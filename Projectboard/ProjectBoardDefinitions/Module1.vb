@@ -8876,15 +8876,23 @@ Public Module Module1
                 Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
                 Dim childrenOfchild As SortedList(Of Integer, Double) = childRole.getSubRoleIDs
                 If childrenOfchild.Count = 0 Then
-                    ' then and only then check it out
-                    ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
+                    ' childRole ist ein Blatt und kann aber Skill oder Person sein
+                    If Not childRole.isSkill Then
+                        ' childRole ist Person
 
-                    If Not ok Then
-                        Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
-                        outputCollection.Add(outmsg)
-                        atleastOneError = True
+                        ' then and only then check it out
+                        ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
+
+                        If Not ok Then
+                            Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
+                            outputCollection.Add(outmsg)
+                            atleastOneError = True
+                            ok = True
+                        End If
+                    Else
                         ok = True
                     End If
+
                 End If
 
             Next
