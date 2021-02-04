@@ -1071,9 +1071,9 @@ Public Module awinDiagrams
 
                     ' Anfang Event Handling für Chart 
                     'prcChart.PrcChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
-                    prcChart = New clsEventsPrcCharts With {
-                        .PrcChartEvents = newChtObj.Chart
-                    }
+                    prcChart = New clsEventsPrcCharts
+                    prcChart.PrcChartEvents = newChtObj.Chart
+
                     prcDiagram.setDiagramEvent = prcChart
                     ' Ende Event Handling für Chart 
 

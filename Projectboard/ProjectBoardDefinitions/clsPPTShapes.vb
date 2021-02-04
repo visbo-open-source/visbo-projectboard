@@ -191,6 +191,9 @@ Public Class clsPPTShapes
                             Case "Multiprojektsicht"
                                 containerShape = pptShape
 
+                            Case "PortfolioRoadmap"
+                                containerShape = pptShape
+
                             Case "Multivariantensicht"
                                 containerShape = pptShape
 
@@ -691,7 +694,8 @@ Public Class clsPPTShapes
 
         ' der Kalender-Start soll in Abhängigkeit von kennzeichneung weiter links oder weiter rechts begionnen 
         If kennzeichnung = "Multiprojektsicht" Or
-            kennzeichnung.StartsWith("Swimlane") Then
+            kennzeichnung.StartsWith("Swimlane") Or
+            kennzeichnung = "PortfolioRoadmap" Then
             ' hier wird ein linker Rand gebraucht 
             calendarLineStart = 120
         Else
@@ -706,7 +710,8 @@ Public Class clsPPTShapes
                 kennzeichnung = "Multivariantensicht" Or
                 kennzeichnung = "Multiprojektsicht" Or
                 kennzeichnung = "Einzelprojektsicht" Or
-                kennzeichnung.StartsWith("Swimlane") Then
+                kennzeichnung.StartsWith("Swimlane") Or
+                kennzeichnung = "PortfolioRoadmap" Then
 
             If IsNothing(_quarterMonthVorlagenShape) Then
                 _quarterMonthVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
@@ -1251,10 +1256,11 @@ Public Class clsPPTShapes
             Dim tmpName As String = ""
             Dim firstTime As Boolean = True
             Dim ok As Boolean = True
-            If kennzeichnung = "AllePlanElemente" Or _
-                kennzeichnung = "Multivariantensicht" Or _
-                kennzeichnung = "Multiprojektsicht" Or _
-                kennzeichnung = "Einzelprojektsicht" Then
+            If kennzeichnung = "AllePlanElemente" Or
+                kennzeichnung = "Multivariantensicht" Or
+                kennzeichnung = "Multiprojektsicht" Or
+                kennzeichnung = "Einzelprojektsicht" Or
+                kennzeichnung = "PortfolioRoadmap" Then
 
                 If IsNothing(_MsDescVorlagenShape) Then
                     ok = False

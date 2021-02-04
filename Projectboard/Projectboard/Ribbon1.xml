@@ -245,29 +245,7 @@
               <button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
             </menu>
           <!--</splitButton>-->
-        </group>
-        <!--<group id="PTeditoa" getVisible="chckVisibility">
-          --><!-- nur für Orga-Admin--><!--
-          <splitButton id="PT2G2splitoa" size ="large">
-            --><!--label="Modify Ressourcen und Kosten"--><!--
-            <button id="PT2G2oa" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
-            <menu id="PT2G2Moa" getVisible="chckVisibility">
-              --><!--label=" Projekt Umbenennen"--><!--
-              --><!--<button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>--><!--
-              <menuSeparator id="separatoroa0"  />
-              --><!--label="Schutz setzen / aufheben"--><!--
-              <button id="PT2G2B5oa" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
-              --><!--label=" Variante Umbenennen"--><!--
-              --><!--<button id="PT2G1B3" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled="false" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>--><!--
-              <menuSeparator id="separatoroa1"  />
-              --><!--label="Modify Attributes"--><!--
-              <button id="PT2G1M2B8oa" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Business Unit, Budget, strateg. Fit und Risiko Kennzahl editiert werden"/>
-              <menuSeparator id="separatoroa2"  />
-              --><!--label="den Status eines Projektes ändern"--><!--
-              --><!--<button id="PT2G1M1B4" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>--><!--
-            </menu>
-          </splitButton>
-        </group>-->
+        </group>        
       </tab>
       <!--label="View"-->
       <!--<tab id="PTview" getVisible="chckVisibility" getLabel ="bestimmeLabel">

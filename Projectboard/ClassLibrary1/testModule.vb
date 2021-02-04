@@ -2050,6 +2050,7 @@ Public Module testModule
                                         With smartChartInfo
                                             .q2 = bestimmeRoleQ2(qualifier2, selectedRoles)
                                             .bigType = ptReportBigTypes.charts
+                                            .detailID = PTprdk.ProjektbedarfsChart
 
                                             ' muss mit dem ersten oder letzten verglichen werden ? 
                                             .hproj = hproj
@@ -12655,34 +12656,73 @@ Public Module testModule
                 tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
             End If
 
+            If currentSessionConstellation.count > 0 Then
+                Dim anzCI As Integer = currentSessionConstellation.count
+                Dim ix As Double = 1.0
+                If currentSessionConstellation.sortListe.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of String, String) In currentSessionConstellation.sortListe
+                        If ShowProjekte.contains(kvp.Value) Then
+                            Dim myProj As clsProjekt = ShowProjekte.getProject(kvp.Value)
+                            If Not IsNothing(myProj) Then
+                                projektListe.Add(ix, calcProjektKey(myProj))
+                                ix = ix + 1
+                            End If
+                        End If
+                    Next
+                Else
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
+                        If kvp.Value.show Then
+                            If Not projektListe.ContainsKey(kvp.Value.zeile) Then
+                                projektListe.Add(kvp.Value.zeile, kvp.Key)
+                            Else
+                                Dim tmpKey As Double = CDbl(kvp.Value.zeile + 0.00001)
+                                Do While projektListe.ContainsKey(tmpKey)
+                                    tmpKey = tmpKey + 0.00001
+                                Loop
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                                ' jetzt ist er nicht mehr enthalten 
+                                Try
+                                    projektListe.Add(tmpKey, kvp.Key)
+                                Catch ex As Exception
 
-                If currentFilter.doesNotBlock(kvp.Value, passMsPhAnyway:=True) Then
-                    If awinSettings.mppSortiertDauer Then
-                        ' es wird aufsteigend nach der Dauer sortiert  
-                        Dim tmpMinDate As Date
-                        Dim tmpMaxDate As Date
-                        Dim tmpDuration As Long
-                        kvp.Value.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones,
-                                                            tmpMinDate, tmpMaxDate, tmpDuration)
-
-                        ' der Schlüssel soll ja die Dauer sein  
-                        key = tmpDuration
-                    Else
-                        ' der Schlüssel soll die Zeile sein, Projekte sollen ja in der Reihenfolge wie auf Projekt-Tafel dargestellt werden
-                        ' der ganzzahlige Teil des Keys ist also immer die Zeile, in der gezeichnet werden muss ... 
-                        key = kvp.Value.tfZeile + DateDiff(DateInterval.Day, StartofCalendar, kvp.Value.startDate) / 100000
-                    End If
-
-                    Do While projektListe.ContainsKey(key)
-                        key = key + 0.000001
-                    Loop
-                    ' jetzt ist sicher gestellt, dass key nicht mehr vorkommen kann ... 
-                    projektListe.Add(key, calcProjektKey(kvp.Value))
+                                End Try
+                            End If
+                        End If
+                    Next
                 End If
 
-            Next
+
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    If currentFilter.doesNotBlock(kvp.Value, passMsPhAnyway:=True) Then
+                        If awinSettings.mppSortiertDauer Then
+                            ' es wird aufsteigend nach der Dauer sortiert  
+                            Dim tmpMinDate As Date
+                            Dim tmpMaxDate As Date
+                            Dim tmpDuration As Long
+                            kvp.Value.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones,
+                                                                tmpMinDate, tmpMaxDate, tmpDuration)
+
+                            ' der Schlüssel soll ja die Dauer sein  
+                            key = tmpDuration
+                        Else
+                            ' der Schlüssel soll die Zeile sein, Projekte sollen ja in der Reihenfolge wie auf Projekt-Tafel dargestellt werden
+                            ' der ganzzahlige Teil des Keys ist also immer die Zeile, in der gezeichnet werden muss ... 
+                            key = kvp.Value.tfZeile + DateDiff(DateInterval.Day, StartofCalendar, kvp.Value.startDate) / 100000
+                        End If
+
+                        Do While projektListe.ContainsKey(key)
+                            key = key + 0.000001
+                        Loop
+                        ' jetzt ist sicher gestellt, dass key nicht mehr vorkommen kann ... 
+                        projektListe.Add(key, calcProjektKey(kvp.Value))
+                    End If
+
+                Next
+            End If
+
         Else
             ' Multivarianten Sicht oder Einzelprojektsicht 
             ' in diesem Fall soll der selektierte Zeitraum nicht betrachtet werden 

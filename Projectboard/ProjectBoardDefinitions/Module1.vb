@@ -7631,7 +7631,7 @@ Public Module Module1
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
-            For i As Integer = 1 To anzSpalten
+            For i As Integer = 0 To anzSpalten - 1
                 strMeld = strMeld & logTrennz & CStr(text(i))
             Next
 
@@ -7675,10 +7675,10 @@ Public Module Module1
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
-            For i As Integer = 1 To anzSpalten
+            For i As Integer = 0 To anzSpalten - 1
                 strMeld = strMeld & logTrennz & CStr(text(i))
             Next
-            For k As Integer = 1 To anzSpaltenValues
+            For k As Integer = 0 To anzSpaltenValues - 1
                 strMeld = strMeld & logTrennz & Format(values(k), "#,##0.##")
             Next
 

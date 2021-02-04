@@ -10980,9 +10980,9 @@ Module SIModule1
 
                             Try
 
-                                slideCoordInfo = New clsPPTShapes With {
-                                    .pptSlide = currentSlide
-                                }
+                                slideCoordInfo = New clsPPTShapes
+                                slideCoordInfo.pptSlide = currentSlide
+
 
                                 With currentSlide
 

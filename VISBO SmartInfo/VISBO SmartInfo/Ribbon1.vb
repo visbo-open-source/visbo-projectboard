@@ -232,6 +232,7 @@ Public Class Ribbon1
                 changeFrm = New frmChanges
                 changeFrm.changeliste = Nothing
 
+
                 If chgeLstListe.ContainsKey(key) Then
                     If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
                         changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
@@ -574,6 +575,7 @@ Public Class Ribbon1
                         If listOfVCs.Count > 1 Then
                             Dim chooseVC As New frmSelectOneItem
                             chooseVC.itemsCollection = listOfVCs
+
                             If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
                                 ' alles ok 
                                 awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
@@ -796,6 +798,7 @@ Public Class Ribbon1
                         If listOfVCs.Count > 1 Then
                             Dim chooseVC As New frmSelectOneItem
                             chooseVC.itemsCollection = listOfVCs
+
                             If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
                                 ' alles ok 
                                 awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
@@ -1029,12 +1032,17 @@ Public Class Ribbon1
 
 
         Dim weitermachen As Boolean = True
+        ' check out whether project portfolio selection was successful, then do action 
+        Dim continueOnComponents As Boolean = False
+
         If Not appearancesWereRead Then
             ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
             weitermachen = loginAndReadApearances(False, errMsg)
         End If
 
         If weitermachen Then
+
+
             ' jetzt hat ja alles geklappt: login, Settings lesen, ... 
             appearancesWereRead = True
             noDBAccessInPPT = False
@@ -1061,66 +1069,7 @@ Public Class Ribbon1
                     returnValue = loadProjectsForm.ShowDialog
 
                     If returnValue = Windows.Forms.DialogResult.OK Then
-
-                        ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
-                        Dim hproj As clsProjekt = Nothing
-                        Dim anzP As Integer = ShowProjekte.Count
-                        If ShowProjekte.Count >= 1 Then
-                            hproj = ShowProjekte.getProject(1)
-
-                            Dim tmpCollection As New Collection
-                            Dim outputCollection As New Collection
-
-                            ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
-                            Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0, outputCollection)
-
-                            ' now show messgaes if there are any ... 
-                            If outputCollection.Count > 0 Then
-                                Call showOutPut(outputCollection, "Create Report", "Errors & Warnings")
-                            End If
-
-                            ' smartSlideLists und slidcoordInfo aufbauen
-                            Call pptAPP_AufbauSmartSlideLists(currentSlide)
-
-                            ' tk 7.10 selectedProjekte wieder zurücksetzen ..
-                            ShowProjekte.Clear(False)
-                            selectedProjekte.Clear(False)
-
-                            showRangeLeft = 0
-                            showRangeRight = 0
-
-                            Dim savePath As String
-                            Dim fullFileName As String
-                            Try
-                                savePath = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                            Catch ex As Exception
-                                savePath = My.Computer.FileSystem.SpecialDirectories.Temp
-                            End Try
-
-                            Try
-                                If anzP > 1 Then
-                                    fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiproject-Report")
-                                Else
-                                    fullFileName = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
-                                End If
-
-                            Catch ex As Exception
-                                fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Single Project Report")
-                            End Try
-
-                            Try
-                                pptAPP.ActivePresentation.SaveAs(fullFileName)
-                            Catch ex As Exception
-                                Call MsgBox("Could not save powerpoint to " & fullFileName)
-                            End Try
-
-                        Else
-                            Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
-                            If awinSettings.englishLanguage Then
-                                msgtxt = "no project selected ... Exit"
-                            End If
-                            Call MsgBox(msgtxt)
-                        End If
+                        continueOnComponents = True
                     Else
                         ' returnValue = DialogResult.Cancel
                     End If
@@ -1128,12 +1077,90 @@ Public Class Ribbon1
                 Else
 
                     ' loads all
-                    Dim success As Boolean = loadPortfolioProjectsInPPT()
-                    If success Then
-
-                    End If
+                    continueOnComponents = loadPortfolioProjectsInPPT()
 
                 End If
+
+                ' now do the action 
+
+                If continueOnComponents Then
+
+                    ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
+                    Dim hproj As clsProjekt = Nothing
+
+                    Dim projectType As ptPRPFType = ptPRPFType.project
+
+                    If currentSldHasPortfolioTemplates Then
+                        projectType = ptPRPFType.portfolio
+                    End If
+
+
+                    Dim anzP As Integer = ShowProjekte.Count
+                    If ShowProjekte.Count >= 1 Then
+
+                        If projectType = ptPRPFType.portfolio Then
+                            ' calculate summary Project 
+                            hproj = calcUnionProject(currentSessionConstellation, False, Date.Now)
+                        Else
+                            hproj = ShowProjekte.getProject(1)
+                        End If
+
+
+                        Dim tmpCollection As New Collection
+                        Dim outputCollection As New Collection
+
+
+                        ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
+                        Call fillReportingComponentWithinPPT(hproj, projectType, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0, outputCollection)
+
+                        ' now show messgaes if there are any ... 
+                        If outputCollection.Count > 0 Then
+                            Call showOutPut(outputCollection, "Create Report", "Errors & Warnings")
+                        End If
+
+                        ' smartSlideLists und slidcoordInfo aufbauen
+                        Call pptAPP_AufbauSmartSlideLists(currentSlide)
+
+                        ' tk 7.10 selectedProjekte wieder zurücksetzen ..
+                        ShowProjekte.Clear(False)
+                        selectedProjekte.Clear(False)
+
+                        showRangeLeft = 0
+                        showRangeRight = 0
+
+                        Dim savePath As String
+                        Dim fullFileName As String
+                        Try
+                            savePath = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                        Catch ex As Exception
+                            savePath = My.Computer.FileSystem.SpecialDirectories.Temp
+                        End Try
+
+                        Try
+                            If anzP > 1 Then
+                                fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiproject-Report")
+                            Else
+                                fullFileName = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
+                            End If
+
+                        Catch ex As Exception
+                            fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Single Project Report")
+                        End Try
+
+                        Try
+                            pptAPP.ActivePresentation.SaveAs(fullFileName)
+                        Catch ex As Exception
+                            Call MsgBox("Could not save powerpoint to " & fullFileName)
+                        End Try
+
+                    Else
+                        Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "no project selected ... Exit"
+                            End If
+                            Call MsgBox(msgtxt)
+                        End If
+                    End If
 
 
             Catch ex As Exception
@@ -1220,11 +1247,11 @@ Public Class Ribbon1
                         selectedProjekte.Add(ShowProjekte.getProject(1), False)
                     End If
 
-                    Dim frmSelectionPhMs As New frmSelectPhasesMilestones
-
                     ' set the datepicker boxes in the form to invisible
                     ' because timeframe is defined by report which is currently shown
+                    Dim frmSelectionPhMs As New frmSelectPhasesMilestones
                     frmSelectionPhMs.addElementMode = True
+
 
                     If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
 
@@ -1378,6 +1405,7 @@ Public Class Ribbon1
                 If listOfVCs.Count > 1 Then
                     Dim chooseVC As New frmSelectOneItem
                     chooseVC.itemsCollection = listOfVCs
+
                     If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
                         ' alles ok 
                         awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString

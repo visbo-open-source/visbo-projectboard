@@ -19885,7 +19885,8 @@ Public Module agm2
                 formatsWereAlreadySet = didZeile1AppearanceAlready(ptTables.meAT)
                 If Not formatsWereAlreadySet Then
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
 
                         If awinSettings.englishLanguage Then
                             CType(.Cells(1, 1), Excel.Range).Value = "Project-Number"
@@ -20035,7 +20036,8 @@ Public Module agm2
                             someVariantTextOccurred = True
                         End If
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
 
                             If hproj.variantDescription <> "" Then
                                 CType(.Cells(zeile, 4), Excel.Range).Value = hproj.variantDescription
@@ -20132,7 +20134,8 @@ Public Module agm2
 
                         With currentWS
 
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                                myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                                 editArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, anzahlSpalten)), Excel.Range)
                                 protectArea = CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Excel.Range)
                                 editArea.Locked = False
@@ -20218,7 +20221,8 @@ Public Module agm2
                             .AutoFit()
                         End With
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
 
                             '' Variant Description
                             With CType(infoBlock.Columns(4), Excel.Range)
@@ -20323,7 +20327,9 @@ Public Module agm2
                         .EntireColumn.Hidden = True
                     End With
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
                         With CType(infoBlock.Columns(4), Excel.Range)
                             .EntireColumn.Hidden = True
                         End With
@@ -20334,7 +20340,8 @@ Public Module agm2
                         .EntireColumn.Hidden = False
                     End With
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                         With CType(infoBlock.Columns(4), Excel.Range)
                             .EntireColumn.Hidden = False
                         End With
@@ -21579,6 +21586,11 @@ Public Module agm2
             ' muss ins logfile
             meldungen.Add(err.errorMsg)
             Call MsgBox(err.errorMsg)
+        End If
+
+        ' jetzt sicherstellen, dass die Grundeinstellung bei Portfolio Manager loadPfv ist 
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            awinSettings.loadPFV = True
         End If
 
     End Sub

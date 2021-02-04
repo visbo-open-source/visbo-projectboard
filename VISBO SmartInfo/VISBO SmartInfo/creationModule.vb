@@ -15,7 +15,7 @@ Module creationModule
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
-    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "PF-Rolle", "PF-Skill"}
+    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "Rolle", "Skill"}
 
     ' hier ist  projectboardCustomization.xlsx zu finden
     Friend customizationPath As String = ""
@@ -139,10 +139,12 @@ Module creationModule
     ''' <summary>
     ''' erzeugt den Bericht auf Grundlage des aktuell geladenen Powerpoints  
     ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie des Projektes steht 
+    ''' wenn mit projectType = ortfolio aufgerufen wird, dann ist hproj das Summary Projekt, lproj das zuletzt beauftragte Baseline Summary Projekt, bProj das zuerst beauftragte Summary Projekt imd 
+    ''' lastProj das Summary Projekt, das entsteht , wenn man die Projekt-Stände vom refdate alle lädt und eine Union erstellt ... 
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <remarks></remarks>
-    Public Sub fillReportingComponentWithinPPT(ByRef hproj As clsProjekt,
+    Public Sub fillReportingComponentWithinPPT(ByVal hproj As clsProjekt, ByVal projectType As ptPRPFType,
                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
@@ -158,10 +160,16 @@ Module creationModule
         ' 4.10.19 tk ist die currentSlide
         'Dim pptSlide As PowerPoint.Slide = Nothing
         Dim shapeRange As PowerPoint.ShapeRange = Nothing
+        Dim isPortfolio As Boolean = (projectType = ptPRPFType.portfolio)
 
         Dim pptShape As PowerPoint.Shape
         Dim pname As String = hproj.name
+
         Dim fullName As String = hproj.getShapeText
+        If isPortfolio Then
+            fullName = printName(currentConstellationPvName)
+        End If
+
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
@@ -176,7 +184,7 @@ Module creationModule
         Dim ze As String = " (" & awinSettings.kapaEinheit & ")"
         Dim ke As String = " (T€)"
         Dim heute As Date = Date.Now
-        Dim istWerteexistieren As Boolean
+
         Dim boxName As String
         Dim listofShapes As New Collection
 
@@ -198,6 +206,7 @@ Module creationModule
 
         Dim msgTxt As String = ""
 
+        ' the following is relevant for both Portfolio as project 
 
         Try   ' Projekthistorie aufbauen, sofern sie für das aktuelle hproj nicht schon aufgebaut ist
             ' die Projekthistorie wird immer (zumindest erstmal hier ...) nur von der Basis-Variante betrachtet ...
@@ -216,15 +225,17 @@ Module creationModule
 
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
+                        ' ic retrieveProjectHistoryFromDB both baseline and planning versions are retrieved 
+
 
                         If Not aktprojekthist Then
-                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
-                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
                         End If
 
 
                         ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
-                        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
 
                         ' ur: alt: bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                         bproj = projekthistorie.beauftragung
@@ -264,13 +275,6 @@ Module creationModule
         End Try
 
 
-
-        If DateDiff(DateInterval.Month, hproj.startDate, heute) > 0 Then
-            istWerteexistieren = True
-        Else
-            istWerteexistieren = False
-        End If
-
         ' tk 4.10.19 aktuell wird nur eine Slide behandelt ... 
         'Dim anzSlidesToAdd As Integer = 1
         'Dim anzahlCurrentSlides As Integer
@@ -288,7 +292,7 @@ Module creationModule
         ' tk 4.10 aktuell macht er das einfach nur für die aktuelle Slide auf der man sitzt 
         While folieIX <= 1
 
-            Call addSmartPPTSlideBaseInfo(currentSlide, reportCreationDate, ptPRPFType.project)
+            Call addSmartPPTSlideBaseInfo(currentSlide, reportCreationDate, projectType)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = currentSlide.Shapes.Count
@@ -337,10 +341,12 @@ Module creationModule
                     End Try
 
                     If kennzeichnung = "Projekt-Name" Or
+                        kennzeichnung = "Portfolio-Name" Or
                         kennzeichnung = "Custom-Field" Or
                         kennzeichnung = "selectedItems" Or
                         kennzeichnung = "Einzelprojektsicht" Or
                         kennzeichnung = "Multiprojektsicht" Or
+                        kennzeichnung = "PortfolioRoadmap" Or
                         kennzeichnung = "AllePlanElemente" Or
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
@@ -388,7 +394,8 @@ Module creationModule
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
                         kennzeichnung = "Multiprojektsicht" Or
-                        kennzeichnung = "TableMilestoneAPVCV" Then
+                        kennzeichnung = "TableMilestoneAPVCV" Or
+                        kennzeichnung = "PortfolioRoadmap" Then
 
                     phMSSelNeeded(0) = True
 
@@ -548,6 +555,25 @@ Module creationModule
                                     msgCollection.Add(msgTxt)
                                 End Try
 
+                            Case "Portfolio-Name"
+
+                                Try
+
+                                    If qualifier <> "Sum" Then
+                                        .TextFrame2.TextRange.Text = fullName
+                                    Else
+                                        .TextFrame2.TextRange.Text = fullName & " (" & ShowProjekte.Count & " P.)"
+                                    End If
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                               ptReportBigTypes.components, ptReportComponents.pfName)
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Projekt-Name':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
 
                             Case "selectedItems"
@@ -742,6 +768,45 @@ Module creationModule
                                 Try
 
                                     If alreadyOneGantt Then
+                                        msgTxt = "not possible to use more than one schedules plan on one page ...  " & vbLf & "not drawn: " & kennzeichnung
+                                        msgCollection.Add(msgTxt)
+                                    Else
+                                        alreadyOneGantt = True
+                                        Dim tmpProjekt As New clsProjekt
+
+                                        Dim minCal As Boolean = False
+                                        If pptShape.AlternativeText.Length > 0 Then
+                                            minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                        End If
+
+                                        Dim pptFirstTime As Boolean = True
+                                        Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                                              selectedPhases, selectedMilestones,
+                                                              translateToRoleNames(selectedRoles), selectedCosts,
+                                                              selectedBUs, selectedTyps,
+                                                              True, False, tmpProjekt, kennzeichnung, minCal, msgCollection)
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                        .Title = ""
+                                    End If
+
+
+
+                                Catch ex As Exception
+
+                                    msgTxt = "Component 'Multiprojektsicht':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
+
+
+                            Case "PortfolioRoadmap"
+
+                                Try
+
+                                    If alreadyOneGantt Then
                                         msgTxt = "not possible to use more than one schedules plan on aone page ...  " & vbLf & "not drawn: " & kennzeichnung
                                         msgCollection.Add(msgTxt)
                                     Else
@@ -792,7 +857,7 @@ Module creationModule
                                                                       selectedPhases, selectedMilestones,
                                                                       translateToRoleNames(selectedRoles), selectedCosts,
                                                                       selectedBUs, selectedTyps,
-                                                                      True, False, hproj, kennzeichnung, minCal, msgCollection)
+                                                                      False, False, hproj, kennzeichnung, minCal, msgCollection)
                                         .TextFrame2.TextRange.Text = ""
                                         .AlternativeText = ""
                                         .Title = ""
@@ -5786,7 +5851,7 @@ Module creationModule
 
                         .Left = leftPos
                         If .Left + .Width > rds.drawingAreaRight + 2 Then
-                            .Left = rds.drawingAreaRight - .Width + 2
+                            .Left = CSng(rds.drawingAreaRight - .Width + 2)
                         End If
 
                         '.Name = .Name & .Id
@@ -5977,7 +6042,7 @@ Module creationModule
 
     End Sub
 
-    Friend Function loadPortfolioProjectsInPPT() As Boolean
+    Friend Function loadPortfolioProjectsInPPT(Optional ByVal calculateSummaryProjectOnly As Boolean = False) As Boolean
         Dim success As Boolean = False
         Dim msgTxt As String = ""
         Dim loadConstellationFrm As New frmLoadConstellation
@@ -5990,6 +6055,8 @@ Module creationModule
 
             dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
 
+
+
             If dbPortfolioNames.Count > 0 Then
 
                 loadConstellationFrm.addToSession.Checked = False
@@ -5997,6 +6064,29 @@ Module creationModule
 
                 loadConstellationFrm.loadAsSummary.Checked = False
                 loadConstellationFrm.loadAsSummary.Visible = False
+
+                Try
+                    Dim timeStampsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
+
+                    If timeStampsCollection.Count > 0 Then
+                        With loadConstellationFrm
+
+                            .constellationsToShow = dbPortfolioNames
+                            '.constellationsToShow = dbConstellations
+                            .retrieveFromDB = True
+                            If timeStampsCollection.Count > 0 Then
+                                .earliestDate = CDate(timeStampsCollection.Item(timeStampsCollection.Count)).Date.AddHours(23).AddMinutes(59)
+                            Else
+                                .earliestDate = Date.Now.Date.AddHours(23).AddMinutes(59)
+                            End If
+
+                        End With
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
 
                 Dim returnValue As DialogResult = loadConstellationFrm.ShowDialog
                 If returnValue = DialogResult.OK Then
@@ -6035,79 +6125,117 @@ Module creationModule
 
 
 
-                    If constellationsChecked.Count >= 1 Then
+                    If constellationsChecked.Count = 1 Then
                         '
-                        Dim curConstellation As clsConstellation = Nothing
+                        'Dim curConstellation As clsConstellation = Nothing
                         For Each kvP As KeyValuePair(Of String, String) In constellationsChecked
 
                             Dim pName As String = kvP.Key
                             Dim vName As String = kvP.Value
                             Try
-                                curConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, dbPortfolioNames(pName),
+                                currentSessionConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, dbPortfolioNames(pName),
                                                                                                                          cTimeStamp, err,
                                                                                                                          variantName:=vName,
                                                                                                                          storedAtOrBefore:=storedAtOrBefore)
                             Catch ex As Exception
-                                curConstellation = Nothing
+                                currentSessionConstellation = Nothing
                             End Try
 
+                            ' jetzt die Sortliste aufbauen 
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
-                            If Not IsNothing(curConstellation) Then
-                                ' in die Liste aufnehmen
-                                projectConstellations.Add(curConstellation)
-                                projectConstellations.addToLoadedSessionPortfolios(curConstellation.constellationName, curConstellation.variantName)
-
-                                currentConstellationPvName = calcPortfolioKey(curConstellation.constellationName, curConstellation.variantName)
+                            If Not IsNothing(currentSessionConstellation) Then
 
                                 ' now retrieve and load all Projects in AlleProjekte, ShowProjekte 
                                 ' in each cItem there are only Show Elements
 
-                                ' hole erst mal das Projektsummary: die Vorgabe 
-                                Dim curSummaryProjVorgabe As clsProjekt = Nothing
-                                curSummaryProjVorgabe = getProjektFromSessionOrDB(pName, vName, AlleProjektSummaries, storedAtOrBefore)
-                                If Not IsNothing(curSummaryProjVorgabe) Then
-                                    AlleProjektSummaries.Add(curSummaryProjVorgabe, updateCurrentConstellation:=False)
-                                End If
+                                If calculateSummaryProjectOnly Then
 
-                                ' jetzt alle Projekte holen 
-                                Try
+                                    ' now calculate the Portfolio Summary Project - planning 
+                                    ' hole erst mal das Projektsummary: die Vorgabe 
+                                    Dim portfolioBudget As Double = -1
 
-                                    For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In curConstellation.Liste
+                                    Dim portfolioBaseline As clsProjekt = getProjektFromSessionOrDB(pName, ptVariantFixNames.pfv.ToString, AlleProjekte, storedAtOrBefore)
+                                    If Not IsNothing(portfolioBaseline) Then
+                                        portfolioBudget = portfolioBaseline.Erloes
 
-                                        If kvpCI.Value.show = True Then
-                                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvpCI.Value.projectName,
+                                        If Not AlleProjekte.Containskey(calcProjektKey(portfolioBaseline)) Then
+                                            AlleProjekte.Add(portfolioBaseline, updateCurrentConstellation:=False)
+                                        End If
+                                    End If
+
+                                    Dim portfolioProject As clsProjekt = calcUnionProject(currentSessionConstellation, False, storedAtOrBefore:=Date.Now, budget:=portfolioBudget)
+
+                                    ' jetzt die currentSessionConstellation zurücksetzen , should only contain Portfolio SummaryProject and Portfolio Baseline 
+                                    Dim tmpName As String = currentSessionConstellation.constellationName
+                                    Dim tmpVname As String = currentSessionConstellation.variantName
+                                    currentSessionConstellation = New clsConstellation(cName:=tmpName)
+                                    currentSessionConstellation.variantName = tmpVname
+
+                                    If Not AlleProjekte.Containskey(calcProjektKey(portfolioProject)) Then
+                                        AlleProjekte.Add(portfolioProject, updateCurrentConstellation:=True)
+                                        If Not ShowProjekte.contains(portfolioProject.name) Then
+                                            ShowProjekte.Add(portfolioProject, updateCurrentConstellation:=True)
+                                        End If
+                                    End If
+
+
+
+                                Else
+
+                                    ' jetzt alle Projekte holen oder das PortfolioPlanungs-Projekt berechnen  
+                                    Try
+
+                                        For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
+
+                                            If kvpCI.Value.show = True Then
+                                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvpCI.Value.projectName,
                                                                                                        kvpCI.Value.variantName, storedAtOrBefore, err) Then
 
-                                                ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                                Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvpCI.Value.projectName,
+                                                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                                    Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvpCI.Value.projectName,
                                                                                                                                   kvpCI.Value.variantName, "",
                                                                                                                                   storedAtOrBefore, err)
 
-                                                If Not IsNothing(hproj) Then
-                                                    If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
-                                                        AlleProjekte.Add(hproj, updateCurrentConstellation:=True, sortkey:=kvpCI.Value.zeile)
-                                                        If Not ShowProjekte.contains(hproj.name) Then
-                                                            ShowProjekte.Add(hproj)
+                                                    If Not IsNothing(hproj) Then
+                                                        If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
+                                                            AlleProjekte.Add(hproj, updateCurrentConstellation:=False)
+                                                            If Not ShowProjekte.contains(hproj.name) Then
+                                                                ShowProjekte.Add(hproj, updateCurrentConstellation:=False)
+                                                            End If
                                                         End If
-                                                    End If
 
+
+                                                    End If
+                                                Else
 
                                                 End If
-                                            Else
-
                                             End If
-                                        End If
-                                    Next
+                                        Next
 
-                                    success = True
-                                Catch ex As Exception
-                                    success = False
-                                End Try
+                                        success = True
+                                    Catch ex As Exception
+                                        success = False
+                                    End Try
+
+                                End If
+
+                                ' in die Liste aufnehmen
+                                projectConstellations.Add(currentSessionConstellation)
+                                projectConstellations.addToLoadedSessionPortfolios(currentSessionConstellation.constellationName, currentSessionConstellation.variantName)
+
+                                currentConstellationPvName = calcPortfolioKey(currentSessionConstellation.constellationName, currentSessionConstellation.variantName)
+
+
+
                             Else
-                                success = False
+                                    success = False
                                 Call MsgBox("Problems when reading Portfolio " & pName)
                             End If
                         Next
+                    ElseIf constellationsChecked.Count > 1 Then
+                        success = False
+                        Call MsgBox("please select only one Portfolio!")
                     End If
 
 
