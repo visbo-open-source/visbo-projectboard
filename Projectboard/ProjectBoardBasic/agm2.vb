@@ -8925,10 +8925,10 @@ Public Module agm2
                             ' ur:20210201: auf Anweisung von TK .validFrom = validFrom
                             ' aktuell soll nur eine Organisation (also alle gleiches validFrom) im VC gespeichert sein
                             If Not IsNothing(oldOrga) Then
-                                logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
+                                Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
                                 .validFrom = oldOrga.validFrom
                             Else
-                                logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
+                                Call logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
                                 ' es existiert noch keine Orga
                                 .validFrom = validFrom
                             End If
@@ -23469,6 +23469,7 @@ Public Module agm2
             End With
 
 
+
             If readingGroups Then
                 Try
                     If awinSettings.englishLanguage Then
@@ -23537,6 +23538,9 @@ Public Module agm2
                         Dim tmpIDValue As String = CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Value
                         Dim tmpOrgaName As String = getStringFromExcelCell(CType(rolesRange.Cells(i, nameCol), Excel.Range))
                         tmpOrgaName = tmpOrgaName.Trim
+
+                        'Vorbesetzung auf Person, nicht Team
+                        isTeam = False
 
                         c = CType(rolesRange.Cells(i, nameCol), Excel.Range)
 
@@ -23631,14 +23635,14 @@ Public Module agm2
                             End If
                         Else
                             ' readingGroups
-                            ' wenn kein przSatz angegeben ist, so ist es eine Gruppe, die nicht den gleichen Namen wie ein Orga-Mitglied haben darf
                             ' außerdem ist bei einer Gruppe isTeam = 1 
                             przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, relpercentCol), Excel.Range), 0.0, 0.0, 1.0)
 
-                            ' Wenn bei readRoleDefinitions mit readingGroups = true kein percent angegeben ist, so muss isTeam auf true gesetzt werden
-                            If (przSatz = 0) Then
-                                isTeam = True
-                            End If
+                            ''Wenn bei readRoleDefinitions mit readingGroups = True kein percent angegeben ist, so muss isTeam auf true gesetzt werden
+                            ' ur: 2021.02.04 : das gilt nun nicht mehr bei skills, da hier die Angabe isTeam erfolgt in der Spalte "relIsTeamCol"
+                            'If (przSatz = 0) Then
+                            '    isTeam = True
+                            'End If
 
                             ' alternativ kann dies auch explizit angegeben sein
                             If Not IsNothing(c.Offset(0, relIsTeamCol).Value) Then
@@ -23652,7 +23656,8 @@ Public Module agm2
                             End If
 
                             ' hier wird sichergestellt, dass es ein Team ist
-                            If Not (przSatz > 0.0 And przSatz <= 1.0) And isTeam Then
+                            'If Not (przSatz > 0.0 And przSatz <= 1.0) And isTeam Then
+                            If isTeam Then
                                 'If tmpIDValue <> "" Then
                                 If Not uniqueNames.Contains(tmpOrgaName) Then
                                     uniqueNames.Add(tmpOrgaName, tmpOrgaName)
@@ -23690,12 +23695,12 @@ Public Module agm2
                                 '    End If
                                 'End If
                             End If
-                        End If
+                            End If
 
 
 
-                        ' jetzt checken 
-                        If readingGroups And isWithoutID Then
+                            ' jetzt checken 
+                            If readingGroups And isWithoutID Then
                             ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
                             Dim roleName As String = CStr(c.Value.trim)
 
@@ -23774,9 +23779,9 @@ Public Module agm2
 
                                     If readingGroups Then
                                         przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, relpercentCol), Excel.Range), 0.0, 0.0, 1.0)
-                                        ' Wenn bei readRoleDefinitions mit readingGroups = true kein percent angegeben ist, so muss isTeam auf true gesetzt werden
+
                                         If (przSatz = 0) Then
-                                            .isSkill = True
+                                            przSatz = 1
                                         End If
 
                                         ' alternativ kann dies auch explizit angegeben sein
