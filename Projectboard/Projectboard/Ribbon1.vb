@@ -12436,7 +12436,8 @@ Imports System.Web
 
 
             Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
-            If withSkills Then
+            Dim showFourDiagrams As Boolean = (withSkills And visboZustaende.projectBoardMode = ptModus.massEditRessSkills)
+            If showFourDiagrams Then
                 stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
             End If
 
@@ -12475,7 +12476,7 @@ Imports System.Web
                                                                        chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
 
                 ' show only when skill are relevant 
-                If withSkills Then
+                If showFourDiagrams Then
                     ' das Auslastungs-Chart Skill
                     repObj = Nothing
                     chLeft = chLeft + chWidth + 2
