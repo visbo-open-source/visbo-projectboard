@@ -295,6 +295,7 @@
         Me.btn_ImportAppCust.Label = "Import CustomSettings"
         Me.btn_ImportAppCust.Name = "btn_ImportAppCust"
         Me.btn_ImportAppCust.ShowImage = True
+        Me.btn_ImportAppCust.Visible = False
         '
         'Ribbon1
         '
