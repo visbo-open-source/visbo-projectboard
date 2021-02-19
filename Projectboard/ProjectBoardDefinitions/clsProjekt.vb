@@ -513,18 +513,19 @@ Public Class clsProjekt
                     End If
 
                     If Me.name = vProj.name And
-                           Me.variantName = vProj.variantName And
-                           Me.variantDescription = vProj.variantDescription And
-                           Me.description = vProj.description And
-                           Me.projectType = vProj.projectType And
-                           DateDiff(DateInterval.Month, Me.actualDataUntil, vProj.actualDataUntil) = 0 And
-                           Me.kundenNummer = vProj.kundenNummer Then
+                        Me.variantName = vProj.variantName And
+                        Me.variantDescription = vProj.variantDescription And
+                        Me.description = vProj.description And
+                        Me.projectType = vProj.projectType And
+                        Me.kundenNummer = vProj.kundenNummer Then
+
+
 
                         If Me.startDate.Date = vProj.startDate.Date And
                                Me.endeDate.Date = vProj.endeDate.Date Then
 
                             If Me.ampelStatus = vProj.ampelStatus And
-                                    Me.ampelErlaeuterung = vProj.ampelErlaeuterung Then
+                                Me.ampelErlaeuterung = vProj.ampelErlaeuterung Then
 
                                 ' es soll nur auf Budget Gelichheit geprüft werden , die Verteilun g macht doch an der Stelle gar keinen Sinn .. . 
                                 ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
@@ -533,13 +534,13 @@ Public Class clsProjekt
                                     'Me.Erloes = .Erloes Then
 
                                     If Me.businessUnit = vProj.businessUnit And
-                                            Me.complexity = vProj.complexity And
-                                            Me.Status = vProj.Status And
-                                            Me.StrategicFit = vProj.StrategicFit And
-                                            Me.Risiko = vProj.Risiko And
-                                            Me.VorlagenName = vProj.VorlagenName And
-                                            Me.volume = vProj.volume And
-                                            Me.leadPerson = vProj.leadPerson Then
+                                        Me.complexity = vProj.complexity And
+                                        Me.Status = vProj.Status And
+                                        Me.StrategicFit = vProj.StrategicFit And
+                                        Me.Risiko = vProj.Risiko And
+                                        Me.VorlagenName = vProj.VorlagenName And
+                                        Me.volume = vProj.volume And
+                                        Me.leadPerson = vProj.leadPerson Then
 
                                         stillOK = True
 
@@ -554,6 +555,10 @@ Public Class clsProjekt
 
                             End If
 
+                        End If
+
+                        If (Me.projectType <> ptPRPFType.projectTemplate) Then
+                            stillOK = stillOK And (DateDiff(DateInterval.Month, Me.actualDataUntil, vProj.actualDataUntil) = 0)
                         End If
 
                     End If

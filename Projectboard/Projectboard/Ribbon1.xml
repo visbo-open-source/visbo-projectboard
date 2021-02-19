@@ -89,6 +89,9 @@
                 <button id="PT4G1B15" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportAppearances" supertip ="Es werden die möglichen Darstellungsklassen der Phasen und Meilensteine importiert "/>
                 <!--label="Customization"-->
                 <button id="PT4G1B16" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomization" supertip ="Es werden die Kundenspezifischen Einstellungen importiert "/>
+                <!--label="Project-Templates"-->
+                <button id="PT4G1B17" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportProjectTemplates" supertip ="Es werden die Projekt-Vorlagen importiert "/>
+         
               </menu> 
               <!--label="Ist-Daten"-->
               <button id="PT4G1B12" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>

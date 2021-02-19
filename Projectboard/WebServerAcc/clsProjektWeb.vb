@@ -328,6 +328,7 @@ Public Class clsProjektWeb
                 .AddPhase(newPhase)
             Next
 
+
             ' jetzt werden Ampel Status und Beschreibung gesetzt 
             ' da das jetzt in der Phase(1) abgespeichert ist, darf das erst gemacht werden, wenn die Phasen alle kopiert sind ... 
             .ampelStatus = Me.ampelStatus
@@ -396,14 +397,12 @@ Public Class clsProjektWeb
                 .keyMetrics = Nothing
             End If
 
-
-
-
             If IsNothing(Me.actualDataUntil) Then
                 .actualDataUntil = Date.MinValue
             Else
                 .actualDataUntil = Me.actualDataUntil.ToLocalTime
             End If
+
 
 
             ''ur:24.01.2019: Infos aus clsVP in clsProjekt benötigt
