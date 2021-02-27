@@ -1844,56 +1844,78 @@ Imports System.Web
 
         enableOnUpdate = False
 
+        If Projektvorlagen.Count = 0 Then
+            Dim msgStr As String = ""
+            If awinSettings.englishLanguage Then
+                msgStr = "Error: No Template found! - Creating Project from Template is not possible. "
+            Else
+                msgStr = "Fehler: Keine Vorlage vorhanden! - Neues Projekt auf Basis Vorlage nicht möglich."
+            End If
+            Call logger(ptErrLevel.logError, "PT2ProjektNeu", msgStr)
+            Call MsgBox(msgStr)
+        Else
 
-        returnValue = ProjektEingabe.ShowDialog
+            returnValue = ProjektEingabe.ShowDialog
 
-        If returnValue = DialogResult.OK Then
-            With ProjektEingabe
+            If returnValue = DialogResult.OK Then
+                With ProjektEingabe
 
-                Dim profitUserAskedFor As String = Nothing
-                If IsNumeric(.profitAskedFor.Text) Or .profitAskedFor.Text = "" Then
-                    profitUserAskedFor = .profitAskedFor.Text
-                End If
-
-
-                If Not noDB Then
-
-                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                        If .txtbx_pNr.Text <> "" Then
-
-                            Try
-                                pNrDoesNotExistYet = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(.txtbx_pNr.Text, err).Count = 0
-                            Catch ex As Exception
-
-                            End Try
-
-                        End If
-
-                        If pNrDoesNotExistYet Then
-
-                            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
-
-                                ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+                    Dim profitUserAskedFor As String = Nothing
+                    If IsNumeric(.profitAskedFor.Text) Or .profitAskedFor.Text = "" Then
+                        profitUserAskedFor = .profitAskedFor.Text
+                    End If
 
 
-                                Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                    If Not noDB Then
+
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                            If .txtbx_pNr.Text <> "" Then
+
+                                Try
+                                    pNrDoesNotExistYet = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(.txtbx_pNr.Text, err).Count = 0
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+                            If pNrDoesNotExistYet Then
+
+                                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
+
+                                    ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+
+
+                                    Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                    CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                    5.0, 5.0, profitUserAskedFor,
                                                    CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+                                Else
+                                    Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                                End If
+
                             Else
-                                Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                                Call MsgBox(" Projekt-Nummer '" & .txtbx_pNr.Text & "' existiert bereits in der Datenbank!")
                             End If
 
-                        Else
-                            Call MsgBox(" Projekt-Nummer '" & .txtbx_pNr.Text & "' existiert bereits in der Datenbank!")
-                        End If
 
+                        Else
+
+                            Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                            appInstance.ScreenUpdating = True
+
+                            ' Projekt soll trotzdem angezeigt werden
+                            Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                               5.0, 5.0, profitUserAskedFor,
+                                               CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+
+                        End If
 
                     Else
 
-                        Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                         appInstance.ScreenUpdating = True
 
                         ' Projekt soll trotzdem angezeigt werden
@@ -1904,33 +1926,22 @@ Imports System.Web
 
                     End If
 
-                Else
+                End With
+            End If
 
-                    appInstance.ScreenUpdating = True
+            ''If Not currentConstellationName.EndsWith("(*)") Then
+            ''    currentConstellationName = currentConstellationName & " (*)"
+            ''End If
 
-                    ' Projekt soll trotzdem angezeigt werden
-                    Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
-                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
-                                               5.0, 5.0, profitUserAskedFor,
-                                               CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+            ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
+            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
-                End If
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
+            End If
 
-            End With
+            'Call storeSessionConstellation("Last")
         End If
-
-        ''If Not currentConstellationName.EndsWith("(*)") Then
-        ''    currentConstellationName = currentConstellationName & " (*)"
-        ''End If
-
-        ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
-        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-
-        If currentConstellationPvName <> calcLastSessionScenarioName() Then
-            currentConstellationPvName = calcLastSessionScenarioName()
-        End If
-
-        'Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
 
@@ -2515,6 +2526,13 @@ Imports System.Web
                     tmpLabel = "kundenspez. Einstellungen"
                 Else
                     tmpLabel = "Customization"
+                End If
+
+            Case "PT4G1B17"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projektvorlagen"
+                Else
+                    tmpLabel = "Project Templates"
                 End If
 
             Case "PT4G1B8"
@@ -8260,9 +8278,78 @@ Imports System.Web
 
 
 
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
-        ' Schließen des LogFiles
-        ''Call logfileSchliessen()
+    End Sub
+    ''' <summary>
+    ''' Importiert werden die auf Platte verfügbaren Projekt-Templates
+    ''' diese werden in DB als VP mit Projekt-Typ= 2 (Vorlage) gespeichert
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportProjectTemplates(control As IRibbonControl)
+
+        Dim i As Integer = 0
+        Dim outputCollection As New Collection
+        Dim isIdentical As Boolean = False
+        Dim msgStr As String = ""
+
+        ' hier wird jetzt der Import gemacht 
+        Call logger(ptErrLevel.logInfo, "Beginn Import Templates", "PTImportProjectTemplates", -1)
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        ' jetzt werden die Projekt-Vorlagen ausgelesen 
+        Call readVorlagen(False)
+        Dim anzahlTemplates As Integer = Projektvorlagen.Count
+
+        Call logger(ptErrLevel.logInfo, anzahlTemplates & " Templates erfolgreich eingelesen", "PTImportProjectTemplates", -1)
+
+        For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
+            Dim vproj As clsProjektvorlage = kvp.Value
+            Dim template As New clsProjekt
+            ' mache aus clsprojektVorlage ein 'clsProjekt'
+            vproj.copyTo(template)
+            template.name = vproj.VorlagenName
+            template.projectType = ptPRPFType.projectTemplate
+            Dim erfolgreich As Boolean = storeSingleProjectToDB(template, outputCollection, isIdentical)
+            If Not erfolgreich Then
+                If awinSettings.englishLanguage Then
+                    msgStr = "Error when writing Template: " & template.name
+                Else
+                    msgStr = "Fehler beim Speichern der Vorlage: " & template.name
+                End If
+                outputCollection.Add(msgStr)
+                Call logger(ptErrLevel.logError, msgStr, "PTImportProjectTemplates", -1)
+            Else
+                If awinSettings.englishLanguage Then
+                    msgStr = "Template: " & template.name & " stored"
+                Else
+                    msgStr = "Vorlage: " & template.name & " gespeichert"
+                End If
+                Call logger(ptErrLevel.logInfo, msgStr, "PTImportProjectTemplates", -1)
+            End If
+        Next
+
+        If outputCollection.Count > 0 Then
+            Dim errmsg As String = vbLf & " .. Information ... to Import "
+            outputCollection.Add(errmsg)
+            Call showOutPut(outputCollection, "Projekt-Templates Import", "")
+
+            Call logger(ptErrLevel.logError, "PTImportProjectTemplates: ", outputCollection)
+
+        Else
+            If awinSettings.englishLanguage Then
+                msgStr = "All Templates stored successfully"
+            Else
+                msgStr = "Alle Vorlagen erfolgreich gespeichert"
+            End If
+            Call MsgBox(msgStr)
+            Call logger(ptErrLevel.logInfo, msgStr, "PTImportProjectTemplates", -1)
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True

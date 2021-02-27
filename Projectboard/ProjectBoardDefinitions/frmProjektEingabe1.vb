@@ -96,8 +96,8 @@ Public Class frmProjektEingabe1
                 '
                 ' Voreinstellungg auf Projekt-Typ 1
                 '
-                vorlagenDropbox.Text = CStr(vorlagenDropbox.Items(1))
-                awinSettings.lastProjektTyp = CStr(vorlagenDropbox.Items(1))
+                vorlagenDropbox.Text = CStr(vorlagenDropbox.Items(0))
+                awinSettings.lastProjektTyp = CStr(vorlagenDropbox.Items(0))
             End If
 
 

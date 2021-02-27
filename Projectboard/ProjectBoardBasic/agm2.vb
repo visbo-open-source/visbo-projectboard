@@ -21394,8 +21394,40 @@ Public Module agm2
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
                     Call readVorlagen(True)
 
-                    ' jetzt werden die Projekt-Vorlagen ausgelesen 
-                    Call readVorlagen(False)
+
+                    ' Auslesen der Projekt-Vorlagen über ReST-Server
+                    Try
+                        Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
+
+                        Dim projVorlage As clsProjektvorlage
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
+                            projVorlage = New clsProjektvorlage
+                            projVorlage.copyFrom(kvp.Value)
+                            Projektvorlagen.Add(projVorlage)
+                        Next
+
+                        ''If IsNothing(Projektvorlagen) Then
+                        ''    ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                        ''    Try
+                        ''        Call readVorlagen(False)
+                        ''    Catch ex As Exception
+
+                        ''    End Try
+                        ''ElseIf Projektvorlagen.Count = 0 Then
+                        ''    Try
+                        ''        Call readVorlagen(False)
+                        ''    Catch ex As Exception
+
+                        ''    End Try
+                        ''End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+
+                    '' jetzt werden die Projekt-Vorlagen ausgelesen 
+                    'Call readVorlagen(False)
 
                     Dim a As Integer = Projektvorlagen.Count
                     Dim b As Integer = ModulVorlagen.Count
@@ -25094,8 +25126,9 @@ Public Module agm2
     ''' liest die Projekt- bzw. Modul-Vorlagen ein 
     ''' </summary>
     ''' <param name="isModulVorlage"></param>
+    ''' 
     ''' <remarks></remarks>
-    Private Sub readVorlagen(ByVal isModulVorlage As Boolean)
+    Public Sub readVorlagen(ByVal isModulVorlage As Boolean)
 
         Dim dirName As String
         Dim dateiName As String
@@ -25246,6 +25279,7 @@ Public Module agm2
             If isModulVorlage Then
                 ' nichts tun - kein Problem, wenn es keine Vorlagen gibt 
             Else
+                Call logger(ptErrLevel.logError, "der Vorlagen Ordner fehlt: " & dirName, "readVorlagen", -1)
                 Throw New ArgumentException("der Vorlagen Ordner fehlt:" & vbLf & dirName)
             End If
         End If

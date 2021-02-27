@@ -8299,9 +8299,12 @@ Public Module awinGeneralModules
 
         Try
             Dim formerVName As String = ""
+            If Not (hproj.projectType = ptPRPFType.projectTemplate) Then
 
-            ' die aktuelle WriteProtection holen 
-            writeProtections.adjustListe(False) = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+                ' die aktuelle WriteProtection holen 
+                writeProtections.adjustListe(False) = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+
+            End If
 
             ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
             'Call storeSessionConstellation("Last")

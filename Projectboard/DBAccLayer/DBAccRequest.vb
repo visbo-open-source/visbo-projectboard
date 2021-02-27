@@ -594,6 +594,107 @@ Public Class Request
 
     End Function
 
+    Public Function retrieveProjectTemplatesFromDB(ByRef err As clsErrorCodeMsg) As clsProjekteAlle
+        Dim result As New clsProjekteAlle
+        Try
+
+            If usedWebServer Then
+
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectTemplatesFromDB(err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+                            ' tk 5.5. kann das hier überhaupt mit success rauskommen ? 
+                            Case 200 ' success
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectTemplatesFromDB(err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+                Catch ex As Exception
+
+                    Throw New ArgumentException(ex.Message)
+
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = Nothing
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveProjectTemplatesFromDB = result
+    End Function
+
+
+    ''' <summary>
+    ''' liest eine Projektvorlage aus der DB (Templates können keine Varianten habe), die zum angegebenen Zeitpunkt die aktuelle war
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneProjectTemplatefromDB(ByVal projectname As String,
+                                             ByVal vpid As String,
+                                             ByVal storedAtOrBefore As DateTime,
+                                             ByRef err As clsErrorCodeMsg) As clsProjekt
+        Dim result As clsProjekt = Nothing
+
+        Try
+
+            If usedWebServer Then
+
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectTemplatefromDB(projectname, vpid, storedAtOrBefore, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+                            ' tk 5.5. kann das hier überhaupt mit success rauskommen ? 
+                            Case 200 ' success
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectTemplatefromDB(projectname, vpid, storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+                Catch ex As Exception
+
+                    Throw New ArgumentException(ex.Message)
+
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = CType(DBAcc, MongoDbAccess.Request).retrieveOneProjectfromDB(projectname, "", storedAtOrBefore)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        retrieveOneProjectTemplatefromDB = result
+
+    End Function
+
 
 
     ''' <summary>

@@ -47,7 +47,7 @@ Public Class clsCustomUserRole
                 '                 "PTview", "PTfilter", "PTWebServer"}
                 ' vorher war ImpExp Orga  komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
-                _nonAllowance = {"PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1M0B2", "PTfilter",
+                _nonAllowance = {"PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B17", "PT4G1M0B2", "PTfilter",
                                  "PT2G1B1",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
                                  "PTWebServer", "PThelp"}
@@ -55,7 +55,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.ProjektLeitung
                 ' vorher war ImpExp Orga etc komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
-                _nonAllowance = {"Pt5G2B4", "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B16",
+                _nonAllowance = {"Pt5G2B4", "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B17", "PT4G1B12", "PT4G1B15",
                                  "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PThelp",
                                  "PT2G1B1", "PT2G1M1B4",
                                  "PTWebServer"}
@@ -66,7 +66,7 @@ Public Class clsCustomUserRole
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
                 _nonAllowance = {"Pt5G2B4", "PT5G3M",
                                  "PT2G1B1", "PT2G1M1B4",
-                                 "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1B11",
+                                 "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B17", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1B11",
                                  "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
@@ -78,7 +78,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.TeamManager
 
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PT2G1B1", "PT2G1M1B4",
-                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B11",
+                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B15", "PT4G1B16", "PT4G1B17", "PT4G1B12", "PT4G1B11",
                                  "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
@@ -89,7 +89,7 @@ Public Class clsCustomUserRole
                 ' internal Viewer sollte die gleichen Funktionen wie Team und Ressourcen Manager sehen, ausser alles was mit editieren zu tun hat 
             Case ptCustomUserRoles.InternalViewer
 
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT2G1B1", "PT2G1M1B4",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1B17", "PT2G1B1", "PT2G1M1B4",
                                  "PT2G1M2B1", "PT2G1M2B8", "PT2G1M2B2", "PT2G2B5", "PT2G1M1B3",
                                  "PT4G1M",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",

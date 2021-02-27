@@ -756,6 +756,134 @@ Public Class Request
         retrieveOneProjectfromDB = result
 
     End Function
+    Public Function retrieveProjectTemplatesFromDB(ByRef err As clsErrorCodeMsg) As clsProjekteAlle
+
+        Dim result As New clsProjekteAlle
+
+        Try
+
+            Dim hproj As New clsProjekt
+
+            ' da in der Datenbank alle DateTime im UTC gespeichert sind, muss hier auch dieses Format verwendet werden
+            Dim aktDate As Date = Date.Now.ToUniversalTime()
+
+
+            ' Kein Projekt  angegeben. es werden alle Projekte im angebenen Zeitraum zurückgegeben
+
+            Try
+
+                Dim TemplateVP As SortedList(Of String, clsVP) = GETallVP(aktVCid, err, ptPRPFType.projectTemplate)
+
+                If err.errorCode = 200 Then    ' Cache wurde erfolgreich gefüllt
+
+                    For Each kvp As KeyValuePair(Of String, clsVP) In TemplateVP
+
+
+                        Dim vpid As String = kvp.Value._id
+
+                        Dim VisboPv_all As New List(Of clsProjektWebLong)
+
+                        VisboPv_all = GETallVPvLong(vpid:=vpid, err:=err, variantName:="", storedAtorBefore:=aktDate)
+
+                        For Each webProj As clsProjektWebLong In VisboPv_all
+
+                            hproj = New clsProjekt
+                            Dim vp As clsVP = kvp.Value
+
+                            webProj.copyto(hproj, vp)
+                            ' _Dauer wird gesetzt durch den Aufruf der Property .dauerInDays
+
+                            result.Add(hproj, False)
+                        Next
+
+
+                    Next
+
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error, while reading the Projects from DB: " & err.errorMsg)
+                    Else
+                        Call MsgBox("Fehler beim Lesen der Projekte aus dem DB: " & err.errorMsg)
+                    End If
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        Catch ex As Exception
+
+        End Try
+        retrieveProjectTemplatesFromDB = result
+    End Function
+
+    ''' <summary>  
+    ''' liest eine Projektvorlage aus der DB (Templates können keine Varianten habe), die zum angegebenen Zeitpunkt die aktuelle war
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneProjectTemplatefromDB(ByVal projectname As String,
+                                             ByVal vpid As String,
+                                             ByVal storedAtOrBefore As DateTime,
+                                             ByRef err As clsErrorCodeMsg) As clsProjekt
+        Dim result As clsProjekt = Nothing
+        ' bei projectTemplates gibt es keine Varianten
+        Dim variantname As String = ""
+
+        storedAtOrBefore = storedAtOrBefore.AddSeconds(1).ToUniversalTime
+
+        Try
+            Dim hproj As New clsProjekt
+            Dim vp As clsVP
+
+            'ur:24.02.19: 
+            'Dim vp As clsVP = GETvpid(projectname, err)
+            If vpid = "" Then
+                ' projectTemplates aus allen vps heraussuchen
+                vp = GETvpid(projectname, err, ptPRPFType.projectTemplate)
+
+                vpid = vp._id
+            Else
+                Dim projTemplates As SortedList(Of String, clsVP) = GETallVP(aktVCid, err, ptPRPFType.projectTemplate)
+                vp = VRScache.VPsId(vpid)
+                If IsNothing(vp) Then
+                    VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.projectTemplate)
+                    vp = VRScache.VPsId(vpid)
+                End If
+            End If
+
+
+            If vpid <> "" Then
+                ' gewünschte Variante vom Server anfordern
+                Dim allVPv As New List(Of clsProjektWebLong)
+                'allVPv = GETallVPvLong(vpid, err, , , , variantname, storedAtOrBefore)
+                allVPv = GETallVPvLong(vpid:=vpid,
+                                       err:=err,
+                                       vpvid:="",
+                                       status:="",
+                                       refNext:=False,
+                                       variantName:=variantname,
+                                       storedAtorBefore:=storedAtOrBefore)
+
+                If allVPv.Count > 0 Then
+                    Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
+                    webProj.copyto(hproj, vp)
+
+                    result = hproj
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveOneProjectTemplatefromDB = result
+
+    End Function
 
 
 
@@ -4059,9 +4187,9 @@ Public Class Request
             Else
                 serverUriString = serverUriName & typeRequest & "?vcid=" & vcid
 
-                'If vptype <> ptPRPFType.portfolio Then
-                If vptype <> ptPRPFType.project And vptype <> ptPRPFType.portfolio Then
-
+                If vptype <> ptPRPFType.project And
+                    vptype <> ptPRPFType.portfolio And
+                    vptype <> ptPRPFType.projectTemplate Then
                     '' kein bestimmter vp-Type gefragt
                 Else
                     serverUriString = serverUriString & "&vpType=" & vptype.ToString
@@ -4131,6 +4259,11 @@ Public Class Request
 
                     Case ptPRPFType.projectTemplate
 
+                        For Each vp In webVPantwort.vp
+
+                            result.Add(vp.name, vp)
+
+                        Next
 
                     Case Else
 
