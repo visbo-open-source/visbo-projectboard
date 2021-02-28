@@ -8312,25 +8312,41 @@ Imports System.Web
             Dim vproj As clsProjektvorlage = kvp.Value
             Dim template As New clsProjekt
             ' mache aus clsprojektVorlage ein 'clsProjekt'
-            vproj.copyTo(template)
-            template.name = vproj.VorlagenName
-            template.projectType = ptPRPFType.projectTemplate
-            Dim erfolgreich As Boolean = storeSingleProjectToDB(template, outputCollection, isIdentical)
-            If Not erfolgreich Then
-                If awinSettings.englishLanguage Then
-                    msgStr = "Error when writing Template: " & template.name
+            Dim startDate As Date = StartofCalendar
+            Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
+            Dim myProject As clsProjekt = Nothing
+            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, Nothing, vproj.VorlagenName, "")
+
+            ' ur: 28.2.2021: nicht mehr benötigt, da eine ganzes Projekt angelegt wird und im ReSt-Server als vorlage dient.
+            ' vproj.copyTo(template)
+            If Not IsNothing(template) Then
+                template.name = vproj.VorlagenName
+                template.projectType = ptPRPFType.projectTemplate
+                Dim erfolgreich As Boolean = storeSingleProjectToDB(template, outputCollection, isIdentical)
+                If Not erfolgreich Then
+                    If awinSettings.englishLanguage Then
+                        msgStr = "Error when writing Template: " & template.name
+                    Else
+                        msgStr = "Fehler beim Speichern der Vorlage: " & template.name
+                    End If
+                    outputCollection.Add(msgStr)
+                    Call logger(ptErrLevel.logError, msgStr, "PTImportProjectTemplates", -1)
                 Else
-                    msgStr = "Fehler beim Speichern der Vorlage: " & template.name
+                    If awinSettings.englishLanguage Then
+                        msgStr = "Template: " & template.name & " stored"
+                    Else
+                        msgStr = "Vorlage: " & template.name & " gespeichert"
+                    End If
+                    Call logger(ptErrLevel.logInfo, msgStr, "PTImportProjectTemplates", -1)
                 End If
-                outputCollection.Add(msgStr)
-                Call logger(ptErrLevel.logError, msgStr, "PTImportProjectTemplates", -1)
+
             Else
                 If awinSettings.englishLanguage Then
-                    msgStr = "Template: " & template.name & " stored"
+                    msgStr = "Error when reading Template: " & vproj.VorlagenName
                 Else
-                    msgStr = "Vorlage: " & template.name & " gespeichert"
+                    msgStr = "Fehler beim Lesen der Vorlage: " & vproj.VorlagenName
                 End If
-                Call logger(ptErrLevel.logInfo, msgStr, "PTImportProjectTemplates", -1)
+                outputCollection.Add(msgStr)
             End If
         Next
 

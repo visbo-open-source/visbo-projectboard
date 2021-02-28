@@ -21406,20 +21406,20 @@ Public Module agm2
                             Projektvorlagen.Add(projVorlage)
                         Next
 
-                        ''If IsNothing(Projektvorlagen) Then
-                        ''    ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                        ''    Try
-                        ''        Call readVorlagen(False)
-                        ''    Catch ex As Exception
+                        If IsNothing(Projektvorlagen) Then
+                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                            Try
+                                Call readVorlagen(False)
+                            Catch ex As Exception
 
-                        ''    End Try
-                        ''ElseIf Projektvorlagen.Count = 0 Then
-                        ''    Try
-                        ''        Call readVorlagen(False)
-                        ''    Catch ex As Exception
+                            End Try
+                        ElseIf Projektvorlagen.Count = 0 Then
+                            Try
+                                Call readVorlagen(False)
+                            Catch ex As Exception
 
-                        ''    End Try
-                        ''End If
+                            End Try
+                        End If
                     Catch ex As Exception
 
                     End Try
