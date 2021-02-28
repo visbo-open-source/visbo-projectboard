@@ -23638,7 +23638,7 @@ Public Module agm2
                                                 End If
 
                                             End If
-                                                Else
+                                        Else
                                             anzWithoutID = anzWithoutID + 1
                                         End If
                                     Else
@@ -23739,12 +23739,12 @@ Public Module agm2
                                 '    End If
                                 'End If
                             End If
-                            End If
+                        End If
 
 
 
-                            ' jetzt checken 
-                            If readingGroups And isWithoutID Then
+                        ' jetzt checken 
+                        If readingGroups And isWithoutID Then
                             ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
                             Dim roleName As String = CStr(c.Value.trim)
 
