@@ -8315,7 +8315,7 @@ Imports System.Web
             Dim startDate As Date = StartofCalendar
             Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
             Dim myProject As clsProjekt = Nothing
-            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, Nothing, vproj.VorlagenName, "")
+            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
 
             ' ur: 28.2.2021: nicht mehr benötigt, da eine ganzes Projekt angelegt wird und im ReSt-Server als vorlage dient.
             ' vproj.copyTo(template)
