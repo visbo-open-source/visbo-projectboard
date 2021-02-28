@@ -1992,6 +1992,7 @@ Public Class clsPhase
             End Try
 
             If isVorlage Then
+                'tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays)) - Me.parentProject.Start + 1
                 tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
             Else
                 tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays)) - Me.parentProject.Start + 1
@@ -2037,7 +2038,7 @@ Public Class clsPhase
             End Try
 
             If isVorlage Then
-                tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
+                tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1))
             Else
                 tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1)) - Me.parentProject.Start + 1
             End If

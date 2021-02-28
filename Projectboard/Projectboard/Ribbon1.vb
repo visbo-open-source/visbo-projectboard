@@ -8312,10 +8312,10 @@ Imports System.Web
             Dim vproj As clsProjektvorlage = kvp.Value
             Dim template As New clsProjekt
             ' mache aus clsprojektVorlage ein 'clsProjekt'
-            Dim startDate As Date = StartofCalendar.AddYears(1)
+            Dim startDate As Date = StartofCalendar
             Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
-
-            template = erstelleProjektAusVorlage(Nothing, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
+            Dim myProject As clsProjekt = Nothing
+            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, Nothing, vproj.VorlagenName, "")
 
             ' ur: 28.2.2021: nicht mehr benötigt, da eine ganzes Projekt angelegt wird und im ReSt-Server als vorlage dient.
             ' vproj.copyTo(template)
