@@ -1241,51 +1241,7 @@
 
 
     End Sub
-    ''' <summary>
-    ''' kopiert die Attribute einer Projektvorlage in newproject;  bei der Quelle handelt es sich um eine 
-    ''' Vorlage  
-    ''' </summary>
-    ''' <param name="project"></param>
-    ''' <remarks></remarks>
-    ''' 
-    Public Overridable Sub copyAttrFrom(ByVal project As clsProjekt)
 
-        With project
-            Me.farbe = .farbe
-            Me.Schrift = .Schrift
-            Me.Schriftfarbe = .Schriftfarbe
-            Me.VorlagenName = .VorlagenName
-            Me.earliestStart = .earliestStart
-            Me.latestStart = .latestStart
-            'Me.name = .name
-        End With
-
-        ' jetzt wird die Hierarchie kopiert 
-        Call copyHryFrom(project)
-
-        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
-        Try
-            With project
-                For Each kvp As KeyValuePair(Of Integer, String) In .customStringFields
-                    Me.customStringFields.Add(kvp.Key, kvp.Value)
-                Next
-
-                For Each kvp As KeyValuePair(Of Integer, Double) In .customDblFields
-                    Me.customDblFields.Add(kvp.Key, kvp.Value)
-                Next
-
-                For Each kvp As KeyValuePair(Of Integer, Boolean) In .customBoolFields
-                    Me.customBoolFields.Add(kvp.Key, kvp.Value)
-                Next
-
-            End With
-        Catch ex As Exception
-
-        End Try
-
-
-
-    End Sub
 
     Public Overridable Sub copyTo(ByRef newproject As clsProjekt)
         Dim p As Integer
@@ -1309,28 +1265,7 @@
 
 
     End Sub
-    Public Overridable Sub copyFrom(ByVal project As clsProjekt)
-        Dim p As Integer
-        Dim newphase As clsPhase
-        Dim oldPhase As clsPhase
-        'Dim parentID As String
-        Dim origName As String = ""
 
-        Call copyAttrFrom(project)
-
-        For p = 0 To project.CountPhases - 1
-            oldPhase = project.AllPhases.Item(p)
-            newphase = New clsPhase(Me, True)
-
-            'parentID = Me.hierarchy.getParentIDOfID(oldPhase.nameID)
-
-            oldPhase.copyTo(newphase)
-            Me.AddPhase(newphase)
-            'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
-        Next p
-
-
-    End Sub
 
 
     Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
@@ -1624,42 +1559,6 @@
             End With
 
             newproject.hierarchy.copyNode(copiedNode, key)
-
-        Next
-
-    End Sub
-
-    ''' <summary>
-    ''' kopiert die Hierarchie von project in die aktuelle Projektvorlage
-    ''' </summary>
-    ''' <param name="project"></param>
-    ''' <remarks></remarks>
-    Friend Sub copyHryFrom(ByVal project As clsProjekt)
-        Dim ix As Integer
-        Dim curNode As clsHierarchyNode
-        Dim copiedNode As clsHierarchyNode
-        Dim key As String
-        Dim childKey As String
-
-        Me.hierarchy = New clsHierarchy
-
-        For ix = 1 To project.hierarchy.count
-            curNode = project.hierarchy.nodeItem(ix)
-            key = project.hierarchy.getIDAtIndex(ix)
-            copiedNode = New clsHierarchyNode
-            With copiedNode
-                .elemName = curNode.elemName
-                .indexOfElem = curNode.indexOfElem
-                '.origName = curNode.origName
-                .parentNodeKey = curNode.parentNodeKey
-                ' jetzt die Kinder kopieren 
-                For cx As Integer = 1 To curNode.childCount
-                    childKey = curNode.getChild(cx)
-                    .addChild(childKey)
-                Next
-            End With
-
-            Me.hierarchy.copyNode(copiedNode, key)
 
         Next
 

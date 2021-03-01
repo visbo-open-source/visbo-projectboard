@@ -7103,15 +7103,16 @@ Public Module agm2
         If isTemplate Then
             ' hier müssen die Werte für die Vorlage übergeben werden.
             Dim projVorlage As New clsProjektvorlage
-            projVorlage.VorlagenName = hproj.name
-            projVorlage.Schrift = hproj.Schrift
-            projVorlage.Schriftfarbe = hproj.Schriftfarbe
-            projVorlage.farbe = hproj.farbe
-            projVorlage.earliestStart = -6
-            projVorlage.latestStart = 6
-            projVorlage.Erloes = hproj.Erloes
-            projVorlage.AllPhases = hproj.AllPhases
-            projVorlage.hierarchy = hproj.hierarchy
+            projVorlage = createTemplateOfProject(hproj)
+            'projVorlage.VorlagenName = hproj.name
+            'projVorlage.Schrift = hproj.Schrift
+            'projVorlage.Schriftfarbe = hproj.Schriftfarbe
+            'projVorlage.farbe = hproj.farbe
+            'projVorlage.earliestStart = -6
+            'projVorlage.latestStart = 6
+            'projVorlage.Erloes = hproj.Erloes
+            'projVorlage.AllPhases = hproj.AllPhases
+            'projVorlage.hierarchy = hproj.hierarchy
             hprojTemp = projVorlage
 
         Else
@@ -21401,19 +21402,22 @@ Public Module agm2
 
                         Dim projVorlage As clsProjektvorlage
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
-                            projVorlage = New clsProjektvorlage
-                            projVorlage.VorlagenName = kvp.Value.name
-                            projVorlage.Schrift = kvp.Value.Schrift
-                            projVorlage.Schriftfarbe = kvp.Value.Schriftfarbe
-                            projVorlage.farbe = kvp.Value.farbe
-                            projVorlage.earliestStart = -6
-                            projVorlage.latestStart = 6
-                            projVorlage.Erloes = kvp.Value.Erloes
-                            projVorlage.AllPhases = kvp.Value.AllPhases
-                            projVorlage.hierarchy = kvp.Value.hierarchy
-                            'hprojTemp = projVorlage
 
-                            'projVorlage.copyFrom(kvp.Value)
+                            projVorlage = createTemplateOfProject(kvp.Value)
+
+                            'projVorlage = New clsProjektvorlage
+                            'projVorlage.VorlagenName = kvp.Value.name
+                            'projVorlage.Schrift = kvp.Value.Schrift
+                            'projVorlage.Schriftfarbe = kvp.Value.Schriftfarbe
+                            'projVorlage.farbe = kvp.Value.farbe
+                            'projVorlage.earliestStart = -6
+                            'projVorlage.latestStart = 6
+                            'projVorlage.Erloes = kvp.Value.Erloes
+                            'projVorlage.AllPhases = kvp.Value.AllPhases
+                            'projVorlage.hierarchy = kvp.Value.hierarchy
+                            ''hprojTemp = projVorlage
+
+                            ''projVorlage.copyFrom(kvp.Value)
                             Projektvorlagen.Add(projVorlage)
                         Next
 
@@ -25297,6 +25301,28 @@ Public Module agm2
 
 
     End Sub
+
+    ''' <summary>
+    ''' erzeugt aus einem Projekt (hproj=clsProjekt=vpv) ein Template (clsProjektVorlage)
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    Function createTemplateOfProject(ByVal hproj As clsProjekt) As clsProjektvorlage
+
+        Dim projVorlage As New clsProjektvorlage
+        projVorlage.VorlagenName = hproj.name
+        projVorlage.Schrift = hproj.Schrift
+        projVorlage.Schriftfarbe = hproj.Schriftfarbe
+        projVorlage.farbe = hproj.farbe
+        projVorlage.earliestStart = -6
+        projVorlage.latestStart = 6
+        projVorlage.Erloes = hproj.Erloes
+        projVorlage.AllPhases = hproj.AllPhases
+        projVorlage.hierarchy = hproj.hierarchy
+
+        createTemplateOfProject = projVorlage
+    End Function
+
 
 
     ''' <summary>

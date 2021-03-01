@@ -13602,6 +13602,7 @@ Public Module Projekte
 
         hproj = New clsProjekt
 
+
         If Projektvorlagen.Contains(vorlagenName) Or Not IsNothing(myproject) Then
             ' jetzt wird bestimmt, ob es eine Zielrenditen Vorgabe gibt ... 
             If IsNothing(profitUserAskedFor) Then
