@@ -7100,6 +7100,7 @@ Public Module agm2
         hproj.ampelErlaeuterung = projektAmpelText
 
 
+
         If isTemplate Then
             ' hier müssen die Werte für die Vorlage übergeben werden.
             Dim projVorlage As New clsProjektvorlage
