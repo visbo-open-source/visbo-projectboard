@@ -580,6 +580,7 @@ Public Class Ribbon1
                 awinsetTypen_Performed = True
             End If
 
+            '' CustomUserRole auf PortfolioManager setzen um eine PFV zu schreiben
             myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
 
             '' Set cursor as Default
@@ -696,7 +697,7 @@ Public Class Ribbon1
             End If
 
         End Try
-
+        '' CustomUserRole wieder zurücksetzen, dass alle anderen Publish keine Baseline sind
         myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
     End Sub
