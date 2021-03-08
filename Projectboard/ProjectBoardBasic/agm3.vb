@@ -3759,7 +3759,7 @@ Public Module agm3
                                             ok = True
                                             anzDays = 0
 
-                                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                                            lastSpalte = CType(currentWS.Cells(firstUrlzeile - 1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
                                             lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
 
                                             ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
