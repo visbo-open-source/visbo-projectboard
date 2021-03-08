@@ -2780,14 +2780,15 @@ Public Class Request
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
 
                     ' validFrom in localTime auf den ersten des Monats setzen
-                    listofOrgaWeb.validFrom = listofOrgaWeb.validFrom.ToLocalTime
+                    'listofOrgaWeb.validFrom = listofOrgaWeb.validFrom.ToLocalTime
                     Dim newOrgavalidFrom As Date = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
                     CType(newsetting, clsVCSettingOrganisation).timestamp = newOrgavalidFrom.ToString("u")
                     CType(newsetting, clsVCSettingOrganisation).userId = ""
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
                     CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
-                    CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom.ToUniversalTime
+                    'CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom.ToUniversalTime
+                    CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom
 
                     If anzSetting = 1 Then
                         Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom
