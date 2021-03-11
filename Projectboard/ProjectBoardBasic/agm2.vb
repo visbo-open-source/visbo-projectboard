@@ -21274,12 +21274,13 @@ Public Module agm2
                 '  Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.ActualdataOrgaUnits <> "" And awinSettings.readCostRolesFromDB Then
                     Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
-                    Dim tmpstr() As String = awinSettings.ActualdataOrgaUnits.Split(New Char() {CChar(";")})
-                    If idArray.Length <> tmpstr.Length Then
-                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.ActualdataOrgaUnits
-                        Call MsgBox(errMsg)
-                        Throw New ArgumentException(errMsg)
-                    End If
+                    ' unnötigen Ersenzähler Überprüfung, macht dann Schweirigkeiten, wenn am Schluss auch noch ein ; angegeben ist
+                    'Dim tmpstr() As String = awinSettings.ActualdataOrgaUnits.Split(New Char() {CChar(";")})
+                    'If idArray.Length <> tmpstr.Length Then
+                    '    Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.ActualdataOrgaUnits
+                    '    Call MsgBox(errMsg)
+                    '    Throw New ArgumentException(errMsg)
+                    'End If
 
                 End If
 

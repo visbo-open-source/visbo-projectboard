@@ -2172,7 +2172,7 @@ Public Module agm3
 
                     projectConstellations.Add(sessionConstellationP)
                     ' jetzt auf Projekt-Tafel anzeigen 
-                    Call loadSessionConstellation(scenarioPVName, False, True)
+                    Call loadSessionConstellation(sessionConstellationP.constellationName, False, True)
 
                 Else
                     Call MsgBox("keine Projekte importiert ...")
