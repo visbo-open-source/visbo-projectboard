@@ -8953,7 +8953,6 @@ Public Module agm2
                                         Try
                                             Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
-
                                             ' wenn sich die Default days per Monat geändert hat 
 
                                             If Not IsNothing(importedRole) Then
@@ -9087,27 +9086,21 @@ Public Module agm2
 
                                                 ' neues Eintrittsdatum , eher unwahrscheinlich 
                                                 If importedRole.entryDate > StartofCalendar Then
-                                                        Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                                        For ix As Integer = 1 To tmpix - 1
-                                                            importedRole.kapazitaet(ix) = 0
-                                                        Next
-                                                    End If
-
+                                                    Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                                    For ix As Integer = 1 To tmpix - 1
+                                                        importedRole.kapazitaet(ix) = 0
+                                                    Next
                                                 End If
 
-                                                ' neues Eintrittsdatum , eher unwahrscheinlich 
-                                                If importedRole.entryDate > StartofCalendar Then
-                                                Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                                For ix As Integer = 1 To tmpix - 1
+                                                Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
+
+                                                For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
                                                     importedRole.kapazitaet(ix) = 0
                                                 Next
+
                                             End If
 
-                                            Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
 
-                                            For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
-                                                importedRole.kapazitaet(ix) = 0
-                                            Next
                                         Catch ex As Exception
                                             Dim a As Integer = 0
                                         End Try
