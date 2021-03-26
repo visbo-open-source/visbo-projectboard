@@ -3448,7 +3448,7 @@ Module SIModule1
                                 Dim qualifier2 As String = pptShape.Tags.Item("Q2")
                                 'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
                                 'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
                             End If
                         Else
                             ' ist Portfolio
@@ -3456,7 +3456,7 @@ Module SIModule1
                                 Dim qualifier2 As String = pptShape.Tags.Item("Q2")
                                 'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
                                 'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("d", repCult) & ")"
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("g", repCult) & ")"
                             End If
                         End If
                     Case ptReportComponents.prDescription
@@ -8545,10 +8545,12 @@ Module SIModule1
 
             ElseIf showShortName Then
                 If curShape.Tags.Item("SN").Length = 0 Then
-                    If curShape.Tags.Item("CN").Length > 0 Then
-                        tmpText = curShape.Tags.Item("CN")
-                        translationNecessary = (selectedLanguage <> defaultSprache)
-                    End If
+                    ' 26.3.21 wenn keine Abbrev definiert ist, soll nicht! der Lang-NAme verwendet werden ! 
+                    tmpText = ""
+                    'If curShape.Tags.Item("CN").Length > 0 Then
+                    '    tmpText = curShape.Tags.Item("CN")
+                    '    translationNecessary = (selectedLanguage <> defaultSprache)
+                    'End If
                 Else
                     tmpText = curShape.Tags.Item("SN")
                     If bestShortName.Length > 0 And tmpText <> bestShortName And useUniqueNames Then
