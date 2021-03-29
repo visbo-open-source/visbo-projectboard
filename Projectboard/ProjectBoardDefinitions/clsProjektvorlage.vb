@@ -506,14 +506,14 @@
                             Else
                                 If i = 1 Then
                                     If phDef.shortName = "" Then
-                                        newDesc1 = tmpPhName
+                                        newDesc1 = phDef.shortName
                                     Else
                                         newDesc1 = phDef.shortName
                                     End If
 
                                 Else
                                     If phDef.shortName = "" Then
-                                        newDesc1 = newDesc1 & tmpPhName
+                                        newDesc1 = newDesc1 & phDef.shortName
                                     Else
                                         newDesc1 = newDesc1 & "-" & phDef.shortName
                                     End If
@@ -536,10 +536,10 @@
                                 ' nichts zu tun
                             Else
                                 If IsNothing(msDef.shortName) Then
-                                    'description2 = "-"
+                                    description2 = ""
                                 Else
                                     If msDef.shortName = "" Then
-                                        'description2 = "-"
+                                        description2 = ""
                                     Else
                                         description2 = msDef.shortName
                                     End If
@@ -560,10 +560,10 @@
                             Else
 
                                 If IsNothing(phDef.shortName) Then
-                                    'description2 = "-"
+                                    description2 = ""
                                 Else
                                     If phDef.shortName = "" Then
-                                        'description2 = "-"
+                                        description2 = ""
                                     Else
                                         description2 = phDef.shortName
                                     End If
@@ -584,14 +584,14 @@
                             End If
 
                             If IsNothing(msDef) Then
-                                'description2 = "-"
+                                description2 = ""
                             Else
 
                                 If IsNothing(msDef.shortName) Then
-                                    'description2 = "-"
+                                    description2 = ""
                                 Else
                                     If msDef.shortName = "" Then
-                                        'description2 = msDef.name
+                                        description2 = ""
                                     Else
                                         description2 = msDef.shortName
                                     End If
@@ -612,10 +612,10 @@
                             Else
 
                                 If IsNothing(phDef.shortName) Then
-                                    'description2 = "-"
+                                    description2 = ""
                                 Else
                                     If phDef.shortName = "" Then
-                                        'description2 = phDef.name
+                                        description2 = ""
                                     Else
                                         description2 = phDef.shortName
                                     End If

@@ -1335,7 +1335,7 @@ Module creationModule
                                         'boxName = repMessages.getmsg(223)
                                     End If
 
-                                    .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
+                                    .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
                                     '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                     bigType = ptReportBigTypes.components
                                     compID = ptReportComponents.prStand
@@ -5457,7 +5457,8 @@ Module creationModule
     ''' <param name="yPosition"></param>
     Friend Function drawMilestoneAtYPos(ByRef rds As clsPPTShapes, ByVal hproj As clsProjekt,
                                     ByVal swimlaneID As String, ByVal milestoneID As String,
-                                    ByVal yPosition As Double) As PowerPoint.Shape
+                                    ByVal yPosition As Double,
+                                    ByVal correctionFactor As Single) As PowerPoint.Shape
 
         Dim milestoneTypShape As PowerPoint.Shape = Nothing
         Dim milestoneTypApp As New clsAppearance
@@ -5595,12 +5596,20 @@ Module creationModule
                 End If
 
 
-                Dim height As Single = CSng(sizeFaktor * milestoneTypApp.height)
+                Dim heigth As Single = CSng(sizeFaktor * milestoneTypApp.height)
                 Dim width As Single = CSng(sizeFaktor * milestoneTypApp.width)
                 Dim top As Single = CSng(yPosition - rds.YMilestone)
+
+                ' jetzt die Position korrigieren , damit beim Add Element die richtige Position herauskommt 
+                ' aber nur, wenn correctionFactor > 0 
+                If correctionFactor > 0 Then
+                    ' dann hat er zuvor ein Element gefunden, sei es Meilenstein oder Phase 
+                    top = CSng(top + correctionFactor - heigth / 2)
+                End If
+
                 Dim left As Single = CSng(x1) - width / 2
 
-                milestoneTypShape = rds.pptSlide.Shapes.AddShape(milestoneTypApp.shpType, left, top, width, height)
+                milestoneTypShape = rds.pptSlide.Shapes.AddShape(milestoneTypApp.shpType, left, top, width, heigth)
 
                 If awinSettings.mppKwInMilestone Then
 
@@ -5690,7 +5699,8 @@ Module creationModule
                                            ByVal hproj As clsProjekt,
                                            ByVal swimlaneID As String,
                                            ByVal phaseID As String,
-                                           ByVal yPosition As Double) As PowerPoint.Shape
+                                           ByVal yPosition As Double,
+                                           ByVal correctionFactor As Single) As PowerPoint.Shape
 
         Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
 
@@ -5874,6 +5884,14 @@ Module creationModule
             ''End With
             Dim top As Single = CSng(yPosition + rds.YPhase)
             Dim heigth As Single = CSng(sizeFaktor * phaseTypApp.height)
+
+            ' jetzt die Position korrigieren , damit beim Add Element die richtige Position herauskommt 
+            ' aber nur, wenn correctionFactor > 0 
+            If correctionFactor > 0 Then
+                ' dann hat er zuvor ein Element gefunden, sei es Meilenstein oder Phase 
+                top = CSng(top + correctionFactor - heigth / 2)
+            End If
+
             Dim width As Single = CSng(x2 - x1)
             Dim left As Single = CSng(x1)
 
@@ -6000,6 +6018,9 @@ Module creationModule
             Dim sisterOrParentShapeName As String = smartSlideLists.getShapeNameWithBreadCrumb(sisterBreadCrumb)
             Dim foundShape As PowerPoint.Shape = Nothing
 
+            Dim correctionFactor As Single = 0.0
+
+
             If sisterOrParentShapeName <> "" Then
                 foundShape = currentSlide.Shapes.Item(sisterOrParentShapeName)
             End If
@@ -6024,14 +6045,16 @@ Module creationModule
                 End If
             End If
 
-
+            If Not IsNothing(foundShape) Then
+                correctionFactor = foundShape.Height / 2
+            End If
 
             If isMilestones Then
                 ' draw the Milestone 
-                Dim newMsShape As PowerPoint.Shape = drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
+                Dim newMsShape As PowerPoint.Shape = drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos, correctionFactor:=correctionFactor)
                 atleastOneAddedElement = True
             Else
-                Dim newPhaseShape As PowerPoint.Shape = drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
+                Dim newPhaseShape As PowerPoint.Shape = drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos, correctionFactor:=correctionFactor)
                 atleastOneAddedElement = True
             End If
 
