@@ -79,7 +79,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public Property showProjectLine() As Boolean
         Get
             Return CType(Me("showProjectLine"),Boolean)
@@ -247,7 +247,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public Property allOnePage() As Boolean
         Get
             Return CType(Me("allOnePage"),Boolean)
@@ -317,7 +317,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("bhtc")>  _
     Public Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -329,7 +329,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("10.28.10.38")>  _
     Public Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -341,7 +341,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public Property VISBOServer() As Boolean
         Get
             Return CType(Me("VISBOServer"),Boolean)
@@ -353,7 +353,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public Property mongoDBWithSSL() As Boolean
         Get
             Return CType(Me("mongoDBWithSSL"),Boolean)
