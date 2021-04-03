@@ -192,11 +192,6 @@
 
                     End If
 
-                    ' jetzt werden die Kapas der alten Rollendefinition übernommen ..
-                    ' das ist ein völliger Schmarr'n , das darf nicht gemacht werden; andernfalls hat man keine Chance, jemals die Default-Werte zu ändern ... 
-                    'If moveKapas Then
-                    '    newRoleDefinition.kapazitaet = oldRoleDefinition.kapazitaet
-                    'End If
                 Next
 
                 ' missingRoles nachbehandeln - subroleIDs vervollständigen
