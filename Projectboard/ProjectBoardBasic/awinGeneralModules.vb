@@ -1633,7 +1633,33 @@ Public Module awinGeneralModules
 
         checkIDStability = result
     End Function
+    ''' <summary>
+    ''' is called when a 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    Public Sub synchronizeWithValuesOFExisting(ByRef hproj As clsProjekt)
 
+        Dim err As New clsErrorCodeMsg
+
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And Not noDB Then
+
+            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
+                ' prüfen, ob es Unterschied gibt 
+                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, "", hproj.timeStamp, err)
+
+                If Not IsNothing(standInDB) Then
+
+                    Call awinAdjustValuesByExistingProj(hproj, standInDB, False, Date.Now, 2, True)
+
+                End If
+
+
+            End If
+
+        End If
+
+
+    End Sub
 
     ''' <summary>
     ''' übernimmt vom existierenden Projekt einige Werte wie Kundennummer, vpID, actualDataUntil: für VISBO steckbriefe oder Fremdsysteme
