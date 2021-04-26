@@ -36,13 +36,7 @@ Public Class Request
     Private VCs As New List(Of clsVC)
 
     Private VRScache As New clsCache
-    ' hierin werden  alle Visbo-Projects und 
-    ' die vom Server bereits angeforderten VisboProjectsVersionsgecacht
-    '
-    ' Private VPs As New SortedList(Of String, clsVP)
-    '                                     vpid                  vname    timestamp-Liste, projectshort
-    ' Private VPvCache As New SortedList(Of String, SortedList(Of String, clstest))
-    ' Private VPvCache As New clsCache
+
 
 
     Private aktUser As clsUserReg = Nothing

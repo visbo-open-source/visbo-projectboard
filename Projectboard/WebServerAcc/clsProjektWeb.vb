@@ -124,8 +124,11 @@ Public Class clsProjektWeb
             Me.actualDataUntil = .actualDataUntil.ToUniversalTime
 
             ' ur:20210426: sollte nun automatisch vom Server aus den VP-Properties geholt werden
-            'Me.Risiko = .Risiko
-            'Me.StrategicFit = .StrategicFit
+            ' diese Werte werden von der ServerVersion ab Mai 2021 nicht mehr gespeichert, sonder die von der zugehörigen VP
+            Me.Risiko = .Risiko
+            Me.StrategicFit = .StrategicFit
+            Me.businessUnit = .businessUnit
+
             Me.Erloes = .Erloes
             Me.leadPerson = .leadPerson
             Me.tfSpalte = .tfspalte
@@ -148,9 +151,6 @@ Public Class clsProjektWeb
             Me.volumen = .volume
             Me.complexity = .complexity
             Me.description = .description
-
-            ' ur:20210426: sollte nun automatisch vom Server aus den VP-Properties geholt werden
-            ' Me.businessUnit = .businessUnit
 
             'ergänzt an 04.12.2018 wird nur zu interne Projektstruktur durchgereicht
             '                      und wieder zurück
@@ -272,10 +272,11 @@ Public Class clsProjektWeb
             Else
                 .variantDescription = Me.variantDescription
             End If
-            ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
-            '.Risiko = Me.Risiko
-            '.StrategicFit = Me.StrategicFit
-            '.businessUnit = Me.businessUnit
+
+            ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren(siehe unten)
+            .Risiko = Me.Risiko
+            .StrategicFit = Me.StrategicFit
+            .businessUnit = Me.businessUnit
 
             .Erloes = Me.Erloes
             .leadPerson = Me.leadPerson
@@ -297,7 +298,6 @@ Public Class clsProjektWeb
             .volume = Me.volumen
             .complexity = Me.complexity
             .description = Me.description
-            .businessUnit = Me.businessUnit
 
             ' Änderung notwendig, weil mal in der Datenbank Schrift mit -10 stand
             If .Schrift < 0 Then
@@ -407,25 +407,30 @@ Public Class clsProjektWeb
 
 
             ''ur:24.01.2019: Infos aus clsVP in clsProjekt benötigt
-
             If Not IsNothing(vp) Then
                 .projectType = vp.vpType
                 .kundenNummer = vp.kundennummer
 
                 ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
-                For Each item As clsCustomFieldDbl In vp.customFieldDouble
-                    If item.name = "_strategicFit" And item.type = "System" Then
-                        .StrategicFit = item.value
-                    End If
-                    If item.name = "_risk" And item.type = "System" Then
-                        .Risiko = item.value
-                    End If
-                Next
-                For Each item As clsCustomFieldStr In vp.customFieldString
-                    If item.name = "_businessUnit" And item.type = "System" Then
-                        .businessUnit = item.value
-                    End If
-                Next
+                If Not IsNothing(vp.customFieldDouble) Then
+                    For Each item As clsCustomFieldDbl In vp.customFieldDouble
+                        If item.name = vp_strategicFit And item.type = "System" Then
+                            .StrategicFit = item.value
+                        End If
+                        If item.name = vp_risk And item.type = "System" Then
+                            .Risiko = item.value
+                        End If
+                    Next
+                End If
+
+                If Not IsNothing(vp.customFieldString) Then
+                    For Each item As clsCustomFieldStr In vp.customFieldString
+                        If item.name = vp_businessUnit And item.type = "System" Then
+                            .businessUnit = item.value
+                        End If
+                    Next
+                End If
+
             End If
 
             ' ur:04.12.2018: ergänzt
