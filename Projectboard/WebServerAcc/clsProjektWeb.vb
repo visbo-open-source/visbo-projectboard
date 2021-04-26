@@ -123,9 +123,9 @@ Public Class clsProjektWeb
             ' 6.11.2018: ur: hinzugefügt, das in clsProjekt am 7.10.2018 eingeführt
             Me.actualDataUntil = .actualDataUntil.ToUniversalTime
 
-
-            Me.Risiko = .Risiko
-            Me.StrategicFit = .StrategicFit
+            ' ur:20210426: sollte nun automatisch vom Server aus den VP-Properties geholt werden
+            'Me.Risiko = .Risiko
+            'Me.StrategicFit = .StrategicFit
             Me.Erloes = .Erloes
             Me.leadPerson = .leadPerson
             Me.tfSpalte = .tfspalte
@@ -148,7 +148,9 @@ Public Class clsProjektWeb
             Me.volumen = .volume
             Me.complexity = .complexity
             Me.description = .description
-            Me.businessUnit = .businessUnit
+
+            ' ur:20210426: sollte nun automatisch vom Server aus den VP-Properties geholt werden
+            ' Me.businessUnit = .businessUnit
 
             'ergänzt an 04.12.2018 wird nur zu interne Projektstruktur durchgereicht
             '                      und wieder zurück
@@ -270,9 +272,11 @@ Public Class clsProjektWeb
             Else
                 .variantDescription = Me.variantDescription
             End If
+            ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
+            '.Risiko = Me.Risiko
+            '.StrategicFit = Me.StrategicFit
+            '.businessUnit = Me.businessUnit
 
-            .Risiko = Me.Risiko
-            .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes
             .leadPerson = Me.leadPerson
             ' es gibt kein Attribut tfspalte mehr - es ist ein Readonly Attribut, wo _Start ausgelesen wird 
@@ -287,7 +291,6 @@ Public Class clsProjektWeb
             .latestStart = Me.latestStart
             .Status = Me.status
 
-
             .farbe = Me.farbe
             .Schrift = Me.Schrift
 
@@ -295,8 +298,6 @@ Public Class clsProjektWeb
             .complexity = Me.complexity
             .description = Me.description
             .businessUnit = Me.businessUnit
-
-
 
             ' Änderung notwendig, weil mal in der Datenbank Schrift mit -10 stand
             If .Schrift < 0 Then
@@ -410,6 +411,21 @@ Public Class clsProjektWeb
             If Not IsNothing(vp) Then
                 .projectType = vp.vpType
                 .kundenNummer = vp.kundennummer
+
+                ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
+                For Each item As clsCustomFieldDbl In vp.customFieldDouble
+                    If item.name = "_strategicFit" And item.type = "System" Then
+                        .StrategicFit = item.value
+                    End If
+                    If item.name = "_risk" And item.type = "System" Then
+                        .Risiko = item.value
+                    End If
+                Next
+                For Each item As clsCustomFieldStr In vp.customFieldString
+                    If item.name = "_businessUnit" And item.type = "System" Then
+                        .businessUnit = item.value
+                    End If
+                Next
             End If
 
             ' ur:04.12.2018: ergänzt
