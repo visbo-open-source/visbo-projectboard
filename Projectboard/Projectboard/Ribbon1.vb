@@ -6926,6 +6926,89 @@ Imports System.Web
     End Sub
 
     ''' <summary>
+    ''' imports tasklists in Offline Data
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportTaskLists(control As IRibbonControl)
+
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.offlineData))
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*tasklist*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim getOrgaFile As New frmSelectImportFiles
+
+        If anzFiles > 0 Then
+
+            getOrgaFile.menueAswhl = PTImpExp.offlineData
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                weiterMachen = True
+            End If
+        Else
+            Dim msgTxt As String = "no tasklists ..." & vbLf & "Folder: " & dirname & vbLf & "name need to have following structure: *ffline*.xls*"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "keine Offline-Daten vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Name muss folgender Namensgebung entsprechen: *ffline*.xls*"
+            End If
+            Call MsgBox(msgTxt)
+            weiterMachen = False
+        End If
+
+        If weiterMachen Then
+
+            ' öffnen des LogFiles
+            'Call logfileOpen()
+
+            For Each selectedWB As String In getOrgaFile.selImportFiles
+
+                dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+                Try
+                    ' hier wird jetzt der Import gemacht 
+                    Call logger(ptErrLevel.logInfo, "Start Import tasklists", selectedWB, -1)
+
+                    ' Öffnen des Offline Data -Files
+                    appInstance.Workbooks.Open(dateiname)
+                    Dim offlineName As String = appInstance.ActiveWorkbook.Name
+
+                    Dim outputCollection As New Collection
+
+                    ' jetzt wird die Aktion durchgeführt ...
+                    Call ImportTaskLists(offlineName, outputCollection, False)
+
+                    ' Schliessen des CustomUser Role-Files
+                    appInstance.Workbooks(offlineName).Close(SaveChanges:=True)
+
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            ' now make sure that ActualData is handled properly 
+            Call importProjekteEintragen(Date.Now, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+    ''' <summary>
     ''' ordnet existierenden Projekten pro Phase eine Ressourcen-Summe zu. 
     ''' wenn bereits Istdaten existieren, so werden die angegebenen Summen so verteilt, dass 
     ''' die Formel Istdaten+Prognose = Summe 

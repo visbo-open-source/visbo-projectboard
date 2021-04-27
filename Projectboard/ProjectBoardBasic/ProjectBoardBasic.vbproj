@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="agm2.vb" />
     <Compile Include="agm3.vb" />
+    <Compile Include="agm4.vb" />
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
     <Compile Include="clsProjectboardConfig.vb" />

@@ -352,6 +352,7 @@ Module creationModule
                         kennzeichnung = "Swimlanes2" Or
                         kennzeichnung = "TableBudgetCostAPVCV" Or
                         kennzeichnung = "TableMilestoneAPVCV" Or
+                        kennzeichnung = "Tabelle Projektziele" Or
                         kennzeichnung = "ProjektBedarfsChart" Or
                         kennzeichnung = "Ampel-Farbe" Or
                         kennzeichnung = "Ampel-Text" Or
@@ -942,6 +943,37 @@ Module creationModule
                                     awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
+                                End Try
+
+
+                            Case "Tabelle Projektziele"
+
+                                Try
+                                    ' wenn es im Qualifier angegebene Meilensteine gibt, dann haben die Prio vor der interaktiven Auswahl 
+                                    ' 
+                                    Dim sMilestones As Collection = selectedMilestones
+
+                                    If Not IsNothing(qualifier2) Then
+                                        If qualifier2.Length > 0 Then
+                                            sMilestones = New Collection
+                                            Dim tmpStr() As String = qualifier2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
+                                            For Each tmpMsName As String In tmpStr
+                                                If Not sMilestones.Contains(tmpMsName) Then
+                                                    sMilestones.Add(tmpMsName, tmpMsName)
+                                                End If
+
+                                            Next
+                                        End If
+                                    End If
+
+
+                                    ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
+                                    ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
+                                    Call zeichneProjektTabelleZiele(pptShape, hproj, sMilestones, "", "")
+
+
+                                Catch ex As Exception
+
                                 End Try
 
 
