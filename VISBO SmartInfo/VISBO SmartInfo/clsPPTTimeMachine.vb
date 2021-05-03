@@ -148,11 +148,13 @@ Public Class clsPPTTimeMachine
 
             For i As Integer = 1 To smartSlideLists.countPortfolios
 
-
-                Dim pfName As String = smartSlideLists.getPfName(i)
+                Dim pfVName As String = smartSlideLists.getPfName(i)
+                Dim pfName As String = getPnameFromKey(pfVName)
+                Dim vName As String = getVariantnameFromKey(pfName)
                 Dim vpid As String = smartSlideLists.getPFvpID(i)
 
                 If pfName.Contains("_last") Then
+
                     If awinSettings.englishLanguage Then
                         Call MsgBox("The portfolio, named '" & pfName & "' is not saved in your database.")
                     Else
@@ -161,7 +163,7 @@ Public Class clsPPTTimeMachine
                     End If
                 Else
 
-                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName, vpid,
+                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName, vName, vpid,
                                                                                                                                         minTS, err,
                                                                                                                                         Date.MinValue.AddDays(1))
 

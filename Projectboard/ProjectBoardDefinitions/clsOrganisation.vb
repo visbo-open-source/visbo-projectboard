@@ -176,18 +176,20 @@
                     Else
                         ' nicht ok => oldRoleDefinition wird in Liste der fehlenden Rollen (missingRoles) eingetragen
                         missingRoles.Add(oldRoleDefinition.UID, oldRoleDefinition)
-                        'Try
-                        '    ' muss noch ausprogrammiert werden - erst mal nur RoundTrip
 
-                        '    ' aktuell also Fehler melden
-                        '    errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
-                        '    outputCollection.Add(errmsg)
-                        'Catch ex As Exception
-                        '    errmsg = ex.Message
-                        '    errmsg = errmsg & vbLf & "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
-                        '    outputCollection.Add(errmsg)
+                        ' ur: 20210422: Fehlermeldungen wieder integriert, da besser verständlich
+                        Try
+                            ' muss noch ausprogrammiert werden - erst mal nur RoundTrip
 
-                        'End Try
+                            ' aktuell also Fehler melden
+                            errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
+                            outputCollection.Add(errmsg)
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            errmsg = errmsg & vbLf & "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
+                            outputCollection.Add(errmsg)
+
+                        End Try
 
 
                     End If

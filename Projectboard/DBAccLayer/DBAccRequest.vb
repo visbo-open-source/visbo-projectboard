@@ -1406,7 +1406,9 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                             ByVal vpid As String,
+                                                             ByVal variantName As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
@@ -1416,7 +1418,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, variantName, storedAtOrBefore)
 
                     If result.Count <= 0 Then
 
@@ -1428,7 +1430,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, variantName, storedAtOrBefore)
                                 End If
 
                             Case Else ' all others
@@ -1524,7 +1526,8 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                                 ByVal variantName As String, ByVal vpid As String,
                                                                  ByRef timestamp As Date,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1534,7 +1537,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, variantName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
 
                     If Not IsNothing(result) Then
@@ -1547,7 +1550,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, variantName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
                                 End If
 
