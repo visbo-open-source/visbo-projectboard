@@ -5131,6 +5131,8 @@ Public Module Module1
                         End If
                         If Not IsNothing(vName) Then
                             .Tags.Add("VNM", vName)
+                        Else
+                            .Tags.Add("VNM", "")
                         End If
 
                         If .Tags.Item("VPID").Length > 0 Then
