@@ -1344,8 +1344,7 @@ Module SIModule1
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
                                 Dim vName As String = tmpShape.Tags.Item("VNM")
-                                pvName = pName
-                                'pvName = calcProjektKey(pName, vName)
+                                pvName = calcPortfolioKey(pName, vName)
                             End If
                             If tmpShape.Tags.Item("VPID").Length > 0 Then
                                 vpid = tmpShape.Tags.Item("VPID")
@@ -3035,7 +3034,7 @@ Module SIModule1
                                             Dim err As New clsErrorCodeMsg
                                             Dim realTimestamp As Date
 
-                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, , curTimeStamp)
+                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, vName, curTimeStamp)
 
                                             Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
 
@@ -3252,7 +3251,8 @@ Module SIModule1
                             currentSessionConstellation =
                                 CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid,
                                                                                                       portfolioTS,
-                                                                                                     err, storedAtOrBefore:=curTimeStamp)
+                                                                                                     err,
+                                                                                                     scInfo.vName, storedAtOrBefore:=curTimeStamp)
                             portfolio = currentSessionConstellation
 
                             '' bringe alles in ShowProjekte 
@@ -3333,7 +3333,12 @@ Module SIModule1
                     Case ptReportComponents.pfName
 
                         If Not IsNothing(portfolio) Then
-                            pptShape.TextFrame2.TextRange.Text = portfolio.constellationName
+                            If portfolio.variantName <> "" Then
+                                pptShape.TextFrame2.TextRange.Text = portfolio.constellationName & "[" & portfolio.variantName & "]"
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = portfolio.constellationName
+                            End If
+
                         End If
 
                     Case ptReportComponents.prCustomField
@@ -3598,7 +3603,8 @@ Module SIModule1
 
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
-                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, scInfo.vpid, err, storedAtOrBefore:=curTimeStamp)
+                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName,
+                                                                                                                                                                   scInfo.vpid, scInfo.vName, err, storedAtOrBefore:=curTimeStamp)
 
                                 ' bringe alles in ShowProjekte 
                                 For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
@@ -3622,7 +3628,7 @@ Module SIModule1
 
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
-                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, scInfo.vpid, err, storedAtOrBefore:=curTimeStamp)
+                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, scInfo.vpid, scInfo.vName, err, storedAtOrBefore:=curTimeStamp)
 
                                 ' bringe alles in ShowProjekte 
                                 For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
@@ -3673,7 +3679,7 @@ Module SIModule1
                         Dim realTimestamp As Date
                         Dim hproj As clsProjekt
 
-                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err,, curTimeStamp)
+                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, scInfo.vName, curTimeStamp)
 
                         If Not IsNothing(aktConst) Then
                             hproj = calcUnionProject(aktConst, False, curTimeStamp)

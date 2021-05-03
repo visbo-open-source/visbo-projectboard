@@ -209,6 +209,8 @@
 
                     If .Tags.Item("VNM").Length > 0 Then
                         _vName = .Tags.Item("VNM")
+                    Else
+                        _vName = ""
                     End If
 
                     If .Tags.Item("PRPF").Length > 0 Then

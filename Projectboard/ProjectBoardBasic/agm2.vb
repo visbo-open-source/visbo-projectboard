@@ -7100,6 +7100,7 @@ Public Module agm2
         hproj.ampelErlaeuterung = projektAmpelText
 
 
+
         If isTemplate Then
             ' hier müssen die Werte für die Vorlage übergeben werden.
             Dim projVorlage As New clsProjektvorlage
@@ -8845,6 +8846,7 @@ Public Module agm2
 
 
         ' Import ohne Configuration
+
         If IsNothing(configListe) Or withoutConfiguration Then
             ' Auslesen der Rollen Definitionen
             Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
@@ -23498,7 +23500,7 @@ Public Module agm2
             Dim anzCosts As Integer = 0
 
             With wsname
-                valueend = CType(.Cells(2000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                valueend = CType(.Cells(20000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
                 For i = valuestart To valueend
                     Dim tmpTypeValue As String = CType(.Cells(i, typeCol), Excel.Range).Value
                     Select Case tmpTypeValue
@@ -23517,6 +23519,8 @@ Public Module agm2
                                 costsStart = i
                             End If
                             anzCosts += 1
+                        Case Else
+
                     End Select
                 Next
             End With
@@ -23566,8 +23570,15 @@ Public Module agm2
 
             ' Exit, wenn es keine Definitionen gibt ... 
             If IsNothing(rolesRange) Then
-                meldungen.Add(errMsg)
-                Exit Sub
+                If (readingGroups And anzGroups > 0) Then
+                    meldungen.Add(errMsg)
+                    Exit Sub
+                End If
+
+                If (Not readingGroups And anzRoles > 0) Then
+                    meldungen.Add(errMsg)
+                    Exit Sub
+                End If
             Else
                 errMsg = ""
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
@@ -25446,7 +25457,7 @@ Public Module agm2
             Dim anzCosts As Integer = 0
 
             With wsname
-                valueend = CType(.Cells(2000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                valueend = CType(.Cells(20000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
                 For iv = valuestart To valueend
                     Dim tmpTypeValue As String = CType(.Cells(iv, typeCol), Excel.Range).Value
                     Select Case tmpTypeValue
@@ -25465,6 +25476,8 @@ Public Module agm2
                                 costsStart = iv
                             End If
                             anzCosts += 1
+                        Case Else
+
                     End Select
                 Next
             End With
@@ -25472,13 +25485,23 @@ Public Module agm2
             With wsname
                 ' costRange = awin_Kosten_Definition
                 Dim costRange As Excel.Range
-                With wsname
-                    valueend = costsStart + anzCosts - 1
-                    costRange = .Range(.Cells(costsStart, nameCol), .Cells(valueend, nameCol))
-                End With
+                Try
+                    With wsname
+                        valueend = costsStart + anzCosts - 1
+                        costRange = .Range(.Cells(costsStart, nameCol), .Cells(valueend, nameCol))
+                    End With
+                Catch ex As Exception
+                    costRange = Nothing
+                End Try
 
-
-                If Not IsNothing(costRange) Then
+                If IsNothing(costRange) Then
+                    If anzCosts > 0 Then
+                        errmsg = "Range <awin_Kosten_Definition> not defined - exit ..."
+                        outputCollection.Add(errmsg)
+                        kostendefinitionen = New clsKostenarten
+                        Exit Sub
+                    End If
+                Else
                     Dim anzZeilen As Integer = costRange.Rows.Count
                     Dim c As Excel.Range
 
@@ -25505,12 +25528,7 @@ Public Module agm2
                         End If
 
                     Next
-                Else
-                    errmsg = "Range <awin_Kosten_Definition> not defined - exit ..."
-                    outputCollection.Add(errmsg)
-                    kostendefinitionen = New clsKostenarten
                 End If
-
 
             End With
 

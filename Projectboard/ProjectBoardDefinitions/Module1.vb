@@ -244,6 +244,11 @@ Public Module Module1
     Public visboFarbeYellow As Integer = RGB(255, 197, 13)
     Public visboFarbeRed As Integer = RGB(255, 0, 0)
 
+    ' ur:20210426: Konstanten für die VP-Properties mit Typ "System"
+    Public Const vp_strategicFit = "_stratigicFit"
+    Public Const vp_risk = "_risk"
+    Public Const vp_businessUnit = "_businessUnit"
+
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
     Public Const rootPhaseNameDB As String = "0"
@@ -5126,6 +5131,8 @@ Public Module Module1
                         End If
                         If Not IsNothing(vName) Then
                             .Tags.Add("VNM", vName)
+                        Else
+                            .Tags.Add("VNM", "")
                         End If
 
                         If .Tags.Item("VPID").Length > 0 Then

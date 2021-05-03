@@ -36,13 +36,7 @@ Public Class Request
     Private VCs As New List(Of clsVC)
 
     Private VRScache As New clsCache
-    ' hierin werden  alle Visbo-Projects und 
-    ' die vom Server bereits angeforderten VisboProjectsVersionsgecacht
-    '
-    ' Private VPs As New SortedList(Of String, clsVP)
-    '                                     vpid                  vname    timestamp-Liste, projectshort
-    ' Private VPvCache As New SortedList(Of String, SortedList(Of String, clstest))
-    ' Private VPvCache As New clsCache
+
 
 
     Private aktUser As clsUserReg = Nothing
@@ -1898,7 +1892,8 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                             ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal variantName As String = noVariantName,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
@@ -2038,7 +2033,9 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                                 ByVal variantName As String,
+                                                                 ByVal vpid As String,
                                                                  ByRef timestamp As Date,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -2056,11 +2053,17 @@ Public Class Request
                 vpid = vp._id
             End If
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName, True)
 
             If err.errorCode = 200 Then
-                timestamp = listOfPortfolios.First.Key.ToLocalTime
-                result = clsVPf2clsConstellation(listOfPortfolios.First.Value)
+
+                If listOfPortfolios.Count > 0 Then
+                    timestamp = listOfPortfolios.First.Key.ToLocalTime
+                    result = clsVPf2clsConstellation(listOfPortfolios.First.Value)
+                Else
+                    result = Nothing
+                End If
+
             End If
 
         Catch ex As Exception
