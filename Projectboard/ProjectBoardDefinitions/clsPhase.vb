@@ -345,27 +345,10 @@ Public Class clsPhase
 
                                 If Me.shortName = vPhase.shortName And
                                         Me.originalName = vPhase.originalName And
-                                        Me.verantwortlich = vPhase.verantwortlich Then
+                                        Me.verantwortlich = vPhase.verantwortlich And
+                                        Me.offset = vPhase.offset Then
 
-                                    ' tk 25.11.19 appearance und individualColor müssen nicht gecheckt werden
-
-                                    If Me.earliestStart = vPhase.earliestStart And
-                                           Me.latestStart = vPhase.latestStart And
-                                           Me.offset = vPhase.offset Then
-
-                                        stillOK = True
-
-                                    End If
-
-                                    'If Me.appearance = vPhase.appearance And
-                                    '        Me.individualColor = vPhase.individualColor And
-                                    '        Me.earliestStart = vPhase.earliestStart And
-                                    '        Me.latestStart = vPhase.latestStart And
-                                    '        Me.offset = vPhase.offset Then
-
-                                    '    stillOK = True
-
-                                    'End If
+                                    stillOK = True
 
                                 End If
 
