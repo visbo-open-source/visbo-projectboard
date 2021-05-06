@@ -695,6 +695,89 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' erzeugt ein einzelnes Projekt aus einer Vorlage und speichert dieses in der DB
+    ''' ein Protfolio Manager speichert immer mit entsprechendem Varianten-Name 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="templateName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endeDate"></param>
+    ''' <param name="budget"></param>
+    ''' <param name="sfit"></param>
+    ''' <param name="risk"></param>
+    ''' <param name="rendite"></param>
+    ''' <param name="description"></param>
+    ''' <param name="kdNr"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function createProjectFromTemplate(ByVal pname As String,
+                                             ByVal templateName As String,
+                                              ByVal startDate As Date,
+                                              ByVal endeDate As Date,
+                                              ByVal budget As Double,
+                                              ByVal sfit As Double,
+                                              ByVal risk As Double,
+                                              ByVal rendite As Double,
+                                              ByVal description As String,
+                                              ByVal kdNr As String,
+                                     ByRef err As clsErrorCodeMsg) As clsProjekt
+
+        Dim result As New clsProjekt
+        Try
+
+            ' tk 5.2.19 automatisch setzen des actualdatauntil, wenn denn der Modus AutoSet gesetzt ist 
+            'If awinSettings.autoSetActualDataDate Then
+            '    projekt.actualDataUntil = projekt.timeStamp.AddDays(-1 * (projekt.timeStamp.Day + 1)).Date.AddHours(12)
+            'End If
+
+
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).createProjectFromTemplate(pname, templateName, startDate, endeDate, budget, sfit, risk, rendite, description, kdNr, uname, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+
+                                    result = CType(DBAcc, WebServerAcc.Request).createProjectFromTemplate(pname, templateName, startDate, endeDate, budget, sfit, risk, rendite, description, kdNr, uname, err)
+
+                                End If
+
+                            Case 409 ' Conflict
+
+                                Call MsgBox(err.errorMsg)
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = Nothing
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("createProjectFromTemplate:" & ex.Message)
+        End Try
+
+        createProjectFromTemplate = result
+    End Function
+
 
 
     ''' <summary>
