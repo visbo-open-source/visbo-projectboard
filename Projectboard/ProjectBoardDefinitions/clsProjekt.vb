@@ -67,6 +67,21 @@ Public Class clsProjekt
         End Set
     End Property
 
+    Public Overrides ReadOnly Property farbe() As Integer
+        Get
+            farbe = RGB(10, 10, 10)
+            If Not IsNothing(Me.businessUnit) Then
+                If Me.businessUnit <> "" Then
+                    For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                        If kvp.Value.name = Me.businessUnit Then
+                            farbe = CInt(kvp.Value.color)
+                        End If
+                    Next
+                End If
+            End If
+        End Get
+    End Property
+
     ' tk ergänzt am 9.6.18 actualDataUntil 
     ' gibt an, bis zu welchem Monat einschließlich die Ressourcen und Kostenbedarfs-Werte den Ist-Daten aus der Zeiterfassung entsprechen 
     Private _actualDataUntil As Date
@@ -2947,7 +2962,7 @@ Public Class clsProjekt
 
         With newproject
 
-            .farbe = farbe
+            '.farbe = farbe
             .Schrift = Schrift
             .Schriftfarbe = Schriftfarbe
             .VorlagenName = VorlagenName
@@ -3362,7 +3377,7 @@ Public Class clsProjekt
             Try
                 With newproj
                     .name = Me.name
-                    .farbe = Me.farbe
+                    '.farbe = Me.farbe
                     .Schrift = Schrift
                     .Schriftfarbe = Schriftfarbe
                     .VorlagenName = VorlagenName
@@ -4020,7 +4035,7 @@ Public Class clsProjekt
         ' jetzt werden die Attribute neu gesetzt ...
         With newProj
 
-            .farbe = Me.farbe
+            '.farbe = Me.farbe
             .Schrift = Me.Schrift
             .Schriftfarbe = Me.Schriftfarbe
             .VorlagenName = ""

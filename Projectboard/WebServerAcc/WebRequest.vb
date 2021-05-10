@@ -1039,6 +1039,28 @@ Public Class Request
                     VP.kundennummer = ""
                 End If
 
+                ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
+                If Not IsNothing(projekt.businessUnit) Then
+                    Dim bu As New clsCustomFieldStr
+                    bu.type = "System"
+                    bu.name = vp_businessUnit
+                    bu.value = projekt.businessUnit
+                    VP.customFieldString.Add(bu)
+                End If
+                If Not IsNothing(projekt.StrategicFit) Then
+                    Dim sfit As New clsCustomFieldDbl
+                    sfit.type = "System"
+                    sfit.name = vp_strategicFit
+                    sfit.value = projekt.StrategicFit
+                    VP.customFieldDouble.Add(sfit)
+                End If
+                If Not IsNothing(projekt.Risiko) Then
+                    Dim risiko As New clsCustomFieldDbl
+                    risiko.type = "System"
+                    risiko.name = vp_risk
+                    risiko.value = projekt.Risiko
+                    VP.customFieldDouble.Add(risiko)
+                End If
 
                 vpErg = POSTOneVP(VP, err)
 

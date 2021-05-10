@@ -27,6 +27,8 @@
         _vpType = 0
         _vpPublic = False
         '_users = New List(Of clsUser)
+        _customFieldDouble = New List(Of clsCustomFieldDbl)
+        _customFieldString = New List(Of clsCustomFieldStr)
         _updatedAt = Date.MinValue.ToString
         _createdAt = Date.MinValue.ToString
         _lock = New List(Of clsVPLock)
