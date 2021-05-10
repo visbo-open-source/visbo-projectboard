@@ -245,7 +245,7 @@ Public Module Module1
     Public visboFarbeRed As Integer = RGB(255, 0, 0)
 
     ' ur:20210426: Konstanten für die VP-Properties mit Typ "System"
-    Public Const vp_strategicFit = "_stratigicFit"
+    Public Const vp_strategicFit = "_strategicFit"
     Public Const vp_risk = "_risk"
     Public Const vp_businessUnit = "_businessUnit"
 

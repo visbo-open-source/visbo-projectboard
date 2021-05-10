@@ -216,7 +216,7 @@ Public Class clsProjektDB
             .latestStart = Me.latestStart
             .Status = Me.status
 
-            .farbe = Me.farbe
+            '.farbe = Me.farbe
             .Schrift = Me.Schrift
 
             .volume = Me.volumen
@@ -238,7 +238,7 @@ Public Class clsProjektDB
                     Dim pvorlage As clsProjektvorlage = Projektvorlagen.getProject(.VorlagenName)
                     .Schrift = pvorlage.Schrift
                     .Schriftfarbe = pvorlage.Schriftfarbe
-                    .farbe = pvorlage.farbe
+                    '.farbe = pvorlage.farbe
                 End If
             Catch ex As Exception
 

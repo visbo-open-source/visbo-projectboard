@@ -1096,7 +1096,7 @@
 
 
     Private _farbe As Integer = RGB(220, 220, 220)
-    Public Property farbe() As Integer
+    Public Overridable ReadOnly Property farbe() As Integer
         Get
             If Not IsNothing(_farbe) Then
                 farbe = _farbe
@@ -1104,19 +1104,19 @@
                 farbe = 10
             End If
         End Get
-        Set(value As Integer)
-            If Not IsNothing(value) Then
-                Try
-                    _farbe = CInt(value)
-                Catch ex As Exception
-                    _farbe = 10
-                End Try
+        'Set(value As Integer)
+        '    If Not IsNothing(value) Then
+        '        Try
+        '            _farbe = CInt(value)
+        '        Catch ex As Exception
+        '            _farbe = 10
+        '        End Try
 
-            Else
-                _farbe = 10
-            End If
+        '    Else
+        '        _farbe = 10
+        '    End If
 
-        End Set
+        'End Set
     End Property
 
     Private _Schrift As Integer = 10
@@ -1206,7 +1206,7 @@
     Public Overridable Sub copyAttrTo(ByRef newproject As clsProjekt)
 
         With newproject
-            .farbe = Me.farbe
+            '.farbe = Me.farbe
             .Schrift = Me.Schrift
             .Schriftfarbe = Me.Schriftfarbe
             .VorlagenName = Me.VorlagenName

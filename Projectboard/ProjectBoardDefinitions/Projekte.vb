@@ -13644,7 +13644,7 @@ Public Module Projekte
                 projVorlage.VorlagenName = myproject.name
                 projVorlage.Schrift = myproject.Schrift
                 projVorlage.Schriftfarbe = myproject.Schriftfarbe
-                projVorlage.farbe = myproject.farbe
+                'projVorlage.farbe = myproject.farbe
                 projVorlage.earliestStart = -6
                 projVorlage.latestStart = 6
                 projVorlage.Erloes = myproject.Erloes

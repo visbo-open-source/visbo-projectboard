@@ -345,27 +345,10 @@ Public Class clsPhase
 
                                 If Me.shortName = vPhase.shortName And
                                         Me.originalName = vPhase.originalName And
-                                        Me.verantwortlich = vPhase.verantwortlich Then
+                                        Me.verantwortlich = vPhase.verantwortlich And
+                                        Me.offset = vPhase.offset Then
 
-                                    ' tk 25.11.19 appearance und individualColor müssen nicht gecheckt werden
-
-                                    If Me.earliestStart = vPhase.earliestStart And
-                                           Me.latestStart = vPhase.latestStart And
-                                           Me.offset = vPhase.offset Then
-
-                                        stillOK = True
-
-                                    End If
-
-                                    'If Me.appearance = vPhase.appearance And
-                                    '        Me.individualColor = vPhase.individualColor And
-                                    '        Me.earliestStart = vPhase.earliestStart And
-                                    '        Me.latestStart = vPhase.latestStart And
-                                    '        Me.offset = vPhase.offset Then
-
-                                    '    stillOK = True
-
-                                    'End If
+                                    stillOK = True
 
                                 End If
 
@@ -2568,62 +2551,51 @@ Public Class clsPhase
     ''' <param name="role"></param>
     ''' <remarks></remarks>
     Public Sub addRole(ByVal role As clsRolle)
+        ' ergänzt, weil das sonst auf Throw Exception führt , wenn role.uid = 0 oder role nicht existiert
+        If Not IsNothing(role) Then
+            If RoleDefinitions.containsUid(role.uid) Then
+                'sollte nach dem 8.7.16 aktiviert werden 
+                'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
+                Dim roleName As String = role.name
+                Dim teamID As Integer = role.teamID
 
-        'sollte nach dem 8.7.16 aktiviert werden 
-        'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
-        Dim roleName As String = role.name
-        Dim teamID As Integer = role.teamID
+                Dim returnValue As clsRolle = Nothing
+                Dim ix As Integer = 0
+                Dim found As Boolean = False
+                Dim oldXWerte() As Double
+                Dim newXwerte() As Double
 
-        Dim returnValue As clsRolle = Nothing
-        Dim ix As Integer = 0
-        Dim found As Boolean = False
-        Dim oldXWerte() As Double
-        Dim newXwerte() As Double
+                While Not found And ix <= _allRoles.Count - 1
+                    If _allRoles.Item(ix).name = roleName And _allRoles.Item(ix).teamID = teamID Then
+                        found = True
+                    Else
+                        ix = ix + 1
+                    End If
+                End While
 
-        While Not found And ix <= _allRoles.Count - 1
-            If _allRoles.Item(ix).name = roleName And _allRoles.Item(ix).teamID = teamID Then
-                found = True
-            Else
-                ix = ix + 1
+                If found Then
+                    oldXWerte = _allRoles.Item(ix).Xwerte()
+                    newXwerte = role.Xwerte
+                    If oldXWerte.Length = newXwerte.Length Then
+                        ' hier dann aufsummieren 
+                        For i As Integer = 0 To oldXWerte.Length - 1
+                            newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                        Next
+
+                        _allRoles.Item(ix).Xwerte() = newXwerte
+
+                    Else
+                        ' darf eigentlich nicht sein 
+                        ' Test: 
+                        Call MsgBox("Fehler in Rollen-Zuordnung")
+                        ' es wird dann einfach gar nichts gemacht 
+                    End If
+                Else
+                    _allRoles.Add(role)
+                End If
+
             End If
-        End While
-
-        If found Then
-            oldXWerte = _allRoles.Item(ix).Xwerte()
-            newXwerte = role.Xwerte
-            If oldXWerte.Length = newXwerte.Length Then
-                ' hier dann aufsummieren 
-                For i As Integer = 0 To oldXWerte.Length - 1
-                    newXwerte(i) = newXwerte(i) + oldXWerte(i)
-                Next
-
-                _allRoles.Item(ix).Xwerte() = newXwerte
-
-            Else
-                ' darf eigentlich nicht sein 
-                ' Test: 
-                Call MsgBox("Fehler in Rollen-Zuordnung")
-                ' es wird dann einfach gar nichts gemacht 
-            End If
-        Else
-            _allRoles.Add(role)
         End If
-
-        '' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        'Try
-        '    Me.parentProject.rcLists.addRP(role.uid, Me.nameID, teamID)
-        'Catch ex As Exception
-
-        'End Try
-
-
-        ' '' Code vor dem 8.7.16
-        ''If Not _allRoles.Contains(role) Then
-        ''    _allRoles.Add(role)
-        ''Else
-        ''    'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
-        ''End If
-
 
     End Sub
 

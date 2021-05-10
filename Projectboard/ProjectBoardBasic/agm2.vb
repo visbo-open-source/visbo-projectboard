@@ -3013,7 +3013,7 @@ Public Module agm2
                         Try
 
                             If isVorlage Then
-                                hproj.farbe = projektFarbe
+                                'hproj.farbe = projektFarbe
                                 hproj.Schrift = schriftGroesse
                                 hproj.Schriftfarbe = schriftfarbe
                             Else
@@ -3021,7 +3021,7 @@ Public Module agm2
                                 If Projektvorlagen.Contains(vorlagenName) Then
                                     vproj = Projektvorlagen.getProject(vorlagenName)
 
-                                    hproj.farbe = vproj.farbe
+                                    'hproj.farbe = vproj.farbe
                                     hproj.Schrift = vproj.Schrift
                                     hproj.Schriftfarbe = vproj.Schriftfarbe
                                     hproj.earliestStart = vproj.earliestStart
@@ -3032,11 +3032,11 @@ Public Module agm2
                                 Else
                                     'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
                                     'hproj.farbe = awinSettings.AmpelNichtBewertet
-                                    Try
-                                        hproj.farbe = CInt(iProjektFarbe)
-                                    Catch ex As Exception
-                                        hproj.farbe = awinSettings.AmpelNichtBewertet
-                                    End Try
+                                    'Try
+                                    '    'hproj.farbe = CInt(iProjektFarbe)
+                                    'Catch ex As Exception
+                                    '    'hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    'End Try
                                     hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                                     hproj.Schriftfarbe = RGB(10, 10, 10)
                                     hproj.earliestStart = 0
@@ -3722,7 +3722,7 @@ Public Module agm2
                         vproj = Projektvorlagen.getProject(vorlagenName)
 
                         hproj.VorlagenName = vorlagenName
-                        hproj.farbe = vproj.farbe
+                        'hproj.farbe = vproj.farbe
                         hproj.Schrift = vproj.Schrift
                         hproj.Schriftfarbe = vproj.Schriftfarbe
                         hproj.earliestStart = vproj.earliestStart
@@ -3733,7 +3733,7 @@ Public Module agm2
                     Else
                         'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
                         hproj.VorlagenName = ""
-                        hproj.farbe = awinSettings.AmpelNichtBewertet
+                        'hproj.farbe = awinSettings.AmpelNichtBewertet
                         hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                         hproj.Schriftfarbe = RGB(10, 10, 10)
                         hproj.earliestStart = 0
@@ -5604,7 +5604,7 @@ Public Module agm2
 
                     ' Projekt-Name auslesen
                     hproj.name = makeValidProjectName(CType(.Range("Projekt_Name").Value, String))
-                    hproj.farbe = .Range("Projekt_Name").Interior.Color
+                    'hproj.farbe = .Range("Projekt_Name").Interior.Color
                     hproj.Schriftfarbe = .Range("Projekt_Name").Font.Color
                     hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)
 
@@ -22259,7 +22259,7 @@ Public Module agm2
                         vproj = Projektvorlagen.getProject(vorlagenName)
 
 
-                        hproj.farbe = vproj.farbe
+                        'hproj.farbe = vproj.farbe
                         hproj.Schrift = vproj.Schrift
                         hproj.Schriftfarbe = vproj.Schriftfarbe
                         hproj.name = ""
@@ -25230,7 +25230,8 @@ Public Module agm2
                                             projVorlage.VorlagenName = hproj.name
                                             projVorlage.Schrift = hproj.Schrift
                                             projVorlage.Schriftfarbe = hproj.Schriftfarbe
-                                            projVorlage.farbe = hproj.farbe
+                                            ' Farbe is now defined via Business Unit , or take Default Color 
+                                            'projVorlage.farbe = hproj.farbe
                                             projVorlage.earliestStart = -6
                                             projVorlage.latestStart = 6
                                             projVorlage.AllPhases = hproj.AllPhases
@@ -25318,7 +25319,8 @@ Public Module agm2
         projVorlage.VorlagenName = hproj.name
         projVorlage.Schrift = hproj.Schrift
         projVorlage.Schriftfarbe = hproj.Schriftfarbe
-        projVorlage.farbe = hproj.farbe
+        ' tk farbe is now defined via business Unit
+        ' projVorlage.farbe = hproj.farbe
         projVorlage.earliestStart = -6
         projVorlage.latestStart = 6
         projVorlage.Erloes = hproj.Erloes
