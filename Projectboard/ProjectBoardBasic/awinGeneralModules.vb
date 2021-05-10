@@ -1728,7 +1728,7 @@ Public Module awinGeneralModules
 
                 If fileFrom3rdParty Then
 
-                    .farbe = cproj.farbe
+                    '.farbe = cproj.farbe
                     .Schrift = cproj.Schrift
                     .Schriftfarbe = cproj.Schriftfarbe
 

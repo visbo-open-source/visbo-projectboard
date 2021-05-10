@@ -1017,7 +1017,7 @@ Public Module BMWItOModul
                         Try
 
                             If isVorlage Then
-                                hproj.farbe = projektFarbe
+                                'hproj.farbe = projektFarbe
                                 hproj.Schrift = schriftGroesse
                                 hproj.Schriftfarbe = schriftfarbe
                             Else
@@ -1025,7 +1025,7 @@ Public Module BMWItOModul
                                 If Projektvorlagen.Contains(vorlagenName) Then
                                     vproj = Projektvorlagen.getProject(vorlagenName)
 
-                                    hproj.farbe = vproj.farbe
+                                    'hproj.farbe = vproj.farbe
                                     hproj.Schrift = vproj.Schrift
                                     hproj.Schriftfarbe = vproj.Schriftfarbe
                                     hproj.earliestStart = vproj.earliestStart
@@ -1035,7 +1035,7 @@ Public Module BMWItOModul
                                     '    vproj = Projektvorlagen.getProject("unknown")
                                 Else
                                     'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
-                                    hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    'hproj.farbe = awinSettings.AmpelNichtBewertet
                                     hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                                     hproj.Schriftfarbe = RGB(10, 10, 10)
                                     hproj.earliestStart = 0

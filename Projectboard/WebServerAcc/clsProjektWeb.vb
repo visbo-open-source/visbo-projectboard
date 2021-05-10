@@ -292,7 +292,7 @@ Public Class clsProjektWeb
             .latestStart = Me.latestStart
             .Status = Me.status
 
-            .farbe = Me.farbe
+            '.farbe = Me.farbe
             .Schrift = Me.Schrift
 
             .volume = Me.volumen
@@ -313,7 +313,7 @@ Public Class clsProjektWeb
                     Dim pvorlage As clsProjektvorlage = Projektvorlagen.getProject(.VorlagenName)
                     .Schrift = pvorlage.Schrift
                     .Schriftfarbe = pvorlage.Schriftfarbe
-                    .farbe = pvorlage.farbe
+                    '.farbe = pvorlage.farbe
                 End If
             Catch ex As Exception
                 Call MsgBox(ex.Message & ": im Catch")

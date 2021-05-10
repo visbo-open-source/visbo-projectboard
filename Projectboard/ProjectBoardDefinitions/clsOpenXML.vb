@@ -175,16 +175,16 @@ Public Class clsOpenXML
                     pvorlage = Projektvorlagen.getProject(0)
                     .Schrift = pvorlage.Schrift
                     .Schriftfarbe = pvorlage.Schriftfarbe
-                    .farbe = pvorlage.farbe
+                    '.farbe = pvorlage.farbe
                 End If
                 .Schrift = pvorlage.Schrift
                 .Schriftfarbe = pvorlage.Schriftfarbe
-                .farbe = pvorlage.farbe
+                '.farbe = pvorlage.farbe
 
             Catch ex As Exception
                 .Schrift = 10
                 .Schriftfarbe = RGB(0, 0, 0)
-                .farbe = RGB(110, 110, 100)
+                '.farbe = RGB(110, 110, 100)
             End Try
 
 
