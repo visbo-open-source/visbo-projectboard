@@ -17,10 +17,16 @@ Public Class Tabelle2
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
 
-        Application.DisplayFormulaBar = False
+
 
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
+
+        Try
+            Application.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
 
         Dim meWS As Excel.Worksheet =
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
@@ -84,8 +90,6 @@ Public Class Tabelle2
             If awinSettings.meEnableSorting Then
 
                 With CType(meWS, Excel.Worksheet)
-                    ' braucht man nicht mehr - ist schon gemacht 
-                    '.Unprotect("x")
                     .EnableSelection = XlEnableSelection.xlNoRestrictions
                 End With
             Else
@@ -1904,59 +1908,19 @@ Public Class Tabelle2
     End Sub
     Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
 
-        appInstance.ActiveWindow.SplitColumn = 0
-        appInstance.ActiveWindow.SplitRow = 0
-        ' Achtung: durch das Wechseln der Windows werden auch die ActiveSheets gewechselt; allerdings werden in diesem Fall dann die 
-        ' Deactivate Events nicht aufgerufen. Deswegen sollte diese Aktionen alle in separaten Methoden sein  ... 
-        ' das ProjInfo Formular löschen, sofern es angezeigt wird 
+        Try
+            appInstance.ActiveWindow.SplitColumn = 0
+        Catch ex As Exception
 
-        ' tk, 3.4.18 wird ohnehin nicht mehr aufgerufen ....
-        ' wird jetzt in backtoProjectBoard , performDeactivateActionsFor.. gemacht 
-        ''If Not IsNothing(formProjectInfo1) Then
-        ''    formProjectInfo1.Close()
-        ''End If
+        End Try
 
-        ''Dim meWS As Excel.Worksheet = _
-        ''    CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-        ''    .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        Try
+            appInstance.ActiveWindow.SplitRow = 0
+        Catch ex As Exception
 
-        ''appInstance.EnableEvents = False
-
-        '' jetzt den Schutz aufheben , falls einer definiert ist 
-        ''If meWS.ProtectContents Then
-        ''    meWS.Unprotect(Password:="x")
-        ''End If
-
-        ''Try
-
-        ''    ' jetzt die Spalten Werte merken 
-        ''    Try
-        ''        massColFontValues(0, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
-        ''        For ik As Integer = 1 To 5
-        ''            massColFontValues(0, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
-        ''        Next
-        ''    Catch ex As Exception
-
-        ''    End Try
+        End Try
 
 
-        ''    ' jetzt die Autofilter de-aktivieren ... 
-        ''    If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-        ''        CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-        ''    End If
-
-        ''    ' jetzt alles löschen 
-        ''    Try
-        ''        meWS.UsedRange.Clear()
-        ''    Catch ex As Exception
-
-        ''    End Try
-
-        ''Catch ex As Exception
-        ''    Call MsgBox("Fehler beim Filter zurücksetzen " & vbLf & ex.Message)
-        ''End Try
-
-        ''appInstance.EnableEvents = True
 
     End Sub
 

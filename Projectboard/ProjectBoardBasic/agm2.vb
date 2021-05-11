@@ -19932,17 +19932,6 @@ Public Module agm2
                             Try
                                 CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
 
-                                'If cfType = 0 Then
-                                '    ' String
-                                '    CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
-                                'ElseIf cfType = 1 Then
-                                '    ' Double
-                                '    CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
-                                'ElseIf cfType = 2 Then
-                                '    ' boolean 
-                                '    CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
-                                'End If
-
                             Catch ex As Exception
 
                             End Try
@@ -20047,9 +20036,6 @@ Public Module agm2
                             CType(.Cells(zeile, 7), Excel.Range).NumberFormat = "#,##0.00"
 
                             CType(.Cells(zeile, 8), Excel.Range).Value = hproj.leadPerson
-                            ' das ist beim PL
-                            'CType(.Cells(zeile, 9), Excel.Range).Value = hproj.ampelStatus
-                            'CType(.Cells(zeile, 10), Excel.Range).Value = hproj.ampelErlaeuterung
                             CType(.Cells(zeile, 9), Excel.Range).Value = hproj.StrategicFit
                             CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.##"
 
@@ -20125,26 +20111,65 @@ Public Module agm2
                         'kompletteZeile.Interior.Color = XlRgbColor.rgbLightGray
 
                     Else
-                        Dim protectArea As Excel.Range = Nothing
-                        Dim editArea As Excel.Range = Nothing
+                        'Dim protectArea As Excel.Range = Nothing
+                        'Dim editArea As Excel.Range = Nothing
 
                         With currentWS
 
                             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
                                 myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
-                                editArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, anzahlSpalten)), Excel.Range)
-                                protectArea = CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Excel.Range)
-                                editArea.Locked = False
-                                protectArea.Locked = True
-                                'protectArea.Interior.Color = XlRgbColor.rgbLightGray
+
+                                ' Project Number darf vom OA verändert werden 
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                    CType(.Cells(zeile, 1), Excel.Range).Locked = True
+                                Else
+                                    CType(.Cells(zeile, 1), Excel.Range).Locked = False
+                                End If
+
+                                ' Name, Variant-Name und Beschreibung der Variante darf nicht verändert werden  
+                                CType(.Cells(zeile, 2), Excel.Range).Locked = True
+                                CType(.Cells(zeile, 3), Excel.Range).Locked = True
+                                CType(.Cells(zeile, 4), Excel.Range).Locked = True
+
+                                ' Business Unit darf nicht verändert werden 
+                                CType(.Cells(zeile, 5), Excel.Range).Locked = True
+
+                                ' ziele, budget, Verantwortlich darf verändert werden 
+                                CType(.Cells(zeile, 6), Excel.Range).Locked = False
+
+                                ' Budget darf vom OA und PMO verändert werden 
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Locked = False
+                                Else
+                                    CType(.Cells(zeile, 7), Excel.Range).Locked = False
+                                End If
+
+                                CType(.Cells(zeile, 8), Excel.Range).Locked = False
+
+
+                                ' Strategie und Risiko darf nicht verändert werden 
+                                CType(.Cells(zeile, 9), Excel.Range).Locked = True
+                                CType(.Cells(zeile, 10), Excel.Range).Locked = True
+
 
                             Else
-                                'protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 3)), Excel.Range)
-                                protectArea = CType(.Rows(zeile), Excel.Range)
-                                editArea = CType(.Range(.Cells(zeile, 4), .Cells(zeile, 6)), Excel.Range)
-                                protectArea.Locked = True
-                                'protectArea.Interior.Color = XlRgbColor.rgbLightGray
-                                editArea.Locked = False
+
+                                ' Project Number darf vom PL nicht verändert werden 
+                                CType(.Cells(zeile, 1), Excel.Range).Locked = True
+                                ' Name, Variant-Name und Beschreibung der Variante darf nicht verändert werden  
+                                CType(.Cells(zeile, 2), Excel.Range).Locked = True
+                                CType(.Cells(zeile, 3), Excel.Range).Locked = True
+
+                                ' Ampelfarbe darf verändert werden  
+                                CType(.Cells(zeile, 4), Excel.Range).Locked = False
+
+                                ' Erläuterung Ampel 
+                                CType(.Cells(zeile, 5), Excel.Range).Locked = False
+
+                                ' Risiko Beschreibung darf verändert werden  
+                                CType(.Cells(zeile, 6), Excel.Range).Locked = False
+
+
                             End If
 
                         End With
@@ -20170,10 +20195,6 @@ Public Module agm2
                 infoBlock = CType(.Range(.Columns(1), .Columns(anzahlSpalten)), Excel.Range)
                 firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
 
-                'infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                'infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-
-
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
                 If formatsWereAlreadySet Then
                     'If massColFontValues(2, 0) > 4 Then
@@ -20185,17 +20206,6 @@ Public Module agm2
 
 
                 Else
-
-                    'Dim ersteZeile As Excel.Range = CType(currentWS.Rows(1), Excel.Range)
-                    'Try
-                    '    ersteZeile.AutoFit()
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    ' die Besonderheiten abbilden 
-                    ' BU
-                    ' Description
 
                     Try
                         ' Projekt Nummer
@@ -20254,16 +20264,6 @@ Public Module agm2
                                 '.ColumnWidth = 15
                             End With
 
-                            '' Ampel-Farbe
-                            'With CType(infoBlock.Columns(9), Excel.Range)
-                            '    .ColumnWidth = 2
-                            'End With
-
-                            '' Ampel-Erläuterung
-                            'With CType(infoBlock.Columns(10), Excel.Range)
-                            '    .ColumnWidth = 25
-                            '    .WrapText = True
-                            'End With
 
                             ' Strategic Fit 
                             With CType(infoBlock.Columns(9), Excel.Range)
@@ -20356,7 +20356,7 @@ Public Module agm2
             appInstance.EnableEvents = True
 
         Catch ex As Exception
-            Call MsgBox("Fehler in Aufbereitung Termine" & vbLf & ex.Message)
+            Call MsgBox("Fehler in Aufbereitung Attribute" & vbLf & ex.Message)
             appInstance.EnableEvents = True
         End Try
 

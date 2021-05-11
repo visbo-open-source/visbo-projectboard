@@ -148,8 +148,7 @@ Public Class clsMeilenstein
 
             Try
                 ' prüfen auf allgemeine Attribute ... 
-                ' tk 16.5.20 NAmensgleichheit reicht hier, weil ansonsten bei de rKorrekt der NameIDs ensureStableIDs eine Ungleichiet auftritt 
-                'If Me.nameID = vglMS.nameID And
+
                 If Me.name = vglMS.name And
                     Me.shortName = vglMS.shortName And
                     Me.originalName = vglMS.originalName And
