@@ -16,41 +16,51 @@ Public Class Tabelle1
 
         Try
             Application.DisplayFormulaBar = False
-
-            With Application.ActiveWindow
-
-                .DisplayWorkbookTabs = False
-                .DisplayHeadings = False
-
-
-                .SplitColumn = 0
-                .SplitRow = 1
-                'If .SplitRow = 1 Then
-                '    ' nichts tun
-                'Else
-                '    .SplitColumn = 0
-                '    .SplitRow = 1
-                'End If
-
-                '.GridlineColor = CInt(awinSettings.gridLineColor)
-                .GridlineColor = RGB(220, 220, 220)
-                a = Application.ActiveWindow.Panes.Count
-
-                .FreezePanes = True
-
-            End With
-
-
         Catch ex As Exception
-            ' nur eine Dummy Zuweisung, um ggf später hier einen Haltepunkt setzen zu können
-            Dim b As Integer = a
+
         End Try
 
-        ' nicht setzen, weil es sonst oft flackert; insbesondere beim Zurückgehen von Massen-Edit auf ProjectBoard 
-        'appInstance.ScreenUpdating = True
-        'Call awinNeuZeichnenDiagramme(2)
+        Try
+            Application.ActiveWindow.DisplayWorkbookTabs = False
+        Catch ex As Exception
 
+        End Try
 
+        Try
+            Application.ActiveWindow.DisplayHeadings = False
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Application.ActiveWindow.SplitColumn = 0
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Application.ActiveWindow.SplitRow = 1
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Application.ActiveWindow.GridlineColor = RGB(220, 220, 220)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            a = Application.ActiveWindow.Panes.Count
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Application.ActiveWindow.FreezePanes = True
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 

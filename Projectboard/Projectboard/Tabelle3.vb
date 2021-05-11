@@ -910,10 +910,24 @@ Public Class Tabelle3
 
     Private Sub Tabelle3_Deactivate() Handles Me.Deactivate
 
-        appInstance.ActiveWindow.SplitColumn = 0
-        appInstance.ActiveWindow.SplitRow = 0
+        Try
+            appInstance.ActiveWindow.SplitColumn = 0
+        Catch ex As Exception
 
-        Application.DisplayFormulaBar = False
+        End Try
+
+        Try
+            appInstance.ActiveWindow.SplitRow = 0
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Application.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 

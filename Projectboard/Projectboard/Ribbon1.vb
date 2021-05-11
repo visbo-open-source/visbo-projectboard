@@ -4631,9 +4631,14 @@ Imports System.Web
 
             ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
             appInstance.EnableEvents = True
-            If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
-                appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
-            End If
+            Try
+                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                End If
+            Catch ex As Exception
+
+            End Try
+
 
             Try
 
@@ -4672,11 +4677,21 @@ Imports System.Web
                     Else
                         Try
                             If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-                                projectboardWindows(PTwindows.mptpf).Visible = True
 
-                                With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
-                                    .Activate()
-                                End With
+                                Try
+                                    projectboardWindows(PTwindows.mptpf).Visible = True
+                                Catch ex As Exception
+                                    projectboardWindows(PTwindows.mptpf) = Nothing
+                                End Try
+
+                                Try
+                                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
+                                        .Activate()
+                                    End With
+                                Catch ex As Exception
+
+                                End Try
+
 
                             End If
                         Catch ex As Exception
@@ -4684,11 +4699,20 @@ Imports System.Web
                         End Try
                         Try
                             If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-                                projectboardWindows(PTwindows.mptpr).Visible = True
 
-                                With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
-                                    .Activate()
-                                End With
+                                Try
+                                    projectboardWindows(PTwindows.mptpr).Visible = True
+                                Catch ex As Exception
+                                    projectboardWindows(PTwindows.mptpr) = Nothing
+                                End Try
+
+                                Try
+                                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
+                                        .Activate()
+                                    End With
+                                Catch ex As Exception
+
+                                End Try
 
                             End If
                         Catch ex As Exception
@@ -4705,16 +4729,20 @@ Imports System.Web
             enableOnUpdate = True
             appInstance.EnableEvents = True
 
-            ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
-            projectboardWindows(PTwindows.mpt).Activate()
+            Try
+                ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
+                projectboardWindows(PTwindows.mpt).Activate()
+            Catch ex As Exception
 
+            End Try
 
-            ''Dim isOn As Boolean = appInstance.EnableEvents
-            ''Dim testname As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
-            ' 
-            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
-                .Activate()
-            End With
+            Try
+                With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+                    .Activate()
+                End With
+            Catch ex As Exception
+
+            End Try
 
 
 
@@ -4728,7 +4756,7 @@ Imports System.Web
                     End If
                 End If
             Catch ex As Exception
-                projectboardWindows(PTwindows.mptpr) = Nothing
+                projectboardWindows(PTwindows.mptpf) = Nothing
             End Try
 
             ' jetzt müssen alle ggf in reDrawProjects aufgeführten Projekte neu gezeichnet werden .. 
