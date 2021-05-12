@@ -12,7 +12,12 @@ Public Class Tabelle4
 
     Private Sub Tabelle4_ActivateEvent() Handles Me.ActivateEvent
         ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
-        Application.DisplayFormulaBar = True
+        Try
+            Application.DisplayFormulaBar = True
+        Catch ex As Exception
+
+        End Try
+
 
         'Dim filterRange As Excel.Range
         Dim formerEE As Boolean = Application.EnableEvents
@@ -48,10 +53,7 @@ Public Class Tabelle4
 
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                'CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                 CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
-
-
             End If
 
         Catch ex As Exception
@@ -112,9 +114,23 @@ Public Class Tabelle4
 
     Private Sub Tabelle4_Deactivate() Handles Me.Deactivate
 
-        appInstance.ActiveWindow.SplitColumn = 0
-        appInstance.ActiveWindow.SplitRow = 0
-        appInstance.DisplayFormulaBar = False
+        Try
+            appInstance.ActiveWindow.SplitColumn = 0
+        Catch ex As Exception
+
+        End Try
+        Try
+            appInstance.ActiveWindow.SplitRow = 0
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 

@@ -545,24 +545,12 @@ Public Class clsProjekt
                                 ' es soll nur auf Budget Gelichheit geprüft werden , die Verteilun g macht doch an der Stelle gar keinen Sinn .. . 
                                 ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
                                 If Me.Erloes = vProj.Erloes Then
-                                    ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
-                                    'Me.Erloes = .Erloes Then
 
-
-                                    If Me.businessUnit = vProj.businessUnit And
-                                        Me.complexity = vProj.complexity And
-                                        Me.Status = vProj.Status And
-                                        Me.StrategicFit = vProj.StrategicFit And
-                                        Me.Risiko = vProj.Risiko And
+                                    If Me.Status = vProj.Status And
                                         Me.VorlagenName = vProj.VorlagenName And
-                                        Me.volume = vProj.volume And
                                         Me.leadPerson = vProj.leadPerson Then
 
                                         stillOK = True
-
-                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
-                                        'Me.earliestStartDate = .earliestStartDate And _
-                                        'Me.latestStartDate = .latestStartDate And _
 
                                     End If
 
