@@ -548,6 +548,7 @@ Public Class clsProjekt
                                     ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
                                     'Me.Erloes = .Erloes Then
 
+
                                     If Me.businessUnit = vProj.businessUnit And
                                         Me.complexity = vProj.complexity And
                                         Me.Status = vProj.Status And
