@@ -72,7 +72,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="mongoDBURL" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://staging.visbo.net/api</Value>
+      <Value Profile="(Default)">https://my.visbo.net/api</Value>
     </Setting>
     <Setting Name="VISBOServer" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -84,7 +84,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\Test Data staging\</Value>
+      <Value Profile="(Default)">C:\VISBO\VISBO Config Data\</Value>
     </Setting>
   </Settings>
 </SettingsFile>
