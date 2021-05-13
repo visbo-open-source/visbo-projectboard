@@ -3602,6 +3602,13 @@ Imports System.Web
                     tmpLabel = "Create Projects from list (customized)"
                 End If
 
+            Case "PT4G1B18" 'Update Projekte gemäß Konfiguration
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Update Projekte aus Liste (konfiguriert)"
+                Else
+                    tmpLabel = "Update Projects from list (customized)"
+                End If
+
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export"
@@ -9020,7 +9027,7 @@ Imports System.Web
                     dateiName = listofFiles.Item(i).ToString
 
 
-                    listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection)
+                    listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, isUpdate:=True)
 
                     If listofArchivAllg.Count > 0 Then
                         Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))

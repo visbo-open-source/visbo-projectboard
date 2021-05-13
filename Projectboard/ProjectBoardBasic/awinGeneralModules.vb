@@ -3532,38 +3532,59 @@ Public Module awinGeneralModules
                                               ByVal Optional kdNr As String = "") As clsProjekt
 
         Dim err As New clsErrorCodeMsg
-
-        Dim key As String = calcProjektKey(pName, vName)
         Dim hproj As clsProjekt = Nothing
-        Try
-            hproj = projektliste.getProject(key)
-            ' wenn es noch nicht geladen ist, muss das Projekt aus der Datenbank geholt werden ..
 
-            ' stimmt der TimeStamp 
-            If Not IsNothing(hproj) Then
-                If hproj.timeStamp >= storedAt Then
-                    hproj = Nothing
+        If pName = "" And kdNr <> "" Then
+            Try
+                If projektliste.Count > 0 Then
+                    hproj = projektliste.getProjectByKDNr(kdNr)
                 End If
-            End If
 
-            If IsNothing(hproj) Then
+                If IsNothing(hproj) Then
+                    Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(kdNr, err)
+                    If nameCollection.Count > 0 Then
+                        Dim newPname As String = CStr(nameCollection.Item(1))
+                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, "", storedAt, err)
+                    End If
+                End If
 
-                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
-                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAt, err)
-                Else
-                    ' jetzt soll versucht werden, das Projekt über die Kunden-Nummer zu bestimmen, sofern die Kunden-Nummer angegeben wurde 
-                    If kdNr <> "" Then
-                        Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(kdNr, err)
-                        If nameCollection.Count > 0 Then
-                            Dim newPname As String = CStr(nameCollection.Item(1))
-                            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, "", storedAt, err)
+            Catch ex As Exception
+
+            End Try
+        Else
+            Dim key As String = calcProjektKey(pName, vName)
+
+            Try
+                hproj = projektliste.getProject(key)
+                ' wenn es noch nicht geladen ist, muss das Projekt aus der Datenbank geholt werden ..
+
+                ' stimmt der TimeStamp 
+                If Not IsNothing(hproj) Then
+                    If hproj.timeStamp >= storedAt Then
+                        hproj = Nothing
+                    End If
+                End If
+
+                If IsNothing(hproj) Then
+
+                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
+                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAt, err)
+                    Else
+                        ' jetzt soll versucht werden, das Projekt über die Kunden-Nummer zu bestimmen, sofern die Kunden-Nummer angegeben wurde 
+                        If kdNr <> "" Then
+                            Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(kdNr, err)
+                            If nameCollection.Count > 0 Then
+                                Dim newPname As String = CStr(nameCollection.Item(1))
+                                hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, "", storedAt, err)
+                            End If
                         End If
                     End If
                 End If
-            End If
-        Catch ex As Exception
+            Catch ex As Exception
 
-        End Try
+            End Try
+        End If
+
 
         getProjektFromSessionOrDB = hproj
 
