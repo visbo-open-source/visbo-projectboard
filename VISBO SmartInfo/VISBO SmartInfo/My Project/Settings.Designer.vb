@@ -377,7 +377,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\Instart\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data\")>  _
     Public Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)

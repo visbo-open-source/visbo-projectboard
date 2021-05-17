@@ -3416,6 +3416,16 @@ Public Class frmProjPortfolioAdmin
                         If Not IsNothing(selProjectAsTemplate) Then
                             Exit For
                         End If
+                        ' checken, ob PMO, dann kann auch Projekt aus PFV-variante erzeugt werden
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            'check if load "pfv"-variant
+                            variantName = "pfv"
+                            ' checken, ob es existiert, sonst weitermachen 
+                            selProjectAsTemplate = AlleProjekte.getProject(pname, variantName)
+                            If Not IsNothing(selProjectAsTemplate) Then
+                                Exit For
+                            End If
+                        End If
 
                     End If
                 Next
