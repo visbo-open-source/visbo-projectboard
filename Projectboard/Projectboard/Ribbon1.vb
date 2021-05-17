@@ -108,7 +108,7 @@ Imports System.Web
         Dim dbPortfolioNames As New SortedList(Of String, String)
         Dim constellationsToDo As New clsConstellations
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Dim returnValue As DialogResult
 
@@ -552,7 +552,7 @@ Imports System.Web
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -5946,7 +5946,7 @@ Imports System.Web
         Dim getInventurImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -6239,7 +6239,7 @@ Imports System.Web
 
         Dim getScenarioImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -6573,7 +6573,7 @@ Imports System.Web
         Dim listOfArchivFiles As New List(Of String)
         'Dim xlsRplanImport As Excel.Workbook
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -7183,7 +7183,7 @@ Imports System.Web
         Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
         Dim anzFiles As Integer = 0
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' erstmal protokollieren, zu welchen Abteilungen Istdaten gelesen und substituiert werden 
         ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
@@ -8513,7 +8513,7 @@ Imports System.Web
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ''Call logfileOpen()
 
@@ -8659,7 +8659,7 @@ Imports System.Web
         Dim getMSImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -8833,13 +8833,13 @@ Imports System.Web
         Dim projectsFile As String = ""
         Dim lastrow As Integer = 0
         Dim outputString As String = ""
-        Dim dateiName As String = ""
+
         Dim listofArchivAllg As New List(Of String)
         Dim outPutCollection As New Collection
 
         Dim outputLine As String = ""
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
@@ -8884,6 +8884,9 @@ Imports System.Web
 
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear(False)
+                ImportBaselineProjekte.Clear(False)
+
+
 
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
@@ -8891,22 +8894,13 @@ Imports System.Web
                 'Call logfileOpen()
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                Dim i As Integer
 
-                For i = 1 To listofVorlagen.Count
-                    dateiName = listofVorlagen.Item(i).ToString
+                listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
 
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
 
-                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
-
-                    If listofArchivAllg.Count > 0 Then
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
-                    End If
-
-                Next
-
-                'Call logfileSchreiben(outPutCollection)
-                ''Call logfileSchliessen()
 
 
                 ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
@@ -8943,6 +8937,28 @@ Imports System.Web
             End If
         End If
 
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+        If MsgBox("Store Baseline and Planning Version?", MsgBoxStyle.YesNo) = MsgBoxResult.Ok Then
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+                ' jetzt als Project Manager speichern
+                Dim saveSpecifics As String = myCustomUserRole.specifics
+                Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+
+                myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                ' Store Planning version
+
+                myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                ' Store Baseline version
+
+            Next
+
+
+        End If
+
         ' so positionieren, dass die Projekte auch sichtbar sind ...
         If boardWasEmpty Then
             If ShowProjekte.Count > 0 Then
@@ -8956,9 +8972,7 @@ Imports System.Web
         End If
 
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
+
 
     End Sub
 
@@ -8973,13 +8987,13 @@ Imports System.Web
         Dim projectsFile As String = ""
         Dim lastrow As Integer = 0
         Dim outputString As String = ""
-        Dim dateiName As String = ""
+
         Dim listofArchivAllg As New List(Of String)
         Dim outPutCollection As New Collection
 
         Dim outputLine As String = ""
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
@@ -9017,42 +9031,36 @@ Imports System.Web
                 Dim listofFiles As Collection
                 listofFiles = getProjConfigImport.selImportFiles
 
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear(False)
+                ImportBaselineProjekte.Clear(False)
+
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                Dim i As Integer
+                listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, isUpdate:=True)
 
-                For i = 1 To listofFiles.Count
-                    dateiName = listofFiles.Item(i).ToString
-
-
-                    listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, isUpdate:=True)
-
-                    If listofArchivAllg.Count > 0 Then
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
-                    End If
-
-                Next
-
-                'Call logfileSchreiben(outPutCollection)
-                ''Call logfileSchliessen()
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
 
 
-                ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                Dim allOK As Boolean = False
                 Try
-                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
-                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+                    allOK = upDatesEintragen(ImportProjekte, ImportBaselineProjekte, outPutCollection)
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
-                        Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Call MsgBox("Error at Method updatesEintragen: " & vbLf & ex.Message)
                     Else
-                        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        Call MsgBox("Fehler bei Methode updatesEintragen: " & vbLf & ex.Message)
                     End If
 
                 End Try
+
+                ImportProjekte.Clear(updateCurrentConstellation:=False)
+                ImportBaselineProjekte.Clear(updateCurrentConstellation:=False)
 
                 '' Cursor auf Default setzen
                 Cursor.Current = Cursors.Default
@@ -9067,9 +9075,9 @@ Imports System.Web
 
         If outPutCollection.Count > 0 Then
             If awinSettings.englishLanguage Then
-                Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                Call showOutPut(outPutCollection, "Update Projects", "please check the notifications ...")
             Else
-                Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                Call showOutPut(outPutCollection, "Update Projekte", "folgende Probleme sind aufgetaucht")
             End If
         End If
 
@@ -10260,7 +10268,7 @@ Imports System.Web
     ''' <remarks></remarks>
     Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
         Call PBBDatenbankLoadProjekte(Control)
 
         ' Window so positionieren, dass die Projekte sichtbar sind ...  

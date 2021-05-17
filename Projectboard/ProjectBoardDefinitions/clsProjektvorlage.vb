@@ -63,6 +63,15 @@
     End Property
 
     ''' <summary>
+    ''' returns Dauer in Months - duration in months 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property dauerInMths As Integer
+        Get
+            dauerInMths = _Dauer
+        End Get
+    End Property
+    ''' <summary>
     ''' gibt die sortierte Liste der Double Customfields zurück 
     ''' </summary>
     ''' <value></value>

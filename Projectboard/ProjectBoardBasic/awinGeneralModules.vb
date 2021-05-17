@@ -8419,25 +8419,6 @@ Public Module awinGeneralModules
                     ' nimmt das ggf zu mergende Projekt auf
                     Dim mProj As clsProjekt = Nothing
 
-                    'Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-
-                    ''ur: 15.1.2020: wird nun ja im Server erledigt
-
-                    'If hproj.variantName <> vorgabeVariantName Then
-
-                    '    '
-                    '    ' hier muss die Berechnung der keyMetrics-Daten erfolgen
-                    '    '
-                    '    hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
-
-
-                    'Else
-                    '    ' hier ist noch zu überlegen, was zu tun ist.
-                    '    ' z.B.  leere keyMetrics
-                    '    hproj.keyMetrics = New clsKeyMetrics
-                    'End If
-
-
 
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=kdNrToStore) Then
 
@@ -8562,9 +8543,7 @@ Public Module awinGeneralModules
 
             outputCollection.Add(outputline)
 
-            ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-            'Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-            'Exit Sub
+
         End Try
 
         storeSingleProjectToDB = tmpResult

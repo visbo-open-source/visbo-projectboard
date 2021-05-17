@@ -3643,24 +3643,24 @@ Public Module agm3
             Next
 
         Else
-            Dim errMsg As String = "Es gibt keine Datei zur Projekt-Anlage" & vbLf _
-                             & "Es wurden daher jetzt keine berücksichtigt"
 
-            ' das sollte nicht dazu führen, dass nichts gemacht wird 
-            'meldungen.Add(errMsg)
-            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
-            'Call MsgBox(errMsg)
+            If awinSettings.englishLanguage Then
+                msgTxt = "no files to read ... Action cancelled! "
+            Else
+                msgTxt = "keine Dateien zu lesen ... Abbruch! "
+            End If
 
-            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
+            meldungen.Add(msgTxt)
+
+            Call logger(ptErrLevel.logError, msgTxt, "", anzFehler)
         End If
 
-        If result Then
-            readProjectsAllg = listOfArchivFiles
-        Else
-            readProjectsAllg = New List(Of String)
-        End If
+
+        readProjectsAllg = listOfArchivFiles
 
     End Function
+
+
     Function readProjectsWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
@@ -4447,7 +4447,161 @@ Public Module agm3
         readProjectsWithConfig = result
     End Function
 
+    ''' <summary>
+    ''' used for Import ActualData : BaselineVersions = Nothing 
+    ''' and Update with Tagetik projects : BaselineVersions need to have same number than PlanningVersions
+    ''' can be performed by both OA, PL and PMO
+    ''' </summary>
+    ''' <param name="PlanningVersions"></param>
+    ''' <param name="BaselineVersions"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Public Function upDatesEintragen(ByVal PlanningVersions As clsProjekteAlle,
+                                     ByVal BaselineVersions As clsProjekteAlle,
+                                     ByRef meldungen As Collection) As Boolean
+        Dim result As Boolean = True
+        Dim outputLine As String = ""
+        Dim planningVersion As clsProjekt = Nothing
+        Dim baselineVersion As clsProjekt = Nothing
+        Dim err As New clsErrorCodeMsg
 
+        Dim today As Date = Date.Now
+
+        ' remember User Role 
+        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+
+        If IsNothing(BaselineVersions) Then
+            ' Actual Data Import 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
+                Try
+                    planningVersion = kvp.Value
+                    Dim mProj As clsProjekt = Nothing
+                    ' Store Planning Version 
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = "saved: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        End If
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputLine = "Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+        Else
+            ' Forecast / Baseline Import 
+            ' first Check
+            If PlanningVersions.Count = BaselineVersions.Count Then
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
+                    Try
+                        planningVersion = kvp.Value
+                        Dim pName As String = kvp.Value.name
+                        Dim baselineKey As String = calcProjektKey(pName, ptVariantFixNames.pfv.ToString)
+                        baselineVersion = BaselineVersions.getProject(baselineKey)
+
+                        If Not IsNothing(baselineVersion) Then
+                            ' Store Planning Version 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                            Dim mProj As clsProjekt = Nothing
+                            planningVersion.timeStamp = today
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "saved: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            End If
+
+                            ' Store Baseline Version 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                            mProj = Nothing
+                            baselineVersion.timeStamp = today
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(baselineVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Baseline saved: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "Baseline gespeichert: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Baseline Store Failed: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "Baseline Speichern Fehlgeschlagen! " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            End If
+
+                        Else
+                            outputLine = "there is no baseline version ... skipped ...  " & kvp.Value.name
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                        End If
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputLine = "unexpected failure - not stored: " & planningVersion.name
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "unerwarteter Fehler - nicht gespeichert: " & planningVersion.name
+                            meldungen.Add(outputLine)
+                        End If
+                    End Try
+
+                Next
+
+
+
+            Else
+                outputLine = "Nr of planning and baseline versions different: " & PlanningVersions.Count & ", " & BaselineVersions.Count
+                meldungen.Add(outputLine)
+                Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                result = False
+            End If
+
+
+        End If
+
+        ' restore User Role 
+        myCustomUserRole.customUserRole = saveUserRole
+
+        upDatesEintragen = result
+    End Function
+
+    ''' <summary>
+    ''' updates projects with Telair Tagetik Import Files 
+    ''' </summary>
+    ''' <param name="projectConfig"></param>
+    ''' <param name="tmpDatei"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
     Function updateProjectWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
@@ -4467,6 +4621,7 @@ Public Module agm3
 
         ' Variables to create a Project
         Dim hproj As clsProjekt = Nothing
+        Dim baseline As clsProjekt = Nothing
         Dim pName As String = ""
         Dim vName As String = ""
         Dim vorlagenName As String = ""
@@ -4486,9 +4641,16 @@ Public Module agm3
 
         Dim monthVon As Integer = 0
         Dim monthBis As Integer = 0
+        Dim arrayOffset As Integer = 0
+        Dim arrayDimension As Integer = 0
 
         Dim noGo As Integer = 0   'Sobald diese Variable > 0 ist, wird das Projekt nicht importiert
+        Dim offsetCorrection As Integer = 0
 
+        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+
+        ' do it as project leader 
+        myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
@@ -4503,6 +4665,7 @@ Public Module agm3
                     Dim resourceNameDefinition As clsConfigProjectsImport = projectConfig("Ressourcen")
                     Dim anchorDef1 As clsConfigProjectsImport = projectConfig("anchor1")
                     Dim anchorDef2 As clsConfigProjectsImport = projectConfig("anchor2")
+                    Dim constraints As clsConfigProjectsImport = projectConfig("constraint")
 
                     ' Auslesen erste Projekt-Spalte
                     firstValueSpalte = monthValuesDefinition.column.von
@@ -4547,6 +4710,14 @@ Public Module agm3
                             Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
                         Else
 
+                            ' are there constraints, i.e which kind of rows should be considered 
+                            Dim validConstraints() As String = Nothing
+                            If Not IsNothing(constraints.content) Then
+                                If constraints.content.Trim <> "" Then
+                                    validConstraints = constraints.content.Split(New Char() {CChar(",")})
+                                End If
+                            End If
+
                             ' should be parameterised
                             Dim searcharea As Excel.Range = CType(currentWS.Columns(monthValuesDefinition.column.von), Excel.Range)
                             Dim colOfStartForeCast As Integer = -1
@@ -4587,19 +4758,23 @@ Public Module agm3
 
                             End Try
 
-                            Dim dimension As Integer = monthValuesDefinition.column.bis - monthValuesDefinition.column.von
+                            arrayDimension = monthValuesDefinition.column.bis - monthValuesDefinition.column.von
 
                             Dim yearValue As String = CStr(currentWS.Cells(headerRow, monthValuesDefinition.column.von).value).Split(New Char() {CChar(" ")}, 2)(0)
                             Dim mthValue As String = currentWS.Cells(headerRow + 1, monthValuesDefinition.column.von).value
 
-                            Dim startDateValues As Date = CDate(mthValue & " " & yearValue)
-                            Dim endDateValues As Date = startDateValues.AddMonths(dimension)
+                            ' Geschäftsjahr xy Telair beginnt im Okt des Vorjahres  
+                            Dim startDateValues As Date = CDate(mthValue & " " & yearValue).AddYears(-1)
+                            Dim startColOfArray = getColumnOfDate(startDateValues)
+                            'Dim endDateValues As Date = startDateValues.AddMonths(arrayDimension)
 
                             Dim colOfStartDateValues As Integer = getColumnOfDate(startDateValues)
                             Dim colOfEndDateValues As Integer = colOfStartDateValues + (monthValuesDefinition.column.bis - monthValuesDefinition.column.von)
 
-                            Dim arrayOffset As Integer = 0
                             arrayOffset = colOfStartForeCast - monthValuesDefinition.column.von
+
+                            monthVon = colOfStartDateValues + arrayOffset
+                            monthBis = colOfEndDateValues
 
                             lastSpalte = lastValueSpalte
                             lastZeile = CType(currentWS.Cells(2000, resourceNameDefinition.column.von), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
@@ -4633,69 +4808,109 @@ Public Module agm3
 
                                 If Not IsNothing(hproj) Then
                                     ' weitermachen 
+
+                                    ' Baseline holen ... 
+                                    baseline = getProjektFromSessionOrDB(hproj.name, ptVariantFixNames.pfv.ToString, AlleProjekte, Date.Now)
+                                    If Not IsNothing(baseline) Then
+                                        If getColumnOfDate(baseline.startDate) <> getColumnOfDate(hproj.startDate) Or
+                                           getColumnOfDate(baseline.endeDate) <> getColumnOfDate(hproj.endeDate) Then
+
+                                            baseline = Nothing
+
+                                            If awinSettings.englishLanguage Then
+                                                outputline = hproj.name & ": Baseline Dates were'nt starting / ending as planning version - Baseline will be adopted"
+                                            Else
+                                                outputline = hproj.name & ": Baseline Start bzw Ende-Datum waren unterschiedlich zu Planning version - Baseline wurde angepasst "
+                                            End If
+                                            meldungen.Add(outputline)
+                                            Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                                        End If
+                                    End If
+
+
+                                    offsetCorrection = getColumnOfDate(hproj.startDate) - startColOfArray
+
                                     For ize = firstValueZeile To lastZeile + 1
 
                                         Dim curRoleName As String = ""
                                         ' new stuff 
 
-                                        ' read roleName / costName
-                                        Dim curString As String = ""
-                                        Try
-                                            If Not IsNothing(currentWS.Cells(ize, resourceNameDefinition.column.von).value) Then
-                                                curString = CStr(currentWS.Cells(ize, resourceNameDefinition.column.von).value)
-                                            End If
-                                        Catch ex As Exception
+                                        Dim checkConstraint As String = CStr(currentWS.Cells(ize, constraints.column.von).value)
+                                        If IsNothing(checkConstraint) Then
+                                            checkConstraint = ""
+                                        End If
 
-                                        End Try
+                                        Dim weiterMachen As Boolean = IsNothing(validConstraints)
 
-                                        If curString <> "" Then
+                                        If Not IsNothing(validConstraints) Then
+                                            weiterMachen = False
+                                            For Each cItem As String In validConstraints
+                                                weiterMachen = weiterMachen Or (cItem.Trim = checkConstraint.Trim)
+                                            Next
+                                        End If
 
-                                            regexpression = New Regex(resourceNameDefinition.content)
-                                            Dim match As Match = regexpression.Match(curString)
-                                            If match.Success Then
-                                                Dim tmpstr() As String = match.Value.Split(New Char() {CChar("("), CChar(")")}, 3)
-                                                curRoleName = tmpstr(1)
-                                            Else
-                                                curRoleName = ""
-                                            End If
+                                        If weiterMachen Then
 
-                                            If curRoleName <> "" Then
-                                                If RoleDefinitions.containsName(curRoleName) Then
-                                                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
-                                                    ' now get real-Name instead of Alias Name
-                                                    curRoleName = RoleDefinitions.getRoleDefByID(tmpRole.UID).name
+                                            ' read roleName / costName
+                                            Dim curString As String = ""
+                                            Try
+                                                If Not IsNothing(currentWS.Cells(ize, resourceNameDefinition.column.von).value) Then
+                                                    curString = CStr(currentWS.Cells(ize, resourceNameDefinition.column.von).value)
+                                                End If
+                                            Catch ex As Exception
 
-                                                    Dim tmpValues() As Double
-                                                    ReDim tmpValues(dimension)
+                                            End Try
 
-                                                    ' now read the values 
-                                                    For isp As Integer = 0 To dimension
-                                                        If Not IsNothing(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) Then
-                                                            If monthValuesDefinition.content = "hours" Then
-                                                                tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) / 8
-                                                            ElseIf monthValuesDefinition.content = "weeks" Then
-                                                                tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 5
-                                                            ElseIf monthValuesDefinition.content = "months" Then
-                                                                tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 20
-                                                            Else
-                                                                tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value)
+                                            If curString <> "" Then
+
+                                                regexpression = New Regex(resourceNameDefinition.content)
+                                                Dim match As Match = regexpression.Match(curString)
+                                                If match.Success Then
+                                                    Dim tmpstr() As String = match.Value.Split(New Char() {CChar("("), CChar(")")}, 3)
+                                                    curRoleName = tmpstr(1)
+                                                Else
+                                                    curRoleName = ""
+                                                End If
+
+                                                If curRoleName <> "" Then
+                                                    If RoleDefinitions.containsName(curRoleName) Then
+                                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                                        ' now get real-Name instead of Alias Name
+                                                        curRoleName = RoleDefinitions.getRoleDefByID(tmpRole.UID).name
+
+                                                        Dim tmpValues() As Double
+                                                        ReDim tmpValues(arrayDimension)
+
+                                                        ' now read the values 
+                                                        For isp As Integer = 0 To arrayDimension
+                                                            If Not IsNothing(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) Then
+                                                                If monthValuesDefinition.content = "hours" Then
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) / 8
+                                                                ElseIf monthValuesDefinition.content = "weeks" Then
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 5
+                                                                ElseIf monthValuesDefinition.content = "months" Then
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 20
+                                                                Else
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value)
+                                                                End If
+
                                                             End If
-
-                                                        End If
-                                                    Next
-
-                                                    ' now add values ... 
-                                                    If roleListNameValues.ContainsKey(curRoleName) Then
-                                                        ' es muss aufsummiert werden 
-                                                        For isp As Integer = 0 To dimension
-                                                            roleListNameValues.Item(curRoleName)(isp) = roleListNameValues.Item(curRoleName)(isp) + tmpValues(isp)
                                                         Next
-                                                    Else
-                                                        roleListNameValues.Add(curRoleName, tmpValues)
-                                                    End If
 
+                                                        ' now add values ... 
+                                                        If roleListNameValues.ContainsKey(curRoleName) Then
+                                                            ' es muss aufsummiert werden 
+                                                            For isp As Integer = 0 To arrayDimension
+                                                                roleListNameValues.Item(curRoleName)(isp) = roleListNameValues.Item(curRoleName)(isp) + tmpValues(isp)
+                                                            Next
+                                                        Else
+                                                            roleListNameValues.Add(curRoleName, tmpValues)
+                                                        End If
+
+                                                    End If
                                                 End If
                                             End If
+
                                         End If
 
                                     Next ize
@@ -4704,10 +4919,10 @@ Public Module agm3
                                     ' Fehler ... 
                                     If awinSettings.englishLanguage Then
                                         outputline = "Couldn't find project " & projNumber & " / " & tryPName
-                            Else
+                                    Else
                                         outputline = "Projekt-Nummer / Name excistiert nicht:  " & projNumber & " / " & tryPName
                                     End If
-                                    'meldungen.Add(outputline)
+                                    meldungen.Add(outputline)
                                     Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
 
                                 End If
@@ -4752,34 +4967,81 @@ Public Module agm3
 
         End Try
 
-        result = Not IsNothing(hproj)
+        Dim planningMerge As Boolean = False
+        Dim baselineMerge As Boolean = False
 
-        If awinSettings.englishLanguage Then
+        Try
             If Not IsNothing(hproj) Then
-                outputline = hproj.name & " updated! "
-                meldungen.Add(outputline)
-                Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-            Else
-                outputline = tmpDatei & " failed! "
-                meldungen.Add(outputline)
-                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+
+                ' now do the Planning Version 
+                planningMerge = hproj.mergeForecastValues(roleListNameValues, monthVon, monthBis, arrayOffset, offsetCorrection, meldungen)
+
+                ' now do the Baseline Version 
+                If Not IsNothing(baseline) Then
+                    baselineMerge = baseline.mergeForecastValues(roleListNameValues, monthVon, monthBis, arrayOffset, offsetCorrection, meldungen)
+                Else
+                    baseline = hproj.createVariant(ptVariantFixNames.pfv.ToString, "Baseline")
+                    baselineMerge = True
+                End If
+
             End If
 
-        Else
-            If Not IsNothing(hproj) Then
-                outputline = hproj.name & " aktualisiert! "
+        Catch ex As Exception
+
+        End Try
+
+        If planningMerge And baselineMerge Then
+            If ImportProjekte.Containskey(calcProjektKey(hproj.name, hproj.variantName)) Then
+                ImportProjekte.Remove(calcProjektKey(hproj.name, hproj.variantName), updateCurrentConstellation:=False)
+                If awinSettings.englishLanguage Then
+                    outputline = hproj.name & " exists in multiple versions - last is used ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                Else
+                    outputline = hproj.name & " existiert mehrfach - die Letzte wird verwendet ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                End If
                 meldungen.Add(outputline)
+            End If
+
+            If ImportBaselineProjekte.Containskey(calcProjektKey(baseline.name, baseline.variantName)) Then
+                ImportBaselineProjekte.Remove(calcProjektKey(baseline.name, baseline.variantName), updateCurrentConstellation:=False)
+                If awinSettings.englishLanguage Then
+                    outputline = baseline.name & " baseline exists in multiple versions - last is used ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                Else
+                    outputline = baseline.name & " Baseline existiert mehrfach - die Letzte wird verwendet ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                End If
+                meldungen.Add(outputline)
+            End If
+
+            ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+            ImportBaselineProjekte.Add(baseline, updateCurrentConstellation:=False)
+
+            If awinSettings.englishLanguage Then
+                outputline = hproj.name & " updated! "
                 Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+
+            Else
+                outputline = hproj.name & " aktualisiert! "
+                Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+            End If
+            result = True
+        Else
+            If awinSettings.englishLanguage Then
+                outputline = tmpDatei & " failed! "
+                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
             Else
                 outputline = tmpDatei & " fehlgeschlagen! "
-                meldungen.Add(outputline)
                 Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
             End If
+            meldungen.Add(outputline)
         End If
 
+        ' bring back to normal user Role
+        myCustomUserRole.customUserRole = saveUserRole
 
         updateProjectWithConfig = result
-
 
     End Function
     Public Sub writeYearInitialPlanningSupportToExcel(ByVal von As Integer, ByVal bis As Integer,

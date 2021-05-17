@@ -132,6 +132,7 @@ Public Module Module1
     Public writeProtections As New clsWriteProtections
 
     Public ImportProjekte As New clsProjekteAlle
+    Public ImportBaselineProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     ' die currentSessionConstellation ist das Abbild der aktuellen Session 
     Public currentSessionConstellation As New clsConstellation

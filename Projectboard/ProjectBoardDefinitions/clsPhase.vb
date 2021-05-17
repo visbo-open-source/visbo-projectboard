@@ -2550,7 +2550,7 @@ Public Class clsPhase
     ''' </summary>
     ''' <param name="role"></param>
     ''' <remarks></remarks>
-    Public Sub addRole(ByVal role As clsRolle)
+    Public Sub addRole(ByVal role As clsRolle, Optional ByVal addToExisting As Boolean = True)
         ' ergänzt, weil das sonst auf Throw Exception führt , wenn role.uid = 0 oder role nicht existiert
         If Not IsNothing(role) Then
             If RoleDefinitions.containsUid(role.uid) Then
@@ -2577,10 +2577,14 @@ Public Class clsPhase
                     oldXWerte = _allRoles.Item(ix).Xwerte()
                     newXwerte = role.Xwerte
                     If oldXWerte.Length = newXwerte.Length Then
-                        ' hier dann aufsummieren 
-                        For i As Integer = 0 To oldXWerte.Length - 1
-                            newXwerte(i) = newXwerte(i) + oldXWerte(i)
-                        Next
+
+                        ' hier dann aufsummieren , wenn addToExisting = true
+                        If addToExisting Then
+                            For i As Integer = 0 To oldXWerte.Length - 1
+                                newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                            Next
+                        End If
+
 
                         _allRoles.Item(ix).Xwerte() = newXwerte
 

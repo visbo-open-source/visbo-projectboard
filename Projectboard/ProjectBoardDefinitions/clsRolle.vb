@@ -988,6 +988,10 @@ Public Class clsRolle
         _teamID = -1
     End Sub
 
+    ''' <summary>
+    ''' laenge is actually dimension
+    ''' </summary>
+    ''' <param name="laenge"></param>
     Public Sub New(ByVal laenge As Integer)
 
         ReDim _bedarf(laenge)
