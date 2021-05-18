@@ -5489,7 +5489,7 @@ Public Module agm3
         If Projektvorlagen.Contains(vorlagenName) Or Not IsNothing(myproject) Then
 
             ' Aufruf von Rest-Call Create a Copy of a Version url: https://dev.visbo.net/api/vpv/:vpvid/copy
-            If Not template Then
+            If Not template And IsNothing(myproject) Then
                 Try
                     hproj = CType(databaseAcc, DBAccLayer.Request).createProjectFromTemplate(pname, vorlagenName, startdate, endedate, budgetVorgabe, sfit, risk, profitUserAskedFor, kurzBeschreibung, kdNr, err)
                 Catch ex As Exception
