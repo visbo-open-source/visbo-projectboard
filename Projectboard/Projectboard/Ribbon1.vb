@@ -8343,10 +8343,12 @@ Imports System.Web
             Dim startDate As Date = StartofCalendar
             Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
             Dim myProject As clsProjekt = Nothing
-            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
+            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
 
             ' ur: 28.2.2021: nicht mehr benötigt, da eine ganzes Projekt angelegt wird und im ReSt-Server als vorlage dient.
             ' vproj.copyTo(template)
+
+
             If Not IsNothing(template) Then
                 template.name = vproj.VorlagenName
                 template.projectType = ptPRPFType.projectTemplate
@@ -8370,9 +8372,9 @@ Imports System.Web
 
             Else
                 If awinSettings.englishLanguage Then
-                    msgStr = "Error when reading Template: " & vproj.VorlagenName
+                    msgStr = "Error when reading/writing Template: (conflict) " & vproj.VorlagenName
                 Else
-                    msgStr = "Fehler beim Lesen der Vorlage: " & vproj.VorlagenName
+                    msgStr = "Fehler beim Lesen/Schreiben der Vorlage: (Konflikt) " & vproj.VorlagenName
                 End If
                 outputCollection.Add(msgStr)
             End If

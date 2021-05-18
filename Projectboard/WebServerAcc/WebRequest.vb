@@ -812,6 +812,174 @@ Public Class Request
         retrieveProjectTemplatesFromDB = result
     End Function
 
+    ''' <summary>
+    ''' erzeugt ein Projekt auf Grund einer Vorlage und speichert dieses
+    ''' Zeitstempel wird aus den Projekt-Infos genommen
+    ''' zurückgegeben wird ein vollständiges Projekt
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="templateName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endeDate"></param>
+    ''' <param name="budget"></param>
+    ''' <param name="sfit"></param>
+    ''' <param name="risk"></param>
+    ''' <param name="rendite"></param>
+    ''' <param name="description"></param>
+    ''' <param name="kdNr"></param>
+    ''' <param name="userName"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function createProjectFromTemplate(ByVal pname As String,
+                                             ByVal templateName As String,
+                                              ByVal startDate As Date,
+                                              ByVal endeDate As Date,
+                                              ByVal budget As Double,
+                                              ByVal sfit As Double,
+                                              ByVal risk As Double,
+                                              ByVal rendite As Double,
+                                              ByVal description As String,
+                                              ByVal kdNr As String,
+                                     ByVal userName As String,
+                                     ByRef err As clsErrorCodeMsg) As clsProjekt
+
+
+        Dim result As New clsProjekt
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+
+        'Verwenden Sie den code wie folgt
+
+        Dim sw As clsStopWatch
+        sw = New clsStopWatch
+        sw.StartTimer()
+
+        Try
+            'Dim data() As Byte
+
+            Dim tName As String = templateName
+            Dim standardVariante As String = ""
+
+            Dim aktvp As clsVP = GETvpid(tName, err, ptPRPFType.projectTemplate)
+            Dim tempID As String = aktvp._id
+
+
+
+            Dim typeRequest As String = "/vp"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+
+            If tempID = "" Then
+                result = Nothing
+            Else
+                serverUriString = serverUriName & typeRequest & "?vpid=" & tempID
+
+                Dim serverUri As New Uri(serverUriString)
+
+                ' DATA - Block zusammensetzen
+                Dim vp_bacrac As New clsVP_bac_rac
+                vp_bacrac.vcid = aktVCid
+                vp_bacrac.name = pname
+                vp_bacrac.kundennummer = kdNr
+                vp_bacrac.description = description
+                Dim risiko As New clsCustomFieldDbl
+                risiko.name = vp_risk
+                risiko.value = risk
+                vp_bacrac.customFieldDouble.Add(risiko)
+                Dim stratFit As New clsCustomFieldDbl
+                stratFit.name = vp_strategicFit
+                stratFit.value = sfit
+                vp_bacrac.customFieldDouble.Add(stratFit)
+                'Dim bu As New clsCustomFieldStr
+                'bu.name = vp_businessUnit
+                'bu.value = ""
+                'vp_bacrac.customFieldString.Add(bu)
+                vp_bacrac.startDate = startDate
+                vp_bacrac.endDate = endeDate
+                If rendite > 0 Then
+                    Dim rac As Double = budget / 100 * (100 - rendite)
+                    vp_bacrac.bac = budget / 100 * (100 - rendite)
+                Else
+                    vp_bacrac.bac = budget
+                End If
+                vp_bacrac.rac = budget
+
+                Dim data As Byte() = serverInputDataJson(vp_bacrac, "")
+
+                ' Request absetzen
+                Dim Antwort As String
+                Dim webVPAntwort As clsWebVP = Nothing
+                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                    Antwort = ReadResponseContent(httpresp)
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                    webVPAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+                End Using
+
+                If errcode = 200 Then
+
+                    If (webVPAntwort.state = "success") Then
+
+                        Dim newVP As clsVP = webVPAntwort.vp.ElementAt(0)
+                        ' VPs nach Id sortiert gecacht
+                        If Not VRScache.VPsId.ContainsKey(newVP._id) Then
+                            VRScache.VPsId.Add(newVP._id, newVP)
+                        Else
+                            VRScache.VPsId.Remove(newVP._id)
+                            VRScache.VPsId.Add(newVP._id, newVP)
+                        End If
+
+
+                        Dim newWebVPvs As List(Of clsProjektWebLong) = GETallVPvLong(newVP._id, err,,,,,)
+                        If newWebVPvs.Count > 0 And err.errorCode = 200 Then
+                            ' vpv zu Cache hinzufügen
+                            VRScache.createVPvLong(newWebVPvs, Date.Now.ToUniversalTime)
+
+                            If newWebVPvs.Count > 0 Then
+                                For Each proj As clsProjektWebLong In newWebVPvs
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                        If proj.variantName = "pfv" Then
+                                            Dim newwebProj As clsProjektWebLong = proj
+                                            newwebProj.copyto(result, newVP)
+                                        End If
+                                    Else
+                                        If proj.variantName <> "pfv" Then
+                                            Dim newwebProj As clsProjektWebLong = proj
+                                            newwebProj.copyto(result, newVP)
+                                        End If
+                                    End If
+                                Next
+                            End If
+                        End If
+
+                    End If
+                Else
+                    result = Nothing
+                    err.errorCode = errcode
+                    err.errorMsg = errmsg
+                End If
+            End If
+
+
+
+        Catch ex As Exception
+            'Throw New ArgumentException(ex.Message & ": storeProjectToDB")
+        End Try
+
+        If awinSettings.visboDebug Then
+            Call MsgBox("createProjectFromTemplate took: " & sw.EndTimer & "milliseconds")
+
+            Debug.Print("createProjectFromTemplate took: " & sw.EndTimer & "milliseconds")
+        End If
+
+
+        createProjectFromTemplate = result
+
+
+
+    End Function
+
     ''' <summary>  
     ''' liest eine Projektvorlage aus der DB (Templates können keine Varianten habe), die zum angegebenen Zeitpunkt die aktuelle war
     ''' </summary>
@@ -6743,6 +6911,7 @@ Public Class Request
         End Try
         POSTOneVPv = result
     End Function
+
 
 
     Private Function POSTOneVPvCopy(ByVal vpid As String,
