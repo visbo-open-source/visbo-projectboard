@@ -21400,6 +21400,8 @@ Public Module agm2
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
 
                             projVorlage = createTemplateOfProject(kvp.Value)
+                            ' hiermit wird die _Dauer gesetzt
+                            Dim vorlagenDauer = projVorlage.dauerInDays
 
                             'projVorlage = New clsProjektvorlage
                             'projVorlage.VorlagenName = kvp.Value.name

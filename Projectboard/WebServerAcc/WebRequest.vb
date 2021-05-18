@@ -954,6 +954,10 @@ Public Class Request
                         End If
 
                     End If
+                Else
+                    result = Nothing
+                    err.errorCode = errcode
+                    err.errorMsg = errmsg
                 End If
             End If
 

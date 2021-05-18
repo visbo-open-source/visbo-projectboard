@@ -5460,7 +5460,7 @@ Public Module agm3
     Public Function erstelleProjektAusVorlage(ByVal myproject As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
                                 ByVal endedate As Date, ByVal budgetVorgabe As Double,
                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String,
-                                ByVal kurzBeschreibung As String, ByVal buName As String, Optional ByVal kdNr As String = "") As clsProjekt
+                                ByVal kurzBeschreibung As String, ByVal buName As String, Optional ByVal kdNr As String = "", Optional ByVal template As Boolean = False) As clsProjekt
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -5489,12 +5489,16 @@ Public Module agm3
         If Projektvorlagen.Contains(vorlagenName) Or Not IsNothing(myproject) Then
 
             ' Aufruf von Rest-Call Create a Copy of a Version url: https://dev.visbo.net/api/vpv/:vpvid/copy
+            If Not template Then
+                Try
+                    hproj = CType(databaseAcc, DBAccLayer.Request).createProjectFromTemplate(pname, vorlagenName, startdate, endedate, budgetVorgabe, sfit, risk, profitUserAskedFor, kurzBeschreibung, kdNr, err)
+                Catch ex As Exception
+                    Call MsgBox("createProjectFromTemplate - konnte kein Projekt erzeugen, evt. das Template nicht in der DB")
+                End Try
+            Else
+                hproj = Nothing
+            End If
 
-            Try
-                hproj = CType(databaseAcc, DBAccLayer.Request).createProjectFromTemplate(pname, vorlagenName, startdate, endedate, budgetVorgabe, sfit, risk, profitUserAskedFor, kurzBeschreibung, kdNr, err)
-            Catch ex As Exception
-                Call MsgBox("createProjectFromTemplate - konnte kein Projekt erzeugen, evt. das Template nicht in der DB")
-            End Try
 
             If IsNothing(hproj) Then
                 hproj = New clsProjekt
@@ -5590,6 +5594,9 @@ Public Module agm3
                 ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
                 ' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
                 ' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
+            Else
+
+                'TODO: update einer Vorlage muss auch funktionieren
 
             End If
 
@@ -5637,7 +5644,7 @@ Public Module agm3
 
         hproj = erstelleProjektAusVorlage(myProject, pname, vorlagenName, startdate, endedate, budgetVorgabe,
                                   tafelZeile, sfit, risk, profitUserAskedFor,
-                                  kurzBeschreibung, "", kdNr:=kdNummer)
+                                  kurzBeschreibung, "", kdNr:=kdNummer, template:=False)
 
 
         ' jetzt wird testweise das hproj.setMilestone Invoices gemacht ..
