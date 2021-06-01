@@ -1133,6 +1133,7 @@ Imports System.Web
                 Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
                 ' jetzt müssen alle Windows bis auf Window(0) = Multiprojekt-Tafel geschlossen werden 
                 ' und mache ProjectboardWindows(mpt) great again ...
+                appInstance.EnableEvents = False
                 Call closeAllWindowsExceptMPT()
 
             Else
@@ -4016,107 +4017,112 @@ Imports System.Web
     ''' <remarks></remarks>
     Function chckVisibility(control As IRibbonControl) As Boolean
 
-        If visboZustaende.projectBoardMode = ptModus.graficboard Then
-
-            If myCustomUserRole.isEntitledForMenu(control.Id) Then
-                Select Case control.Id
-                    Case "PTMEC" ' Massen-Edit Charts
-                        chckVisibility = False
-                    Case "PTmassEdit" ' Mass-Edit bearbeiten
-                        chckVisibility = False
-                    Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
-                        chckVisibility = False
-                    Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
-                        chckVisibility = False
-                    Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
-                        chckVisibility = False
-                    Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
-                        chckVisibility = False
-                    Case "PTzurück" ' Zurück
-                        chckVisibility = False
-                    Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
-                        chckVisibility = False
-                    Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
-                        chckVisibility = False
-                    Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
-                        chckVisibility = False
-                    Case "PT6G2B5" ' Sortierung ermöglichen
-                        chckVisibility = False
-                    Case "PT6G2B7" ' Header anzeigen
-                        chckVisibility = False
-                    Case "PThelp" ' Help anzeigen
-                        chckVisibility = False
-                    Case Else
-                        ' alle anderen werden sichtbar gemacht
-                        chckVisibility = True
-                End Select
-            Else
-                chckVisibility = False
-            End If
-
+        If isInChartWindow Then
+            chckVisibility = False
         Else
-            Select Case control.Id
 
-                Case "PTproj"
-                    chckVisibility = False
-                Case "PTedit"
-                    chckVisibility = False
-                Case "PTview"
-                    chckVisibility = False
-                Case "PTfilter"
-                    chckVisibility = False
-                Case "PTsort"
-                    chckVisibility = False
-                Case "PToptimize"
-                    chckVisibility = False
-                Case "PTcharts"
-                    chckVisibility = False
-                Case "PTreport"
-                    chckVisibility = False
-                Case "PTeinst"
-                    chckVisibility = False
-                Case "PThelp"
-                    chckVisibility = False
-                Case "PTWebServer"
-                    chckVisibility = False
-                Case "PTTestfunktionen"
-                    chckVisibility = False
-                Case "PTlizenz"
-                    chckVisibility = False
+            If visboZustaende.projectBoardMode = ptModus.graficboard Then
 
-                Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
+                If myCustomUserRole.isEntitledForMenu(control.Id) Then
+                    Select Case control.Id
+                        Case "PTMEC" ' Massen-Edit Charts
+                            chckVisibility = False
+                        Case "PTmassEdit" ' Mass-Edit bearbeiten
+                            chckVisibility = False
+                        Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
+                            chckVisibility = False
+                        Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
+                            chckVisibility = False
+                        Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
+                            chckVisibility = False
+                        Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
+                            chckVisibility = False
+                        Case "PTzurück" ' Zurück
+                            chckVisibility = False
+                        Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
+                            chckVisibility = False
+                        Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
+                            chckVisibility = False
+                        Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
+                            chckVisibility = False
+                        Case "PT6G2B5" ' Sortierung ermöglichen
+                            chckVisibility = False
+                        Case "PT6G2B7" ' Header anzeigen
+                            chckVisibility = False
+                        Case "PThelp" ' Help anzeigen
+                            chckVisibility = False
+                        Case Else
+                            ' alle anderen werden sichtbar gemacht
+                            chckVisibility = True
+                    End Select
+                Else
                     chckVisibility = False
+                End If
 
-                Case "PTMEC" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        chckVisibility = True
-                    Else
+            Else
+                Select Case control.Id
+
+                    Case "PTproj"
                         chckVisibility = False
-                    End If
+                    Case "PTedit"
+                        chckVisibility = False
+                    Case "PTview"
+                        chckVisibility = False
+                    Case "PTfilter"
+                        chckVisibility = False
+                    Case "PTsort"
+                        chckVisibility = False
+                    Case "PToptimize"
+                        chckVisibility = False
+                    Case "PTcharts"
+                        chckVisibility = False
+                    Case "PTreport"
+                        chckVisibility = False
+                    Case "PTeinst"
+                        chckVisibility = False
+                    Case "PThelp"
+                        chckVisibility = False
+                    Case "PTWebServer"
+                        chckVisibility = False
+                    Case "PTTestfunktionen"
+                        chckVisibility = False
+                    Case "PTlizenz"
+                        chckVisibility = False
+
+                    Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
+                        chckVisibility = False
+
+                    Case "PTMEC" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = True
+                        Else
+                            chckVisibility = False
+                        End If
 
 
-                Case "PTmassEdit" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                    Case "PTmassEdit" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
-                    Else
-                        chckVisibility = False
-                    End If
+                        Else
+                            chckVisibility = False
+                        End If
 
-                Case "PTMECsettings" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                    Case "PTMECsettings" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = True
+                        Else
+                            chckVisibility = False
+                        End If
+
+                    Case Else
                         chckVisibility = True
-                    Else
-                        chckVisibility = False
-                    End If
+                End Select
 
-                Case Else
-                    chckVisibility = True
-            End Select
+            End If
 
         End If
-
     End Function
 
     ''' <summary>
@@ -4631,20 +4637,10 @@ Imports System.Web
 
             Call enableControls(ptModus.graficboard)
 
-            'appInstance.EnableEvents = False
-            ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
-            'enableOnUpdate = False
 
-
-            ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
-            appInstance.EnableEvents = True
-            Try
-                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
-                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
-                End If
-            Catch ex As Exception
-
-            End Try
+            ' der close Window ruft DeActivate_Sheet auf ... 
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
 
             Try
@@ -4674,6 +4670,10 @@ Imports System.Web
 
             End Try
 
+            'If Not appInstance.EnableEvents = True Then
+            '    ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
+            '    appInstance.EnableEvents = True
+            'End If
 
             ' jetzt müssen ggf drei Windows wieder angezeigt werden 
             Try
@@ -4682,6 +4682,15 @@ Imports System.Web
                     If CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count = 1 Then
                         .WindowState = Excel.XlWindowState.xlMaximized
                     Else
+
+                        Try
+                            If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                                appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
                         Try
                             If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
 
@@ -4735,6 +4744,8 @@ Imports System.Web
 
             enableOnUpdate = True
             appInstance.EnableEvents = True
+            ' tl 22.5.21 now here
+            appInstance.ScreenUpdating = True
 
             Try
                 ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
@@ -4751,9 +4762,9 @@ Imports System.Web
 
             End Try
 
+            ' tk 22.05.21 war hier ... 
+            'appInstance.ScreenUpdating = True
 
-
-            appInstance.ScreenUpdating = True
 
             ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
             Try

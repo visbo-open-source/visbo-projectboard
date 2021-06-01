@@ -22771,6 +22771,9 @@ Public Module agm2
         Dim defaultTagessatz As Double = 800.0
         Dim errMsg As String = ""
 
+        ' nimmt die People auf, also die in Orga sind, nicht in Gruppen Definition und keine Kinder haben ... 
+        Dim listOFPeople = New Collection
+
         Try
             Dim hasHierarchy As Boolean = False
             Dim atleastOneWithIndent As Boolean = False
@@ -23183,7 +23186,31 @@ Public Module agm2
                                 End With
 
                                 ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                                If readingGroups And neueRollendefinitionen.containsName(hrole.name) Then
+                                If readingGroups Then
+                                    Try
+                                        If neueRollendefinitionen.containsName(hrole.name) Then
+                                            If neueRollendefinitionen.getRoledef(hrole.name).getSubRoleCount = 0 Then
+                                                ' ListOfPeople
+                                                If Not listOFPeople.Contains(hrole.name) Then
+                                                    listOFPeople.Add(hrole.name, hrole.name)
+                                                End If
+                                            End If
+                                        Else
+                                            If neueRollendefinitionen.containsUid(hrole.UID) Then
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "ID has multiple occurrences: " & hrole.UID
+                                                Else
+                                                    errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                                End If
+                                                meldungen.Add(errMsg)
+                                            Else
+                                                neueRollendefinitionen.Add(hrole)
+                                            End If
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
                                     ' nichts tun, alles gut : 
                                 Else
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
@@ -23198,7 +23225,13 @@ Public Module agm2
                                         Else
                                             neueRollendefinitionen.Add(hrole)
                                         End If
-
+                                    Else
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "Name has multiple occurrences: " & hrole.name
+                                        Else
+                                            errMsg = "Name kommt mehrfach vor: " & hrole.name
+                                        End If
+                                        meldungen.Add(errMsg)
                                     End If
 
                                 End If
@@ -23263,23 +23296,9 @@ Public Module agm2
                                         parentRole.addSubRole(subRole.UID, przSatz)
                                         parentRole.isSkill = readingGroups            'Team-Marker setzen
 
-                                        If curLevel = maxIndent And readingGroups Then
+                                        If readingGroups Then
 
-                                            ' ur:2.1.21 wird oben gesetzt
-                                            'If Not parentRole.isSkill Then
-                                            '    parentRole.isSkill = True
-                                            'End If
-
-                                            If subRole.getSubRoleCount > 0 Then
-                                                ' Fehler ! 
-                                                If awinSettings.englishLanguage Then
-                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
-                                                Else
-                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
-                                                End If
-
-                                                meldungen.Add(errMsg)
-                                            Else
+                                            If listOFPeople.Contains(curRoleName) Then
                                                 subRole.addSkill(parentRole.UID, przSatz)
                                             End If
 
@@ -23331,31 +23350,12 @@ Public Module agm2
                                         parentRole.isSkill = readingGroups            'Team-Marker setzen
 
                                         If readingGroups Then
-                                            ' hier kann er eigentlich nie hinkommen ...
-                                            If curLevel = maxIndent Then
-                                                'If Not parentRole.isSkill Then
-                                                '    parentRole.isSkill = True
-                                                'End If
-                                                If subRole.getSubRoleCount > 0 Then
-                                                    ' Fehler ! 
-                                                    If awinSettings.englishLanguage Then
-                                                        errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
-                                                    Else
-                                                        errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
-                                                    End If
-                                                    meldungen.Add(errMsg)
-                                                Else
-                                                    subRole.addSkill(parentRole.UID, przSatz)
-                                                End If
 
-                                            Else
-
-                                                If subRole.getSubRoleCount = 0 Then
-                                                    subRole.isSkill = readingGroups
-                                                End If
+                                            If listOFPeople.Contains(curRoleName) Then
+                                                subRole.addSkill(parentRole.UID, przSatz)
                                             End If
-                                        End If
 
+                                        End If
 
                                     Else
                                         ' nichts tun 

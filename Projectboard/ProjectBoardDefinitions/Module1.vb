@@ -128,6 +128,8 @@ Public Module Module1
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
     Public sessionCacheProjekte As New clsProjekteAlle
 
+    Public isInChartWindow As Boolean = False
+
     ' die globale Variable für die Write Protections
     Public writeProtections As New clsWriteProtections
 
@@ -8094,6 +8096,11 @@ Public Module Module1
             Exit Sub
         End If
 
+        ' tk 22.5.21 
+        If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+            projectboardWindows(PTwindows.mpt).Activate()
+        End If
+
         '' '' alle Windows schliessen, bis auf das MPT Window 
         ' ''For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
         ' ''    tmpWindow.Activate()
@@ -8134,11 +8141,12 @@ Public Module Module1
             If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
 
                 'projectboardWindows(PTwindows.mptpf).Activate()
-                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
-                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
-                End If
+                'If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                '    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                'End If
                 Try
                     projectboardWindows(PTwindows.mptpf).Close()
+
                 Catch ex As Exception
 
                 End Try

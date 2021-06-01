@@ -520,41 +520,75 @@ Public Class ThisWorkbook
 
 
 
-    Private bIShrankTheRibbon As Boolean
+    Protected Friend bIShrankTheRibbon As Boolean = False
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
 
-        If appInstance.Version <> "14.0" Then
+        Try
+            If appInstance.Version <> "14.0" Then
 
-            If CStr(Wn.Caption).Contains("Chart") Then
-                bIShrankTheRibbon = False
-                appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
-                bIShrankTheRibbon = True
+                If CStr(Wn.Caption).Contains("Chart") Then
+                    isInChartWindow = True
+                    ' tk 23.5.21 Aufruf des MAkros ExecuteExcel4MAkro führt zu Problemen in Office 16 und später 
+                    ' deshalb rausgenommen und isInChartWindow Variable ersetzt
+                    ' in ribbon1.chckvisibility wird das Menu in Abhängigkeit von isInChartWindow gezeigt oder auch nicht
+
+                    ' tk 23.5.21 deprecated
+                    ''If bIShrankTheRibbon = False Then
+                    ''    Dim resultObject As Object = (appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)"))
+                    ''    bIShrankTheRibbon = True
+
+                    ''End If
+                Else
+                    isInChartWindow = False
+
+                    ' tk 23.5.21 deprecated
+                    'If bIShrankTheRibbon = True Then
+                    '    Dim resultObject As Object = appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+                    '    bIShrankTheRibbon = False
+                    'End If
+                End If
+
             End If
-        End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 
 
     Private Sub ThisWorkbook_WindowDeactivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowDeactivate
-        If appInstance.Version <> "14.0" Then
+        Try
+            'If appInstance.Version <> "14.0" Then
 
-            If CStr(Wn.Caption).Contains("Chart") Then
-                If bIShrankTheRibbon Then
-                    'appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
-                    appInstance.ActiveWindow.WindowState = XlWindowState.xlNormal
-                End If
-            End If
-        End If
+            '    If CStr(Wn.Caption).Contains("Chart") Then
+            '        If bIShrankTheRibbon = True Then
+            '            Dim resultObject As Object = appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+            '            bIShrankTheRibbon = False
+            '        End If
+            '    End If
+            'End If
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 
     Private Sub ThisWorkbook_SheetDeactivate(Sh As Object) Handles Me.SheetDeactivate
-        Dim a As Integer = -1
+        Dim sheetName As String = CType(Sh, Worksheet).Name
     End Sub
 
     Private Sub ThisWorkbook_WindowResize(Wn As Window) Handles Me.WindowResize
         ' ein Vergrößern sollte immer das Chart größer, das heisst breiter werden lassen
         ' das Mitte Window 
         ' beim Verkleinern sollte gar nix passieren , auss
+        Dim whatIs As Boolean = bIShrankTheRibbon
+    End Sub
 
+    Private Sub ThisWorkbook_SheetActivate(Sh As Object) Handles Me.SheetActivate
+        Dim sheetName As String = CType(Sh, Worksheet).Name
     End Sub
 End Class
