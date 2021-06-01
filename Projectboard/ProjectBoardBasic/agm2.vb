@@ -6245,7 +6245,8 @@ Public Module agm2
 
                                             hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
                                             '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
-                                            hrchynode.indexOfElem = hproj.AllPhases.Count
+
+
                                             ' merken von letzem Element (Knoten,Phase,Meilenstein)
                                             lasthrchynode = hrchynode
                                             lastelemID = cphase.nameID
@@ -20602,6 +20603,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\Modulare Szenarien"
             importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\AddOn Regeln"
             importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+            importOrdnerNames(PTImpExp.JiraProjects) = awinPath & "Import\JIRA Project"
             importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\MassEdit"
             importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
             importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"

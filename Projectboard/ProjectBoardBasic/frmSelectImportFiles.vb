@@ -32,6 +32,8 @@ Public Class frmSelectImportFiles
                     fileNameWildCards = {"*.mpp"}
                 Case PTImpExp.projectWithConfig
                     fileNameWildCards = {importFileNames}
+                Case PTImpExp.JiraProjects
+                    fileNameWildCards = {importFileNames}
                 Case Else
                     fileNameWildCards = {"*.xls", "*.xlsx"}
             End Select
@@ -140,6 +142,17 @@ Public Class frmSelectImportFiles
                 Me.Text = "select RPLAN RXF-files"
             Else
                 Me.Text = "RPLAN RXF Dateien auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+
+        ElseIf menueAswhl = PTImpExp.JiraProjects Then
+            dirName = importOrdnerNames(PTImpExp.JiraProjects)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select JiraProjects-files"
+            Else
+                Me.Text = "JIRA Dateien auswählen"
             End If
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One

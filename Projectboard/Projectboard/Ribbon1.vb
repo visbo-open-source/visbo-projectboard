@@ -3582,6 +3582,13 @@ Imports System.Web
                     tmpLabel = "RPLAN RXF"
                 End If
 
+            Case "PT4G1B10" ' Import JIRA Projekte
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "JIRA-Projekt"
+                Else
+                    tmpLabel = "JIRA-project"
+                End If
+
             Case "PT4G1B7" ' Import Projekte (Batch)
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Erzeuge Projekte aus Liste (VISBO)"
@@ -8846,6 +8853,140 @@ Imports System.Web
         outPutCollection.Add(outputString)
 
         If outPutCollection.Count > 0 Then
+            If awinSettings.englishLanguage Then
+                Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+            Else
+                Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+            End If
+        End If
+
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+
+    Public Sub PTImportJIRAProjects(control As IRibbonControl)
+
+        Dim JIRAProjectsConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectsFile As String = ""
+        Dim lastrow As Integer = 0
+        Dim outputString As String = ""
+        Dim dateiName As String = ""
+        Dim listofArchivAllg As New List(Of String)
+        Dim outPutCollection As New Collection
+
+        Dim outputLine As String = ""
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+        Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
+
+        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+
+        If allesOK Then
+
+            Dim getProjConfigImport As New frmSelectImportFiles
+
+            Dim returnValue As DialogResult
+
+
+            Call projektTafelInit()
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            getProjConfigImport.menueAswhl = PTImpExp.JiraProjects
+            getProjConfigImport.importFileNames = projectsFile
+            returnValue = getProjConfigImport.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                Dim ok As Boolean = False
+                Dim importDate As Date = Date.Now
+                'Dim importDate As Date = "31.10.2013"
+                ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+                Dim listofVorlagen As Collection
+                listofVorlagen = getProjConfigImport.selImportFiles
+
+
+                '' ''dirName = awinPath & msprojectFilesOrdner
+                ' ''dirName = importOrdnerNames(PTImpExp.msproject)
+                ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear(False)
+
+                '' Cursor auf HourGlass setzen
+                Cursor.Current = Cursors.WaitCursor
+
+                'Call logfileOpen()
+
+                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+                Dim i As Integer
+
+                For i = 1 To listofVorlagen.Count
+                    dateiName = listofVorlagen.Item(i).ToString
+
+
+                    listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                    If listofArchivAllg.Count > 0 Then
+                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.JiraProjects))
+                    End If
+
+                Next
+
+                'Call logfileSchreiben(outPutCollection)
+                ''Call logfileSchliessen()
+
+
+                ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                Try
+                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                    Else
+                        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                    End If
+
+                End Try
+
+                '' Cursor auf Default setzen
+                Cursor.Current = Cursors.Default
+
+            End If
+
+        End If
+
+
+        If outPutCollection.Count > 0 Then
+
+            outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+            outPutCollection.Add(outputString)
+
             If awinSettings.englishLanguage Then
                 Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
             Else

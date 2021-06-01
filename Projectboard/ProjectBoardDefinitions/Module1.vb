@@ -932,6 +932,7 @@ Public Module Module1
         customization = 14
         appearances = 15
         projectWithConfig = 16
+        JiraProjects = 17
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

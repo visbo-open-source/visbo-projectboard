@@ -375,787 +375,6 @@ Public Module agm3
                                             configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
                                             ProjectsFile = configLine.ProjectsFile
 
-                                            'Case "ProjectTemplate"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "Budget"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "ProjectDescription"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "ProjectStart"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "ProjectEnd"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "duration"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "BU"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "ProjectNumber"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "ProjectName"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "TimeUnit"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "Ressourcen"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "days"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "weeks"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "months"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "years"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "Total"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                            'Case "LastLine"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
 
                                         Case Else
                                             configLine.Titel = CStr(.Cells(i, titleCol).value)
@@ -5020,6 +4239,1473 @@ Public Module agm3
 
         readProjectsWithConfig = result
     End Function
+
+    Public Function readProjectsJIRA(ByVal listOfProjectFiles As Collection,
+                                     ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                     ByRef meldungen As Collection) As List(Of String)
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim listOfArchivFiles As New List(Of String)
+        Dim taskList As New SortedList(Of Date, clsJIRA_Task)
+        Dim anzFehler As Integer = 0
+        Dim result As Boolean = False
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+
+
+        If listOfProjectFiles.Count > 0 Then
+            ' Öffnen des projectFile
+            For Each tmpDatei As String In listOfProjectFiles
+                Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekte " & tmpDatei, "readProjectsJIRA", anzFehler)
+
+                'TODO for UR: 
+                '   Read Tasks into clsJIRA-Task-Class
+                '   group Tasks into phases and milestones with ressources, deliverables ...
+
+                result = readJIRATasks(projectConfig, tmpDatei, taskList, meldungen)
+                Call logger(ptErrLevel.logInfo, "JIRA-Projekt " & taskList.ElementAt(1).Value.projectName & " eingelesen", "readProjectsJIRA", anzFehler)
+
+                ' Projektstart bestimmen
+                Dim i As Integer = 0
+                Dim projStart As Date
+                While taskList.ElementAt(i).Key <= Date.MinValue
+                    i = i + 1
+                End While
+                projStart = taskList.ElementAt(i).Key            ' StartDatum fürs Projekt ist das Erstellt-Datum der ersten Task, die nicht nothing ist,  in Tasklist
+
+                ' Projekt erzeugen mit Name, Start- und Ende-Datum
+                Dim hproj As clsProjekt
+                Dim anzTasks As Integer = taskList.Count
+
+                ' taskList nach Vorgangstyp filtern
+                Dim epicCollection As Collection = filternNach("Vorgangstyp", "Epic", taskList)
+
+                ' find project start
+                Dim oneEpic As clsJIRA_Task = epicCollection.Item(1)
+
+
+                ' find the project-End
+                Dim projEnde As Date
+                For Each item As clsJIRA_Task In epicCollection
+                    If item.SprintEndDate > projEnde Then
+                        projEnde = item.SprintEndDate
+                    End If
+                    If item.fällig > projEnde Then
+                        projEnde = item.fällig
+                    End If
+                Next
+
+                hproj = New clsProjekt(taskList.ElementAt(1).Value.projectName, False, projStart, projEnde)
+
+
+                ' jeden epic-Vorgang einzeln filtern und als Phase in das Projekt eintragen
+                Dim epics() As Collection
+                ReDim epics(epicCollection.Count - 1)
+
+                Dim ie As Integer = 0
+
+                ' Phasen aus den Epics erzeugen
+                Dim ephase As clsPhase
+
+                For Each item As clsJIRA_Task In epicCollection
+
+                    ephase = New clsPhase(hproj)
+                    ephase.nameID = calcHryElemKey(item.Jira_ID, False)
+
+                    ' Ergänzung tk für Demo BHTC 
+                    ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                    Dim origPhName As String = item.Jira_ID
+                    item.Jira_ID = phaseMappings.mapToStdName("", item.Jira_ID)
+
+
+                    ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                    If Not PhaseDefinitions.Contains(item.Jira_ID) Then
+                        Dim newPhaseDef As New clsPhasenDefinition
+                        newPhaseDef.name = item.Jira_ID
+                        ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                        'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                        '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                        'Else
+                        newPhaseDef.shortName = item.Jira_ID
+                        'End If
+
+                        ' Task Class, falls Customfield visbo_taskclass definiert ist
+                        'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                        '    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                        'Else
+                        newPhaseDef.darstellungsKlasse = ""
+                        'End If
+                        ephase.appearanceName = newPhaseDef.darstellungsKlasse
+
+                        newPhaseDef.UID = PhaseDefinitions.Count + 1
+                        'PhaseDefinitions.Add(newPhaseDef)
+                        missingPhaseDefinitions.Add(newPhaseDef)
+                    Else
+                        'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                        '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
+                        'Else
+                        ephase.appearanceName = appearanceDefinitions.getPhaseAppearance(item.Jira_ID, "").name
+                        'End If
+                    End If
+
+
+                    Dim duration As Integer = calcDauerIndays(item.Erstellt, item.fällig)
+                    If duration < 0 Then
+                        If item.fällig <= Date.MinValue Then
+                            item.fällig = projEnde
+                        End If
+                        If item.fällig <= item.Erstellt Then
+                            item.fällig = item.Erstellt
+                        End If
+                        If (item.erledigt > Date.MinValue) And (item.erledigt > item.Erstellt) Then
+                            item.fällig = item.erledigt
+                        End If
+                        'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
+                        duration = calcDauerIndays(item.Erstellt, item.fällig)
+                    End If
+
+                    If duration > 0 Then
+
+                        Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, item.Erstellt)
+                        ephase.offset = offset
+                        ephase.changeStartandDauer(offset, duration)
+                        If item.TaskStatus = "Fertig" Then
+                            ephase.percentDone = 1.0
+                        Else
+                            ephase.percentDone = 0.0
+                        End If
+                        ephase.verantwortlich = item.zugewPerson
+
+                        ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                        Dim hrchynode As New clsHierarchyNode
+                        hrchynode.elemName = ephase.name
+                        hrchynode.parentNodeKey = rootPhaseName
+                        hproj.AddPhase(ephase, origName:=item.Jira_ID, parentID:=rootPhaseName)
+                        hrchynode.indexOfElem = hproj.AllPhases.Count
+                    End If
+
+
+                    Dim epicVorg As New Collection
+                    epicVorg = filternNach("Übergeordnet", item.Jira_ID, taskList)
+                    epics(ie) = epicVorg
+                    Dim vgphase As clsPhase
+
+                    For Each itemVg As clsJIRA_Task In epicVorg
+
+                        vgphase = New clsPhase(hproj)
+                        vgphase.nameID = calcHryElemKey(itemVg.Jira_ID, False)
+
+                        ' Ergänzung tk für Demo BHTC 
+                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                        Dim origPhNameVG As String = itemVg.Jira_ID
+                        itemVg.Jira_ID = phaseMappings.mapToStdName("", itemVg.Jira_ID)
+
+
+                        ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                        If Not PhaseDefinitions.Contains(itemVg.Jira_ID) Then
+                            Dim newPhaseDef As New clsPhasenDefinition
+                            newPhaseDef.name = itemVg.Jira_ID
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                            '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                            'Else
+                            newPhaseDef.shortName = itemVg.Jira_ID
+                            'End If
+
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                            '    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            'Else
+                            newPhaseDef.darstellungsKlasse = ""
+                            'End If
+                            vgphase.appearanceName = newPhaseDef.darstellungsKlasse
+
+                            newPhaseDef.UID = PhaseDefinitions.Count + 1
+                            'PhaseDefinitions.Add(newPhaseDef)
+                            missingPhaseDefinitions.Add(newPhaseDef)
+                        Else
+                            'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                            '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
+                            'Else
+                            vgphase.appearanceName = appearanceDefinitions.getPhaseAppearance(itemVg.Jira_ID, "").name
+                            'End If
+                        End If
+
+
+                        Dim durationVg As Integer = calcDauerIndays(itemVg.Erstellt, itemVg.fällig)
+                        If durationVg < 0 Then
+                            If itemVg.fällig <= Date.MinValue Then
+                                itemVg.fällig = projEnde
+                            End If
+                            If itemVg.fällig <= itemVg.Erstellt Then
+                                itemVg.fällig = itemVg.Erstellt
+                            End If
+                            If Not IsNothing(itemVg.erledigt) Then
+                                itemVg.fällig = itemVg.erledigt
+                            End If
+                            'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
+                        Else
+                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, itemVg.Erstellt)
+                            vgphase.offset = offset
+                            vgphase.changeStartandDauer(offset, durationVg)
+                            If itemVg.TaskStatus = "Fertig" Then
+                                vgphase.percentDone = 1.0
+                            Else
+                                vgphase.percentDone = 0.0
+                            End If
+                            vgphase.verantwortlich = itemVg.zugewPerson
+
+                            ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                            Dim hrchynode As New clsHierarchyNode
+                            hrchynode.elemName = vgphase.name
+                            hrchynode.parentNodeKey = ephase.nameID
+                            hproj.AddPhase(vgphase, origName:=itemVg.Jira_ID, parentID:=ephase.nameID)
+                            hrchynode.indexOfElem = hproj.AllPhases.Count
+                        End If
+                        Call logger(ptErrLevel.logInfo, "JIRA-Phase " & itemVg.Jira_ID & ":" & itemVg.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                    Next     ' itemvg
+
+                    ie = ie + 1
+                    Call logger(ptErrLevel.logInfo, "JIRA-Phase " & item.Jira_ID & ":" & item.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                Next    ' item
+
+                If result Then
+                    Dim keyStr As String = ""
+                    Try
+                        keyStr = calcProjektKey(hproj)
+                        ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                        'meldungen.Add(calcProjektKey(hproj))
+                        ' hier: merken der erfolgreich importierten Projects Dateien
+                        listOfArchivFiles.Add(tmpDatei)
+
+                    Catch ex2 As Exception
+                        Call MsgBox("Projekt " & keyStr & " kann nicht zweimal importiert werden ...")
+                    End Try
+
+                Else
+                    Call logger(ptErrLevel.logWarning, "Einlesen JIRA-Projekt nicht erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
+                End If
+            Next
+
+        Else
+            Dim errMsg As String = "Es gibt keine Datei zur Projekt-Anlage" & vbLf _
+                             & "Es wurden daher jetzt keine berücksichtigt"
+
+            ' das sollte nicht dazu führen, dass nichts gemacht wird 
+            'meldungen.Add(errMsg)
+            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+            'Call MsgBox(errMsg)
+
+            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
+        End If
+
+        If result Then
+            readProjectsJIRA = listOfArchivFiles
+        Else
+            readProjectsJIRA = New List(Of String)
+        End If
+
+    End Function
+
+    Public Function filternNach(ByVal Field As String, ByVal testValue As String, ByVal taskList As SortedList(Of Date, clsJIRA_Task)) As Collection
+
+        Dim resCollection As New Collection
+
+        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In taskList
+            Select Case Field
+                Case "Vorgangstyp"
+                    If item.Value.Vorgangstyp = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "ZugewiesenePerson"
+                    If item.Value.zugewPerson = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "Autor"
+                    If item.Value.Autor = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "Prio"
+                    If item.Value.Prio = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "Task-Status"
+                    If item.Value.TaskStatus = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "Verknüpfte Vorgänge"
+                    If item.Value.verknüpfte_JiraID = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "Area"
+                    If item.Value.Area = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "Label"
+                Case "Übergeordnet"
+                    If item.Value.parent_JiraID = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case "SprintName"
+                    If item.Value.Sprint = testValue Then
+                        resCollection.Add(item.Value, item.Value.Erstellt)
+                    End If
+                Case Else
+
+            End Select
+        Next
+
+        filternNach = resCollection
+    End Function
+
+
+    Public Function readJIRATasks(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                     ByVal JiraExcelFile As String, ByRef taskList As SortedList(Of Date, clsJIRA_Task), ByRef meldungen As Collection) As Boolean
+        Dim result As Boolean = False
+        Dim outputline As String = ""
+        Dim ok As Boolean = False
+        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim regexpression As Regex
+        Dim firstUrlspalte As Integer
+        Dim firstUrlzeile As Integer
+        Dim lastSpalte As Integer
+        Dim lastZeile As Integer
+        Dim anz_Proj_created As Integer = 0
+        Dim anz_Proj_notCreated As Integer = 0
+        Dim oneNextTask As New clsJIRA_Task
+
+        Dim noGo As Integer = 0   'Sobald diese Variable > 0 ist, wird das Projekt nicht importiert
+
+        Try
+            If My.Computer.FileSystem.FileExists(JiraExcelFile) Then
+
+                Try
+                    projectWB = appInstance.Workbooks.Open(JiraExcelFile)
+
+                    Dim vstart As clsConfigProjectsImport = projectConfig("valueStart")
+                    ' Auslesen erste Projekt-Spalte
+                    firstUrlspalte = vstart.column.von
+                    firstUrlzeile = vstart.row.von
+
+                    If appInstance.Worksheets.Count > 0 Then
+
+                        If Not IsNothing(vstart.sheet) Then
+                            currentWS = CType(appInstance.Worksheets(vstart.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            ok = (currentWS.Name = vstart.sheetDescript)
+                        End If
+                        If Not ok Then
+                            If Not IsNothing(vstart.sheetDescript) Then
+                                currentWS = CType(appInstance.Worksheets(vstart.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            Else
+                                currentWS = Nothing
+                            End If
+                        End If
+
+                        If IsNothing(currentWS) Then
+                            outputline = "The Worksheet you want to import cannot be matched"
+                            meldungen.Add(outputline)
+                            Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                        Else
+                            ' bestimme letzte Zeile und Spalte
+                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, firstUrlspalte), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                            Try
+
+
+                                For i = firstUrlzeile To lastZeile + 1
+
+                                    oneNextTask = New clsJIRA_Task
+
+                                    ' projectName:
+                                    Try
+                                        Dim projectNameConfig As clsConfigProjectsImport = projectConfig("Projekt")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> projectNameConfig.sheet Then
+                                            If Not IsNothing(projectNameConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projectNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projectNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case projectNameConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.projectName = CStr(.Cells(i, projectNameConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.projectName = CInt(.Cells(i, projectNameConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.projectName = CDbl(.Cells(i, projectNameConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.projectName = CDate(.Cells(i, projectNameConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.projectName = .Cells(i, projectNameConfig.column.von).value
+                                            End Select
+
+                                            If projectNameConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(projectNameConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.projectName)
+                                                If match.Success Then
+                                                    oneNextTask.projectName = match.Value
+                                                Else
+                                                    oneNextTask.projectName = Nothing
+                                                End If
+                                            End If
+                                        End With
+                                    Catch ex As Exception
+                                        ' Fehler bei ProjectName
+                                        outputline = "problems reading ProjektName: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Vorgangstyp:
+                                    Try
+                                        Dim vorgangstypConfig As clsConfigProjectsImport = projectConfig("Vorgangstyp")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> vorgangstypConfig.sheet Then
+                                            If Not IsNothing(vorgangstypConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(vorgangstypConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(vorgangstypConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case vorgangstypConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Vorgangstyp = CStr(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Vorgangstyp = CInt(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Vorgangstyp = CDbl(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Vorgangstyp = CDate(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Vorgangstyp = .Cells(i, vorgangstypConfig.column.von).value
+                                            End Select
+
+                                            If vorgangstypConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(vorgangstypConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Vorgangstyp)
+                                                If match.Success Then
+                                                    oneNextTask.Vorgangstyp = match.Value
+                                                Else
+                                                    oneNextTask.Vorgangstyp = Nothing
+                                                End If
+                                            End If
+                                        End With
+                                    Catch ex As Exception
+                                        ' Fehler bei Vorgangstyp
+                                        outputline = "problems reading Vorgangstyp: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'Jira-ID:
+                                    Try
+                                        Dim JiraIDConfig As clsConfigProjectsImport = projectConfig("Jira-ID")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> JiraIDConfig.sheet Then
+                                            If Not IsNothing(JiraIDConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(JiraIDConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(JiraIDConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case JiraIDConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Jira_ID = CStr(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Jira_ID = CInt(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Jira_ID = CDbl(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Jira_ID = CDate(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Jira_ID = .Cells(i, JiraIDConfig.column.von).value
+                                            End Select
+
+                                            If JiraIDConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(JiraIDConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Jira_ID)
+                                                If match.Success Then
+                                                    oneNextTask.Jira_ID = match.Value
+                                                Else
+                                                    oneNextTask.Jira_ID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Jira-ID:
+                                        outputline = "problems reading JIRA-ID: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'Zusammenfassung:
+                                    Try
+                                        Dim subjectConfig As clsConfigProjectsImport = projectConfig("Zusammenfassung")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> subjectConfig.sheet Then
+                                            If Not IsNothing(subjectConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(subjectConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(subjectConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case subjectConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Zusammenfassung = CStr(.Cells(i, subjectConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Zusammenfassung = CInt(.Cells(i, subjectConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Zusammenfassung = CDbl(.Cells(i, subjectConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Zusammenfassung = CDate(.Cells(i, subjectConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Zusammenfassung = .Cells(i, subjectConfig.column.von).value
+                                            End Select
+
+                                            If subjectConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(subjectConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Zusammenfassung)
+                                                If match.Success Then
+                                                    oneNextTask.Zusammenfassung = match.Value
+                                                Else
+                                                    oneNextTask.Zusammenfassung = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Zusammenfassung:
+                                        outputline = "problems reading Zusammenfassung: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'zugewiesene Person:
+                                    Try
+                                        Dim personConfig As clsConfigProjectsImport = projectConfig("ZugewiesenePerson")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> personConfig.sheet Then
+
+                                            If Not IsNothing(personConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(personConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(personConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case personConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.zugewPerson = CStr(.Cells(i, personConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.zugewPerson = CInt(.Cells(i, personConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.zugewPerson = CDbl(.Cells(i, personConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.zugewPerson = CDate(.Cells(i, personConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.zugewPerson = .Cells(i, personConfig.column.von).value
+                                            End Select
+
+                                            If personConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(personConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.zugewPerson)
+                                                If match.Success Then
+                                                    oneNextTask.zugewPerson = match.Value
+                                                Else
+                                                    oneNextTask.zugewPerson = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei zugewiesene Person:
+                                        outputline = "problems reading zugewiesene Person: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'Autor:
+                                    Try
+                                        Dim autorConfig As clsConfigProjectsImport = projectConfig("Autor")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> autorConfig.sheet Then
+                                            If Not IsNothing(autorConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(autorConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(autorConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case autorConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Autor = CStr(.Cells(i, autorConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Autor = CInt(.Cells(i, autorConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Autor = CDbl(.Cells(i, autorConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Autor = CDate(.Cells(i, autorConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Autor = .Cells(i, autorConfig.column.von).value
+                                            End Select
+
+                                            If autorConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(autorConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Autor)
+                                                If match.Success Then
+                                                    oneNextTask.Autor = match.Value
+                                                Else
+                                                    oneNextTask.Autor = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei zugewiesene Person:
+                                        outputline = "problems reading Autor: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Priorität:
+                                    Try
+                                        Dim prioConfig As clsConfigProjectsImport = projectConfig("Prio")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> prioConfig.sheet Then
+                                            If Not IsNothing(prioConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(prioConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(prioConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case prioConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Prio = CStr(.Cells(i, prioConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Prio = CInt(.Cells(i, prioConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Prio = CDbl(.Cells(i, prioConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Prio = CDate(.Cells(i, prioConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Prio = .Cells(i, prioConfig.column.von).value
+                                            End Select
+
+                                            If prioConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(prioConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Prio)
+                                                If match.Success Then
+                                                    oneNextTask.Prio = match.Value
+                                                Else
+                                                    oneNextTask.Prio = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Priorität:
+                                        outputline = "problems reading Priorität: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Task-Status:
+                                    Try
+                                        Dim statusConfig As clsConfigProjectsImport = projectConfig("Task-Status")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> statusConfig.sheet Then
+                                            If Not IsNothing(statusConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(statusConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(statusConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case statusConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.TaskStatus = CStr(.Cells(i, statusConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.TaskStatus = CInt(.Cells(i, statusConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.TaskStatus = CDbl(.Cells(i, statusConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.TaskStatus = CDate(.Cells(i, statusConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.TaskStatus = .Cells(i, statusConfig.column.von).value
+                                            End Select
+
+                                            If statusConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(statusConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.TaskStatus)
+                                                If match.Success Then
+                                                    oneNextTask.TaskStatus = match.Value
+                                                Else
+                                                    oneNextTask.TaskStatus = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Task-Status:
+                                        outputline = "problems reading Status: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Lösung:
+                                    Try
+                                        Dim lösungConfig As clsConfigProjectsImport = projectConfig("Lösung(*)")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> lösungConfig.sheet Then
+                                            If Not IsNothing(lösungConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(lösungConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(lösungConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case lösungConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.loesung = CStr(.Cells(i, lösungConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.loesung = CInt(.Cells(i, lösungConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.loesung = CDbl(.Cells(i, lösungConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.loesung = CDate(.Cells(i, lösungConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.loesung = .Cells(i, lösungConfig.column.von).value
+                                            End Select
+
+                                            If lösungConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(lösungConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.loesung)
+                                                If match.Success Then
+                                                    oneNextTask.loesung = match.Value
+                                                Else
+                                                    oneNextTask.loesung = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Lösung(*)
+                                        outputline = "problems reading Lösung: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Erstellungsdatum:
+                                    Try
+                                        Dim createdAtConfig As clsConfigProjectsImport = projectConfig("Erstellungsdatum")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> createdAtConfig.sheet Then
+                                            If Not IsNothing(createdAtConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(createdAtConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(createdAtConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case createdAtConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Erstellt = CStr(.Cells(i, createdAtConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.Erstellt = CInt(.Cells(i, createedAtConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.Erstellt = CDbl(.Cells(i, createedAtConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Erstellt = CDate(.Cells(i, createdAtConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Erstellt = .Cells(i, createdAtConfig.column.von).value
+                                            End Select
+
+                                            If createdAtConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(createdAtConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Erstellt)
+                                                If match.Success Then
+                                                    oneNextTask.Erstellt = match.Value
+                                                Else
+                                                    oneNextTask.Erstellt = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Erstellungsdatum
+                                        outputline = "problems reading Erstellungsdatum: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Aktualisiert:
+                                    Try
+                                        Dim updatedAtConfig As clsConfigProjectsImport = projectConfig("Aktualisiert")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> updatedAtConfig.sheet Then
+                                            If Not IsNothing(updatedAtConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(updatedAtConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(updatedAtConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case updatedAtConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.aktualisiert = CStr(.Cells(i, updatedAtConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.aktualisiert = CInt(.Cells(i, createedAtConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.aktualisiert = CDbl(.Cells(i, createedAtConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.aktualisiert = CDate(.Cells(i, updatedAtConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.aktualisiert = .Cells(i, updatedAtConfig.column.von).value
+                                            End Select
+
+                                            If updatedAtConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(updatedAtConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.aktualisiert)
+                                                If match.Success Then
+                                                    oneNextTask.aktualisiert = match.Value
+                                                Else
+                                                    oneNextTask.aktualisiert = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Aktualisiert
+                                        outputline = "problems reading Aktualisierungs-Datum: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Fälligkeitsdatum:
+                                    Try
+                                        Dim toBeReadyConfig As clsConfigProjectsImport = projectConfig("Fälligkeitsdatum")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> toBeReadyConfig.sheet Then
+                                            If Not IsNothing(toBeReadyConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(toBeReadyConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(toBeReadyConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case toBeReadyConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.fällig = CStr(.Cells(i, toBeReadyConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.fällig = CInt(.Cells(i, toBeReadyConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.fällig = CDbl(.Cells(i, toBeReadyConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.fällig = CDate(.Cells(i, toBeReadyConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.fällig = .Cells(i, toBeReadyConfig.column.von).value
+                                            End Select
+
+                                            If toBeReadyConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(toBeReadyConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.fällig)
+                                                If match.Success Then
+                                                    oneNextTask.fällig = match.Value
+                                                Else
+                                                    oneNextTask.fällig = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Fälligkeitsdatum
+                                        outputline = "problems reading Fälligkeit: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Verknüpfte Vorgänge(Jira-ID):
+                                    Try
+                                        Dim connectedConfig As clsConfigProjectsImport = projectConfig("Verknüpfte Vorgänge(Jira-ID)")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> connectedConfig.sheet Then
+                                            If Not IsNothing(connectedConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(connectedConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(connectedConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case connectedConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.verknüpfte_JiraID = CStr(.Cells(i, connectedConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.verknüpfte_JiraID = CInt(.Cells(i, connectedConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.verknüpfte_JiraID = CDbl(.Cells(i, connectedConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.verknüpfte_JiraID = CDate(.Cells(i, connectedConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.verknüpfte_JiraID = .Cells(i, connectedConfig.column.von).value
+                                            End Select
+
+                                            If connectedConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(connectedConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.verknüpfte_JiraID)
+                                                If match.Success Then
+                                                    oneNextTask.verknüpfte_JiraID = match.Value
+                                                Else
+                                                    oneNextTask.verknüpfte_JiraID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei verknüpfte Vorgänge
+                                        outputline = "problems reading verknüpfte Vorgänge: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Area:
+                                    Try
+                                        Dim areaConfig As clsConfigProjectsImport = projectConfig("Area")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> areaConfig.sheet Then
+                                            If Not IsNothing(areaConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(areaConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(areaConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case areaConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.verknüpfte_JiraID = CStr(.Cells(i, areaConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.verknüpfte_JiraID = CInt(.Cells(i, areaConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.verknüpfte_JiraID = CDbl(.Cells(i, areaConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.verknüpfte_JiraID = CDate(.Cells(i, areaConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.verknüpfte_JiraID = .Cells(i, areaConfig.column.von).value
+                                            End Select
+
+                                            If areaConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(areaConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.verknüpfte_JiraID)
+                                                If match.Success Then
+                                                    oneNextTask.verknüpfte_JiraID = match.Value
+                                                Else
+                                                    oneNextTask.verknüpfte_JiraID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Area
+                                        outputline = "problems reading Area: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Parent(Jira-ID):
+                                    Try
+                                        Dim parentConfig As clsConfigProjectsImport = projectConfig("Parent(Jira-ID)")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> parentConfig.sheet Then
+                                            If Not IsNothing(parentConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(parentConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(parentConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case parentConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.parent_JiraID = CStr(.Cells(i, parentConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.parent_JiraID = CInt(.Cells(i, parentConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.parent_JiraID = CDbl(.Cells(i, parentConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.parent_JiraID = CDate(.Cells(i, parentConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.parent_JiraID = .Cells(i, parentConfig.column.von).value
+                                            End Select
+
+                                            If parentConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(parentConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.parent_JiraID)
+                                                If match.Success Then
+                                                    oneNextTask.parent_JiraID = match.Value
+                                                Else
+                                                    oneNextTask.parent_JiraID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei übergeordnet
+                                        outputline = "problems reading Übergeordnet: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Fortschritt:
+                                    Try
+                                        Dim fortschrittConfig As clsConfigProjectsImport = projectConfig("Fortschritt")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> fortschrittConfig.sheet Then
+                                            If Not IsNothing(fortschrittConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(fortschrittConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(fortschrittConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case fortschrittConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Fortschritt = CStr(.Cells(i, fortschrittConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Fortschritt = CInt(.Cells(i, fortschrittConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Fortschritt = CDbl(.Cells(i, fortschrittConfig.column.von).value)
+                                                    'Case "Date"
+                                                    '    oneNextTask.Fortschritt = CDate(.Cells(i, fortschrittConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Fortschritt = .Cells(i, fortschrittConfig.column.von).value
+                                            End Select
+
+                                            If fortschrittConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(fortschrittConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Fortschritt)
+                                                If match.Success Then
+                                                    oneNextTask.Fortschritt = match.Value
+                                                Else
+                                                    oneNextTask.Fortschritt = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Fortschritt
+                                        outputline = "problems reading Fortschritt: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Story Point-Schätzung:
+                                    Try
+                                        Dim aufwandConfig As clsConfigProjectsImport = projectConfig("Story Point-Schätzung")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> aufwandConfig.sheet Then
+                                            If Not IsNothing(aufwandConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(aufwandConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(aufwandConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case aufwandConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.StoryPoints = CStr(.Cells(i, aufwandConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.StoryPoints = CInt(.Cells(i, aufwandConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.StoryPoints = CDbl(.Cells(i, aufwandConfig.column.von).value)
+                                                    'Case "Date"
+                                                    '    oneNextTask.StoryPoints = CDate(.Cells(i, aufwandConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.StoryPoints = .Cells(i, aufwandConfig.column.von).value
+                                            End Select
+
+                                            If aufwandConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(aufwandConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.StoryPoints)
+                                                If match.Success Then
+                                                    oneNextTask.StoryPoints = match.Value
+                                                Else
+                                                    oneNextTask.StoryPoints = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  Story Point-Schätzung
+                                        outputline = "problems reading Story Point-Schätzung: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Erledigt-Datum:
+                                    Try
+                                        Dim erledigtConfig As clsConfigProjectsImport = projectConfig("Erledigt-Datum")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> erledigtConfig.sheet Then
+                                            If Not IsNothing(erledigtConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(erledigtConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(erledigtConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case erledigtConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.erledigt = CStr(.Cells(i, erledigtConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.erledigt = CInt(.Cells(i, erledigtConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.erledigt = CDbl(.Cells(i, erledigtConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.erledigt = CDate(.Cells(i, erledigtConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.erledigt = .Cells(i, erledigtConfig.column.von).value
+                                            End Select
+
+                                            If erledigtConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(erledigtConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.erledigt)
+                                                If match.Success Then
+                                                    oneNextTask.erledigt = match.Value
+                                                Else
+                                                    oneNextTask.erledigt = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  Erledigt-Datum
+                                        outputline = "problems reading Erledigt-Datum: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintName:
+                                    Try
+                                        Dim sprintNameConfig As clsConfigProjectsImport = projectConfig("SprintName")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> sprintNameConfig.sheet Then
+                                            If Not IsNothing(sprintNameConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintNameConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Sprint = CStr(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Sprint = CInt(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Sprint = CDbl(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Sprint = CDate(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Sprint = .Cells(i, sprintNameConfig.column.von).value
+                                            End Select
+
+                                            If sprintNameConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintNameConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Sprint)
+                                                If match.Success Then
+                                                    oneNextTask.Sprint = match.Value
+                                                Else
+                                                    oneNextTask.Sprint = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintName
+                                        outputline = "problems reading SprintName: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintStartDate:
+                                    Try
+                                        Dim sprintStartConfig As clsConfigProjectsImport = projectConfig("SprintStartDate")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> sprintStartConfig.sheet Then
+                                            If Not IsNothing(sprintStartConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintStartConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintStartConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintStartConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintStartDate = CStr(.Cells(i, sprintStartConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.SprintStartDate = CInt(.Cells(i, sprintStartConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.SprintStartDate = CDbl(.Cells(i, sprintStartConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintStartDate = CDate(.Cells(i, sprintStartConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintStartDate = .Cells(i, sprintStartConfig.column.von).value
+                                            End Select
+
+                                            If sprintStartConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintStartConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintStartDate)
+                                                If match.Success Then
+                                                    oneNextTask.SprintStartDate = match.Value
+                                                Else
+                                                    oneNextTask.SprintStartDate = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintStartDate
+                                        oneNextTask.SprintStartDate = Nothing
+                                        outputline = "problems reading SprintStartDate: line: " & i.ToString
+                                        'meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+
+                                    ' SprintEndDate:
+                                    Try
+                                        Dim sprintEndConfig As clsConfigProjectsImport = projectConfig("SprintEndDate")
+                                        'richtige Tabelle öffnen
+
+                                        If currentWS.Index <> sprintEndConfig.sheet Then
+                                            If Not IsNothing(sprintEndConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintEndConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintEndConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintEndConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintEndDate = CStr(.Cells(i, sprintEndConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.SprintEndDate = CInt(.Cells(i, sprintEndConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.SprintEndDate = CDbl(.Cells(i, sprintEndConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintEndDate = CDate(.Cells(i, sprintEndConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintEndDate = .Cells(i, sprintEndConfig.column.von).value
+                                            End Select
+
+                                            If sprintEndConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintEndConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintEndDate)
+                                                If match.Success Then
+                                                    oneNextTask.SprintEndDate = match.Value
+                                                Else
+                                                    oneNextTask.SprintEndDate = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintEndDate
+                                        oneNextTask.SprintEndDate = Nothing
+                                        outputline = "problems reading SprintEndDate: line: " & i.ToString
+                                        'meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintCompleteDate:
+                                    Try
+                                        Dim sprintCompleteConfig As clsConfigProjectsImport = projectConfig("SprintCompleteDate")
+                                        'richtige Tabelle öffnen
+
+                                        If currentWS.Index <> sprintCompleteConfig.sheet Then
+                                            If Not IsNothing(sprintCompleteConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintCompleteConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintCompleteConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Dim sprintCompleteObject As Object = Nothing
+                                            Try
+                                                sprintCompleteObject = .Cells(i, sprintCompleteConfig.column.von).value
+                                                If sprintCompleteObject = "[no subfield found]" Then
+                                                    sprintCompleteObject = Nothing
+                                                End If
+                                            Catch ex As Exception
+                                                sprintCompleteObject = Nothing
+                                            End Try
+
+
+                                            If Not IsNothing(sprintCompleteObject) Then
+                                                Select Case sprintCompleteConfig.Typ
+                                                    Case "Text"
+                                                        oneNextTask.SprintCompleteDate = CStr(.Cells(i, sprintCompleteConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.SprintCompleteDate = CInt(.Cells(i, sprintEndConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.SprintCompleteDate = CDbl(.Cells(i, sprintEndConfig.column.von).value)
+                                                    Case "Date"
+                                                        oneNextTask.SprintCompleteDate = CDate(.Cells(i, sprintCompleteConfig.column.von).value)
+                                                    Case Else
+                                                        oneNextTask.SprintCompleteDate = .Cells(i, sprintCompleteConfig.column.von).value
+                                                End Select
+
+                                                If sprintCompleteConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(sprintCompleteConfig.content)
+                                                    Dim match As Match = regexpression.Match(oneNextTask.SprintCompleteDate)
+                                                    If match.Success Then
+                                                        oneNextTask.SprintCompleteDate = match.Value
+                                                    Else
+                                                        oneNextTask.SprintCompleteDate = Nothing
+                                                    End If
+                                                End If
+                                            Else
+                                                oneNextTask.SprintCompleteDate = Date.MaxValue
+                                            End If
+
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintCompleteDate
+                                        outputline = "problems reading SprintCompleteDate: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintGoal:
+                                    Try
+                                        Dim sprintGoalConfig As clsConfigProjectsImport = projectConfig("SprintGoal")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> sprintGoalConfig.sheet Then
+                                            If Not IsNothing(sprintGoalConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintGoalConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintGoalConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintGoalConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintGoal = CStr(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.SprintGoal = CInt(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.SprintGoal = CDbl(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintGoal = CDate(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintGoal = .Cells(i, sprintGoalConfig.column.von).value
+                                            End Select
+
+                                            If sprintGoalConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintGoalConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintGoal)
+                                                If match.Success Then
+                                                    oneNextTask.SprintGoal = match.Value
+                                                Else
+                                                    oneNextTask.SprintGoal = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintGoal
+                                        outputline = "problems reading SprintGoal: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    '------------------------------------------
+                                    ' Plausibilitäten prüfen und ggfs. anpassen
+                                    '------------------------------------------
+                                    '' wenn kein Fälligkeitdatum angegeben ist, so wird date.maxvalue hierfür gesetzt
+                                    'If oneNextTask.fällig <= Date.MinValue Then
+                                    '    oneNextTask.fällig = Date.MaxValue
+                                    'End If
+                                    ' wenn task einem Sprint zugeordnet, so ist Fälligkeit = enddate des Sprints
+                                    If Not IsNothing(oneNextTask.Sprint) And Not IsNothing(oneNextTask.SprintEndDate) Then
+                                        oneNextTask.fällig = oneNextTask.SprintEndDate
+                                    End If
+
+                                    ' ist die Task bereits fertig ,
+                                    If oneNextTask.TaskStatus = "Fertig" Then
+                                        oneNextTask.fällig = oneNextTask.erledigt
+                                    End If
+
+                                    While taskList.ContainsKey(oneNextTask.Erstellt)
+                                        oneNextTask.Erstellt = DateAdd(DateInterval.Second, 1, oneNextTask.Erstellt)
+                                    End While
+                                    If Not IsNothing(oneNextTask.Erstellt) Then
+                                        taskList.Add(oneNextTask.Erstellt, oneNextTask)
+                                    End If
+
+                                    outputline = "line " & i.ToString & " Done"
+                                    Call logger(ptErrLevel.logInfo, outputline, "readJIRATasks", anzFehler)
+
+                                Next i       ' next line
+
+                            Catch ex As Exception
+                                outputline = "problems reading project: catch ex of lines-loop : " & ex.Message
+                                meldungen.Add(outputline)
+                                Call MsgBox(outputline)
+                            End Try
+
+                        End If      ' worksheet gibt es nicht
+
+                    End If
+
+
+                Catch ex As Exception
+                    outputline = "problems reading project: catch ex of projectWB : " & ex.Message
+                    meldungen.Add(outputline)
+                    Call MsgBox(outputline)
+
+                End Try
+            End If
+
+            ' Schliessen der Excel-Ausleitung von Jira
+
+
+            appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=False)
+
+        Catch ex As Exception
+            outputline = "problems reading project: catch from the beginning of readJIRATasks : " & ex.Message
+            meldungen.Add(outputline)
+            Call MsgBox(outputline)
+        End Try
+
+        If meldungen.Count <= 0 Then
+            result = True
+        End If
+
+        readJIRATasks = result
+
+    End Function
+
 
 
     Public Sub writeYearInitialPlanningSupportToExcel(ByVal von As Integer, ByVal bis As Integer,

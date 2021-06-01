@@ -88,6 +88,7 @@
     <Compile Include="clsDocuments.vb" />
     <Compile Include="clsDocumentsDB.vb" />
     <Compile Include="clsErrorCodeMsg.vb" />
+    <Compile Include="clsJIRA_Task.vb" />
     <Compile Include="frmProvideDate.Designer.vb">
       <DependentUpon>frmProvideDate.vb</DependentUpon>
     </Compile>
