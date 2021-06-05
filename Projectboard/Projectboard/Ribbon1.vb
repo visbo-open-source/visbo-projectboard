@@ -8856,13 +8856,20 @@ Imports System.Web
 
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
         Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
+        Dim configProposalImport As String = awinPath & configfilesOrdner & "configCalcTemplateImport.xlsx"
 
-        ' check here whether it is about updating projects or whether it is about to create new projects 
+        ' check here which Configuration file is given:
+        ' Instart: a lot of Files or 
+        ' Telair, normally just one file 
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim telairImportConfigOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim instartImportConfigOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
-        If allesOK Then
+        If telairImportConfigOK Or instartImportConfigOK Then
+
+            ' one of the two/several ImPortConfigFiles probably does not exist, that is why it should be reset 
+            outPutCollection.Clear()
 
             Dim getProjConfigImport As New frmSelectImportFiles
 
@@ -8905,8 +8912,12 @@ Imports System.Web
                 'Call logfileOpen()
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+                If telairImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                ElseIf instartImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
 
-                listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
 
                 If listofArchivAllg.Count > 0 Then
                     Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
@@ -8940,35 +8951,17 @@ Imports System.Web
         outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
         outPutCollection.Add(outputString)
 
-        If outPutCollection.Count > 0 Then
+        If outPutCollection.Count > 1 Then
             If awinSettings.englishLanguage Then
-                Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                Call showOutPut(outPutCollection, "Import Projects", "Errors occurred")
             Else
-                Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                Call showOutPut(outPutCollection, "Einlesen Projekte", "es gab Probleme")
             End If
         End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
-
-        If MsgBox("Store Baseline and Planning Version?", MsgBoxStyle.YesNo) = MsgBoxResult.Ok Then
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
-                ' jetzt als Project Manager speichern
-                Dim saveSpecifics As String = myCustomUserRole.specifics
-                Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
-
-                myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
-                ' Store Planning version
-
-                myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
-                ' Store Baseline version
-
-            Next
-
-
-        End If
 
         ' so positionieren, dass die Projekte auch sichtbar sind ...
         If boardWasEmpty Then
@@ -9050,7 +9043,7 @@ Imports System.Web
                 Cursor.Current = Cursors.WaitCursor
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, isUpdate:=True)
+                listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, ptImportTypen.telairTagetikUpdate)
 
                 If listofArchivAllg.Count > 0 Then
                     Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))

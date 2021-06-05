@@ -343,7 +343,7 @@ Public Module Module1
     ''' <summary>
     ''' definiert, welche Import-Methode angewendet werden soll ; angelegt 30.11.18 by tk
     ''' </summary>
-    Public Enum ptVisboImportTypen
+    Public Enum ptImportTypen
         visboSimple = 0
         visboProjectbrief = 1
         visboMassCreation = 2
@@ -356,6 +356,9 @@ Public Module Module1
         visboMassRessourcenEdit = 9
         visboMPP = 10
         allianzBOBImport = 11
+        telairTagetikImport = 12
+        telairTagetikUpdate = 13
+        instartCalcTemplateImport = 14
     End Enum
 
     Public Enum ptImportSettings
