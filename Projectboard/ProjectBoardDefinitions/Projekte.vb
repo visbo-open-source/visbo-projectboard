@@ -13707,6 +13707,172 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' creates a new project from Scratch, with given parameters
+    ''' if problems occur Nothing is returned, protocols see logfile ...
+    ''' Assumptions: pname, vname is valid, startdate is before endeDate, budget is .ge.0 , KPI are in range between 0 and 10
+    ''' phases are all children of rootphase
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endeDate"></param>
+    ''' <param name="budget"></param>
+    ''' <param name="businessUnit"></param>
+    ''' <param name="description"></param>
+    ''' <param name="responsible"></param>
+    ''' <param name="sfitKPI"></param>
+    ''' <param name="riskKPI"></param>
+    ''' <param name="phaseDates"></param>
+    ''' <param name="phaseRoleValues"></param>
+    ''' <param name="phaseCostValues"></param>
+    ''' <param name="phaseMilestones"></param>
+    ''' <param name="phaseDeliverables"></param>
+    ''' <param name="msDeliverables"></param>
+    ''' <returns></returns>
+    Public Function erstelleProjektausParametern(ByVal pName As String, ByVal vName As String,
+                                                 ByVal startDate As Date, ByVal endeDate As Date, ByVal budget As Double,
+                                                 ByVal businessUnit As String, ByVal description As String, ByVal responsible As String,
+                                                 ByVal sfitKPI As Integer, ByVal riskKPI As Integer,
+                                                 ByVal phaseDates As SortedList(Of String, Date()),
+                                                 ByVal phaseRoleValues As SortedList(Of String, SortedList(Of String, Double())),
+                                                 ByVal phaseCostValues As SortedList(Of String, SortedList(Of String, Double())),
+                                                 ByVal phaseMilestones As SortedList(Of String, SortedList(Of Date, KeyValuePair(Of String, Double))),
+                                                 ByVal phaseDeliverables As SortedList(Of String, List(Of String)),
+                                                 ByVal msDeliverables As SortedList(Of String, List(Of String))
+                                                 ) As clsProjekt
+
+        Dim hproj As New clsProjekt(pName, False, startDate, endeDate)
+        Dim projektDauerIndays As Integer = calcDauerIndays(startDate, endeDate)
+        Dim errMsg As String = ""
+        Dim msName As String = ""
+
+        Try
+            '
+            ' create and set Stamm-Daten
+            hproj.variantName = vName
+            hproj.Erloes = budget
+            hproj.businessUnit = businessUnit
+            hproj.description = description
+            hproj.leadPerson = responsible
+            hproj.StrategicFit = sfitKPI
+            hproj.Risiko = riskKPI
+
+            '
+            ' add Phases
+            If Not IsNothing(phaseDates) Then
+
+                For Each kvp As KeyValuePair(Of String, Date()) In phaseDates
+
+                    'eleiminate the index used for maintaining the sort order .. 
+                    Dim phName As String = kvp.Key.Substring(3)
+                    Dim cphase As New clsPhase(parent:=hproj)
+                    Dim phaseDuration As Long = calcDauerIndays(kvp.Value(0), kvp.Value(1))
+                    Dim offset As Long = DateDiff(DateInterval.Day, hproj.startDate, kvp.Value(0))
+                    With cphase
+                        .nameID = hproj.hierarchy.findUniqueElemKey(phName, False)
+                        .changeStartandDauer(offset, phaseDuration)
+                    End With
+
+                    hproj.AddPhase(cphase, parentID:=rootPhaseName)
+                Next
+
+            End If
+
+            ' 
+            ' add milestones to phases
+
+            For Each kvp As KeyValuePair(Of String, SortedList(Of Date, KeyValuePair(Of String, Double))) In phaseMilestones
+                Dim cphase As clsPhase = Nothing
+                If kvp.Key = elemNameOfElemID(rootPhaseName) Then
+                    cphase = hproj.getPhase(1)
+                Else
+                    cphase = hproj.getPhase(kvp.Key)
+                End If
+
+                If Not IsNothing(cphase) Then
+
+                    For Each kvp2 As KeyValuePair(Of Date, KeyValuePair(Of String, Double)) In kvp.Value
+                        Dim termsOfPayment As Integer = 30
+                        Dim msDate As Date = kvp2.Key
+                        msName = kvp2.Value.Key
+                        Dim invoice As New KeyValuePair(Of Double, Integer)(kvp2.Value.Value, termsOfPayment)
+
+                        Dim cMilestone As clsMeilenstein = New clsMeilenstein(parent:=cphase)
+
+                        With cMilestone
+                            .setDate = msDate
+                            .nameID = hproj.hierarchy.findUniqueElemKey(msName, True)
+                            .invoice = invoice
+                        End With
+
+                        cphase.addMilestone(cMilestone)
+
+                    Next
+                Else
+                    errMsg = "unknown Phase " & kvp.Key & " for Milestone " & msName
+                    Throw New Exception(errMsg)
+                End If
+
+            Next
+
+            '
+            ' assign resources to phases 
+            For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseRoleValues
+
+                Dim phaseName As String = kvp.Key
+                Dim roleValues As SortedList(Of String, Double()) = kvp.Value
+                Dim cPhase As clsPhase = hproj.getPhase(phaseName)
+
+                If Not IsNothing(cPhase) Then
+                    For Each kvp2 As KeyValuePair(Of String, Double()) In roleValues
+                        cPhase.AddRoleWX(kvp2.Key, kvp2.Value, True)
+                    Next
+                Else
+                    errMsg = "unknown Phase when assigning roles" & phaseName
+                    Throw New Exception(errMsg)
+                End If
+
+            Next
+
+            '
+            ' assign costs to phases 
+            For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseCostValues
+
+                Dim phaseName As String = kvp.Key
+                Dim costValues As SortedList(Of String, Double()) = kvp.Value
+                Dim cPhase As clsPhase = hproj.getPhase(phaseName)
+
+                If Not IsNothing(cPhase) Then
+                    For Each kvp2 As KeyValuePair(Of String, Double()) In costValues
+                        cPhase.AddCostWX(kvp2.Key, kvp2.Value, True)
+                    Next
+                Else
+                    errMsg = "unknown Phase when assigning costs" & phaseName
+                    Throw New Exception(errMsg)
+                End If
+
+            Next
+
+
+            '
+            ' assign deliverables to phases
+            ' not yet implemented
+
+
+            '
+            ' assign deliverables to milestones
+            ' not yet implemented
+
+
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "erstelleProjektausParametern", anzFehler)
+            hproj = Nothing
+        End Try
+
+        erstelleProjektausParametern = hproj
+    End Function
 
     ''' <summary>
     ''' erstellt ein Projekt aus den angegebenen Parametern

@@ -4634,6 +4634,13 @@ Public Module agm3
         upDatesEintragen = result
     End Function
 
+    ''' <summary>
+    ''' creates from a Instart Angebots-Kalkulation in Excel a VISBO Project 
+    ''' </summary>
+    ''' <param name="projectConfig"></param>
+    ''' <param name="tmpDatei"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
     Public Function readCalcTemplatesWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
@@ -4660,13 +4667,19 @@ Public Module agm3
         Dim phaseRoleValues As New SortedList(Of String, SortedList(Of String, Double()))
         Dim phaseCostValues As New SortedList(Of String, SortedList(Of String, Double()))
         Dim invoiceMilestones As New SortedList(Of Date, KeyValuePair(Of String, Double))
-
+        Dim phaseDates As New SortedList(Of String, Date())
 
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
                 Try
                     projectWB = appInstance.Workbooks.Open(tmpDatei)
                     Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
+                    '
+                    ' Start protokollieren 
+                    outputline = "Start Import CalcTemplate: " & tmpDatei
+                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    '
+                    '
                     Dim searchColumn As Excel.Range = Nothing
                     Dim trennZeichen As String = projectConfig("Ende-Zeichen").content
 
@@ -4692,6 +4705,11 @@ Public Module agm3
                     offsets = pNameDefinition.getRowColumnOffset
                     pName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
 
+                    ' check PName
+                    If Not isValidProjectName(pName) Then
+                        outputline = "invalid Project-Name ... Exit ... : " & pName & " in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
 
                     ' read Start: this and all following information has to be on the same Worksheet ! 
                     searchColNr = startDefinition.column.von
@@ -4707,6 +4725,12 @@ Public Module agm3
                     offsets = endeDefinition.getRowColumnOffset
                     endDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
 
+                    ' check Validity
+                    If getColumnOfDate(startDate) <= 0 Or getColumnOfDate(startDate) > getColumnOfDate(endDate) Then
+                        outputline = "invalid Start and/or End-Dates  ... Exit ... : " & startDate.ToShortDateString & " - " & endDate.ToShortDateString & " in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
                     ' read VariantName 
                     searchColNr = vNameDefinition.column.von
                     searchColumn = currentWS.Columns(searchColNr)
@@ -4718,6 +4742,21 @@ Public Module agm3
                         vName = ""
                     End If
 
+                    ' check vName
+                    If vName <> "" Then
+                        If Not isValidProjectName(vName) Then
+                            outputline = "invalid Variant-Name ... Exit ... : " & vName & " in File " & dateiName
+                            Throw New Exception(outputline)
+                        End If
+                    End If
+
+                    ' now check whether pName, vName already exists ... 
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now)
+                    If Not IsNothing(hproj) Then
+                        ' not allowed .. 
+                        outputline = "Project with given Name and Variant-Name already exists ... Exit ... : " & pName & "[ " & vName & " ] in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
 
                     ' read Kunde
                     searchColNr = kundeDefinition.column.von
@@ -4742,6 +4781,24 @@ Public Module agm3
                         businessUnit = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
                     Else
                         businessUnit = ""
+                    End If
+
+                    If businessUnit <> "" Then
+                        ' check whether it is defined
+                        Dim found As Boolean = False
+                        For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                            found = kvp.Value.name = businessUnit
+                            If found Then
+                                Exit For
+                            End If
+                        Next
+
+                        If Not found Then
+
+                            outputline = "business Unit not defined: " & businessUnit
+                            Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig 2", anzFehler)
+                            businessUnit = ""
+                        End If
                     End If
 
 
@@ -4944,9 +5001,9 @@ Public Module agm3
 
                         ' now input that into phaseRoleValues
                         ' now substitute by the enumerated phase-Name
-                        If myPhaseName <> "." Then
-                            myPhaseName = phaseNames.Item(myPhaseName)
-                        End If
+                        'If myPhaseName <> "." Then
+                        '    myPhaseName = phaseNames.Item(myPhaseName)
+                        'End If
 
                         If Not phaseRoleValues.ContainsKey(myPhaseName) Then
                             roleValues.Add(myRoleNameID, myValues)
@@ -5101,16 +5158,109 @@ Public Module agm3
 
                     Next
 
+                    ' now close the Excel file 
+                    If Not IsNothing(projectWB) Then
+                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                    End If
+
+                    ' now check/protocol the sums ...
+                    Dim checkSumPT As Double = 0.0
+                    For Each kvp1 As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseRoleValues
+                        For Each kvp2 As KeyValuePair(Of String, Double()) In kvp1.Value
+                            checkSumPT = checkSumPT + kvp2.Value.Sum
+                        Next
+                    Next
+
+                    Dim checkSumTE As Double = 0.0
+                    For Each kvp1 As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseCostValues
+                        For Each kvp2 As KeyValuePair(Of String, Double()) In kvp1.Value
+                            checkSumTE = checkSumTE + kvp2.Value.Sum
+                        Next
+                    Next
+
+                    Dim checkSumIV As Double = 0.0
+                    For Each kvp1 As KeyValuePair(Of Date, KeyValuePair(Of String, Double)) In invoiceMilestones
+                        checkSumIV = checkSumIV + kvp1.Value.Value
+                    Next
+
+                    outputline = "PT Sum: " & checkSumPT.ToString("#.##") & "; T€ Sum: " & checkSumTE.ToString("#.##") & "; Invoice Summe: " & checkSumIV.ToString("#.##")
+                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    ' Ende Protocolling ... 
+
                     ' now create the project ...
+                    ' it is guaranteed that the project/variant-Name does not exist ... 
+
+                    Dim phaseMilestones As New SortedList(Of String, SortedList(Of Date, KeyValuePair(Of String, Double)))
+                    phaseMilestones.Add(elemNameOfElemID(rootPhaseName), invoiceMilestones)
+
+                    ' now define phaseDates ... 
+                    Dim startEndDates As Date()
+                    ReDim startEndDates(1)
+                    startEndDates(0) = startDate
+                    startEndDates(1) = endDate
+                    Dim phDates As New SortedList(Of String, Date())
+
+                    For Each kvp As KeyValuePair(Of String, String) In phaseNames
+                        If Not phDates.ContainsKey(kvp.Value) Then
+                            phDates.Add(kvp.Value, startEndDates)
+                        End If
+                    Next
+
+                    Dim newProj As clsProjekt = erstelleProjektausParametern(pName:=pName, vName:=vName, startDate:=startDate, endeDate:=endDate,
+                                                                             budget:=budget, businessUnit:=businessUnit, description:="Project for " & kunde,
+                                                                             responsible:="", sfitKPI:=Nothing, riskKPI:=Nothing,
+                                                                             phaseDates:=phDates,
+                                                                             phaseRoleValues:=phaseRoleValues, phaseCostValues:=phaseCostValues,
+                                                                             phaseMilestones:=phaseMilestones,
+                                                                             phaseDeliverables:=Nothing, msDeliverables:=Nothing)
+
+                    If Not IsNothing(newProj) Then
+                        Dim prCheckSumPT As Double = newProj.getAlleRessourcen.Sum
+                        Dim prCheckSumTE As Double = newProj.getGesamtAndereKosten.Sum
+                        Dim prCheckSumIV As Double = newProj.getInvoicesPenalties.Sum
+
+                        ' now protocol after project is created 
+                        outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & "; Invoice Summe: " & prCheckSumIV.ToString("#.##")
+                        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+
+                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+                        result = True
+                        outputline = "Success! project created: " & newProj.getShapeText
+                        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    Else
+                        result = False
+                        outputline = "Failed! no project created: " & pName & "[ " & vName & " ]"
+                        Call logger(ptErrLevel.logError, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    End If
+
                     Dim stopp As Integer = 0
 
                 Catch ex As Exception
-                    Call MsgBox(ex.Message)
+
+                    ' now close the Excel file 
+                    If Not IsNothing(projectWB) Then
+                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                    End If
+
+                    Call logger(ptErrLevel.logError, ex.Message, "readCalcTemplatesWithConfig 1", anzFehler)
+                    meldungen.Add(ex.Message)
+                    result = False
                 End Try
             End If
         Catch ex As Exception
-
+            Call logger(ptErrLevel.logError, ex.Message, "readCalcTemplatesWithConfig 2", anzFehler)
+            meldungen.Add(ex.Message)
+            result = False
         End Try
+
+
+
+        '
+        ' Ende protokollieren 
+        outputline = "Ende Import CalcTemplate: " & tmpDatei
+        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+        '
+        '
 
         readCalcTemplatesWithConfig = result
     End Function

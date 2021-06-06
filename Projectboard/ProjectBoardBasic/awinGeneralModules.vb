@@ -1179,7 +1179,7 @@ Public Module awinGeneralModules
             ' wenn nein, wird es im Show-Modus ergänzt 
             Dim searchPName As String = hproj.name
             Dim searchVName As String = hproj.variantName
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And searchVName = "" Then
                 ' das hier muss gemacht werden, weil man ja wissen will, inwieweit sich das Projekt im Vergleich zur Baseline / pfv verändert werden 
                 searchVName = getDefaultVariantNameAccordingUserRole()
             End If
