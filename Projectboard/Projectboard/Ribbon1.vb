@@ -8949,21 +8949,11 @@ Imports System.Web
 
                     listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
 
-                    If listofArchivAllg.Count > 0 Then
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.JiraProjects))
-                    End If
-
                 Next
-
-                'Call logfileSchreiben(outPutCollection)
-                ''Call logfileSchliessen()
-
-
-                ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                 Try
                     ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
                     ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=True)
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
@@ -8973,6 +8963,26 @@ Imports System.Web
                     End If
 
                 End Try
+
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.JiraProjects))
+                End If
+
+
+                '' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                'Try
+                '    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                '    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                '    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+
+                'Catch ex As Exception
+                '    If awinSettings.englishLanguage Then
+                '        Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                '    Else
+                '        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                '    End If
+
+                'End Try
 
                 '' Cursor auf Default setzen
                 Cursor.Current = Cursors.Default

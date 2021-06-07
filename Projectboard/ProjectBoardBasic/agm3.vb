@@ -4413,7 +4413,7 @@ Public Module agm3
                         tasksInserted.Add(item.Value.Jira_ID, item.Value)
                     End If
 
-                    '                    TODO
+                    '  Tasks filtern nach JIRA_ID des Epics
                     Dim epicVorg As New SortedList(Of Date, clsJIRA_Task)
                     epicVorg = filternNach("Übergeordnet", item.Value.Jira_ID, taskList)
                     epics(ie) = epicVorg
@@ -4506,6 +4506,35 @@ Public Module agm3
                             End If
                             vgphase.verantwortlich = itemVg.Value.zugewPerson
 
+
+                            ' Ressources verteilen
+                            Dim vgXwerte As Double() = Nothing
+                            Dim vgoldXwerte As Double()
+                            Dim vganfang As Integer = vgphase.relStart
+                            Dim vgende As Integer = vgphase.relEnde
+                            If itemVg.Value.StoryPoints > 0.0 Then
+                                ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
+                                    Dim hrole As New clsRolle(vgende - vganfang)
+                                    Dim otherRoledef As clsRollenDefinition = RoleDefinitions.getRoledef(vgphase.verantwortlich)
+                                    Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
+                                    hrole.uid = roledef.UID
+                                    hrole.teamID = -1
+
+                                    ReDim vgoldXwerte(0)
+                                    vgoldXwerte(0) = itemVg.Value.StoryPoints
+
+                                    With vgphase
+                                        ReDim vgXwerte(vgende - vganfang)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
+                                    End With
+                                    hrole.Xwerte = vgXwerte
+
+                                    vgphase.addRole(hrole)
+                                End If
+                            End If
+
                             ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
                             Dim hrchynode As New clsHierarchyNode
                             hrchynode.elemName = vgphase.name
@@ -4536,6 +4565,33 @@ Public Module agm3
                     End If
                     ' Dauer ist nun korrigiert
 
+                    ' Ressources verteilen
+                    Dim Xwerte As Double() = Nothing
+                    Dim oldXwerte As Double()
+                    Dim anfang As Integer = ephase.relStart
+                    Dim ende As Integer = ephase.relEnde
+                    If item.Value.StoryPoints > 0.0 Then
+                        ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                        Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                        If (aktOrga.allRoles.containsName(ephase.verantwortlich)) Then
+                            Dim hrole As New clsRolle(ende - anfang)
+                            Dim otherRoledef As clsRollenDefinition = RoleDefinitions.getRoledef(ephase.verantwortlich)
+                            Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(ephase.verantwortlich)
+                            hrole.uid = roledef.UID
+                            hrole.teamID = -1
+
+                            ReDim oldXwerte(0)
+                            oldXwerte(0) = item.Value.StoryPoints
+
+                            With ephase
+                                ReDim Xwerte(ende - anfang)
+                                .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                            End With
+                            hrole.Xwerte = Xwerte
+
+                            ephase.addRole(hrole)
+                        End If
+                    End If
 
                     ie = ie + 1
                     Call logger(ptErrLevel.logInfo, "JIRA-Phase " & item.Value.Jira_ID & ":" & item.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
@@ -4602,6 +4658,34 @@ Public Module agm3
                             backphase.percentDone = 0.0
                         End If
                         backphase.verantwortlich = backlogItem.Value.zugewPerson
+
+                        ' Ressources eintragen für Backlog-Tasks
+                        Dim Xwerte As Double() = Nothing
+                        Dim oldXwerte As Double()
+                        Dim anfang As Integer = backphase.relStart
+                        Dim ende As Integer = backphase.relEnde
+                        If backlogItem.Value.StoryPoints > 0.0 Then
+                            ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                            Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                            If (aktOrga.allRoles.containsName(backphase.verantwortlich)) Then
+                                Dim hrole As New clsRolle(ende - anfang)
+                                Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(backphase.verantwortlich)
+                                'Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(backphase.verantwortlich)
+                                hrole.uid = roledef.UID
+                                hrole.teamID = -1
+
+                                ReDim oldXwerte(0)
+                                oldXwerte(0) = backlogItem.Value.StoryPoints
+
+                                With backphase
+                                    ReDim Xwerte(ende - anfang)
+                                    .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                End With
+                                hrole.Xwerte = Xwerte
+
+                                backphase.addRole(hrole)
+                            End If
+                        End If
 
                         ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
                         Dim hrchynode As New clsHierarchyNode

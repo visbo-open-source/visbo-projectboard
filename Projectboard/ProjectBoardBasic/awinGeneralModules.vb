@@ -1111,15 +1111,16 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
-    ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
+    '''  ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
     ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
     ''' wenn ein importiertes Projekt bereits in der Datenbank existiert und verändert ist, dann wird es markiert und gleichzeitig temporär geschützt 
     ''' wenn ein importiertes Projekt bereits in der Datenbank existiert, verändert wurde und von anderen geschützt ist, dann wird eine Variante angelegt 
     ''' </summary>
     ''' <param name="importDate"></param>
-    ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
+    ''' <param name="drawPlanTafel">>sollen die PRojekte gezeichnet werden</param>
     ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
-    ''' <remarks></remarks>
+    ''' <param name="getSomeValuesFromOldProj">sollen z.B. Kundennummer, vpID, actualDataUntilübernommen werden</param>
+    ''' <param name="calledFromActualDataImport">Aufwände sollen auch ggfs. IstDaten übernommen werden</param>
     Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean,
                                        ByVal fileFrom3rdParty As Boolean,
                                        ByVal getSomeValuesFromOldProj As Boolean,
