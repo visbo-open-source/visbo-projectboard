@@ -23008,7 +23008,15 @@ Public Module agm2
 
                             index = index + 1
                             If anzWithID > 0 Then
-                                roleUID = CInt(CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value)
+                                Try
+                                    If Not IsNothing(c.Offset(0, -1).Value) Then
+                                        If IsNumeric(c.Offset(0, -1).Value) Then
+                                            roleUID = CInt(c.Offset(0, -1).Value)
+                                        End If
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler beim Lesen von RoleUID: Zeile: " & i + 2)
+                                End Try
                             Else
                                 roleUID = index
                             End If
@@ -23036,10 +23044,13 @@ Public Module agm2
                                         End If
                                     End If
 
-
-                                    .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-                                    If .tagessatzIntern <= 0 Then
-                                        .tagessatzIntern = defaultTagessatz
+                                    If Not IsNothing(c.Offset(0, 2).Value) Then
+                                        If IsNumeric(c.Offset(0, 2).Value) Then
+                                            .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+                                            If .tagessatzIntern <= 0 Then
+                                                .tagessatzIntern = defaultTagessatz
+                                            End If
+                                        End If
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
