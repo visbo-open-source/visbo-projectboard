@@ -4275,11 +4275,8 @@ Public Module agm3
             For Each tmpDatei As String In listOfProjectFiles
                 Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekte " & tmpDatei, "readProjectsJIRA", anzFehler)
 
-                'TODO for UR: 
-                '   Read Tasks into clsJIRA-Task-Class
-                '   group Tasks into phases and milestones with ressources, deliverables ...
-
                 result = readJIRATasks(projectConfig, tmpDatei, taskList, taskListSortedID, sprintList, meldungen)
+
                 Call logger(ptErrLevel.logInfo, "JIRA-Projekt " & taskList.ElementAt(1).Value.projectName & " eingelesen", "readProjectsJIRA", anzFehler)
 
                 ' Bestimme SprintEndDate vom letzen Sprint
@@ -4413,7 +4410,10 @@ Public Module agm3
                         tasksInserted.Add(item.Value.Jira_ID, item.Value)
                     End If
 
+
+
                     '  Tasks filtern nach JIRA_ID des Epics
+                    Dim epicStoryPoints As Double = 0.0
                     Dim epicVorg As New SortedList(Of Date, clsJIRA_Task)
                     epicVorg = filternNach("Übergeordnet", item.Value.Jira_ID, taskList)
                     epics(ie) = epicVorg
@@ -4507,12 +4507,16 @@ Public Module agm3
                             vgphase.verantwortlich = itemVg.Value.zugewPerson
 
 
-                            ' Ressources verteilen
+                            ' Ressources auf Vorgang verteilen
                             Dim vgXwerte As Double() = Nothing
                             Dim vgoldXwerte As Double()
                             Dim vganfang As Integer = vgphase.relStart
                             Dim vgende As Integer = vgphase.relEnde
                             If itemVg.Value.StoryPoints > 0.0 Then
+
+                                ' Aufsammeln der StoryPoints aller Tasks zu einer Epic
+                                epicStoryPoints = epicStoryPoints + itemVg.Value.StoryPoints
+
                                 ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
                                 Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
                                 If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
@@ -4535,13 +4539,23 @@ Public Module agm3
                                 End If
                             End If
 
-                            ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
-                            Dim hrchynode As New clsHierarchyNode
-                            hrchynode.elemName = vgphase.name
-                            hrchynode.parentNodeKey = ephase.nameID
-                            hproj.AddPhase(vgphase, origName:=itemVg.Value.Jira_ID, parentID:=ephase.nameID)
-                            tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
-                            hrchynode.indexOfElem = hproj.AllPhases.Count
+                            ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+
+                                tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+                                ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                vgphase.unionizeWith(ephase)
+
+                            Else
+                                ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                Dim hrchynode As New clsHierarchyNode
+                                hrchynode.elemName = vgphase.name
+                                hrchynode.parentNodeKey = ephase.nameID
+                                hproj.AddPhase(vgphase, origName:=itemVg.Value.Jira_ID, parentID:=ephase.nameID)
+                                tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+                                hrchynode.indexOfElem = hproj.AllPhases.Count
+                            End If
+
                         End If
 
                         ' bestimme retrospektiv phaseStart und phaseEnd
@@ -4554,7 +4568,7 @@ Public Module agm3
 
                         Call logger(ptErrLevel.logInfo, "JIRA-Task " & itemVg.Value.Jira_ID & ":" & itemVg.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
-                    Next     ' itemvg
+                    Next     ' itemvg = Vorgang
 
                     ' Dauer der Phase anpassen an Tasks-Dates
                     duration = calcDauerIndays(phaseStart, phaseEnd)
@@ -4565,12 +4579,13 @@ Public Module agm3
                     End If
                     ' Dauer ist nun korrigiert
 
-                    ' Ressources verteilen
+                    ' Ressources der Phase (= Summe der Tasks zu einem Epic) auf die Dauer verteilen
                     Dim Xwerte As Double() = Nothing
                     Dim oldXwerte As Double()
                     Dim anfang As Integer = ephase.relStart
                     Dim ende As Integer = ephase.relEnde
-                    If item.Value.StoryPoints > 0.0 Then
+
+                    If epicStoryPoints > 0.0 Then
                         ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
                         Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
                         If (aktOrga.allRoles.containsName(ephase.verantwortlich)) Then
@@ -4596,7 +4611,7 @@ Public Module agm3
                     ie = ie + 1
                     Call logger(ptErrLevel.logInfo, "JIRA-Phase " & item.Value.Jira_ID & ":" & item.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
-                Next    ' item
+                Next    ' item = epic
 
                 'restliche Tasks des Projektes in die RootPhase eintragen und wenn einem Sprint zugeordnet
                 For Each task As KeyValuePair(Of String, clsJIRA_Task) In taskListSortedID
@@ -4608,36 +4623,37 @@ Public Module agm3
                             tasksFertigOSprint.add(task.Key, task.Value)
                         End If
                     End If
-                Next
+                Next  ' Ende bestimmen der restl. Tasks
 
                 ' Backlog-Tasks eintragen last SprintEnde - ProjektEnde
                 ' Bestimmung von Start und Ende der Tasks - evt. durch last SprintEnde und ProjektEnde definiert
-                Dim backphase As clsPhase
+                Dim bphase As clsPhase
                 Dim testDate As Date = sprintList.ElementAt(sprintList.Count - 1).Value.SprintEndDate
                 Dim backStart As Date = lastSprintEnd
                 Dim backEnd As Date = hproj.endeDate
 
-                backphase = New clsPhase(hproj)
+                bphase = New clsPhase(hproj)
                 Dim backphaseNameNew As String = "Backlog without epics"
-                backphase.nameID = calcHryElemKey(backphaseNameNew, False)
+                bphase.nameID = calcHryElemKey(backphaseNameNew, False)
                 Dim durationBL As Integer = 0
 
                 durationBL = calcDauerIndays(backStart, backEnd)
 
                 If durationBL > 0 Then
                     Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, backStart)
-                    backphase.offset = offset
-                    backphase.changeStartandDauer(offset, durationBL)
+                    bphase.offset = offset
+                    bphase.changeStartandDauer(offset, durationBL)
 
                     ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
                     Dim hrchynode As New clsHierarchyNode
-                    hrchynode.elemName = backphase.name
+                    hrchynode.elemName = bphase.name
                     hrchynode.parentNodeKey = rootPhaseName
-                    hproj.AddPhase(backphase, origName:=backphaseNameNew, parentID:=rootPhaseName)
+                    hproj.AddPhase(bphase, origName:=backphaseNameNew, parentID:=rootPhaseName)
                     hrchynode.indexOfElem = hproj.AllPhases.Count
                 End If
 
-                Dim backlogPhaseID As String = backphase.nameID         ' ist der Parent der Backlog - Tasks
+                Dim backphase As clsPhase
+                Dim backlogPhaseID As String = bphase.nameID         ' ist der Parent der Backlog - Tasks
                 For Each backlogItem As KeyValuePair(Of String, clsJIRA_Task) In tasksBacklog
 
                     backphase = New clsPhase(hproj)
@@ -4686,19 +4702,28 @@ Public Module agm3
                                 backphase.addRole(hrole)
                             End If
                         End If
+                        ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
-                        ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
-                        Dim hrchynode As New clsHierarchyNode
-                        hrchynode.elemName = backphase.name
-                        hrchynode.parentNodeKey = rootPhaseName
-                        hproj.AddPhase(backphase, origName:=backlogItem.Value.Jira_ID, parentID:=backlogPhaseID)
-                        'tasksInserted.Add(backlogItem.Value.Jira_ID, backlogItem.Value)
-                        hrchynode.indexOfElem = hproj.AllPhases.Count
+                            ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                            backphase.unionizeWith(bphase)
+
+                        Else
+                            ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                            Dim hrchynode As New clsHierarchyNode
+                            hrchynode.elemName = backphase.name
+                            hrchynode.parentNodeKey = rootPhaseName
+                            hproj.AddPhase(backphase, origName:=backlogItem.Value.Jira_ID, parentID:=backlogPhaseID)
+                            'tasksInserted.Add(backlogItem.Value.Jira_ID, backlogItem.Value)
+                            hrchynode.indexOfElem = hproj.AllPhases.Count
+                        End If
+
                     End If
-
                     Call logger(ptErrLevel.logInfo, "JIRA-Task " & backlogItem.Value.Jira_ID & ":" & backlogItem.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
                 Next     ' backlogItem
+
+
 
                 If result Then
 
@@ -4706,7 +4731,8 @@ Public Module agm3
                     Try
                         keyStr = calcProjektKey(hproj)
                         ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-                        'meldungen.Add(calcProjektKey(hproj))
+
+                        Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekt erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
                         ' hier: merken der erfolgreich importierten Projects Dateien
                         listOfArchivFiles.Add(tmpDatei)
 
