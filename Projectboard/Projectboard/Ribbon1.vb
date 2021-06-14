@@ -8444,7 +8444,19 @@ Imports System.Web
             Dim startDate As Date = StartofCalendar
             Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
             Dim myProject As clsProjekt = Nothing
-            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
+
+            ' tk 7.6.21
+            ' BudgetVorgabe errechnen 
+            Dim budgetVorgabe As Double = vproj.Erloes
+            Try
+                ' if there are any resource / costs assignements: take the sum of it as Vorgabe
+                budgetVorgabe = vproj.getGesamtKostenBedarf.Sum
+            Catch ex As Exception
+
+            End Try
+
+            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, budgetVorgabe, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
+            'template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
 
             ' ur: 28.2.2021: nicht mehr benötigt, da eine ganzes Projekt angelegt wird und im ReSt-Server als vorlage dient.
             ' vproj.copyTo(template)

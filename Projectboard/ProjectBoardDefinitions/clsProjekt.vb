@@ -91,7 +91,7 @@ Public Class clsProjekt
         End Get
         Set(value As Date)
             If Not IsNothing(value) Then
-                If value > StartofCalendar Then
+                If value > startDate Then
                     ' Actual Data Until kann aber nicht größer werden als das Projektende ...
                     ' das gilt aber nur, wenn das Projekt nicht gerade erst aufgebaut wird, es also schon eine Dauer gibt 
                     If dauerInDays > 0 Then

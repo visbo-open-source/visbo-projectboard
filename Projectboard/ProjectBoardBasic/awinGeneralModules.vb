@@ -916,7 +916,15 @@ Public Module awinGeneralModules
 
             ' es wird kein existierendes Projekt als Vorlage verwendet 
             Dim myProject As clsProjekt = Nothing
-            vproj = erstelleProjektAusVorlage(myProject, "TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0,
+
+            ' tk 7.6.21 
+            Dim budgetVorgabe As Double = hproj.Erloes
+            Try
+                budgetVorgabe = hproj.getGesamtKostenBedarf.Sum
+            Catch ex As Exception
+
+            End Try
+            vproj = erstelleProjektAusVorlage(myProject, "TMSHilfsproj", mapStruktur, minDate, maxDate, budgetVorgabe, 0,
                                      hproj.StrategicFit, hproj.Risiko, Nothing, hproj.description, hproj.businessUnit)
 
             If Not IsNothing(vproj) Then
@@ -1127,7 +1135,7 @@ Public Module awinGeneralModules
 
         Dim err As New clsErrorCodeMsg
 
-        Dim hproj As New clsProjekt, cproj As New clsProjekt
+        Dim hproj As New clsProjekt, formerProj As New clsProjekt
         Dim fullName As String, vglName As String
         'Dim pname As String
 
@@ -1187,24 +1195,24 @@ Public Module awinGeneralModules
             vglName = calcProjektKey(searchPName, searchVName)
             Try
                 If kvp.Value.kundenNummer = "" Then
-                    cproj = AlleProjekte.getProject(vglName)
+                    formerProj = AlleProjekte.getProject(vglName)
                 Else
-                    cproj = AlleProjekte.getProjectByKDNr(kvp.Value.kundenNummer)
+                    formerProj = AlleProjekte.getProjectByKDNr(kvp.Value.kundenNummer)
                 End If
 
 
-                If IsNothing(cproj) Then
+                If IsNothing(formerProj) Then
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
-                        cproj = awinReadProjectFromDatabase(kvp.Value.kundenNummer, searchPName, searchVName, Date.Now)
+                        formerProj = awinReadProjectFromDatabase(kvp.Value.kundenNummer, searchPName, searchVName, Date.Now)
                     End If
                 Else
                     existsInSession = True
                 End If
 
                 ' ist es immer noch Nothing ? 
-                If IsNothing(cproj) Then
+                If IsNothing(formerProj) Then
                     ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
 
                     ' falls es sich um eine Variante handelt, muss jetzt geprüft werden, ob die Basis-Variante in Session oder DB existiert  
@@ -1266,16 +1274,16 @@ Public Module awinGeneralModules
                     End Try
                 Else
 
-                    ' jetzt sollen bestimmte Werte aus dem cproj übernommen werden 
+                    ' jetzt sollen bestimmte Werte aus der früheren Projekt-Version übernommen werden 
                     ' das ist dann wichtig, wenn z.Bsp nur Rplan Excel Werte eingelesen werden, die enthalten ja nix ausser Termine ...
                     ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
 
                     ' prüfen: hat cproj invoices? und hproj keine ? 
                     Try
-                        Dim array1 As Double() = cproj.getInvoicesPenalties
+                        Dim array1 As Double() = formerProj.getInvoicesPenalties
                         Dim array2 As Double() = hproj.getInvoicesPenalties
                         If array1.Sum > 0 And array2.Sum = 0 Then
-                            Call hproj.updateProjectwithInvoicesFrom(cproj)
+                            Call hproj.updateProjectwithInvoicesFrom(formerProj)
                         End If
                     Catch ex As Exception
 
@@ -1284,7 +1292,7 @@ Public Module awinGeneralModules
 
                     Try
                         If getSomeValuesFromOldProj Then
-                            Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
+                            Call awinAdjustValuesByExistingProj(hproj, formerProj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
                         End If
 
                     Catch ex As Exception
@@ -1292,22 +1300,22 @@ Public Module awinGeneralModules
                     End Try
 
                     ' jetzt sicherstellen, dass der Vergleich nicht einfach aufgrund Unterschied im VarantName zu einem Unterschied, damit Markierung führt ... 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> cproj.variantName Then
-                        cproj.variantName = hproj.variantName
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> formerProj.variantName Then
+                        formerProj.variantName = hproj.variantName
                     End If
 
                     ' evtl ist jetzt der Name ein anderer , weil über P-Nr aus Datenbank geholt  
-                    If Not IsNothing(cproj) Then
+                    If Not IsNothing(formerProj) Then
                         ' Fall Telair oder auch andere: wenn PNr angeben ist und die PNames aus DB und Import nicht übereinstimmen, dann gewinnt DB 
-                        If cproj.name <> hproj.name Then
-                            Dim txtMsg As String = "from " & hproj.name & " to " & cproj.name
+                        If formerProj.name <> hproj.name Then
+                            Dim txtMsg As String = "from " & hproj.name & " to " & formerProj.name
                             nameChangeCollection.Add(txtMsg)
 
-                            hproj.name = cproj.name
+                            hproj.name = formerProj.name
                         End If
                     End If
 
-                    If Not hproj.isIdenticalTo(vProj:=cproj) Then
+                    If Not hproj.isIdenticalTo(vProj:=formerProj) Then
                         ' das heisst, das Projekt hat sich verändert 
                         hproj.marker = True
                         'If hproj.Status = ProjektStatus(PTProjektStati.beauftragt) Then
@@ -1398,11 +1406,11 @@ Public Module awinGeneralModules
                             Dim oldVname As String = hproj.variantName
                             Dim wasMarked As Boolean = hproj.marker
                             Dim tmpProj As clsProjekt = hproj.createVariant("$MergeTemp", hproj.variantDescription)
-                            Call tmpProj.mergeActualValues(cproj)
+                            Call tmpProj.mergeActualValues(formerProj)
                             ' wenn alles gut ging ...
                             hproj = tmpProj
                             hproj.variantName = oldVname
-                            hproj.marker = Not hproj.isIdenticalTo(vProj:=cproj)
+                            hproj.marker = Not hproj.isIdenticalTo(vProj:=formerProj)
 
                             If hproj.marker <> wasMarked Then
                                 Dim txtMsg As String = hproj.name & ": old actual data was restored by former project description ... "
@@ -1454,10 +1462,10 @@ Public Module awinGeneralModules
             ' sowohl auf der Plantafel eingetragen werden als auch in ShowProjekte und in alleProjekte eingetragen 
 
             ' bringe das neue Projekt in Showprojekte und in AlleProjekte
-            If Not IsNothing(cproj) Then
+            If Not IsNothing(formerProj) Then
                 ' Fall Telair oder auch andere: wenn PNr angeben ist und die PNames aus DB und Import nicht übereinstimmen, dann gewinnt DB 
-                If cproj.name <> hproj.name Then
-                    hproj.name = cproj.name
+                If formerProj.name <> hproj.name Then
+                    hproj.name = formerProj.name
                 End If
             End If
 
@@ -1667,13 +1675,13 @@ Public Module awinGeneralModules
     ''' ist vor allem dann relevant wenn nur ein RPLAN Excel mit gerademal Terminen eingelesen wird ....
     ''' </summary>
     ''' <param name="hproj"></param>
-    ''' <param name="cproj"></param>
+    ''' <param name="formerProj"></param>
     ''' <param name="existsInSession"></param>
     ''' <param name="importDate"></param>
     ''' <param name="tafelZeile"></param>
     ''' <param name="fileFrom3rdParty">gibt an, ob es sich um einen VISBO Steckbrief handelt (false) oder einen fremden Steckbrief</param>
     ''' <remarks></remarks>
-    Private Sub awinAdjustValuesByExistingProj(ByRef hproj As clsProjekt, ByVal cproj As clsProjekt,
+    Private Sub awinAdjustValuesByExistingProj(ByRef hproj As clsProjekt, ByVal formerProj As clsProjekt,
                                                ByVal existsInSession As Boolean, ByVal importDate As Date,
                                                ByRef tafelZeile As Integer,
                                                ByVal fileFrom3rdParty As Boolean)
@@ -1695,22 +1703,22 @@ Public Module awinGeneralModules
                 .Id = vglName & "#" & importDate.ToString
 
                 .StartOffset = 0
-                .Status = cproj.Status
+                .Status = formerProj.Status
 
                 ' 
                 ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData von cProj übernommen werden 
                 ' das soll unabhängig vom autoSetActualData gemacht werden ... 
-                hproj.actualDataUntil = cproj.actualDataUntil
+                hproj.actualDataUntil = formerProj.actualDataUntil
 
                 ' übernehme die VPID 
-                hproj.vpID = cproj.vpID
+                hproj.vpID = formerProj.vpID
 
                 ' übernehme die Kunden-Nummer 
-                hproj.kundenNummer = cproj.kundenNummer
+                hproj.kundenNummer = formerProj.kundenNummer
 
 
                 If existsInSession Then
-                    .shpUID = cproj.shpUID
+                    .shpUID = formerProj.shpUID
                     ' in diesem Fall heisst es ja genaus, dann ist es auch in der sortListe der Constellations bereits vorhanden ...
                     '.tfZeile = cproj.tfZeile
                 Else
@@ -1721,11 +1729,11 @@ Public Module awinGeneralModules
 
 
                 .timeStamp = importDate
-                .UID = cproj.UID
+                .UID = formerProj.UID
 
                 ' tk 19.2.20 nur wenn der Vorlagen-Name was anderes ist 
-                If .VorlagenName = "" And cproj.VorlagenName <> "" Then
-                    .VorlagenName = cproj.VorlagenName
+                If .VorlagenName = "" And formerProj.VorlagenName <> "" Then
+                    .VorlagenName = formerProj.VorlagenName
                 End If
 
 
@@ -1738,10 +1746,10 @@ Public Module awinGeneralModules
                 End If
 
                 ' macht er jetzt immer, wenn das cproj keine Ressourcenbedarfe enthält
-                If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
+                If hproj.getGesamtKostenBedarf.Sum = 0 And formerProj.getGesamtKostenBedarf.Sum > 0 Then
                     ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
                     Try
-                        Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
+                        Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(formerProj)
                         If Not IsNothing(tmpProj) Then
                             hproj = tmpProj
                         End If
@@ -1755,34 +1763,34 @@ Public Module awinGeneralModules
                 If fileFrom3rdParty Then
 
                     '.farbe = cproj.farbe
-                    .Schrift = cproj.Schrift
-                    .Schriftfarbe = cproj.Schriftfarbe
+                    .Schrift = formerProj.Schrift
+                    .Schriftfarbe = formerProj.Schriftfarbe
 
 
 
                     ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 
-                    If hproj.leadPerson = "" And cproj.leadPerson <> "" Then
-                        hproj.leadPerson = cproj.leadPerson
+                    If hproj.leadPerson = "" And formerProj.leadPerson <> "" Then
+                        hproj.leadPerson = formerProj.leadPerson
                     End If
 
-                    If hproj.Erloes = 0 And cproj.Erloes > 0 Then
-                        hproj.Erloes = cproj.Erloes
-                    End If
-
-
-                    If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And cproj.ampelStatus > 0 Then
-                        hproj.ampelStatus = cproj.ampelStatus
-                        hproj.ampelErlaeuterung = cproj.ampelErlaeuterung
-                    End If
-
-                    If hproj.description = "" And cproj.description <> "" Then
-                        hproj.description = cproj.description
+                    If hproj.Erloes = 0 And formerProj.Erloes > 0 Then
+                        hproj.Erloes = formerProj.Erloes
                     End If
 
 
-                    hproj.Risiko = cproj.Risiko
-                    hproj.StrategicFit = cproj.StrategicFit
-                    hproj.projectType = cproj.projectType
+                    If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And formerProj.ampelStatus > 0 Then
+                        hproj.ampelStatus = formerProj.ampelStatus
+                        hproj.ampelErlaeuterung = formerProj.ampelErlaeuterung
+                    End If
+
+                    If hproj.description = "" And formerProj.description <> "" Then
+                        hproj.description = formerProj.description
+                    End If
+
+
+                    hproj.Risiko = formerProj.Risiko
+                    hproj.StrategicFit = formerProj.StrategicFit
+                    hproj.projectType = formerProj.projectType
 
                 End If
 
@@ -2767,9 +2775,9 @@ Public Module awinGeneralModules
                     End If
 
                     ' wenn jetzt automatisch setzen des ActualdataDate gemacht werden soll
-                    If awinSettings.autoSetActualDataDate Then
-                        impProjekt.actualDataUntil = importDate.AddMonths(-1)
-                    End If
+                    'If awinSettings.autoSetActualDataDate Then
+                    '    impProjekt.actualDataUntil = importDate.AddMonths(-1)
+                    'End If
 
                     ' Aufnehmen in Constellation
                     Dim newCItem As New clsConstellationItem

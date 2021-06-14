@@ -13614,7 +13614,15 @@ Public Module Projekte
                     If Not IsNothing(myproject) Then
                         referenceBudget = myproject.Erloes
                     Else
+                        ' tk 7.6.2021 das ReferenceBudget errechnet sich aus der Menge der Gesamt-Kosten
+                        ' nur im Fehlerfall Erloes verwenden
                         referenceBudget = Projektvorlagen.getProject(vorlagenName).Erloes
+                        Try
+                            referenceBudget = Projektvorlagen.getProject(vorlagenName).getGesamtKostenBedarf.Sum
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     If referenceBudget > 0 Then

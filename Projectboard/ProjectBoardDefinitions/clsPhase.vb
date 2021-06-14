@@ -4395,7 +4395,7 @@ Public Class clsPhase
 
 
             Catch ex As Exception
-
+                Dim a As Integer = 0
             End Try
 
         Else

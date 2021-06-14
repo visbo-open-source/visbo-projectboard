@@ -22802,7 +22802,7 @@ Public Module agm2
                     End If
 
                     rolesRange = wsname.Range("awin_Rollen_Definition")
-                    przSatz = 1.0
+                    przSatz = 0.0
                 Catch ex As Exception
                     rolesRange = Nothing
                 End Try
@@ -22814,6 +22814,10 @@ Public Module agm2
                 meldungen.Add(errMsg)
                 Exit Sub
             Else
+                ' still to do for Instart and others
+                ' now perform validity check
+                ' each cell c has an entry within the whole Range
+
                 errMsg = ""
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
@@ -22832,7 +22836,8 @@ Public Module agm2
                 For i = 2 To anzZeilen - 1
 
                     Try
-                        Dim tmpIDValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                        'Dim tmpIDValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                        Dim tmpIDValue As String = getStringFromExcelCell(CType(rolesRange.Cells(i, 1).offset(0, -1), Excel.Range))
                         Dim tmpOrgaName As String = getStringFromExcelCell(CType(rolesRange.Cells(i, 1), Excel.Range))
 
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
@@ -23009,7 +23014,21 @@ Public Module agm2
 
                             index = index + 1
                             If anzWithID > 0 Then
-                                roleUID = CInt(CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value)
+                                If Not IsNothing(CType(rolesRange.Cells(i, 1).Offset(0, -1), Excel.Range).Value) Then
+                                    Try
+                                        Dim tmpValue As String = CStr(CType(rolesRange.Cells(i, 1).Offset(0, -1), Excel.Range).Value)
+                                        If IsNumeric(tmpValue) Then
+                                            roleUID = CInt(tmpValue)
+                                        End If
+
+                                    Catch ex As Exception
+                                        roleUID = 0
+                                    End Try
+
+                                Else
+                                    roleUID = 0
+                                End If
+
                             Else
                                 roleUID = index
                             End If
@@ -23017,9 +23036,11 @@ Public Module agm2
                             tmpStr = CType(c.Value, String)
                             If isValidRoleName(tmpStr, errMsg) Then
                                 If readingGroups Then
-                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
+                                    ' tk 7.6.21 nicht mehr relevant
+                                    'przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
+                                    przSatz = 0.0
                                 Else
-                                    przSatz = 1.0
+                                    przSatz = 0.0
                                 End If
 
                                 ' jetzt kommt die Rollen Definition 
@@ -23029,78 +23050,94 @@ Public Module agm2
                                     .name = tmpStr.Trim
                                     .defaultKapa = 0.0
 
-                                    If Not IsNothing(c.Offset(0, 1).Value) Then
-                                        If IsNumeric(c.Offset(0, 1).Value) Then
-                                            If CDbl(c.Offset(0, 1).Value) > 0 Then
-                                                .defaultKapa = CDbl(c.Offset(0, 1).Value)
-                                            End If
-                                        End If
-                                    End If
-
-
-                                    .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-                                    If .tagessatzIntern <= 0 Then
-                                        .tagessatzIntern = defaultTagessatz
-                                    End If
-
-                                    ' tk 5.12 Aufnahme extern
-                                    If Not IsNothing(c.Offset(0, 3).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
-                                        tmpValue = tmpValue.Trim
-                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        If positiveCriterias.Contains(tmpValue) Then
-                                            .isExternRole = True
-                                        End If
-                                    End If
-
-                                    ' jetzt die neuen Attribute aufnehmen
-                                    ' Personal-Nummer
-                                    Try
-                                        If Not IsNothing(c.Offset(0, 4).Value) Then
-                                            .employeeNr = CStr(c.Offset(0, 4).Value).Trim
-                                        Else
-                                            .employeeNr = ""
-                                        End If
-                                    Catch ex As Exception
-                                        If awinSettings.englishLanguage Then
-                                            errMsg = "invalid value for employeeNr: " & .name
-                                        Else
-                                            errMsg = "ungültiger Wert für Personal-Nummer: " & .name
-                                        End If
-                                        meldungen.Add(errMsg)
-                                    End Try
-
-                                    ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
-                                    Try
-                                        If Not IsNothing(c.Offset(0, 5).Value) Then
-                                            If CStr(c.Offset(0, 5).Value).Trim = "" Then
-                                                .defaultDayCapa = -1
-                                            ElseIf IsNumeric(c.Offset(0, 5).Value) Then
-                                                Dim tmpValue As Double = CDbl(c.Offset(0, 5).Value)
-                                                If tmpValue >= 0 And tmpValue <= 12 Then
-                                                    .defaultDayCapa = tmpValue
-                                                Else
-                                                    ' 
-                                                    If awinSettings.englishLanguage Then
-                                                        errMsg = "invalid value for default capacity per day: " & .name
-                                                    Else
-                                                        errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
-                                                    End If
-                                                    meldungen.Add(errMsg)
+                                    If Not readingGroups Then
+                                        If Not IsNothing(c.Offset(0, 1).Value) Then
+                                            If IsNumeric(c.Offset(0, 1).Value) Then
+                                                If CDbl(c.Offset(0, 1).Value) > 0 Then
+                                                    .defaultKapa = CDbl(c.Offset(0, 1).Value)
                                                 End If
                                             End If
-                                        Else
-                                            .defaultDayCapa = -1
                                         End If
-                                    Catch ex As Exception
-                                        If awinSettings.englishLanguage Then
-                                            errMsg = "invalid value for default capacity per day: " & .name
-                                        Else
-                                            errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                    End If
+
+                                    If Not IsNothing(c.Offset(0, 2).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 2).Value)
+                                        If IsNumeric(tmpValue) Then
+                                            .tagessatzIntern = CDbl(tmpValue)
+                                            If .tagessatzIntern <= 0 Then
+                                                .tagessatzIntern = defaultTagessatz
+                                            End If
                                         End If
-                                        meldungen.Add(errMsg)
-                                    End Try
+
+                                    Else
+                                        If Not readingGroups Then
+                                            .tagessatzIntern = defaultTagessatz
+                                        End If
+                                    End If
+
+
+
+                                    If Not readingGroups Then
+                                        ' tk 5.12 Aufnahme extern
+                                        If Not IsNothing(c.Offset(0, 3).Value) Then
+                                            Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
+                                            tmpValue = tmpValue.Trim
+                                            Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                            If positiveCriterias.Contains(tmpValue) Then
+                                                .isExternRole = True
+                                            End If
+                                        End If
+
+                                        ' jetzt die neuen Attribute aufnehmen
+                                        ' Personal-Nummer
+                                        Try
+                                            If Not IsNothing(c.Offset(0, 4).Value) Then
+                                                .employeeNr = CStr(c.Offset(0, 4).Value).Trim
+                                            Else
+                                                .employeeNr = ""
+                                            End If
+                                        Catch ex As Exception
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "invalid value for employeeNr: " & .name
+                                            Else
+                                                errMsg = "ungültiger Wert für Personal-Nummer: " & .name
+                                            End If
+                                            meldungen.Add(errMsg)
+                                        End Try
+
+                                        ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
+                                        Try
+                                            If Not IsNothing(c.Offset(0, 5).Value) Then
+                                                If CStr(c.Offset(0, 5).Value).Trim = "" Then
+                                                    .defaultDayCapa = -1
+                                                ElseIf IsNumeric(c.Offset(0, 5).Value) Then
+                                                    Dim tmpValue As Double = CDbl(c.Offset(0, 5).Value)
+                                                    If tmpValue >= 0 And tmpValue <= 12 Then
+                                                        .defaultDayCapa = tmpValue
+                                                    Else
+                                                        ' 
+                                                        If awinSettings.englishLanguage Then
+                                                            errMsg = "invalid value for default capacity per day: " & .name
+                                                        Else
+                                                            errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                                        End If
+                                                        meldungen.Add(errMsg)
+                                                    End If
+                                                End If
+                                            Else
+                                                .defaultDayCapa = -1
+                                            End If
+                                        Catch ex As Exception
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "invalid value for default capacity per day: " & .name
+                                            Else
+                                                errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                            End If
+                                            meldungen.Add(errMsg)
+                                        End Try
+
+                                    End If
 
                                     ' Eintrittsdatum der Ressourcen 
                                     Try
@@ -23127,7 +23164,6 @@ Public Module agm2
                                     Try
                                         If Not IsNothing(c.Offset(0, 7).Value) Then
                                             If CStr(c.Offset(0, 7).Value).Trim = "" Then
-                                                '.exitDate = CDate("31.12.2200")
                                                 .exitDate = DateAndTime.DateSerial(2200, 12, 31).Date
                                             Else
                                                 Dim tmpValue As Date = CDate(c.Offset(0, 7).Value)
@@ -23279,12 +23315,8 @@ Public Module agm2
                                 curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                 curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
-                                If readingGroups Then
-                                    ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
-                                    przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
-                                Else
-                                    przSatz = 1.0
-                                End If
+
+                                przSatz = 0.0 ' not any more relevant, tk 7.6.21
 
                                 Do While curLevel = lastLevel And ix <= anzZeilen - 1
 
@@ -23319,9 +23351,10 @@ Public Module agm2
                                         curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                         curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                         If readingGroups Then
-                                            przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                            przSatz = 0.0
+                                            'przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                         Else
-                                            przSatz = 1.0
+                                            przSatz = 0.0
                                         End If
 
                                     Else
