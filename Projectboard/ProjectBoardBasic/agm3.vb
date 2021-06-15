@@ -4418,8 +4418,8 @@ Public Module agm3
                     epicVorg = filternNach("Übergeordnet", item.Value.Jira_ID, taskList)
                     epics(ie) = epicVorg
                     Dim vgphase As clsPhase
-                    Dim phaseStart As Date = Date.MaxValue
-                    Dim phaseEnd As Date = Date.MinValue
+                    Dim phaseStart As Date = ephase.getStartDate
+                    Dim phaseEnd As Date = ephase.getEndDate
 
                     For Each itemVg As KeyValuePair(Of Date, clsJIRA_Task) In epicVorg
 
@@ -4476,16 +4476,23 @@ Public Module agm3
                             End If
                             durationVg = calcDauerIndays(taskStart, taskEnd)
                         Else
-                            durationVg = calcDauerIndays(itemVg.Value.Erstellt, itemVg.Value.fällig)
+                            taskStart = itemVg.Value.Erstellt
+                            taskEnd = itemVg.Value.fällig
+                            durationVg = calcDauerIndays(taskStart, taskend)
                             If durationVg < 0 Then
-                                If itemVg.Value.fällig <= Date.MinValue Then
-                                    itemVg.Value.fällig = projEnde
-                                End If
+
                                 If Not IsNothing(itemVg.Value.erledigt) Then
                                     itemVg.Value.fällig = itemVg.Value.erledigt
                                 End If
                                 If itemVg.Value.fällig <= itemVg.Value.Erstellt Then
-                                    itemVg.Value.fällig = itemVg.Value.Erstellt
+                                    If itemVg.Value.Erstellt <= itemVg.Value.aktualisiert Then
+                                        itemVg.Value.fällig = itemVg.Value.aktualisiert
+                                    Else
+                                        itemVg.Value.fällig = projEnde
+                                    End If
+                                End If
+                                If itemVg.Value.fällig <= Date.MinValue Then
+                                    itemVg.Value.fällig = projEnde
                                 End If
 
                                 'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
@@ -4496,7 +4503,7 @@ Public Module agm3
                         End If
 
                         If durationVg > 0 Then
-                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, itemVg.Value.Erstellt)
+                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, taskStart)
                             vgphase.offset = offset
                             vgphase.changeStartandDauer(offset, durationVg)
                             If itemVg.Value.TaskStatus = "Fertig" Then
@@ -4520,7 +4527,7 @@ Public Module agm3
                                 ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
                                 Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
                                 If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
-                                    Dim hrole As New clsRolle(vgende - vganfang)
+                                    Dim hrole As New clsRolle(vgende - vganfang + 1)
                                     Dim otherRoledef As clsRollenDefinition = RoleDefinitions.getRoledef(vgphase.verantwortlich)
                                     Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
                                     hrole.uid = roledef.UID
@@ -4530,7 +4537,7 @@ Public Module agm3
                                     vgoldXwerte(0) = itemVg.Value.StoryPoints
 
                                     With vgphase
-                                        ReDim vgXwerte(vgende - vganfang)
+                                        ReDim vgXwerte(vgende - vganfang + 1)
                                         .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
                                     End With
                                     hrole.Xwerte = vgXwerte
@@ -4544,7 +4551,7 @@ Public Module agm3
 
                                 tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
                                 ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
-                                vgphase.unionizeWith(ephase)
+                                ephase.unionizeWith(vgphase)
 
                             Else
                                 ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
@@ -4559,12 +4566,20 @@ Public Module agm3
                         End If
 
                         ' bestimme retrospektiv phaseStart und phaseEnd
-                        If taskStart < phaseStart Then
-                            phaseStart = taskStart
+                        If vgphase.getStartDate <= phaseStart Then
+                            phaseStart = vgphase.getStartDate
                         End If
-                        If taskEnd > phaseEnd Then
-                            phaseEnd = taskEnd
+                        If vgphase.getEndDate >= phaseEnd Then
+                            phaseEnd = vgphase.getEndDate
                         End If
+
+                        '' bestimme retrospektiv phaseStart und phaseEnd
+                        'If taskStart <= phaseStart Then
+                        '    phaseStart = taskStart
+                        'End If
+                        'If taskEnd >= phaseEnd Then
+                        '    phaseEnd = taskEnd
+                        'End If
 
                         Call logger(ptErrLevel.logInfo, "JIRA-Task " & itemVg.Value.Jira_ID & ":" & itemVg.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
@@ -4706,7 +4721,7 @@ Public Module agm3
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
                             ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
-                            backphase.unionizeWith(bphase)
+                            bphase.unionizeWith(backphase)
 
                         Else
                             ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
