@@ -430,6 +430,14 @@ Public Class clsProjektWeb
                         End If
                     Next
                 End If
+                If Not IsNothing(vp.customFieldDate) Then
+                    ' ur: 20210616: prepared for Monitoring process quality
+                    'For Each item As clsCustomFieldDate In vp.customFieldDate
+                    '    If item.name = vp_pmCommit And item.type = "System" Then
+                    '        .pmCommit = item.value
+                    '    End If
+                    'Next
+                End If
 
             End If
 

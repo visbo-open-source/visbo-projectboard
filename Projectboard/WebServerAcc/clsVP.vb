@@ -8,9 +8,10 @@
     Public Property vpPublic As Boolean
 
     ' ur: 20210422 properties like businessUnit, strategikFit, risk now moved to vp
+    ' ur: 20210616 property PMCommit new in VP
     Public Property customFieldString As List(Of clsCustomFieldStr)
     Public Property customFieldDouble As List(Of clsCustomFieldDbl)
-
+    Public Property customFieldDate As List(Of clsCustomFieldDate)
 
     'Public Property users As List(Of clsUser)
     Public Property updatedAt As String
@@ -30,6 +31,7 @@
         _customFieldDouble = New List(Of clsCustomFieldDbl)
         '_users = New List(Of clsUser)
         _customFieldDouble = New List(Of clsCustomFieldDbl)
+        _customFieldDate = New List(Of clsCustomFieldDate)
         _customFieldString = New List(Of clsCustomFieldStr)
         _updatedAt = Date.MinValue.ToString
         _createdAt = Date.MinValue.ToString
@@ -53,7 +55,7 @@ Public Class clsCustomFieldStr
         _type = "System"
     End Sub
 End Class
-' ur: 20210422 vp-Properties strategikFit, risk definitions
+' ur: 20210422 vp-Properties strategicFit, risk definitions
 Public Class clsCustomFieldDbl
     Public Property name As String
     Public Property localName As String
@@ -66,3 +68,17 @@ Public Class clsCustomFieldDbl
         _type = "System"
     End Sub
 End Class
+' ur: 20210616 vp-Properties PMCommit
+Public Class clsCustomFieldDate
+    Public Property name As String
+    Public Property localName As String
+    Public Property value As Date
+    Public Property type As String
+    Sub New()
+        _name = ""
+        _localName = ""
+        _value = Date.MinValue
+        _type = "System"
+    End Sub
+End Class
+

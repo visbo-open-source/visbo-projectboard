@@ -1229,6 +1229,14 @@ Public Class Request
                     risiko.value = projekt.Risiko
                     VP.customFieldDouble.Add(risiko)
                 End If
+                ' ur: 20210616: neues vp-Property PMCommit nun aus VP in VPV kopieren
+                'If Not IsNothing(projekt.pmCommit) Then
+                '    Dim pmCommit As New clsCustomFieldDate
+                '    pmCommit.type = "System"
+                '    pmCommit.name = vp_pmCommit
+                '    pmCommit.value = projekt.pmCommit
+                '    VP.customFieldDate.Add(pmCommit)
+                'End If
 
                 vpErg = POSTOneVP(VP, err)
 
