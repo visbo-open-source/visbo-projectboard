@@ -6645,27 +6645,34 @@ Public Module Module1
 
                         ' wegen Einrückung in Details ...
                         Dim curItem As String = CStr(toDoCollectionR.Item(m))
-                        Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
+                        Dim isRoleOrSkill As Boolean = RoleDefinitions.containsNameOrID(curItem)
+
+                        Dim lookingForNameID As String = curItem
 
 
-                        If isRole Then
+                        If isRoleOrSkill Then
 
                             Dim teamID As Integer = -1
                             Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(curItem, teamID)
 
+                            If curRole.isSkill Then
+                                Dim topOrgaRolle As clsRollenDefinition = RoleDefinitions.getContainingRoleOfSkillMembers(curRole.UID)
+                                lookingForNameID = RoleDefinitions.bestimmeRoleNameID(topOrgaRolle.UID, curRole.UID)
+                            End If
+
                             If myCustomUserRole.isAllowedToSee(curRole.name) Then
-                                curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(lookingForNameID, inclSubRoles:=True,
                                                                      outPutInEuro:=showEuro), hproj.Start).Sum
 
                                 If considerLapr And Not reducedTable Then
-                                    laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                    laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(lookingForNameID, inclSubRoles:=True,
                                                                               outPutInEuro:=showEuro), lproj.Start).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                    faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(lookingForNameID, inclSubRoles:=True,
                                                                               outPutInEuro:=showEuro), bproj.Start).Sum
                                 Else
                                     faprValue = 0.0

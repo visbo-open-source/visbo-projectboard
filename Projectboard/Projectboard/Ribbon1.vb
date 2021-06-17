@@ -7597,9 +7597,14 @@ Imports System.Web
 
                                 Call logger(ptErrLevel.logInfo, "PTImportIstDaten", logArray)
 
-                                ' im Output anzeigen ... 
-                                logmessage = logArray(0) & substituteUnit
-                                outPutCollection.Add(logmessage)
+                                ' show it - just for Info:  ...
+                                ' 
+                                ' don not show it in interactiev protocol ... 
+
+                                'logmessage = ""
+                                'outPutCollection.Add(logmessage)
+                                'logmessage = logArray(0) & substituteUnit
+                                'outPutCollection.Add(logmessage)
 
                             Next
 

@@ -329,7 +329,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("https://staging.visbo.net/api")>  _
     Public Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)

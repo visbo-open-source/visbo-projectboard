@@ -1241,14 +1241,14 @@ Public Module agm3
                                             result = False
                                         Else
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to Name in Sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name in Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
 
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
@@ -1256,14 +1256,14 @@ Public Module agm3
                                         If hrole.name <> personalName Then
                                             ' Warning: name and personal Number do not match ...
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to Name in Sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name in Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
                                     End If
                                     'Dim identical As Boolean = (personalName = hrole.name)
@@ -1397,9 +1397,9 @@ Public Module agm3
                                                 ElseIf pNames.Count > 1 Then
                                                     ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
                                                     If awinSettings.englishLanguage Then
-                                                        outputline = "There exists more than one project to project No. '" & projektKDNr & "'"
+                                                        outputline = "no assignment possible: There exists more than one project to project No. '" & projektKDNr & "'"
                                                     Else
-                                                        outputline = "Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
+                                                        outputline = "keine Zuordnung möglich: Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
                                                     End If
 
                                                     oPCollection.Add(outputline)
