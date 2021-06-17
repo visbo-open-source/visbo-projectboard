@@ -21400,6 +21400,8 @@ Public Module agm2
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
 
                             projVorlage = createTemplateOfProject(kvp.Value)
+                            ' hiermit wird die _Dauer gesetzt
+                            Dim vorlagenDauer = projVorlage.dauerInDays
 
                             'projVorlage = New clsProjektvorlage
                             'projVorlage.VorlagenName = kvp.Value.name
@@ -23014,20 +23016,21 @@ Public Module agm2
 
                             index = index + 1
                             If anzWithID > 0 Then
-                                If Not IsNothing(CType(rolesRange.Cells(i, 1).Offset(0, -1), Excel.Range).Value) Then
-                                    Try
-                                        Dim tmpValue As String = CStr(CType(rolesRange.Cells(i, 1).Offset(0, -1), Excel.Range).Value)
-                                        If IsNumeric(tmpValue) Then
-                                            roleUID = CInt(tmpValue)
+
+                                Try
+                                    If Not IsNothing(c.Offset(0, -1).Value) Then
+                                        If IsNumeric(c.Offset(0, -1).Value) Then
+                                            roleUID = CInt(c.Offset(0, -1).Value)
                                         End If
-
-                                    Catch ex As Exception
-                                        roleUID = 0
-                                    End Try
-
-                                Else
-                                    roleUID = 0
-                                End If
+                                    End If
+                                Catch ex As Exception
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "RoleID couldn't be read, perhaps a problem excel"
+                                    Else
+                                        errMsg = "RoleId kann nicht gelesen werden, evt. existiert hier ein Problem mit Excel"
+                                    End If
+                                    Call logger(ptErrLevel.logsevereError, "readRoleDefinitions", errMsg)
+                                End Try
 
                             Else
                                 roleUID = index
@@ -23061,9 +23064,10 @@ Public Module agm2
                                     End If
 
                                     If Not IsNothing(c.Offset(0, 2).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, 2).Value)
-                                        If IsNumeric(tmpValue) Then
-                                            .tagessatzIntern = CDbl(tmpValue)
+
+                                        If IsNumeric(c.Offset(0, 2).Value) Then
+                                            .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+
                                             If .tagessatzIntern <= 0 Then
                                                 .tagessatzIntern = defaultTagessatz
                                             End If
@@ -23073,6 +23077,7 @@ Public Module agm2
                                         If Not readingGroups Then
                                             .tagessatzIntern = defaultTagessatz
                                         End If
+
                                     End If
 
 
