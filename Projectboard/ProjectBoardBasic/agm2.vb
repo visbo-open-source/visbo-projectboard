@@ -23015,7 +23015,12 @@ Public Module agm2
                                         End If
                                     End If
                                 Catch ex As Exception
-                                    Call MsgBox("Fehler beim Lesen von RoleUID: Zeile: " & i + 2)
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "RoleID couldn't be read, perhaps a problem excel"
+                                    Else
+                                        errMsg = "RoleId kann nicht gelesen werden, evt. existiert hier ein Problem mit Excel"
+                                    End If
+                                    Call logger(ptErrLevel.logsevereError, "readRoleDefinitions", errMsg)
                                 End Try
                             Else
                                 roleUID = index
