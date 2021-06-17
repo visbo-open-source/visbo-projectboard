@@ -26,6 +26,8 @@
         _vpvCount = 0
         _vpType = 0
         _vpPublic = False
+        _customFieldString = New List(Of clsCustomFieldStr)
+        _customFieldDouble = New List(Of clsCustomFieldDbl)
         '_users = New List(Of clsUser)
         _customFieldDouble = New List(Of clsCustomFieldDbl)
         _customFieldString = New List(Of clsCustomFieldStr)

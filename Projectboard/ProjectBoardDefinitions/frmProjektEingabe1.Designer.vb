@@ -102,7 +102,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_Number.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lbl_Number.Name = "lbl_Number"
         Me.lbl_Number.Size = New System.Drawing.Size(59, 16)
-        Me.lbl_Number.TabIndex = 69
+        Me.lbl_Number.TabIndex = 52
         Me.lbl_Number.Text = "Nummer"
         '
         'txtbx_pNr
@@ -112,7 +112,7 @@ Partial Class frmProjektEingabe1
         Me.txtbx_pNr.Margin = New System.Windows.Forms.Padding(2)
         Me.txtbx_pNr.Name = "txtbx_pNr"
         Me.txtbx_pNr.Size = New System.Drawing.Size(254, 22)
-        Me.txtbx_pNr.TabIndex = 68
+        Me.txtbx_pNr.TabIndex = 53
         '
         'txtbx_description
         '
@@ -124,7 +124,7 @@ Partial Class frmProjektEingabe1
         Me.txtbx_description.Name = "txtbx_description"
         Me.txtbx_description.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.txtbx_description.Size = New System.Drawing.Size(723, 65)
-        Me.txtbx_description.TabIndex = 67
+        Me.txtbx_description.TabIndex = 59
         '
         'lbl_Description
         '
@@ -136,7 +136,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_Description.Name = "lbl_Description"
         Me.lbl_Description.RightToLeft = System.Windows.Forms.RightToLeft.No
         Me.lbl_Description.Size = New System.Drawing.Size(38, 16)
-        Me.lbl_Description.TabIndex = 66
+        Me.lbl_Description.TabIndex = 58
         Me.lbl_Description.Text = "Ziele"
         '
         'profitAskedFor
@@ -147,7 +147,7 @@ Partial Class frmProjektEingabe1
         Me.profitAskedFor.Margin = New System.Windows.Forms.Padding(2)
         Me.profitAskedFor.Name = "profitAskedFor"
         Me.profitAskedFor.Size = New System.Drawing.Size(54, 22)
-        Me.profitAskedFor.TabIndex = 65
+        Me.profitAskedFor.TabIndex = 57
         '
         'lblProfitField
         '
@@ -159,7 +159,7 @@ Partial Class frmProjektEingabe1
         Me.lblProfitField.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lblProfitField.Name = "lblProfitField"
         Me.lblProfitField.Size = New System.Drawing.Size(78, 16)
-        Me.lblProfitField.TabIndex = 64
+        Me.lblProfitField.TabIndex = 56
         Me.lblProfitField.Text = "Rendite (%)"
         '
         'lbl_Laufzeit
@@ -172,7 +172,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_Laufzeit.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lbl_Laufzeit.Name = "lbl_Laufzeit"
         Me.lbl_Laufzeit.Size = New System.Drawing.Size(53, 16)
-        Me.lbl_Laufzeit.TabIndex = 63
+        Me.lbl_Laufzeit.TabIndex = 61
         Me.lbl_Laufzeit.Text = "Laufzeit"
         '
         'endMilestoneDropbox
@@ -184,7 +184,7 @@ Partial Class frmProjektEingabe1
         Me.endMilestoneDropbox.Margin = New System.Windows.Forms.Padding(2)
         Me.endMilestoneDropbox.Name = "endMilestoneDropbox"
         Me.endMilestoneDropbox.Size = New System.Drawing.Size(532, 24)
-        Me.endMilestoneDropbox.TabIndex = 62
+        Me.endMilestoneDropbox.TabIndex = 68
         '
         'lbl_Referenz2
         '
@@ -196,7 +196,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_Referenz2.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lbl_Referenz2.Name = "lbl_Referenz2"
         Me.lbl_Referenz2.Size = New System.Drawing.Size(86, 16)
-        Me.lbl_Referenz2.TabIndex = 61
+        Me.lbl_Referenz2.TabIndex = 67
         Me.lbl_Referenz2.Text = "Meilenstein 2"
         '
         'startMilestoneDropbox
@@ -208,7 +208,7 @@ Partial Class frmProjektEingabe1
         Me.startMilestoneDropbox.Margin = New System.Windows.Forms.Padding(2)
         Me.startMilestoneDropbox.Name = "startMilestoneDropbox"
         Me.startMilestoneDropbox.Size = New System.Drawing.Size(532, 24)
-        Me.startMilestoneDropbox.TabIndex = 60
+        Me.startMilestoneDropbox.TabIndex = 66
         '
         'lbl_Referenz1
         '
@@ -220,7 +220,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_Referenz1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lbl_Referenz1.Name = "lbl_Referenz1"
         Me.lbl_Referenz1.Size = New System.Drawing.Size(86, 16)
-        Me.lbl_Referenz1.TabIndex = 59
+        Me.lbl_Referenz1.TabIndex = 65
         Me.lbl_Referenz1.Text = "Meilenstein 1"
         '
         'DateTimeEnde
@@ -231,7 +231,7 @@ Partial Class frmProjektEingabe1
         Me.DateTimeEnde.Margin = New System.Windows.Forms.Padding(2)
         Me.DateTimeEnde.Name = "DateTimeEnde"
         Me.DateTimeEnde.Size = New System.Drawing.Size(119, 22)
-        Me.DateTimeEnde.TabIndex = 58
+        Me.DateTimeEnde.TabIndex = 63
         '
         'dauerUnverändert
         '
@@ -243,7 +243,7 @@ Partial Class frmProjektEingabe1
         Me.dauerUnverändert.Margin = New System.Windows.Forms.Padding(2)
         Me.dauerUnverändert.Name = "dauerUnverändert"
         Me.dauerUnverändert.Size = New System.Drawing.Size(138, 20)
-        Me.dauerUnverändert.TabIndex = 57
+        Me.dauerUnverändert.TabIndex = 60
         Me.dauerUnverändert.Text = "Dauer wie Vorlage"
         Me.dauerUnverändert.UseVisualStyleBackColor = True
         '
@@ -256,7 +256,7 @@ Partial Class frmProjektEingabe1
         Me.DateTimeStart.Margin = New System.Windows.Forms.Padding(2)
         Me.DateTimeStart.Name = "DateTimeStart"
         Me.DateTimeStart.Size = New System.Drawing.Size(119, 22)
-        Me.DateTimeStart.TabIndex = 56
+        Me.DateTimeStart.TabIndex = 62
         '
         'vorlagenDropbox
         '
@@ -267,7 +267,7 @@ Partial Class frmProjektEingabe1
         Me.vorlagenDropbox.Margin = New System.Windows.Forms.Padding(2)
         Me.vorlagenDropbox.Name = "vorlagenDropbox"
         Me.vorlagenDropbox.Size = New System.Drawing.Size(309, 24)
-        Me.vorlagenDropbox.TabIndex = 55
+        Me.vorlagenDropbox.TabIndex = 51
         '
         'Erloes
         '
@@ -277,7 +277,7 @@ Partial Class frmProjektEingabe1
         Me.Erloes.Margin = New System.Windows.Forms.Padding(2)
         Me.Erloes.Name = "Erloes"
         Me.Erloes.Size = New System.Drawing.Size(88, 22)
-        Me.Erloes.TabIndex = 54
+        Me.Erloes.TabIndex = 55
         '
         'lbl_pName
         '
@@ -288,7 +288,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_pName.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lbl_pName.Name = "lbl_pName"
         Me.lbl_pName.Size = New System.Drawing.Size(45, 16)
-        Me.lbl_pName.TabIndex = 53
+        Me.lbl_pName.TabIndex = 48
         Me.lbl_pName.Text = "Name"
         '
         'projectName
@@ -298,7 +298,7 @@ Partial Class frmProjektEingabe1
         Me.projectName.Margin = New System.Windows.Forms.Padding(2)
         Me.projectName.Name = "projectName"
         Me.projectName.Size = New System.Drawing.Size(254, 22)
-        Me.projectName.TabIndex = 48
+        Me.projectName.TabIndex = 49
         '
         'lblVorlage
         '
@@ -310,7 +310,7 @@ Partial Class frmProjektEingabe1
         Me.lblVorlage.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lblVorlage.Name = "lblVorlage"
         Me.lblVorlage.Size = New System.Drawing.Size(56, 16)
-        Me.lblVorlage.TabIndex = 52
+        Me.lblVorlage.TabIndex = 50
         Me.lblVorlage.Text = "Vorlage"
         Me.lblVorlage.TextAlign = System.Drawing.ContentAlignment.TopRight
         '
@@ -324,7 +324,7 @@ Partial Class frmProjektEingabe1
         Me.lblBudget.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lblBudget.Name = "lblBudget"
         Me.lblBudget.Size = New System.Drawing.Size(78, 16)
-        Me.lblBudget.TabIndex = 50
+        Me.lblBudget.TabIndex = 54
         Me.lblBudget.Text = "Budget (T€)"
         '
         'AbbrButton
@@ -336,7 +336,7 @@ Partial Class frmProjektEingabe1
         Me.AbbrButton.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(119, 22)
-        Me.AbbrButton.TabIndex = 51
+        Me.AbbrButton.TabIndex = 69
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
@@ -349,7 +349,7 @@ Partial Class frmProjektEingabe1
         Me.OKButton.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(119, 22)
-        Me.OKButton.TabIndex = 49
+        Me.OKButton.TabIndex = 64
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
