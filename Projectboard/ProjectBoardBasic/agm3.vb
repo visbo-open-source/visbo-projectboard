@@ -5214,6 +5214,7 @@ Public Module agm3
                                                                              phaseMilestones:=phaseMilestones,
                                                                              phaseDeliverables:=Nothing, msDeliverables:=Nothing)
 
+
                     If Not IsNothing(newProj) Then
                         Dim prCheckSumPT As Double = newProj.getAlleRessourcen.Sum
                         Dim prCheckSumTE As Double = newProj.getGesamtAndereKosten.Sum

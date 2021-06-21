@@ -13479,6 +13479,7 @@ Public Module Projekte
 
     ''' <summary>
     ''' creates a new project from Scratch, with given parameters
+    ''' Example : create a project from Instart calcTemplate 
     ''' if problems occur Nothing is returned, protocols see logfile ...
     ''' Assumptions: pname, vname is valid, startdate is before endeDate, budget is .ge.0 , KPI are in range between 0 and 10
     ''' phases are all children of rootphase
