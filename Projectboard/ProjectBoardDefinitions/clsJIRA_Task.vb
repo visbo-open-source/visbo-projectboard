@@ -12,6 +12,7 @@
     Public Property Erstellt As Date
     Public Property aktualisiert As Date
     Public Property fällig As Date
+    Public Property StartDate As Date
     Public Property verknüpfte_JiraID As String
     Public Property Area As String
     Public Property parent_JiraID As String
@@ -38,6 +39,7 @@
         _Erstellt = Date.MinValue
         _aktualisiert = Date.MinValue
         _fällig = Date.MinValue
+        _StartDate = Date.MinValue
         _verknüpfte_JiraID = ""
         _parent_JiraID = ""
         _Fortschritt = 0
