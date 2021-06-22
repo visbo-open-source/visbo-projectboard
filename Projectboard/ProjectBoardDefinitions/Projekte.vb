@@ -14923,15 +14923,14 @@ Public Module Projekte
         ' prüfen, ob es in der ShowProjektListe ist ...
         If ShowProjekte.contains(pname) Then
 
-
             Try
                 hproj = ShowProjekte.getProject(pname)
                 ' Sicherstellen, dass der Status Wechsel nur bei der Basis-Variante vorgenommen werden kann ...
-                If hproj.variantName <> "" And hproj.projectType = ptPRPFType.project Then
+                If hproj.variantName <> ptVariantFixNames.pfv.ToString And hproj.projectType = ptPRPFType.project Then
                     If awinSettings.englishLanguage Then
-                        errmsg = hproj.getShapeText & " : status change of a project-variant is not possible!"
+                        errmsg = hproj.getShapeText & " : status change only possible for Baseline!"
                     Else
-                        errmsg = hproj.getShapeText & " : Status Wechsel ist für eine Variante nicht möglich!"
+                        errmsg = hproj.getShapeText & " : Status Wechsel ist nur für die Vorgabe möglich!"
                     End If
                     Throw New ArgumentException(errmsg)
                 End If
@@ -15040,7 +15039,7 @@ Public Module Projekte
                 Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
             Catch ex As Exception
-                Call MsgBox(" Fehler in Beauftragung " & pname & " , Modul: awinBeauftragung")
+                Call MsgBox("Fehler in Beauftragung '" & pname & "' , Modul: changeProjectStatus" & vbCrLf & ex.Message)
                 Exit Sub
             End Try
 
