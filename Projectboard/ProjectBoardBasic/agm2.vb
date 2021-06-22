@@ -8691,6 +8691,7 @@ Public Module agm2
 
                 importedCustomization.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
+                importedCustomization.onePersonOneRole = awinSettings.onePersonOneRole
                 importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
                 importedCustomization.actualDataMonth = awinSettings.actualDataMonth
@@ -21079,6 +21080,7 @@ Public Module agm2
 
                         awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
 
+                        awinSettings.onePersonOneRole = customizations.onePersonOneRole
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
                         awinSettings.actualDataMonth = customizations.actualDataMonth
@@ -24562,6 +24564,12 @@ Public Module agm2
                 End Try
 
                 Try
+                    awinSettings.onePersonOneRole = CBool(.Range("onePersonOneRole").Value)
+                Catch ex As Exception
+                    awinSettings.onePersonOneRole = False
+                End Try
+
+                Try
                     awinSettings.autoSetActualDataDate = CBool(.Range("autoSetActualDataDate").Value)
                 Catch ex As Exception
                     awinSettings.autoSetActualDataDate = False
@@ -25641,6 +25649,9 @@ Public Module agm2
         customizations.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
         customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+        ' steuert, ob eine Person immer exakt eine Rolle/Skill hat. Wird benötigt, wenn Personen Junior, Senior, Expert zugewiesen wird 
+        customizations.onePersonOneRole = awinSettings.onePersonOneRole
 
         customizations.actualDataMonth = awinSettings.actualDataMonth
         customizations.ergebnisfarbe1 = ergebnisfarbe1
