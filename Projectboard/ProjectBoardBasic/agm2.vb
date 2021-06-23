@@ -21253,9 +21253,9 @@ Public Module agm2
 
                         With myCustomUserRole
                             If awinSettings.visboServer Then
-                                .customUserRole = ptCustomUserRoles.ProjektleitungRestricted
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
                             Else
-                                .customUserRole = ptCustomUserRoles.ProjektLeitung
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
                             End If
                             .specifics = ""
                             .userName = dbUsername
@@ -21619,13 +21619,20 @@ Public Module agm2
                 Else
                     Dim message As String
                     If awinSettings.englishLanguage Then
-                        message = "User hasn't got any role" & vbLf & "Please contact your administrator"
+                        message = "User hasn't got any role - Projectlead restricted Role assumed ..."
                         meldungen.Add("User hasn't got any role")
                     Else
-                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen" & vbLf & "Bitte kontaktieren Sie ihren Administrator"
+                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen - Projektleiter Restricted Angenommen"
                         meldungen.Add("Dem User wurde noch keine Rolle zugewiesen")
                     End If
-                    Throw New ArgumentException(message)
+
+                    myCustomUserRole = New clsCustomUserRole
+                    With myCustomUserRole
+                        .customUserRole = ptCustomUserRoles.ProjektleitungRestricted
+                        .userName = dbUsername
+                        .specifics = allCustomUserRoles.getPMOSpecifics
+                    End With
+
                 End If
 
             End If
