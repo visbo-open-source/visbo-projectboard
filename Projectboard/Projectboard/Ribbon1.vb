@@ -12937,7 +12937,8 @@ Imports System.Web
                             End If
                         End If
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                           myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
 
                         ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
                         ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
@@ -12997,7 +12998,8 @@ Imports System.Web
                             End If
                         End If
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                           myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
 
                         If rcName <> "" Then
                             Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)

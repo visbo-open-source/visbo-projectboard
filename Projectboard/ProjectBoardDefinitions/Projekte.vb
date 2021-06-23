@@ -9901,6 +9901,7 @@ Public Module Projekte
         '
         ErgebnisListeR = New Collection
         If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+           myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
             myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
             Try
@@ -10221,6 +10222,7 @@ Public Module Projekte
         '
         ErgebnisListeR = New Collection
         If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+           myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
             myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
             Try

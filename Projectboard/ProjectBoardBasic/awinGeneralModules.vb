@@ -7861,6 +7861,7 @@ Public Module awinGeneralModules
                                             ' tk neu 18.1.2020
                                             ' 
                                             If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
                                                     myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                                                 ' 
                                                 potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
@@ -7978,6 +7979,7 @@ Public Module awinGeneralModules
 
                                                 ' tk neu 18.1.2020
                                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                   myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
                                                     myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                                                     ' 
                                                     potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
@@ -8079,6 +8081,7 @@ Public Module awinGeneralModules
 
                                             ' tk neu 18.1.2020
                                             If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
                                                     myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                                                 ' 
                                                 potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
@@ -8179,6 +8182,7 @@ Public Module awinGeneralModules
 
                                             ' tk neu 18.1.2020
                                             If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
                                                     myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                                                 ' 
                                                 potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)

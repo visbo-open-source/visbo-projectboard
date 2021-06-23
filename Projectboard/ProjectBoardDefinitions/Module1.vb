@@ -338,6 +338,7 @@ Public Module Module1
         InternalViewer = 5
         ExternalViewer = 6
         TeamManager = 7
+        ProjektleitungRestricted = 8
     End Enum
 
     ''' <summary>
@@ -6491,7 +6492,8 @@ Public Module Module1
             Try
                 ' erstmal in Abhängigkeit von der Rolle den Überblick zeichnen  
                 If showEuro And (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Then
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted) Then
 
                     ' Überblick zeichnen ... 
                     Dim curPKI() As Double = {-1, -1, -1, -1, -1, -1}
@@ -8882,8 +8884,63 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' necessary when role assignments and no skill assignments have been made: person is either junior, senior or expert. 
+    ''' </summary>
+    ''' <param name="roleDefinitionsToCheck"></param>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function checkOnePersonOneRole(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
+        Dim result As Boolean = True
+        Dim tmpMsgCollection As New Collection
+
+
+        If awinSettings.onePersonOneRole Then
+            Try
+                Dim todoCollection As Collection = roleDefinitionsToCheck.getBasicRoles
+
+                If todoCollection.Count > 0 Then
+
+                    For Each roleName As String In todoCollection
+                        Dim curRole As clsRollenDefinition = roleDefinitionsToCheck.getRoledef(roleName)
+                        Dim heuteCol As Integer = getColumnOfDate(Date.Now)
+                        If curRole.isActiveRole(heuteCol - 1, heuteCol + 11) Then
+                            Dim anzSkills As Integer = curRole.getSkillIDs.Count
+                            If anzSkills <> 1 Then
+                                result = False
+                                Dim msgTxt As String = roleName & " is having " & anzSkills & " dedicated role(s"
+                                tmpMsgCollection.Add(msgTxt)
+                            End If
+                        End If
+                    Next
+
+                End If
+            Catch ex As Exception
+                result = False
+            End Try
+
+        End If
+
+        If tmpMsgCollection.Count > 0 Then
+            Call showOutPut(tmpMsgCollection, "Warnings:", "next step you may either cancel or continue")
+            If MsgBox("Continue and Ignore Warnings?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                ' nichts tun .."
+                result = True
+            Else
+                result = False
+                Call logger(ptErrLevel.logWarning, "Check Role Assignments to People", tmpMsgCollection)
+                Dim msgTxt As String = "RoleAssignments need to be checked ... exited on user demand!"
+                outputCollection.Add(msgTxt)
+            End If
+        End If
+
+
+        checkOnePersonOneRole = result
+
+    End Function
+
+    ''' <summary>
     ''' Test-Funktion: 
-    ''' Die Teams, deren Kinder Roles sind: haben die wiederum die entsprechende Skill Definiotion ? 
+    ''' Die Teams, deren Kinder Roles sind: haben die wiederum die entsprechende Skill Definition ? 
     ''' </summary>
     ''' <returns></returns>
     Public Function checkTeamDefinitions(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
@@ -8924,7 +8981,12 @@ Public Module Module1
             Next
 
         Next
-        checkTeamDefinitions = atleastOneError
+
+        If awinSettings.onePersonOneRole Then
+            checkTeamDefinitions = atleastOneError Or Not (checkOnePersonOneRole(roleDefinitionsToCheck, outputCollection))
+        Else
+            checkTeamDefinitions = atleastOneError
+        End If
 
     End Function
 

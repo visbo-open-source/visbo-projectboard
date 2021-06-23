@@ -3189,7 +3189,7 @@ Public Module agm3
                                             ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
                                             Dim found As Boolean = False
                                             Dim i As Integer = lastZeile + 1
-                                            While Not found
+                                            While Not found And i > firstUrlzeile
                                                 i = i - 1
                                                 If kapaConfig("LastLine").regex = "RegEx" Then
                                                     regexpression = New Regex(kapaConfig("LastLine").content)
@@ -3204,7 +3204,11 @@ Public Module agm3
                                                 End If
 
                                             End While
-                                            lastZeile = i - 1
+
+                                            If found Then
+                                                lastZeile = i - 1
+                                            End If
+
 
 
                                             ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind

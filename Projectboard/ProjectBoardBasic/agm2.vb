@@ -8906,7 +8906,7 @@ Public Module agm2
                     Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
                     If outputCollection.Count > 0 Then
-                        ' wird an der aurufenden Stelle ausgegeben ... 
+                        ' wird an der aufrufenden Stelle ausgegeben ... 
                     ElseIf TeamsAreNotOK Or existingOverloads Then
                         ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
                     Else
@@ -19939,7 +19939,8 @@ Public Module agm2
 
                         Next
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
                         If awinSettings.englishLanguage Then
                             CType(.Cells(1, 1), Excel.Range).Value = "Project-Number"
                             CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
@@ -21252,7 +21253,7 @@ Public Module agm2
 
                         With myCustomUserRole
                             If awinSettings.visboServer Then
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .customUserRole = ptCustomUserRoles.ProjektleitungRestricted
                             Else
                                 .customUserRole = ptCustomUserRoles.ProjektLeitung
                             End If

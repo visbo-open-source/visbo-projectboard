@@ -60,6 +60,12 @@ Public Class clsCustomUserRole
                                  "PT2G1B1", "PT2G1M1B4",
                                  "PTWebServer"}
 
+            Case ptCustomUserRoles.ProjektleitungRestricted
+                ' soll nur sehr wenig machen können: laden, editieren, speichern
+                _nonAllowance = {"PT5G3M", "PT4G1M1-1", "PT4G1B12", "PT4G1B6", "PT4G1B4", "PT4G1B2", "PT4G1B3", "PT4G1M1-3", "PT4G1M1B1", "PT4G1M1B2",
+                                 "PT4G2M-2", "PT2G1B1", "PT2G1M1B4", "PTMarkBT", "PTunmarkBT",
+                                 "PTfilter", "PTsort", "PTcharts", "PTreport", "PTeinst",
+                                 "PThelp", "PTWebServer", "PTTestfunktionen"}
 
             Case ptCustomUserRoles.RessourceManager
                 ' vorher war ImpExp Orga etc komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
@@ -121,6 +127,7 @@ Public Class clsCustomUserRole
 
             isAllowed = (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Or
+                        (myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.Alles)
@@ -152,6 +159,7 @@ Public Class clsCustomUserRole
 
 
                 ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                       _customUserRole = ptCustomUserRoles.ProjektleitungRestricted Or
                        _customUserRole = ptCustomUserRoles.InternalViewer Or
                        _customUserRole = ptCustomUserRoles.PortfolioManager Or
                        _customUserRole = ptCustomUserRoles.OrgaAdmin Or
@@ -295,7 +303,9 @@ Public Class clsCustomUserRole
     Public Function getAggregationRoleIDs() As Integer()
         Dim result() As Integer = Nothing
 
-        If specifics <> "" And (_customUserRole = ptCustomUserRoles.PortfolioManager Or _customUserRole = ptCustomUserRoles.ProjektLeitung) Then
+        If specifics <> "" And (_customUserRole = ptCustomUserRoles.PortfolioManager Or
+                                _customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                _customUserRole = ptCustomUserRoles.ProjektleitungRestricted) Then
 
             Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
             Dim i As Integer = 0

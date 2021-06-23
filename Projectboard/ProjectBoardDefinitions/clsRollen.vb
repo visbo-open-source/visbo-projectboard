@@ -960,7 +960,9 @@ Public Class clsRollen
             For r As Integer = 1 To _allRollen.Count
                 Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
                 If Not tmpRole.isCombinedRole Then
-                    tmpCollection.Add(tmpRole.name, tmpRole.name)
+                    If Not tmpCollection.Contains(tmpRole.name) Then
+                        tmpCollection.Add(tmpRole.name, tmpRole.name)
+                    End If
                 End If
             Next
 
