@@ -933,6 +933,67 @@ Imports System.Web
 
         End If
 
+        ' tk added 23.6.21
+        If ShowProjekte.Count > 0 Then
+
+
+            Try
+                Dim sortType As Integer = ptSortCriteria.buStartName
+
+
+                If Not IsNothing(currentSessionConstellation) Then
+                    If currentSessionConstellation.Liste.Count <> 0 Then
+
+                        Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True, cName:="Sort Result")
+
+                        appInstance.ScreenUpdating = False
+                        Try
+                            ' nur dann muss was gemacht werden ...  
+                            currentSortConstellation.sortCriteria = sortType
+
+                            Dim tmpConstellation As New clsConstellations
+                            tmpConstellation.Add(currentSortConstellation)
+
+                            ' es in der Session Liste verfügbar machen
+                            If projectConstellations.Contains(currentSortConstellation.constellationName) Then
+                                projectConstellations.Remove(currentSortConstellation.constellationName)
+                            End If
+
+                            projectConstellations.Add(currentSortConstellation)
+
+                            Call showConstellations(constellationsToShow:=tmpConstellation,
+                                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+
+                        Catch ex As Exception
+
+                        End Try
+
+                        appInstance.ScreenUpdating = True
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("nothing loaded ...")
+                        Else
+                            Call MsgBox("nichts geladen ...")
+                        End If
+                    End If
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please load projects/portfolios first ...")
+                    Else
+                        Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+                    End If
+                End If
+
+            Catch ex As Exception
+                If appInstance.ScreenUpdating = False Then
+                    appInstance.ScreenUpdating = True
+                End If
+            End Try
+
+        End If
+
 
 
     End Sub

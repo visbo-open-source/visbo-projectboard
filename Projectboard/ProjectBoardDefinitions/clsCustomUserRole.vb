@@ -63,7 +63,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.ProjektleitungRestricted
                 ' soll nur sehr wenig machen können: laden, editieren, speichern
                 _nonAllowance = {"PT5G3M", "PT4G1M1-1", "PT4G1B12", "PT4G1B6", "PT4G1B4", "PT4G1B2", "PT4G1B3", "PT4G1M1-3", "PT4G1M1B1", "PT4G1M1B2",
-                                 "PT4G2M-2", "PT2G1B1", "PT2G1M1B4", "PTMarkBT", "PTunmarkBT",
+                                 "PT4G2M-2", "PT4G2B3", "PT4G2M3", "PT2G1B1", "PT2G1M1B4", "PTMarkBT", "PTunmarkBT",
                                  "PTfilter", "PTsort", "PTcharts", "PTreport", "PTeinst",
                                  "PThelp", "PTWebServer", "PTTestfunktionen"}
 
