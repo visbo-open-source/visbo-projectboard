@@ -312,6 +312,8 @@ Public Module agm3
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim outputLine As String
 
+        Dim oldAnzMsg As Integer = outputCollection.Count
+
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
@@ -375,787 +377,205 @@ Public Module agm3
                                             configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
                                             ProjectsFile = configLine.ProjectsFile
 
-                                            'Case "ProjectTemplate"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                        Case Else
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.sheet = CInt(.Cells(i, TabNCol).value)
+                                            configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                            ' check out, whether there really is a valid Range Definition 
+                                            Dim validRange As Boolean = True
+                                            If configLine.cellrange Then
+                                                Dim colrange As String = CStr(.Cells(i, SNCol).value)
+                                                Dim hstr() As String = Split(colrange, ":")
+                                                If hstr.Length = 2 Then
+                                                    configLine.column.von = CInt(hstr(0))
+                                                    configLine.column.bis = CInt(hstr(1))
+                                                ElseIf hstr.Length = 1 Then
+                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
+                                                Else
+                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    validRange = False
+                                                    'outputCollection.Add(outputLine)
+                                                End If
 
-                                            'Case "Budget"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            Else
+                                                configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                configLine.column.bis = CInt(.Cells(i, SNCol).value)
+                                            End If
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                            ' now consider potential Row Range 
+                                            If configLine.cellrange Then
+                                                Dim colrange As String = CStr(.Cells(i, ZNCol).value)
+                                                Dim hstr() As String = Split(colrange, ":")
+                                                If hstr.Length = 2 Then
+                                                    configLine.row.von = CInt(hstr(0))
+                                                    configLine.row.bis = CInt(hstr(1))
+                                                ElseIf hstr.Length = 1 Then
+                                                    configLine.row.von = CInt(.Cells(i, ZNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, ZNCol).value)
+                                                Else
+                                                    If Not validRange Then
+                                                        ' if there was no valid column nor a valid row Range: add message , make sure it is considered invalid
+                                                        outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                        outputCollection.Add(outputLine)
+                                                    End If
+                                                End If
+                                            Else
+                                                configLine.row.von = CInt(.Cells(i, ZNCol).value)
+                                                configLine.row.bis = CInt(.Cells(i, ZNCol).value)
+                                            End If
 
-                                            'Case "ProjectDescription"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.objType = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                    End Select
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                    If ProjectsConfigs.ContainsKey(configLine.Titel) Then
+                                        ProjectsConfigs.Remove(configLine.Titel)
+                                    End If
 
-                                            'Case "ProjectStart"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                    ProjectsConfigs.Add(configLine.Titel, configLine)
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                Next
 
-                                            'Case "ProjectEnd"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                            End With
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputLine = "The structure of the configFile doesn't match!  -  " & configFile
+                            Else
+                                outputLine = "Der Aufbau der Konfigurationsdatei ist nicht passend  -  " & configFile
+                            End If
+                            outputCollection.Add(outputLine)
+                        End If
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                    End If
 
-                                            'Case "duration"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        outputLine = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                    Else
+                        outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
+                                    vbCrLf & " es fand kein Import statt "
+                    End If
+                    outputCollection.Add(outputLine)
+                End Try
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                ' configCapaImport - Konfigurationsfile schließen
+                configWB.Close(SaveChanges:=False)
 
-                                            'Case "BU"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("The configuration-file " & configFile & "  To import the projects couldn't be opened.")
+                    outputLine = "The configurationfile " & configFile & "  to import the projects couldn't be opened."
+                Else
+                    Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
+                                vbCrLf & " Die Projekte können somit nicht importiert werden")
+                    outputLine = "Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
+                                vbCrLf & " Die Projekte können somit nicht importiert werden"
+                End If
+                outputCollection.Add(outputLine)
+            End Try
+        Else
+            If awinSettings.englishLanguage Then
+                outputLine = "The configuration-file doen't exist!  -  " & configFile
+            Else
+                outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
+            End If
+            outputCollection.Add(outputLine)
+        End If
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                                            'Case "ProjectNumber"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+        'checkProjectImportConfig = (ProjectsConfigs.Count > 0)
+        ' tk: return false, if no Config Entries or a new Error message was entered into outputCollection   
+        checkProjectImportConfig = (ProjectsConfigs.Count > 0) And (outputCollection.Count = oldAnzMsg)
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+    End Function
 
-                                            'Case "ProjectName"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+    Public Function checkProjectUpdateConfig(configFile As String,
+                                      ByRef ProjectsFile As String,
+                                      ByRef ProjectsConfigs As SortedList(Of String, clsConfigProjectsImport),
+                                      ByRef lastrow As Integer,
+                                      ByRef outputCollection As Collection) As Boolean
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                                            'Case "TimeUnit"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+        Dim configLine As New clsConfigProjectsImport
+        Dim currentDirectoryName As String = requirementsOrdner
+        Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
+        Dim outputLine As String
 
-                                            'Case "Ressourcen"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+        Dim anzOldMsginOutput As Integer = outputCollection.Count
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+        ''
+        '' Config-file wird geöffnet
+        ' Filename ggf. mit Directory erweitern
+        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
 
-                                            'Case "days"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(configFile) Then
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+            Try
+                configWB = appInstance.Workbooks.Open(configFile)
 
-                                            'Case "weeks"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                Try
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                    If appInstance.Worksheets.Count > 0 Then
 
-                                            'Case "months"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                        Dim titleCol As Integer,
+                            IdentCol As Integer,
+                            InputFileCol As Integer,
+                            TypCol As Integer,
+                            DatenCol As Integer,
+                            TabUCol As Integer, TabNCol As Integer,
+                            SUCol As Integer, SNCol As Integer,
+                            ZUCol As Integer, ZNCol As Integer,
+                            ObjCol As Integer,
+                            InhaltCol As Integer
 
-                                            'Case "years"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschiedenen Configurationselemente
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                        titleCol = searcharea.Find("Titel").Column
+                        IdentCol = searcharea.Find("Identifier").Column
+                        InputFileCol = searcharea.Find("InputFile").Column
+                        TypCol = searcharea.Find("Typ").Column
+                        DatenCol = searcharea.Find("Datenbereich").Column
+                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
+                        TabUCol = searcharea.Find("Tabellen-Name").Column
+                        SNCol = searcharea.Find("Spalten-Nummer").Column
+                        SUCol = searcharea.Find("Spaltenüberschrift").Column
+                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
+                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
 
-                                            'Case "Total"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                        ObjCol = searcharea.Find("Objekt-Typ").Column
+                        InhaltCol = searcharea.Find("Inhalt").Column
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
 
-                                            'Case "LastLine"
-                                            '    configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            '    configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            '    configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            '    configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            '    configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            '    configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            '    configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.column.von = CInt(hstr(0))
-                                            '            configLine.column.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, SNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                            '        configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            '    End If
-                                            '    configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                        If ok Then
+                            With currentWS
+                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
 
-                                            '    If configLine.cellrange Then
-                                            '        Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                            '        Dim hstr() As String = Split(colrange, ":")
-                                            '        If hstr.Length = 2 Then
-                                            '            configLine.row.von = CInt(hstr(0))
-                                            '            configLine.row.bis = CInt(hstr(1))
-                                            '        ElseIf hstr.Length = 1 Then
-                                            '            configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '            configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '        Else
-                                            '            outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                            '        End If
-                                            '    Else
-                                            '        configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                            '        configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            '    End If
-                                            '    configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            '    configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            '    configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                For i = 6 To lastrow
+
+                                    configLine = New clsConfigProjectsImport
+
+                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
+
+                                    Select Case Titel
+                                        Case "DateiName"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
+                                            ProjectsFile = configLine.ProjectsFile
 
                                         Case Else
                                             configLine.Titel = CStr(.Cells(i, titleCol).value)
@@ -1239,13 +659,14 @@ Public Module agm3
 
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
-                    Call MsgBox("The configuration-file " & configFile & "  To import the projects couldn't be opened.")
-                    outputLine = "The configurationfile " & configFile & "  to import the projects couldn't be opened."
+                    outputLine = "The configuration-file " & configFile & "  to update the projects couldn't be opened."
+                    Call MsgBox(outputLine)
+
                 Else
-                    Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
-                                vbCrLf & " Die Projekte können somit nicht importiert werden")
                     outputLine = "Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
                                 vbCrLf & " Die Projekte können somit nicht importiert werden"
+                    Call MsgBox(outputLine)
+
                 End If
                 outputCollection.Add(outputLine)
             End Try
@@ -1258,7 +679,7 @@ Public Module agm3
             outputCollection.Add(outputLine)
         End If
 
-        checkProjectImportConfig = (ProjectsConfigs.Count > 0)
+        checkProjectUpdateConfig = (ProjectsConfigs.Count > 0) And (outputCollection.Count = anzOldMsginOutput)
 
     End Function
 
@@ -1379,8 +800,8 @@ Public Module agm3
                                                     configLine.column.von = CInt(hstr1(0))
                                                     configLine.column.bis = CInt(hstr1(1))
                                                 ElseIf hstr1.Length = 1 Then
-                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
                                                     If awinSettings.englishLanguage Then
@@ -1482,6 +903,8 @@ Public Module agm3
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim outputLine As String
 
+        Dim anzOldMsgInOutPut As Integer = outputCollection.Count
+
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
@@ -1578,8 +1001,8 @@ Public Module agm3
                                                     configLine.column.von = CInt(hstr1(0))
                                                     configLine.column.bis = CInt(hstr1(1))
                                                 ElseIf hstr1.Length = 1 Then
-                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
                                                     If awinSettings.englishLanguage Then
@@ -1656,7 +1079,8 @@ Public Module agm3
 
         End If
 
-        checkOrgaImportConfig = (orgaImportConfigs.Count > 0)
+        ' make sure no additional error message were added here 
+        checkOrgaImportConfig = (orgaImportConfigs.Count > 0) And (outputCollection.Count = anzOldMsgInOutPut)
 
     End Function
 
@@ -1817,14 +1241,14 @@ Public Module agm3
                                             result = False
                                         Else
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to Name in Sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name in Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
 
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
@@ -1832,14 +1256,14 @@ Public Module agm3
                                         If hrole.name <> personalName Then
                                             ' Warning: name and personal Number do not match ...
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to Name in Sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name in Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
                                     End If
                                     'Dim identical As Boolean = (personalName = hrole.name)
@@ -1973,9 +1397,9 @@ Public Module agm3
                                                 ElseIf pNames.Count > 1 Then
                                                     ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
                                                     If awinSettings.englishLanguage Then
-                                                        outputline = "There exists more than one project to project No. '" & projektKDNr & "'"
+                                                        outputline = "no assignment possible: There exists more than one project to project No. '" & projektKDNr & "'"
                                                     Else
-                                                        outputline = "Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
+                                                        outputline = "keine Zuordnung möglich: Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
                                                     End If
 
                                                     oPCollection.Add(outputline)
@@ -3765,7 +3189,7 @@ Public Module agm3
                                             ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
                                             Dim found As Boolean = False
                                             Dim i As Integer = lastZeile + 1
-                                            While Not found
+                                            While Not found And i > firstUrlzeile
                                                 i = i - 1
                                                 If kapaConfig("LastLine").regex = "RegEx" Then
                                                     regexpression = New Regex(kapaConfig("LastLine").content)
@@ -3780,7 +3204,11 @@ Public Module agm3
                                                 End If
 
                                             End While
-                                            lastZeile = i - 1
+
+                                            If found Then
+                                                lastZeile = i - 1
+                                            End If
+
 
 
                                             ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
@@ -4184,13 +3612,15 @@ Public Module agm3
     ''' <returns></returns>
     Public Function readProjectsAllg(ByVal listOfProjectFiles As Collection,
                                      ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
-                                     ByRef meldungen As Collection) As List(Of String)
+                                     ByRef meldungen As Collection,
+                                     ByVal importType As ptImportTypen) As List(Of String)
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim listOfArchivFiles As New List(Of String)
         Dim anzFehler As Integer = 0
         Dim result As Boolean = False
+        Dim msgTxt As String = ""
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -4207,34 +3637,73 @@ Public Module agm3
         If listOfProjectFiles.Count > 0 Then
             ' Öffnen des projectFile
             For Each tmpDatei As String In listOfProjectFiles
-                Call logger(ptErrLevel.logInfo, "Einlesen Projekte " & tmpDatei, "", anzFehler)
-                result = readProjectsWithConfig(projectConfig, tmpDatei, meldungen)
 
-                If result Then
-                    ' hier: merken der erfolgreich importierten Projects Dateien
-                    listOfArchivFiles.Add(tmpDatei)
+                If importType = ptImportTypen.telairTagetikUpdate Then
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Updating Project from " & tmpDatei
+                    Else
+                        msgTxt = "Update Projekt mit " & tmpDatei
+                    End If
+                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
+                    result = updateProjectWithConfig(projectConfig, tmpDatei, meldungen)
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten Projects Dateien
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
+
+                ElseIf importType = ptImportTypen.telairTagetikImport Then
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Importing Projects from " & tmpDatei
+                    Else
+                        msgTxt = "Einlesen Projekte aus " & tmpDatei
+                    End If
+                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
+                    result = readProjectsWithConfig(projectConfig, tmpDatei, meldungen)
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten Projects Dateien
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
+
+                ElseIf importType = ptImportTypen.instartCalcTemplateImport Then
+
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Importing Projects from " & tmpDatei
+                    Else
+                        msgTxt = "Einlesen Projekte aus " & tmpDatei
+                    End If
+                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
+                    result = readCalcTemplatesWithConfig(projectConfig, tmpDatei, meldungen)
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten Projects Dateien
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
+
                 End If
+
             Next
 
         Else
-            Dim errMsg As String = "Es gibt keine Datei zur Projekt-Anlage" & vbLf _
-                             & "Es wurden daher jetzt keine berücksichtigt"
 
-            ' das sollte nicht dazu führen, dass nichts gemacht wird 
-            'meldungen.Add(errMsg)
-            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
-            'Call MsgBox(errMsg)
+            If awinSettings.englishLanguage Then
+                msgTxt = "no files to read ... Action cancelled! "
+            Else
+                msgTxt = "keine Dateien zu lesen ... Abbruch! "
+            End If
 
-            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
+            meldungen.Add(msgTxt)
+
+            Call logger(ptErrLevel.logError, msgTxt, "", anzFehler)
         End If
 
-        If result Then
-            readProjectsAllg = listOfArchivFiles
-        Else
-            readProjectsAllg = New List(Of String)
-        End If
+
+        readProjectsAllg = listOfArchivFiles
 
     End Function
+
+
     Function readProjectsWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
@@ -5021,7 +4490,1236 @@ Public Module agm3
         readProjectsWithConfig = result
     End Function
 
+    ''' <summary>
+    ''' used for Import ActualData : BaselineVersions = Nothing 
+    ''' and Update with Tagetik projects : BaselineVersions need to have same number than PlanningVersions
+    ''' can be performed by both OA, PL and PMO
+    ''' </summary>
+    ''' <param name="PlanningVersions"></param>
+    ''' <param name="BaselineVersions"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Public Function upDatesEintragen(ByVal PlanningVersions As clsProjekteAlle,
+                                     ByVal BaselineVersions As clsProjekteAlle,
+                                     ByRef meldungen As Collection) As Boolean
+        Dim result As Boolean = True
+        Dim outputLine As String = ""
+        Dim planningVersion As clsProjekt = Nothing
+        Dim baselineVersion As clsProjekt = Nothing
+        Dim err As New clsErrorCodeMsg
 
+        Dim today As Date = Date.Now
+
+        ' remember User Role 
+        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+
+        If IsNothing(BaselineVersions) Then
+            ' Actual Data Import 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
+                Try
+                    planningVersion = kvp.Value
+                    Dim mProj As clsProjekt = Nothing
+                    ' Store Planning Version 
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = "saved: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        End If
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputLine = "Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+        Else
+            ' Forecast / Baseline Import 
+            ' first Check
+            If PlanningVersions.Count = BaselineVersions.Count Then
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
+                    Try
+                        planningVersion = kvp.Value
+                        Dim pName As String = kvp.Value.name
+                        Dim baselineKey As String = calcProjektKey(pName, ptVariantFixNames.pfv.ToString)
+                        baselineVersion = BaselineVersions.getProject(baselineKey)
+
+                        If Not IsNothing(baselineVersion) Then
+                            ' Store Planning Version 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                            Dim mProj As clsProjekt = Nothing
+                            planningVersion.timeStamp = today
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "saved: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            End If
+
+                            ' Store Baseline Version 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                            mProj = Nothing
+                            baselineVersion.timeStamp = today
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(baselineVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Baseline saved: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "Baseline gespeichert: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Baseline Store Failed: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                Else
+                                    outputLine = "Baseline Speichern Fehlgeschlagen! " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                End If
+                            End If
+
+                        Else
+                            outputLine = "there is no baseline version ... skipped ...  " & kvp.Value.name
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                        End If
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputLine = "unexpected failure - not stored: " & planningVersion.name
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "unerwarteter Fehler - nicht gespeichert: " & planningVersion.name
+                            meldungen.Add(outputLine)
+                        End If
+                    End Try
+
+                Next
+
+
+
+            Else
+                outputLine = "Nr of planning and baseline versions different: " & PlanningVersions.Count & ", " & BaselineVersions.Count
+                meldungen.Add(outputLine)
+                Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                result = False
+            End If
+
+
+        End If
+
+        ' restore User Role 
+        myCustomUserRole.customUserRole = saveUserRole
+
+        upDatesEintragen = result
+    End Function
+
+    ''' <summary>
+    ''' creates from a Instart Angebots-Kalkulation in Excel a VISBO Project 
+    ''' </summary>
+    ''' <param name="projectConfig"></param>
+    ''' <param name="tmpDatei"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Public Function readCalcTemplatesWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                    ByVal tmpDatei As String,
+                                    ByRef meldungen As Collection) As Boolean
+        Dim outputline As String = ""
+        Dim ok As Boolean = False
+        Dim result As Boolean = False
+        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim searchColNr As Integer = 1
+        Dim myRowNr As Integer = 1
+
+        Dim offsets As Integer() = Nothing
+
+        Dim pName As String = ""
+        Dim vName As String = ""
+        Dim startDate As Date = Nothing
+        Dim endDate As Date = Nothing
+        Dim kunde As String = ""
+        Dim budget As Double = 0.0
+        Dim businessUnit As String = ""
+
+        Dim arrayDimension As Integer = 0
+
+        Dim phaseRoleValues As New SortedList(Of String, SortedList(Of String, Double()))
+        Dim phaseCostValues As New SortedList(Of String, SortedList(Of String, Double()))
+        Dim invoiceMilestones As New SortedList(Of Date, KeyValuePair(Of String, Double))
+        Dim phaseDates As New SortedList(Of String, Date())
+
+        Try
+            If My.Computer.FileSystem.FileExists(tmpDatei) Then
+                Try
+                    projectWB = appInstance.Workbooks.Open(tmpDatei)
+                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
+                    '
+                    ' Start protokollieren 
+                    outputline = "Start Import CalcTemplate: " & tmpDatei
+                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    '
+                    '
+                    Dim searchColumn As Excel.Range = Nothing
+                    Dim trennZeichen As String = projectConfig("Ende-Zeichen").content
+
+                    Dim pNameDefinition As clsConfigProjectsImport = projectConfig("Projekt-Name")
+                    Dim startDefinition As clsConfigProjectsImport = projectConfig("Start")
+                    Dim endeDefinition As clsConfigProjectsImport = projectConfig("Ende")
+                    Dim vNameDefinition As clsConfigProjectsImport = projectConfig("Varianten-Name")
+                    Dim kundeDefinition As clsConfigProjectsImport = projectConfig("Kunde")
+                    Dim buDefinition As clsConfigProjectsImport = projectConfig("Business-Unit")
+                    Dim budgetDefinition As clsConfigProjectsImport = projectConfig("Budget")
+                    Dim pkDefinition As clsConfigProjectsImport = projectConfig("Personalkosten")
+                    Dim skDefinition As clsConfigProjectsImport = projectConfig("SonstKosten")
+                    Dim zpDefinition As clsConfigProjectsImport = projectConfig("Zahlungsplan")
+
+                    Dim anzZeilen As Integer = 0
+                    Dim myValue As String = ""
+
+                    ' read PName 
+                    currentWS = projectWB.Worksheets(pNameDefinition.sheetDescript)
+                    searchColNr = pNameDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=pNameDefinition.Identifier).Row
+                    offsets = pNameDefinition.getRowColumnOffset
+                    pName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+
+                    ' check PName
+                    If Not isValidProjectName(pName) Then
+                        outputline = "invalid Project-Name ... Exit ... : " & pName & " in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
+                    ' read Start: this and all following information has to be on the same Worksheet ! 
+                    searchColNr = startDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=startDefinition.Identifier).Row
+                    offsets = startDefinition.getRowColumnOffset
+                    startDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+
+                    ' read Ende: 
+                    searchColNr = endeDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=endeDefinition.Identifier).Row
+                    offsets = endeDefinition.getRowColumnOffset
+                    endDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+
+                    ' check Validity
+                    If getColumnOfDate(startDate) <= 0 Or getColumnOfDate(startDate) > getColumnOfDate(endDate) Then
+                        outputline = "invalid Start and/or End-Dates  ... Exit ... : " & startDate.ToShortDateString & " - " & endDate.ToShortDateString & " in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
+                    ' read VariantName 
+                    searchColNr = vNameDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=vNameDefinition.Identifier).Row
+                    offsets = vNameDefinition.getRowColumnOffset
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        vName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        vName = ""
+                    End If
+
+                    ' check vName
+                    If vName <> "" Then
+                        If Not isValidProjectName(vName) Then
+                            outputline = "invalid Variant-Name ... Exit ... : " & vName & " in File " & dateiName
+                            Throw New Exception(outputline)
+                        End If
+                    End If
+
+                    ' now check whether pName, vName already exists ... 
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now)
+                    If Not IsNothing(hproj) Then
+                        ' not allowed .. 
+                        outputline = "Project with given Name and Variant-Name already exists ... Exit ... : " & pName & "[ " & vName & " ] in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
+                    ' read Kunde
+                    searchColNr = kundeDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=kundeDefinition.Identifier).Row
+                    offsets = kundeDefinition.getRowColumnOffset
+
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        kunde = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        kunde = ""
+                    End If
+
+
+                    ' read bu
+                    searchColNr = buDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=buDefinition.Identifier).Row
+                    offsets = buDefinition.getRowColumnOffset
+
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        businessUnit = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        businessUnit = ""
+                    End If
+
+                    If businessUnit <> "" Then
+                        ' check whether it is defined
+                        Dim found As Boolean = False
+                        For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                            found = kvp.Value.name = businessUnit
+                            If found Then
+                                Exit For
+                            End If
+                        Next
+
+                        If Not found Then
+
+                            outputline = "business Unit not defined: " & businessUnit
+                            Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig 2", anzFehler)
+                            businessUnit = ""
+                        End If
+                    End If
+
+
+                    ' read budget / erloes
+                    searchColNr = budgetDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=budgetDefinition.Identifier).Row
+                    offsets = budgetDefinition.getRowColumnOffset
+
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        budget = CDbl(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                    Else
+                        budget = 0
+                    End If
+
+
+                    ' now define arrayLength 
+                    arrayDimension = getColumnOfDate(endDate) - getColumnOfDate(startDate)
+
+                    ' read pk : Personalkosten
+                    searchColNr = pkDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=pkDefinition.Identifier).Row
+                    offsets = pkDefinition.getRowColumnOffset
+
+
+                    pkDefinition.column.bis = pkDefinition.column.von + offsets(1) + arrayDimension
+                    pkDefinition.row.von = myRowNr + offsets(0)
+
+                    anzZeilen = 0
+                    myValue = ""
+
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
+                        myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
+                    Else
+                        myValue = trennZeichen
+                    End If
+
+                    Do While myValue <> trennZeichen
+                        anzZeilen = anzZeilen + 1
+                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
+                            myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
+                        Else
+                            myValue = trennZeichen
+                        End If
+                    Loop
+                    pkDefinition.row.bis = pkDefinition.row.von + anzZeilen - 1
+
+
+                    ' read sk : SonstKosten
+                    searchColNr = skDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=skDefinition.Identifier).Row
+                    offsets = skDefinition.getRowColumnOffset
+
+                    skDefinition.column.bis = skDefinition.column.von + offsets(1) + arrayDimension
+                    skDefinition.row.von = myRowNr + offsets(0)
+
+                    anzZeilen = 0
+                    myValue = ""
+
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
+                        myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
+                    Else
+                        myValue = trennZeichen
+                    End If
+
+                    Do While myValue <> trennZeichen
+                        anzZeilen = anzZeilen + 1
+                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
+                            myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
+                        Else
+                            myValue = trennZeichen
+                        End If
+                    Loop
+
+                    skDefinition.row.bis = skDefinition.row.von + anzZeilen - 1
+
+                    ' read zp : Zahlungsplan 
+                    searchColNr = zpDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=zpDefinition.Identifier).Row
+                    offsets = zpDefinition.getRowColumnOffset
+
+                    zpDefinition.column.bis = zpDefinition.column.von + offsets(1) + arrayDimension
+                    zpDefinition.row.von = myRowNr + offsets(0)
+
+                    anzZeilen = 0
+                    myValue = ""
+
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
+                        myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
+                    Else
+                        myValue = trennZeichen
+                    End If
+
+                    Do While myValue <> trennZeichen
+                        anzZeilen = anzZeilen + 1
+                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
+                            myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
+                        Else
+                            myValue = trennZeichen
+                        End If
+                    Loop
+
+                    zpDefinition.row.bis = zpDefinition.row.von + anzZeilen - 1
+
+                    ' now read the phaseNames
+                    Dim phaseNames As New SortedList(Of String, String)
+
+
+                    Dim phaseCol As Integer = pkDefinition.column.von - 2
+                    Dim orgaUnitCol As Integer = pkDefinition.column.von - 1
+                    Dim roleCol As Integer = pkDefinition.column.von
+
+                    Dim myPhaseName As String = rootPhaseName
+                    Dim myOrgaUnit As String = ""
+                    Dim myRole As String = ""
+                    Dim lfdNr As Integer = 0
+                    offsets = pkDefinition.getRowColumnOffset
+
+                    ' now read line for line 
+                    For zeile As Integer = pkDefinition.row.von To pkDefinition.row.bis
+
+                        ' read the phase-Name 
+                        If Not IsNothing(currentWS.Cells(zeile, phaseCol).value) Then
+                            myPhaseName = CStr(currentWS.Cells(zeile, phaseCol).value).Trim
+                            If myPhaseName = "" Then
+                                myPhaseName = "."
+                            End If
+                        Else
+                            myPhaseName = "."
+                        End If
+
+                        If myPhaseName <> "." Then
+                            If Not phaseNames.ContainsKey(myPhaseName) Then
+                                lfdNr = lfdNr + 1
+                                phaseNames.Add(myPhaseName, lfdNr.ToString("0#") & "_" & myPhaseName)
+                            End If
+                        End If
+
+                        ' now read the Orga-Unit, must not be empty 
+                        If Not IsNothing(currentWS.Cells(zeile, orgaUnitCol).value) Then
+                            myOrgaUnit = CStr(currentWS.Cells(zeile, orgaUnitCol).value).Trim
+                            If myOrgaUnit = "" Then
+                                Throw New Exception("Orga-Unit must not be empty: Zeile" & zeile.ToString)
+                            Else
+                                If Not RoleDefinitions.containsName(myOrgaUnit) Then
+                                    Throw New Exception("Orga-Unit does not exist: " & myOrgaUnit)
+                                End If
+                            End If
+                        Else
+                            Throw New Exception("Orga-Unit must not be empty: Zeile" & zeile.ToString)
+                        End If
+
+
+                        ' now read the role 
+                        If Not IsNothing(currentWS.Cells(zeile, roleCol).value) Then
+                            myRole = CStr(currentWS.Cells(zeile, roleCol).value).Trim
+                            If myRole = "" Then
+                                Throw New Exception("Role must not be empty: Zeile" & zeile.ToString)
+                            Else
+                                If Not RoleDefinitions.containsName(myRole) Then
+                                    ' maybe it is because there is only provided Senior or something like that instead of e.telligent - Senior 
+                                    Dim possibleAlternatives As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(myRole, myOrgaUnit)
+                                    If possibleAlternatives.Count <> 1 Then
+                                        Throw New Exception("no unique assignment: Orga-Unit, Role" & myOrgaUnit & " , " & myRole)
+                                    Else
+                                        myRole = possibleAlternatives.First
+                                    End If
+                                End If
+                            End If
+                        Else
+                            Throw New Exception("Orga-Unit must not be empty: Zeile" & zeile.ToString)
+                        End If
+
+                        Dim myRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(myOrgaUnit, myRole)
+                        If myRoleNameID = "" Then
+                            Throw New Exception("Invalid Combination" & myOrgaUnit & " , " & myRole)
+                        End If
+
+                        ' now read the monthly assignments 
+
+                        Dim myValues As Double()
+                        ReDim myValues(arrayDimension)
+
+                        Dim startIX As Integer = pkDefinition.column.von + offsets(1)
+                        For ix As Integer = 0 To arrayDimension
+                            If Not IsNothing(currentWS.Cells(zeile, startIX + ix).value) Then
+                                myValues(ix) = CDbl(currentWS.Cells(zeile, startIX + ix).value)
+                                If myValues(ix) < 0 Then
+                                    Throw New Exception("Negative resource needs are not allowed (row, column) " & zeile & " , " & ix)
+                                End If
+                            Else
+                                myValues(ix) = 0
+                            End If
+                        Next
+
+                        Dim roleValues As New SortedList(Of String, Double())
+
+                        ' now input that into phaseRoleValues
+                        ' now substitute by the enumerated phase-Name
+                        'If myPhaseName <> "." Then
+                        '    myPhaseName = phaseNames.Item(myPhaseName)
+                        'End If
+
+                        If Not phaseRoleValues.ContainsKey(myPhaseName) Then
+                            roleValues.Add(myRoleNameID, myValues)
+                            phaseRoleValues.Add(myPhaseName, roleValues)
+                        Else
+                            roleValues = phaseRoleValues.Item(myPhaseName)
+                            If Not roleValues.ContainsKey(myRoleNameID) Then
+                                roleValues.Add(myRoleNameID, myValues)
+                            Else
+                                ' add ...
+                                If roleValues.Item(myRoleNameID).Length <> myValues.Length Then
+                                    Throw New Exception("Invalid Combination" & myOrgaUnit & " , " & myRole)
+                                End If
+                                For ix As Integer = 0 To myValues.Length - 1
+                                    roleValues.Item(myRoleNameID)(ix) = roleValues.Item(myRoleNameID)(ix) + myValues(ix)
+                                Next
+                            End If
+                        End If
+
+                    Next
+
+
+                    ' now get the cost Values 
+                    Dim costCol As Integer = skDefinition.column.von
+
+                    myPhaseName = elemNameOfElemID(rootPhaseName)
+                    Dim myCost As String = ""
+                    offsets = skDefinition.getRowColumnOffset
+
+                    ' now read line for line 
+                    For zeile As Integer = skDefinition.row.von To skDefinition.row.bis
+
+                        ' now read the Cost 
+                        If Not IsNothing(currentWS.Cells(zeile, costCol).value) Then
+                            myCost = CStr(currentWS.Cells(zeile, costCol).value).Trim
+                            If myCost = "" Then
+                                Throw New Exception("Cost must not be empty: Zeile" & zeile.ToString)
+                            Else
+                                If Not CostDefinitions.containsName(myCost) Then
+                                    Throw New Exception("unknown Cost Name: " & myCost)
+                                End If
+                            End If
+                        Else
+                            Throw New Exception("Cost Name must not be empty: Zeile" & zeile.ToString)
+                        End If
+
+
+                        ' now read the monthly assignments
+                        Dim myValues As Double()
+                        ReDim myValues(arrayDimension)
+
+
+                        Dim startIX As Integer = skDefinition.column.von + offsets(1)
+                        For ix As Integer = 0 To arrayDimension
+                            If Not IsNothing(currentWS.Cells(zeile, startIX + ix).value) Then
+                                Dim tstStr As String = CStr(currentWS.Cells(zeile, startIX + ix).value)
+                                If IsNumeric(tstStr) Then
+                                    myValues(ix) = CDbl(tstStr)
+                                Else
+                                    myValues(ix) = 0
+                                End If
+
+                                If myValues(ix) < 0 Then
+                                    Throw New Exception("Negative resource needs are not allowed (row, column) " & zeile & " , " & ix)
+                                End If
+                            Else
+                                myValues(ix) = 0
+                            End If
+                        Next
+
+                        Dim costValues As New SortedList(Of String, Double())
+
+                        ' now input that into phaseCostValues
+                        If Not phaseCostValues.ContainsKey(myPhaseName) Then
+                            costValues.Add(myCost, myValues)
+                            phaseCostValues.Add(myPhaseName, costValues)
+                        Else
+                            costValues = phaseCostValues.Item(myPhaseName)
+                            If Not costValues.ContainsKey(myCost) Then
+                                costValues.Add(myCost, myValues)
+                            Else
+                                ' add ...
+                                If costValues.Item(myCost).Length <> myValues.Length Then
+                                    Throw New Exception("093 - Invalid array Lengths " & myCost)
+                                End If
+                                For ix As Integer = 0 To myValues.Length - 1
+                                    costValues.Item(myCost)(ix) = costValues.Item(myCost)(ix) + myValues(ix)
+                                Next
+                            End If
+                        End If
+
+                    Next
+
+
+                    ' now get the milestones                     '
+                    Dim msCol As Integer = zpDefinition.column.von
+
+                    myPhaseName = rootPhaseName
+                    Dim myMilestoneName As String = ""
+                    offsets = zpDefinition.getRowColumnOffset
+                    lfdNr = 0
+                    Dim milestoneNames As New List(Of String)
+
+                    ' now read line for line 
+                    For zeile As Integer = zpDefinition.row.von To zpDefinition.row.bis
+
+                        ' now read the Milestone 
+                        If Not IsNothing(currentWS.Cells(zeile, msCol).value) Then
+                            myMilestoneName = CStr(currentWS.Cells(zeile, msCol).value).Trim
+                            If myMilestoneName = "" Then
+                                Throw New Exception("Milestone Name must not be empty: Zeile" & zeile.ToString)
+                            Else
+                                If milestoneNames.Contains(myMilestoneName) Then
+                                    Throw New Exception("Duplicate Milestone-Name: " & myMilestoneName)
+                                Else
+                                    milestoneNames.Add(myMilestoneName)
+                                End If
+                            End If
+                        Else
+                            Throw New Exception("Milestone Name must not be empty: Zeile" & zeile.ToString)
+                        End If
+
+
+                        ' now get the amount and the Date 
+                        Dim ix As Integer = zpDefinition.column.von + offsets(1)
+
+                        Dim invoiceValue As Double = 0
+
+                        Do While ix <= zpDefinition.column.bis And invoiceValue = 0
+
+                            If Not IsNothing(currentWS.Cells(zeile, ix).value) Then
+                                Dim tstStr As String = currentWS.Cells(zeile, ix).value
+                                If IsNumeric(tstStr) Then
+                                    invoiceValue = CDbl(tstStr)
+                                    If invoiceValue <= 0 Then
+                                        ix = ix + 1
+                                        invoiceValue = 0
+                                    End If
+                                Else
+                                    ix = ix + 1
+                                End If
+
+                            End If
+
+
+
+                        Loop
+
+                        Dim myDate As Date = getDateofColumn(getColumnOfDate(startDate) + ix - (zpDefinition.column.von + offsets(1)), True)
+                        Dim myValuePair As New KeyValuePair(Of String, Double)(myMilestoneName, invoiceValue)
+                        invoiceMilestones.Add(myDate, myValuePair)
+
+                    Next
+
+                    ' now close the Excel file 
+                    If Not IsNothing(projectWB) Then
+                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                    End If
+
+                    ' now check/protocol the sums ...
+                    Dim checkSumPT As Double = 0.0
+                    For Each kvp1 As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseRoleValues
+                        For Each kvp2 As KeyValuePair(Of String, Double()) In kvp1.Value
+                            checkSumPT = checkSumPT + kvp2.Value.Sum
+                        Next
+                    Next
+
+                    Dim checkSumTE As Double = 0.0
+                    For Each kvp1 As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseCostValues
+                        For Each kvp2 As KeyValuePair(Of String, Double()) In kvp1.Value
+                            checkSumTE = checkSumTE + kvp2.Value.Sum
+                        Next
+                    Next
+
+                    Dim checkSumIV As Double = 0.0
+                    For Each kvp1 As KeyValuePair(Of Date, KeyValuePair(Of String, Double)) In invoiceMilestones
+                        checkSumIV = checkSumIV + kvp1.Value.Value
+                    Next
+
+                    outputline = "PT Sum: " & checkSumPT.ToString("#.##") & "; T€ Sum: " & checkSumTE.ToString("#.##") & "; Invoice Summe: " & checkSumIV.ToString("#.##")
+                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    ' Ende Protocolling ... 
+
+                    ' now create the project ...
+                    ' it is guaranteed that the project/variant-Name does not exist ... 
+
+                    Dim phaseMilestones As New SortedList(Of String, SortedList(Of Date, KeyValuePair(Of String, Double)))
+                    phaseMilestones.Add(elemNameOfElemID(rootPhaseName), invoiceMilestones)
+
+                    ' now define phaseDates ... 
+                    Dim startEndDates As Date()
+                    ReDim startEndDates(1)
+                    startEndDates(0) = startDate
+                    startEndDates(1) = endDate
+                    Dim phDates As New SortedList(Of String, Date())
+
+                    For Each kvp As KeyValuePair(Of String, String) In phaseNames
+                        If Not phDates.ContainsKey(kvp.Value) Then
+                            phDates.Add(kvp.Value, startEndDates)
+                        End If
+                    Next
+
+                    Dim newProj As clsProjekt = erstelleProjektausParametern(pName:=pName, vName:=vName, startDate:=startDate, endeDate:=endDate,
+                                                                             budget:=budget, businessUnit:=businessUnit, description:="Project for " & kunde,
+                                                                             responsible:="", sfitKPI:=Nothing, riskKPI:=Nothing,
+                                                                             phaseDates:=phDates,
+                                                                             phaseRoleValues:=phaseRoleValues, phaseCostValues:=phaseCostValues,
+                                                                             phaseMilestones:=phaseMilestones,
+                                                                             phaseDeliverables:=Nothing, msDeliverables:=Nothing)
+
+
+                    If Not IsNothing(newProj) Then
+                        Dim prCheckSumPT As Double = newProj.getAlleRessourcen.Sum
+                        Dim prCheckSumTE As Double = newProj.getGesamtAndereKosten.Sum
+                        Dim prCheckSumIV As Double = newProj.getInvoicesPenalties.Sum
+
+                        ' now protocol after project is created 
+                        outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & "; Invoice Summe: " & prCheckSumIV.ToString("#.##")
+                        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+
+                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+                        result = True
+                        outputline = "Success! project created: " & newProj.getShapeText
+                        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    Else
+                        result = False
+                        outputline = "Failed! no project created: " & pName & "[ " & vName & " ]"
+                        Call logger(ptErrLevel.logError, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    End If
+
+                    Dim stopp As Integer = 0
+
+                Catch ex As Exception
+
+                    ' now close the Excel file 
+                    If Not IsNothing(projectWB) Then
+                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                    End If
+
+                    Call logger(ptErrLevel.logError, ex.Message, "readCalcTemplatesWithConfig 1", anzFehler)
+                    meldungen.Add(ex.Message)
+                    result = False
+                End Try
+            End If
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "readCalcTemplatesWithConfig 2", anzFehler)
+            meldungen.Add(ex.Message)
+            result = False
+        End Try
+
+
+
+        '
+        ' Ende protokollieren 
+        outputline = "Ende Import CalcTemplate: " & tmpDatei
+        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+        '
+        '
+
+        readCalcTemplatesWithConfig = result
+    End Function
+
+    ''' <summary>
+    ''' updates projects with Telair Tagetik Import Files 
+    ''' </summary>
+    ''' <param name="projectConfig"></param>
+    ''' <param name="tmpDatei"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Function updateProjectWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                    ByVal tmpDatei As String,
+                                    ByRef meldungen As Collection) As Boolean
+
+        Dim outputline As String = ""
+        Dim ok As Boolean = False
+        Dim result As Boolean = False
+        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim regexpression As Regex
+        Dim firstValueSpalte As Integer
+        Dim lastValueSpalte As Integer
+        Dim firstValueZeile As Integer
+        Dim lastSpalte As Integer
+        Dim lastZeile As Integer
+
+
+        ' Variables to create a Project
+        Dim hproj As clsProjekt = Nothing
+        Dim baseline As clsProjekt = Nothing
+        Dim pName As String = ""
+        Dim vName As String = ""
+        Dim vorlagenName As String = ""
+
+        Dim projectNumber As String = ""
+
+        Dim zeile As Integer = 0
+        Dim roleNames() As String = Nothing
+        Dim roleValues() As Double = Nothing
+        Dim roleListNameValues As New SortedList(Of String, Double())
+        Dim costNames() As String = Nothing
+        Dim costValues() As Double = Nothing
+
+        Dim combinedName As Boolean = True
+        Dim createBudget As Boolean = True
+        Dim createCostsRolesAnyhow As Boolean = True
+
+        Dim monthVon As Integer = 0
+        Dim monthBis As Integer = 0
+        Dim arrayOffset As Integer = 0
+        Dim arrayDimension As Integer = 0
+
+        Dim noGo As Integer = 0   'Sobald diese Variable > 0 ist, wird das Projekt nicht importiert
+        Dim offsetCorrection As Integer = 0
+
+        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+
+        ' do it as project leader 
+        myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+        Try
+            If My.Computer.FileSystem.FileExists(tmpDatei) Then
+
+
+                Try
+
+                    projectWB = appInstance.Workbooks.Open(tmpDatei)
+                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
+
+                    ' now define vz=zeile, vc=spalte, wo der jeweilige Wert steckt
+                    Dim monthValuesDefinition As clsConfigProjectsImport = projectConfig("months")
+                    Dim resourceNameDefinition As clsConfigProjectsImport = projectConfig("Ressourcen")
+                    Dim anchorDef1 As clsConfigProjectsImport = projectConfig("anchor1")
+                    Dim anchorDef2 As clsConfigProjectsImport = projectConfig("anchor2")
+                    Dim constraints As clsConfigProjectsImport = projectConfig("constraint")
+
+                    ' Auslesen erste Projekt-Spalte
+                    firstValueSpalte = monthValuesDefinition.column.von
+                    lastValueSpalte = monthValuesDefinition.column.bis
+                    firstValueZeile = monthValuesDefinition.row.von
+                    ' need to searchedFor ... 
+                    If firstValueZeile = 0 Then
+                        firstValueZeile = 11
+                    End If
+
+                    If appInstance.Worksheets.Count > 0 Then
+
+                        If Not IsNothing(monthValuesDefinition.sheet) Then
+                            Try
+                                currentWS = CType(projectWB.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                ok = True
+                            Catch ex As Exception
+                                currentWS = Nothing
+                                ok = False
+                            End Try
+                        End If
+
+                        If Not ok Then
+                            If Not IsNothing(monthValuesDefinition.sheetDescript) Then
+                                Try
+                                    If monthValuesDefinition.sheetDescript <> "" Then
+                                        currentWS = CType(appInstance.Worksheets(monthValuesDefinition.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    End If
+                                    currentWS = Nothing
+                                Catch ex As Exception
+                                    currentWS = Nothing
+                                End Try
+
+                            Else
+                                currentWS = Nothing
+                            End If
+                        End If
+
+                        If IsNothing(currentWS) Then
+                            outputline = "The Worksheet you want to import cannot be matched"
+                            meldungen.Add(outputline)
+                            Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                        Else
+
+                            ' are there constraints, i.e which kind of rows should be considered 
+                            Dim validConstraints() As String = Nothing
+                            If Not IsNothing(constraints.content) Then
+                                If constraints.content.Trim <> "" Then
+                                    validConstraints = constraints.content.Split(New Char() {CChar(",")})
+                                End If
+                            End If
+
+                            ' should be parameterised
+                            Dim searcharea As Excel.Range = CType(currentWS.Columns(monthValuesDefinition.column.von), Excel.Range)
+                            Dim colOfStartForeCast As Integer = -1
+                            Dim headerRow As Integer = 9
+
+                            Try
+                                ' searchFor Actual 
+                                headerRow = searcharea.Find(anchorDef1.Identifier).Row
+                            Catch ex As Exception
+                                headerRow = searcharea.Find(anchorDef2.Identifier).Row
+                                colOfStartForeCast = monthValuesDefinition.column.von
+                            End Try
+
+
+                            ' Zeile 5 enthält die verschieden Configurationselemente
+
+                            colOfStartForeCast = monthValuesDefinition.column.bis + 1
+                            Try
+                                searcharea = CType(currentWS.Rows(headerRow), Excel.Range)
+                                Dim testString As String = CStr(CType(searcharea.Cells(1, 4), Excel.Range).Value)
+                                testString = CStr(currentWS.Cells(headerRow, 4).Value)
+                                '                        What:="Forecast", After:=ActiveCell, LookIn:=xlValues,
+                                'LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext,
+                                'MatchCase:=False, SearchFormat:=False
+                                Dim searchErg As Excel.Range = searcharea.Find(What:="Forecast", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
+                                                                               SearchOrder:=XlSearchOrder.xlByColumns, SearchDirection:=XlSearchDirection.xlNext, MatchCase:=False, SearchFormat:=False)
+                                If Not IsNothing(searchErg) Then
+                                    colOfStartForeCast = searchErg.Column
+                                Else
+                                    searchErg = searcharea.Find(What:="Forecast", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
+                                                                               SearchOrder:=XlSearchOrder.xlByColumns, SearchDirection:=XlSearchDirection.xlPrevious, MatchCase:=False, SearchFormat:=False)
+                                    If Not IsNothing(searchErg) Then
+                                        colOfStartForeCast = searchErg.Column
+                                    End If
+
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
+                            arrayDimension = monthValuesDefinition.column.bis - monthValuesDefinition.column.von
+
+                            Dim yearValue As String = CStr(currentWS.Cells(headerRow, monthValuesDefinition.column.von).value).Split(New Char() {CChar(" ")}, 2)(0)
+                            Dim mthValue As String = currentWS.Cells(headerRow + 1, monthValuesDefinition.column.von).value
+
+                            ' Geschäftsjahr xy Telair beginnt im Okt des Vorjahres  
+                            Dim startDateValues As Date = CDate(mthValue & " " & yearValue).AddYears(-1)
+                            Dim startColOfArray = getColumnOfDate(startDateValues)
+                            'Dim endDateValues As Date = startDateValues.AddMonths(arrayDimension)
+
+                            Dim colOfStartDateValues As Integer = getColumnOfDate(startDateValues)
+                            Dim colOfEndDateValues As Integer = colOfStartDateValues + (monthValuesDefinition.column.bis - monthValuesDefinition.column.von)
+
+                            arrayOffset = colOfStartForeCast - monthValuesDefinition.column.von
+
+                            monthVon = colOfStartDateValues + arrayOffset
+                            monthBis = colOfEndDateValues
+
+                            lastSpalte = lastValueSpalte
+                            lastZeile = CType(currentWS.Cells(2000, resourceNameDefinition.column.von), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                            ' now get projNumber as part of the fileName
+
+                            Try
+
+
+                                Dim projNumber As String = ""
+                                If dateiName.Contains("(") Then
+                                    Dim tmpstr() As String = dateiName.Split(New Char() {CChar("("), CChar(")")}, 3)
+                                    projNumber = tmpstr(0).Trim
+
+                                    Dim datumsAngabe As String = tmpstr(1)
+
+                                Else
+                                    Dim tmpstr() As String = dateiName.Split(New Char() {CChar(".")}, 2)
+                                    projNumber = tmpstr(0)
+                                End If
+
+                                hproj = getProjektFromSessionOrDB("", "", AlleProjekte, Date.Now, kdNr:=projNumber)
+
+                                Dim tryPName As String = ""
+                                If IsNothing(hproj) Then
+                                    ' project with given Number does not exist 
+                                    Dim tmpstr() As String = dateiName.Split(New Char() {CChar(".")}, 2)
+                                    tryPName = tmpstr(0).Trim
+                                    hproj = getProjektFromSessionOrDB(tryPName, "", AlleProjekte, Date.Now)
+                                End If
+
+                                If Not IsNothing(hproj) Then
+                                    ' weitermachen 
+
+                                    ' Baseline holen ... 
+                                    baseline = getProjektFromSessionOrDB(hproj.name, ptVariantFixNames.pfv.ToString, AlleProjekte, Date.Now)
+                                    If Not IsNothing(baseline) Then
+                                        If getColumnOfDate(baseline.startDate) <> getColumnOfDate(hproj.startDate) Or
+                                           getColumnOfDate(baseline.endeDate) <> getColumnOfDate(hproj.endeDate) Then
+
+                                            baseline = Nothing
+
+                                            If awinSettings.englishLanguage Then
+                                                outputline = hproj.name & ": Baseline Dates were'nt starting / ending as planning version - Baseline will be adopted"
+                                            Else
+                                                outputline = hproj.name & ": Baseline Start bzw Ende-Datum waren unterschiedlich zu Planning version - Baseline wurde angepasst "
+                                            End If
+                                            meldungen.Add(outputline)
+                                            Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                                        End If
+                                    End If
+
+
+                                    offsetCorrection = getColumnOfDate(hproj.startDate) - startColOfArray
+
+                                    For ize = firstValueZeile To lastZeile + 1
+
+                                        Dim curRoleName As String = ""
+                                        ' new stuff 
+
+                                        Dim checkConstraint As String = CStr(currentWS.Cells(ize, constraints.column.von).value)
+                                        If IsNothing(checkConstraint) Then
+                                            checkConstraint = ""
+                                        End If
+
+                                        Dim weiterMachen As Boolean = IsNothing(validConstraints)
+
+                                        If Not IsNothing(validConstraints) Then
+                                            weiterMachen = False
+                                            For Each cItem As String In validConstraints
+                                                weiterMachen = weiterMachen Or (cItem.Trim = checkConstraint.Trim)
+                                            Next
+                                        End If
+
+                                        If weiterMachen Then
+
+                                            ' read roleName / costName
+                                            Dim curString As String = ""
+                                            Try
+                                                If Not IsNothing(currentWS.Cells(ize, resourceNameDefinition.column.von).value) Then
+                                                    curString = CStr(currentWS.Cells(ize, resourceNameDefinition.column.von).value)
+                                                End If
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                            If curString <> "" Then
+
+                                                regexpression = New Regex(resourceNameDefinition.content)
+                                                Dim match As Match = regexpression.Match(curString)
+                                                If match.Success Then
+                                                    Dim tmpstr() As String = match.Value.Split(New Char() {CChar("("), CChar(")")}, 3)
+                                                    curRoleName = tmpstr(1)
+                                                Else
+                                                    curRoleName = ""
+                                                End If
+
+                                                If curRoleName <> "" Then
+                                                    If RoleDefinitions.containsName(curRoleName) Then
+                                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                                        ' now get real-Name instead of Alias Name
+                                                        curRoleName = RoleDefinitions.getRoleDefByID(tmpRole.UID).name
+
+                                                        Dim tmpValues() As Double
+                                                        ReDim tmpValues(arrayDimension)
+
+                                                        ' now read the values 
+                                                        For isp As Integer = 0 To arrayDimension
+                                                            If Not IsNothing(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) Then
+                                                                If monthValuesDefinition.content = "hours" Then
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) / 8
+                                                                ElseIf monthValuesDefinition.content = "weeks" Then
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 5
+                                                                ElseIf monthValuesDefinition.content = "months" Then
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 20
+                                                                Else
+                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value)
+                                                                End If
+
+                                                            End If
+                                                        Next
+
+                                                        ' now add values ... 
+                                                        If roleListNameValues.ContainsKey(curRoleName) Then
+                                                            ' es muss aufsummiert werden 
+                                                            For isp As Integer = 0 To arrayDimension
+                                                                roleListNameValues.Item(curRoleName)(isp) = roleListNameValues.Item(curRoleName)(isp) + tmpValues(isp)
+                                                            Next
+                                                        Else
+                                                            roleListNameValues.Add(curRoleName, tmpValues)
+                                                        End If
+
+                                                    End If
+                                                End If
+                                            End If
+
+                                        End If
+
+                                    Next ize
+
+                                Else
+                                    ' Fehler ... 
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Couldn't find project " & projNumber & " / " & tryPName
+                                    Else
+                                        outputline = "Projekt-Nummer / Name excistiert nicht:  " & projNumber & " / " & tryPName
+                                    End If
+                                    meldungen.Add(outputline)
+                                    Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+
+                                End If
+
+                            Catch ex As Exception
+                                If awinSettings.englishLanguage Then
+                                    outputline = "The actual file isn't conform with the Configuration!"
+                                Else
+                                    outputline = "die ausgewählte Datei entspricht nicht der Konfiguration!"
+                                End If
+
+                                meldungen.Add(outputline)
+                                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                            End Try
+
+                        End If
+
+                    End If
+
+                    projectWB.Close(SaveChanges:=False)
+
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        outputline = "There is something wrong with the inputfile: " & tmpDatei
+                    Else
+                        outputline = "Fehler im Inputfile: " & tmpDatei
+                    End If
+
+                    meldungen.Add(outputline)
+                    Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                End Try
+            Else
+                If awinSettings.englishLanguage Then
+                    outputline = "The file you selected doesn't exist!"
+                Else
+                    outputline = "Die ausgewählte Datei existiert nicht!"
+                End If
+                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        Dim planningMerge As Boolean = False
+        Dim baselineMerge As Boolean = False
+
+        Try
+            If Not IsNothing(hproj) Then
+
+                ' now do the Planning Version 
+                planningMerge = hproj.mergeForecastValues(roleListNameValues, monthVon, monthBis, arrayOffset, offsetCorrection, meldungen)
+
+                ' now do the Baseline Version 
+                If Not IsNothing(baseline) Then
+                    baselineMerge = baseline.mergeForecastValues(roleListNameValues, monthVon, monthBis, arrayOffset, offsetCorrection, meldungen)
+                Else
+                    baseline = hproj.createVariant(ptVariantFixNames.pfv.ToString, "Baseline")
+                    baselineMerge = True
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        If planningMerge And baselineMerge Then
+            If ImportProjekte.Containskey(calcProjektKey(hproj.name, hproj.variantName)) Then
+                ImportProjekte.Remove(calcProjektKey(hproj.name, hproj.variantName), updateCurrentConstellation:=False)
+                If awinSettings.englishLanguage Then
+                    outputline = hproj.name & " exists in multiple versions - last is used ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                Else
+                    outputline = hproj.name & " existiert mehrfach - die Letzte wird verwendet ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                End If
+                meldungen.Add(outputline)
+            End If
+
+            If ImportBaselineProjekte.Containskey(calcProjektKey(baseline.name, baseline.variantName)) Then
+                ImportBaselineProjekte.Remove(calcProjektKey(baseline.name, baseline.variantName), updateCurrentConstellation:=False)
+                If awinSettings.englishLanguage Then
+                    outputline = baseline.name & " baseline exists in multiple versions - last is used ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                Else
+                    outputline = baseline.name & " Baseline existiert mehrfach - die Letzte wird verwendet ...  "
+                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+                End If
+                meldungen.Add(outputline)
+            End If
+
+            ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+            ImportBaselineProjekte.Add(baseline, updateCurrentConstellation:=False)
+
+            If awinSettings.englishLanguage Then
+                outputline = hproj.name & " updated! "
+                Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+
+            Else
+                outputline = hproj.name & " aktualisiert! "
+                Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
+            End If
+            result = True
+        Else
+            If awinSettings.englishLanguage Then
+                outputline = tmpDatei & " failed! "
+                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+            Else
+                outputline = tmpDatei & " fehlgeschlagen! "
+                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+            End If
+            meldungen.Add(outputline)
+        End If
+
+        ' bring back to normal user Role
+        myCustomUserRole.customUserRole = saveUserRole
+
+        updateProjectWithConfig = result
+
+    End Function
     Public Sub writeYearInitialPlanningSupportToExcel(ByVal von As Integer, ByVal bis As Integer,
                                                       ByVal roleCollection As Collection, ByVal costCollection As Collection,
                                                       ByVal unit As PTEinheiten)

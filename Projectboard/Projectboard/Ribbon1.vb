@@ -108,7 +108,7 @@ Imports System.Web
         Dim dbPortfolioNames As New SortedList(Of String, String)
         Dim constellationsToDo As New clsConstellations
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Dim returnValue As DialogResult
 
@@ -552,7 +552,7 @@ Imports System.Web
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -933,6 +933,67 @@ Imports System.Web
 
         End If
 
+        ' tk added 23.6.21
+        If ShowProjekte.Count > 0 Then
+
+
+            Try
+                Dim sortType As Integer = ptSortCriteria.buStartName
+
+
+                If Not IsNothing(currentSessionConstellation) Then
+                    If currentSessionConstellation.Liste.Count <> 0 Then
+
+                        Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True, cName:="Sort Result")
+
+                        appInstance.ScreenUpdating = False
+                        Try
+                            ' nur dann muss was gemacht werden ...  
+                            currentSortConstellation.sortCriteria = sortType
+
+                            Dim tmpConstellation As New clsConstellations
+                            tmpConstellation.Add(currentSortConstellation)
+
+                            ' es in der Session Liste verfügbar machen
+                            If projectConstellations.Contains(currentSortConstellation.constellationName) Then
+                                projectConstellations.Remove(currentSortConstellation.constellationName)
+                            End If
+
+                            projectConstellations.Add(currentSortConstellation)
+
+                            Call showConstellations(constellationsToShow:=tmpConstellation,
+                                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+
+                        Catch ex As Exception
+
+                        End Try
+
+                        appInstance.ScreenUpdating = True
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("nothing loaded ...")
+                        Else
+                            Call MsgBox("nichts geladen ...")
+                        End If
+                    End If
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please load projects/portfolios first ...")
+                    Else
+                        Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+                    End If
+                End If
+
+            Catch ex As Exception
+                If appInstance.ScreenUpdating = False Then
+                    appInstance.ScreenUpdating = True
+                End If
+            End Try
+
+        End If
+
 
 
     End Sub
@@ -1133,6 +1194,7 @@ Imports System.Web
                 Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
                 ' jetzt müssen alle Windows bis auf Window(0) = Multiprojekt-Tafel geschlossen werden 
                 ' und mache ProjectboardWindows(mpt) great again ...
+                appInstance.EnableEvents = False
                 Call closeAllWindowsExceptMPT()
 
             Else
@@ -3602,6 +3664,13 @@ Imports System.Web
                     tmpLabel = "Create Projects from list (customized)"
                 End If
 
+            Case "PT4G1B18" 'Update Projekte gemäß Konfiguration
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Update Projekte aus Liste (konfiguriert)"
+                Else
+                    tmpLabel = "Update Projects from list (customized)"
+                End If
+
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export"
@@ -4009,107 +4078,112 @@ Imports System.Web
     ''' <remarks></remarks>
     Function chckVisibility(control As IRibbonControl) As Boolean
 
-        If visboZustaende.projectBoardMode = ptModus.graficboard Then
-
-            If myCustomUserRole.isEntitledForMenu(control.Id) Then
-                Select Case control.Id
-                    Case "PTMEC" ' Massen-Edit Charts
-                        chckVisibility = False
-                    Case "PTmassEdit" ' Mass-Edit bearbeiten
-                        chckVisibility = False
-                    Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
-                        chckVisibility = False
-                    Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
-                        chckVisibility = False
-                    Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
-                        chckVisibility = False
-                    Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
-                        chckVisibility = False
-                    Case "PTzurück" ' Zurück
-                        chckVisibility = False
-                    Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
-                        chckVisibility = False
-                    Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
-                        chckVisibility = False
-                    Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
-                        chckVisibility = False
-                    Case "PT6G2B5" ' Sortierung ermöglichen
-                        chckVisibility = False
-                    Case "PT6G2B7" ' Header anzeigen
-                        chckVisibility = False
-                    Case "PThelp" ' Help anzeigen
-                        chckVisibility = False
-                    Case Else
-                        ' alle anderen werden sichtbar gemacht
-                        chckVisibility = True
-                End Select
-            Else
-                chckVisibility = False
-            End If
-
+        If isInChartWindow Then
+            chckVisibility = False
         Else
-            Select Case control.Id
 
-                Case "PTproj"
-                    chckVisibility = False
-                Case "PTedit"
-                    chckVisibility = False
-                Case "PTview"
-                    chckVisibility = False
-                Case "PTfilter"
-                    chckVisibility = False
-                Case "PTsort"
-                    chckVisibility = False
-                Case "PToptimize"
-                    chckVisibility = False
-                Case "PTcharts"
-                    chckVisibility = False
-                Case "PTreport"
-                    chckVisibility = False
-                Case "PTeinst"
-                    chckVisibility = False
-                Case "PThelp"
-                    chckVisibility = False
-                Case "PTWebServer"
-                    chckVisibility = False
-                Case "PTTestfunktionen"
-                    chckVisibility = False
-                Case "PTlizenz"
-                    chckVisibility = False
+            If visboZustaende.projectBoardMode = ptModus.graficboard Then
 
-                Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
+                If myCustomUserRole.isEntitledForMenu(control.Id) Then
+                    Select Case control.Id
+                        Case "PTMEC" ' Massen-Edit Charts
+                            chckVisibility = False
+                        Case "PTmassEdit" ' Mass-Edit bearbeiten
+                            chckVisibility = False
+                        Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
+                            chckVisibility = False
+                        Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
+                            chckVisibility = False
+                        Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
+                            chckVisibility = False
+                        Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
+                            chckVisibility = False
+                        Case "PTzurück" ' Zurück
+                            chckVisibility = False
+                        Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
+                            chckVisibility = False
+                        Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
+                            chckVisibility = False
+                        Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
+                            chckVisibility = False
+                        Case "PT6G2B5" ' Sortierung ermöglichen
+                            chckVisibility = False
+                        Case "PT6G2B7" ' Header anzeigen
+                            chckVisibility = False
+                        Case "PThelp" ' Help anzeigen
+                            chckVisibility = False
+                        Case Else
+                            ' alle anderen werden sichtbar gemacht
+                            chckVisibility = True
+                    End Select
+                Else
                     chckVisibility = False
+                End If
 
-                Case "PTMEC" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        chckVisibility = True
-                    Else
+            Else
+                Select Case control.Id
+
+                    Case "PTproj"
                         chckVisibility = False
-                    End If
+                    Case "PTedit"
+                        chckVisibility = False
+                    Case "PTview"
+                        chckVisibility = False
+                    Case "PTfilter"
+                        chckVisibility = False
+                    Case "PTsort"
+                        chckVisibility = False
+                    Case "PToptimize"
+                        chckVisibility = False
+                    Case "PTcharts"
+                        chckVisibility = False
+                    Case "PTreport"
+                        chckVisibility = False
+                    Case "PTeinst"
+                        chckVisibility = False
+                    Case "PThelp"
+                        chckVisibility = False
+                    Case "PTWebServer"
+                        chckVisibility = False
+                    Case "PTTestfunktionen"
+                        chckVisibility = False
+                    Case "PTlizenz"
+                        chckVisibility = False
+
+                    Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
+                        chckVisibility = False
+
+                    Case "PTMEC" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = True
+                        Else
+                            chckVisibility = False
+                        End If
 
 
-                Case "PTmassEdit" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                    Case "PTmassEdit" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
-                    Else
-                        chckVisibility = False
-                    End If
+                        Else
+                            chckVisibility = False
+                        End If
 
-                Case "PTMECsettings" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                    Case "PTMECsettings" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = True
+                        Else
+                            chckVisibility = False
+                        End If
+
+                    Case Else
                         chckVisibility = True
-                    Else
-                        chckVisibility = False
-                    End If
+                End Select
 
-                Case Else
-                    chckVisibility = True
-            End Select
+            End If
 
         End If
-
     End Function
 
     ''' <summary>
@@ -4624,20 +4698,10 @@ Imports System.Web
 
             Call enableControls(ptModus.graficboard)
 
-            'appInstance.EnableEvents = False
-            ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
-            'enableOnUpdate = False
 
-
-            ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
-            appInstance.EnableEvents = True
-            Try
-                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
-                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
-                End If
-            Catch ex As Exception
-
-            End Try
+            ' der close Window ruft DeActivate_Sheet auf ... 
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
 
             Try
@@ -4667,6 +4731,10 @@ Imports System.Web
 
             End Try
 
+            'If Not appInstance.EnableEvents = True Then
+            '    ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
+            '    appInstance.EnableEvents = True
+            'End If
 
             ' jetzt müssen ggf drei Windows wieder angezeigt werden 
             Try
@@ -4675,6 +4743,15 @@ Imports System.Web
                     If CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count = 1 Then
                         .WindowState = Excel.XlWindowState.xlMaximized
                     Else
+
+                        Try
+                            If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                                appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
                         Try
                             If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
 
@@ -4728,6 +4805,8 @@ Imports System.Web
 
             enableOnUpdate = True
             appInstance.EnableEvents = True
+            ' tl 22.5.21 now here
+            appInstance.ScreenUpdating = True
 
             Try
                 ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
@@ -4744,9 +4823,9 @@ Imports System.Web
 
             End Try
 
+            ' tk 22.05.21 war hier ... 
+            'appInstance.ScreenUpdating = True
 
-
-            appInstance.ScreenUpdating = True
 
             ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
             Try
@@ -5939,7 +6018,7 @@ Imports System.Web
         Dim getInventurImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -6232,7 +6311,7 @@ Imports System.Web
 
         Dim getScenarioImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -6566,7 +6645,7 @@ Imports System.Web
         Dim listOfArchivFiles As New List(Of String)
         'Dim xlsRplanImport As Excel.Workbook
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -6954,6 +7033,89 @@ Imports System.Web
     End Sub
 
     ''' <summary>
+    ''' imports tasklists in Offline Data
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportTaskLists(control As IRibbonControl)
+
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.offlineData))
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*tasklist*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim getOrgaFile As New frmSelectImportFiles
+
+        If anzFiles > 0 Then
+
+            getOrgaFile.menueAswhl = PTImpExp.offlineData
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                weiterMachen = True
+            End If
+        Else
+            Dim msgTxt As String = "no tasklists ..." & vbLf & "Folder: " & dirname & vbLf & "name need to have following structure: *ffline*.xls*"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "keine Offline-Daten vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Name muss folgender Namensgebung entsprechen: *ffline*.xls*"
+            End If
+            Call MsgBox(msgTxt)
+            weiterMachen = False
+        End If
+
+        If weiterMachen Then
+
+            ' öffnen des LogFiles
+            'Call logfileOpen()
+
+            For Each selectedWB As String In getOrgaFile.selImportFiles
+
+                dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+                Try
+                    ' hier wird jetzt der Import gemacht 
+                    Call logger(ptErrLevel.logInfo, "Start Import tasklists", selectedWB, -1)
+
+                    ' Öffnen des Offline Data -Files
+                    appInstance.Workbooks.Open(dateiname)
+                    Dim offlineName As String = appInstance.ActiveWorkbook.Name
+
+                    Dim outputCollection As New Collection
+
+                    ' jetzt wird die Aktion durchgeführt ...
+                    Call ImportTaskLists(offlineName, outputCollection, False)
+
+                    ' Schliessen des CustomUser Role-Files
+                    appInstance.Workbooks(offlineName).Close(SaveChanges:=True)
+
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            ' now make sure that ActualData is handled properly 
+            Call importProjekteEintragen(Date.Now, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+    ''' <summary>
     ''' ordnet existierenden Projekten pro Phase eine Ressourcen-Summe zu. 
     ''' wenn bereits Istdaten existieren, so werden die angegebenen Summen so verteilt, dass 
     ''' die Formel Istdaten+Prognose = Summe 
@@ -7093,7 +7255,7 @@ Imports System.Web
         Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
         Dim anzFiles As Integer = 0
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' erstmal protokollieren, zu welchen Abteilungen Istdaten gelesen und substituiert werden 
         ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
@@ -7496,9 +7658,14 @@ Imports System.Web
 
                                 Call logger(ptErrLevel.logInfo, "PTImportIstDaten", logArray)
 
-                                ' im Output anzeigen ... 
-                                logmessage = logArray(0) & substituteUnit
-                                outPutCollection.Add(logmessage)
+                                ' show it - just for Info:  ...
+                                ' 
+                                ' don not show it in interactiev protocol ... 
+
+                                'logmessage = ""
+                                'outPutCollection.Add(logmessage)
+                                'logmessage = logArray(0) & substituteUnit
+                                'outPutCollection.Add(logmessage)
 
                             Next
 
@@ -8343,12 +8510,22 @@ Imports System.Web
             Dim startDate As Date = StartofCalendar
             Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
             Dim myProject As clsProjekt = Nothing
-            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
+
+            ' tk 7.6.21
+            ' BudgetVorgabe errechnen 
+            Dim budgetVorgabe As Double = vproj.Erloes
+            Try
+                ' if there are any resource / costs assignements: take the sum of it as Vorgabe
+                budgetVorgabe = vproj.getGesamtKostenBedarf.Sum
+            Catch ex As Exception
+
+            End Try
+
+            template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, budgetVorgabe, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
+            'template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "")
 
             ' ur: 28.2.2021: nicht mehr benötigt, da eine ganzes Projekt angelegt wird und im ReSt-Server als vorlage dient.
             ' vproj.copyTo(template)
-
-
             If Not IsNothing(template) Then
                 template.name = vproj.VorlagenName
                 template.projectType = ptPRPFType.projectTemplate
@@ -8372,9 +8549,9 @@ Imports System.Web
 
             Else
                 If awinSettings.englishLanguage Then
-                    msgStr = "Error when reading/writing Template: (conflict) " & vproj.VorlagenName
+                    msgStr = "Error when reading Template: " & vproj.VorlagenName
                 Else
-                    msgStr = "Fehler beim Lesen/Schreiben der Vorlage: (Konflikt) " & vproj.VorlagenName
+                    msgStr = "Fehler beim Lesen der Vorlage: " & vproj.VorlagenName
                 End If
                 outputCollection.Add(msgStr)
             End If
@@ -8425,7 +8602,7 @@ Imports System.Web
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ''Call logfileOpen()
 
@@ -8571,7 +8748,7 @@ Imports System.Web
         Dim getMSImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         Call projektTafelInit()
 
@@ -8745,23 +8922,32 @@ Imports System.Web
         Dim projectsFile As String = ""
         Dim lastrow As Integer = 0
         Dim outputString As String = ""
-        Dim dateiName As String = ""
+
         Dim listofArchivAllg As New List(Of String)
         Dim outPutCollection As New Collection
 
         Dim outputLine As String = ""
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
         Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
+        Dim configProposalImport As String = awinPath & configfilesOrdner & "configCalcTemplateImport.xlsx"
+
+        ' check here which Configuration file is given:
+        ' Instart: a lot of Files or 
+        ' Telair, normally just one file 
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim telairImportConfigOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim instartImportConfigOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
-        If allesOK Then
+        If telairImportConfigOK Or instartImportConfigOK Then
+
+            ' one of the two/several ImPortConfigFiles probably does not exist, that is why it should be reset 
+            outPutCollection.Clear()
 
             Dim getProjConfigImport As New frmSelectImportFiles
 
@@ -8794,6 +8980,9 @@ Imports System.Web
 
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear(False)
+                ImportBaselineProjekte.Clear(False)
+
+
 
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
@@ -8801,22 +8990,17 @@ Imports System.Web
                 'Call logfileOpen()
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                Dim i As Integer
+                If telairImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                ElseIf instartImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
 
-                For i = 1 To listofVorlagen.Count
-                    dateiName = listofVorlagen.Item(i).ToString
 
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
 
-                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
-
-                    If listofArchivAllg.Count > 0 Then
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
-                    End If
-
-                Next
-
-                'Call logfileSchreiben(outPutCollection)
-                ''Call logfileSchliessen()
 
 
                 ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
@@ -8845,11 +9029,137 @@ Imports System.Web
         outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
         outPutCollection.Add(outputString)
 
+        If outPutCollection.Count > 1 Then
+            If awinSettings.englishLanguage Then
+                Call showOutPut(outPutCollection, "Import Projects", "Errors occurred")
+            Else
+                Call showOutPut(outPutCollection, "Einlesen Projekte", "es gab Probleme")
+            End If
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' update projects with information provided in tagetik files  
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTUpdateProjectsWithConfig(control As IRibbonControl)
+
+        Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectsFile As String = ""
+        Dim lastrow As Integer = 0
+        Dim outputString As String = ""
+
+        Dim listofArchivAllg As New List(Of String)
+        Dim outPutCollection As New Collection
+
+        Dim outputLine As String = ""
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
+
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+        Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectUpdates.xlsx"
+
+        ' check here whether it is about updating projects or whether it is about to create new projects 
+
+        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkProjectUpdateConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+        If allesOK Then
+
+            Dim getProjConfigImport As New frmSelectImportFiles
+
+            Dim returnValue As DialogResult
+
+
+            Call projektTafelInit()
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            getProjConfigImport.menueAswhl = PTImpExp.projectWithConfig
+            getProjConfigImport.importFileNames = projectsFile
+            returnValue = getProjConfigImport.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                Dim ok As Boolean = False
+                Dim importDate As Date = Date.Now
+                'Dim importDate As Date = "31.10.2013"
+                ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+                Dim listofFiles As Collection
+                listofFiles = getProjConfigImport.selImportFiles
+
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear(False)
+                ImportBaselineProjekte.Clear(False)
+
+                '' Cursor auf HourGlass setzen
+                Cursor.Current = Cursors.WaitCursor
+
+                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+                listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, ptImportTypen.telairTagetikUpdate)
+
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
+
+
+                Dim allOK As Boolean = False
+                Try
+                    allOK = upDatesEintragen(ImportProjekte, ImportBaselineProjekte, outPutCollection)
+
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error at Method updatesEintragen: " & vbLf & ex.Message)
+                    Else
+                        Call MsgBox("Fehler bei Methode updatesEintragen: " & vbLf & ex.Message)
+                    End If
+
+                End Try
+
+                ImportProjekte.Clear(updateCurrentConstellation:=False)
+                ImportBaselineProjekte.Clear(updateCurrentConstellation:=False)
+
+                '' Cursor auf Default setzen
+                Cursor.Current = Cursors.Default
+
+            End If
+
+        End If
+
+
+        outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+        outPutCollection.Add(outputString)
+
         If outPutCollection.Count > 0 Then
             If awinSettings.englishLanguage Then
-                Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                Call showOutPut(outPutCollection, "Update Projects", "please check the notifications ...")
             Else
-                Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                Call showOutPut(outPutCollection, "Update Projekte", "folgende Probleme sind aufgetaucht")
             End If
         End If
 
@@ -8870,8 +9180,8 @@ Imports System.Web
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
 
-    End Sub
 
+    End Sub
     ''' <summary>
     ''' exportiert selektierte/alle Files in eine Excel Datei, die genauso aufgebaut ist , wie die BMW Import Datei  
     ''' </summary>
@@ -10040,7 +10350,7 @@ Imports System.Web
     ''' <remarks></remarks>
     Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
         Call PBBDatenbankLoadProjekte(Control)
 
         ' Window so positionieren, dass die Projekte sichtbar sind ...  
@@ -12688,7 +12998,8 @@ Imports System.Web
                             End If
                         End If
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                           myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
 
                         ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
                         ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
@@ -12748,7 +13059,8 @@ Imports System.Web
                             End If
                         End If
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                           myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
 
                         If rcName <> "" Then
                             Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)

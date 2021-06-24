@@ -64,7 +64,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("MS Project VISBO AddIn")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -73,7 +73,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Task Class - local")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Task Class")>  _
     Public ReadOnly Property TaskClass() As String
         Get
             Return CType(Me("TaskClass"),String)
@@ -82,7 +82,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Alias")>  _
     Public ReadOnly Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
@@ -100,7 +100,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("http://localhost:3484")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -109,7 +109,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("bhtc")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -127,7 +127,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Indikatoren")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Indicators")>  _
     Public ReadOnly Property VISBOAmpelText() As String
         Get
             Return CType(Me("VISBOAmpelText"),String)
@@ -157,7 +157,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
     Public ReadOnly Property VISBOServer() As Boolean
         Get
             Return CType(Me("VISBOServer"),Boolean)
@@ -187,7 +187,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("% Complete")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("% Abgeschlossen")>  _
     Public ReadOnly Property VISBOpercentDone() As String
         Get
             Return CType(Me("VISBOpercentDone"),String)
@@ -196,7 +196,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("false")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
     Public ReadOnly Property mongoDBWithSSL() As String
         Get
             Return CType(Me("mongoDBWithSSL"),String)
@@ -214,7 +214,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("TMS_View_local")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
     Public ReadOnly Property VISBOMapping() As String
         Get
             Return CType(Me("VISBOMapping"),String)

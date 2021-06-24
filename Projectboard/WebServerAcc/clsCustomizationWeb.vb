@@ -32,6 +32,9 @@ Public Class clsCustomizationWeb
     Private _gridLineColor As Long
     Private _missingDefinitionColor As Long
 
+    ' tk 21.6.21 One Person has one skill 
+    Private _onePersonOneRole As Boolean
+
     Private _allianzIstDatenReferate As String
     Private _autoSetActualDataDate As Boolean
     Private _actualDataMonth As Date
@@ -354,7 +357,16 @@ Public Class clsCustomizationWeb
         End Set
     End Property
 
-
+    Public Property onePersonOneRole As Boolean
+        Get
+            onePersonOneRole = _onePersonOneRole
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _onePersonOneRole = value
+            End If
+        End Set
+    End Property
 
     Public Property allianzIstDatenReferate As String
         Get
@@ -795,6 +807,7 @@ Public Class clsCustomizationWeb
 
             .missingDefinitionColor = Me.missingDefinitionColor
 
+            .onePersonOneRole = Me.onePersonOneRole
             .allianzIstDatenReferate = Me.allianzIstDatenReferate
 
             .autoSetActualDataDate = Me.autoSetActualDataDate
@@ -883,6 +896,7 @@ Public Class clsCustomizationWeb
 
             Me.missingDefinitionColor = .missingDefinitionColor
 
+            Me.onePersonOneRole = .onePersonOneRole
             Me.allianzIstDatenReferate = .allianzIstDatenReferate
 
             Me.autoSetActualDataDate = .autoSetActualDataDate
@@ -959,6 +973,8 @@ Public Class clsCustomizationWeb
         showTimeSpanInPT = 0
         gridLineColor = 0
         missingDefinitionColor = 0
+
+        _onePersonOneRole = False
 
         allianzIstDatenReferate = ""
         autoSetActualDataDate = False

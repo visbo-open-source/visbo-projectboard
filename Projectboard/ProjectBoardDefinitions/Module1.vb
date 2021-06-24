@@ -128,10 +128,13 @@ Public Module Module1
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
     Public sessionCacheProjekte As New clsProjekteAlle
 
+    Public isInChartWindow As Boolean = False
+
     ' die globale Variable für die Write Protections
     Public writeProtections As New clsWriteProtections
 
     Public ImportProjekte As New clsProjekteAlle
+    Public ImportBaselineProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     ' die currentSessionConstellation ist das Abbild der aktuellen Session 
     Public currentSessionConstellation As New clsConstellation
@@ -335,12 +338,13 @@ Public Module Module1
         InternalViewer = 5
         ExternalViewer = 6
         TeamManager = 7
+        ProjektleitungRestricted = 8
     End Enum
 
     ''' <summary>
     ''' definiert, welche Import-Methode angewendet werden soll ; angelegt 30.11.18 by tk
     ''' </summary>
-    Public Enum ptVisboImportTypen
+    Public Enum ptImportTypen
         visboSimple = 0
         visboProjectbrief = 1
         visboMassCreation = 2
@@ -353,6 +357,9 @@ Public Module Module1
         visboMassRessourcenEdit = 9
         visboMPP = 10
         allianzBOBImport = 11
+        telairTagetikImport = 12
+        telairTagetikUpdate = 13
+        instartCalcTemplateImport = 14
     End Enum
 
     Public Enum ptImportSettings
@@ -6485,7 +6492,8 @@ Public Module Module1
             Try
                 ' erstmal in Abhängigkeit von der Rolle den Überblick zeichnen  
                 If showEuro And (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Then
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted) Then
 
                     ' Überblick zeichnen ... 
                     Dim curPKI() As Double = {-1, -1, -1, -1, -1, -1}
@@ -6639,27 +6647,34 @@ Public Module Module1
 
                         ' wegen Einrückung in Details ...
                         Dim curItem As String = CStr(toDoCollectionR.Item(m))
-                        Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
+                        Dim isRoleOrSkill As Boolean = RoleDefinitions.containsNameOrID(curItem)
+
+                        Dim lookingForNameID As String = curItem
 
 
-                        If isRole Then
+                        If isRoleOrSkill Then
 
                             Dim teamID As Integer = -1
                             Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(curItem, teamID)
 
+                            If curRole.isSkill Then
+                                Dim topOrgaRolle As clsRollenDefinition = RoleDefinitions.getContainingRoleOfSkillMembers(curRole.UID)
+                                lookingForNameID = RoleDefinitions.bestimmeRoleNameID(topOrgaRolle.UID, curRole.UID)
+                            End If
+
                             If myCustomUserRole.isAllowedToSee(curRole.name) Then
-                                curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(lookingForNameID, inclSubRoles:=True,
                                                                      outPutInEuro:=showEuro), hproj.Start).Sum
 
                                 If considerLapr And Not reducedTable Then
-                                    laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                    laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(lookingForNameID, inclSubRoles:=True,
                                                                               outPutInEuro:=showEuro), lproj.Start).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                    faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(lookingForNameID, inclSubRoles:=True,
                                                                               outPutInEuro:=showEuro), bproj.Start).Sum
                                 Else
                                     faprValue = 0.0
@@ -8093,6 +8108,11 @@ Public Module Module1
             Exit Sub
         End If
 
+        ' tk 22.5.21 
+        If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+            projectboardWindows(PTwindows.mpt).Activate()
+        End If
+
         '' '' alle Windows schliessen, bis auf das MPT Window 
         ' ''For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
         ' ''    tmpWindow.Activate()
@@ -8133,11 +8153,12 @@ Public Module Module1
             If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
 
                 'projectboardWindows(PTwindows.mptpf).Activate()
-                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
-                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
-                End If
+                'If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                '    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                'End If
                 Try
                     projectboardWindows(PTwindows.mptpf).Close()
+
                 Catch ex As Exception
 
                 End Try
@@ -8863,8 +8884,63 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' necessary when role assignments and no skill assignments have been made: person is either junior, senior or expert. 
+    ''' </summary>
+    ''' <param name="roleDefinitionsToCheck"></param>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function checkOnePersonOneRole(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
+        Dim result As Boolean = True
+        Dim tmpMsgCollection As New Collection
+
+
+        If awinSettings.onePersonOneRole Then
+            Try
+                Dim todoCollection As Collection = roleDefinitionsToCheck.getBasicRoles
+
+                If todoCollection.Count > 0 Then
+
+                    For Each roleName As String In todoCollection
+                        Dim curRole As clsRollenDefinition = roleDefinitionsToCheck.getRoledef(roleName)
+                        Dim heuteCol As Integer = getColumnOfDate(Date.Now)
+                        If curRole.isActiveRole(heuteCol - 1, heuteCol + 11) Then
+                            Dim anzSkills As Integer = curRole.getSkillIDs.Count
+                            If anzSkills <> 1 Then
+                                result = False
+                                Dim msgTxt As String = roleName & " is having " & anzSkills & " dedicated role(s"
+                                tmpMsgCollection.Add(msgTxt)
+                            End If
+                        End If
+                    Next
+
+                End If
+            Catch ex As Exception
+                result = False
+            End Try
+
+        End If
+
+        If tmpMsgCollection.Count > 0 Then
+            Call showOutPut(tmpMsgCollection, "Warnings:", "next step you may either cancel or continue")
+            If MsgBox("Continue and Ignore Warnings?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                ' nichts tun .."
+                result = True
+            Else
+                result = False
+                Call logger(ptErrLevel.logWarning, "Check Role Assignments to People", tmpMsgCollection)
+                Dim msgTxt As String = "RoleAssignments need to be checked ... exited on user demand!"
+                outputCollection.Add(msgTxt)
+            End If
+        End If
+
+
+        checkOnePersonOneRole = result
+
+    End Function
+
+    ''' <summary>
     ''' Test-Funktion: 
-    ''' Die Teams, deren Kinder Roles sind: haben die wiederum die entsprechende Skill Definiotion ? 
+    ''' Die Teams, deren Kinder Roles sind: haben die wiederum die entsprechende Skill Definition ? 
     ''' </summary>
     ''' <returns></returns>
     Public Function checkTeamDefinitions(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
@@ -8905,7 +8981,12 @@ Public Module Module1
             Next
 
         Next
-        checkTeamDefinitions = atleastOneError
+
+        If awinSettings.onePersonOneRole Then
+            checkTeamDefinitions = atleastOneError Or Not (checkOnePersonOneRole(roleDefinitionsToCheck, outputCollection))
+        Else
+            checkTeamDefinitions = atleastOneError
+        End If
 
     End Function
 

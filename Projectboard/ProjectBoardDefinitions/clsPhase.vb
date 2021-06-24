@@ -2379,7 +2379,70 @@ Public Class clsPhase
 
         isRoleWithInvalidNeeds = tmpResult
     End Function
+    ''' <summary>
+    ''' adds roleName with arValues to Phase
+    ''' if length of arValues differs from length Phase, then a new distribution of arValues.sum ist calculated
+    ''' if eaddToExisting = true: addieser bei gleichen Role-IDs
+    ''' replace values else 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="arValues"></param>
+    ''' <param name="addToExisting"></param>
+    Public Sub AddRoleWX(ByVal roleNameID As String, ByVal arValues As Double(), ByVal addToExisting As Boolean)
 
+        Dim rSum As Double()
+        ReDim rSum(0)
+        rSum(0) = arValues.Sum
+
+        Dim dimension As Integer = Me.relEnde - Me.relStart
+        If dimension <> arValues.Length - 1 Then
+            arValues = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, rSum, 1.0)
+        End If
+
+        Dim teamID As Integer = -1
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
+        Dim tmpRole As clsRolle = Me.getRoleByRoleNameID(roleNameID)
+
+        If IsNothing(tmpRole) Then
+            ' die Rolle hat bisher noch nicht existiert ...
+
+            tmpRole = New clsRolle(dimension)
+
+            With tmpRole
+                .uid = roleID
+                .teamID = teamID
+                .Xwerte = arValues
+            End With
+
+            ' jetzt muss die Rolle ergänzt werden 
+            _allRoles.Add(tmpRole)
+
+        Else
+            ' die Rolle hat bereits existiert 
+            If addToExisting Then
+                If tmpRole.Xwerte.Length = arValues.Length Then
+                    ' hier dann aufsummieren 
+                    Dim oldXwerte As Double() = tmpRole.Xwerte
+                    For i As Integer = 0 To oldXwerte.Length - 1
+                        arValues(i) = arValues(i) + oldXwerte(i)
+                    Next
+
+                Else
+                    ' darf eigentlich nicht sein 
+                    ' Test: 
+                    'Call MsgBox("Fehler in Rollen-Zuordnung")
+                    ' es wird dann einfach gar nichts gemacht 
+                End If
+            Else
+                ' nichts weiter tun 
+            End If
+
+            tmpRole.Xwerte() = arValues
+        End If
+
+
+    End Sub
     ''' <summary>
     ''' erstellt eine neue Rolle, weist der Rolle monatliche Ressourcenbedarfe zu, deren Summe dem Wert der Variable summe entspricht  
     ''' der RoleName muss in Roledefinitions existieren , sonst gibt es eine Fehlermeldung 
@@ -2437,12 +2500,6 @@ Public Class clsPhase
         End If
 
 
-        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        'Try
-        '    Me.parentProject.rcLists.addRP(tmpRole.uid, Me.nameID, teamID:=teamID)
-        'Catch ex As Exception
-
-        'End Try
 
 
     End Sub
@@ -2550,7 +2607,7 @@ Public Class clsPhase
     ''' </summary>
     ''' <param name="role"></param>
     ''' <remarks></remarks>
-    Public Sub addRole(ByVal role As clsRolle)
+    Public Sub addRole(ByVal role As clsRolle, Optional ByVal addToExisting As Boolean = True)
         ' ergänzt, weil das sonst auf Throw Exception führt , wenn role.uid = 0 oder role nicht existiert
         If Not IsNothing(role) Then
             If RoleDefinitions.containsUid(role.uid) Then
@@ -2577,10 +2634,14 @@ Public Class clsPhase
                     oldXWerte = _allRoles.Item(ix).Xwerte()
                     newXwerte = role.Xwerte
                     If oldXWerte.Length = newXwerte.Length Then
-                        ' hier dann aufsummieren 
-                        For i As Integer = 0 To oldXWerte.Length - 1
-                            newXwerte(i) = newXwerte(i) + oldXWerte(i)
-                        Next
+
+                        ' hier dann aufsummieren , wenn addToExisting = true
+                        If addToExisting Then
+                            For i As Integer = 0 To oldXWerte.Length - 1
+                                newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                            Next
+                        End If
+
 
                         _allRoles.Item(ix).Xwerte() = newXwerte
 
@@ -3420,6 +3481,56 @@ Public Class clsPhase
 
     End Sub
 
+    Public Sub AddCostWX(ByVal costName As String, ByVal arValues As Double(), ByVal addToExisting As Boolean)
+
+        Dim rSum As Double()
+        ReDim rSum(0)
+        rSum(0) = arValues.Sum
+
+        Dim dimension As Integer = Me.relEnde - Me.relStart
+        If dimension <> arValues.Length - 1 Then
+            arValues = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, rSum, 1.0)
+        End If
+
+        Dim tmpCost As clsKostenart = Me.getCost(costName)
+
+        If IsNothing(tmpCost) Then
+            ' die Kostenart hat bisher noch nicht existiert ...
+
+            tmpCost = New clsKostenart(dimension)
+
+            With tmpCost
+                .KostenTyp = CostDefinitions.getCostdef(costName).UID
+                .Xwerte = arValues
+            End With
+
+            ' jetzt muss die Kostenart ergänzt werden 
+            _allCosts.Add(tmpCost)
+
+        Else
+            ' die Kostenart hat bereits existiert 
+            If addToExisting Then
+                If tmpCost.Xwerte.Length = arValues.Length Then
+                    ' hier dann aufsummieren 
+                    Dim oldXwerte As Double() = tmpCost.Xwerte
+                    For i As Integer = 0 To oldXwerte.Length - 1
+                        arValues(i) = arValues(i) + oldXwerte(i)
+                    Next
+
+                Else
+                    ' darf eigentlich nicht sein 
+                    ' Test: 
+                    'Call MsgBox("Fehler in Rollen-Zuordnung")
+                    ' es wird dann einfach gar nichts gemacht 
+                End If
+            Else
+                ' nichts weiter tun 
+            End If
+
+            tmpCost.Xwerte() = arValues
+        End If
+    End Sub
+
     ''' <summary>
     ''' erstellt eine neue Kostenart, weist der Kostenart monatliche Bedarfe zu, deren Summe dem Wert der Variable summe entspricht  
     ''' </summary>
@@ -3445,7 +3556,7 @@ Public Class clsPhase
                 .Xwerte = xWerte
             End With
 
-            ' jetzt muss die Rolle ergänzt werden 
+            ' jetzt muss die Kostenart ergänzt werden 
             _allCosts.Add(tmpCost)
 
         Else
@@ -4284,7 +4395,7 @@ Public Class clsPhase
 
 
             Catch ex As Exception
-
+                Dim a As Integer = 0
             End Try
 
         Else

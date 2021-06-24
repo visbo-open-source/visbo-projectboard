@@ -119,6 +119,7 @@
                 <button id="PT4G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="neue Projekte können auf Basis einer VISBO Liste in 'Import\Batch Projektlisten' erzeugt werden"/>
                 <!--label="Import Projects with Config-File"-->
                 <button id="PT4G1B9" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportProjectsWithConfig" supertip ="neue Projekte können auf Basis von einer oder mehreren Excel-Dateien aus dem Folder 'Import\projects with config' gemäss vorhandener Konfigurationsdatei importiert werden" />
+                <button id="PT4G1B18" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTUpdateProjectsWithConfig" supertip ="aktuelle Projekte mit Excel-Dateien aus dem Folder 'Import\projects with config' updaten" />
                 <menuSeparator id="menuSeparator2"/>
                 <!--label="Import Portfolio Definition"-->
                 <button id="PT4G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>
@@ -459,7 +460,7 @@
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->
-      <!--<tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTTestG1" >
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
@@ -468,7 +469,7 @@
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
           <button id="PTTestAPIvsClient" label="compare API versus Client Berechnung"  onAction ="PTTestAPI_Client" />
         </group>
-      </tab>-->
+      </tab>
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 

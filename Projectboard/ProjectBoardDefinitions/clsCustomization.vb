@@ -31,6 +31,9 @@
     Private _gridLineColor As Long
     Private _missingDefinitionColor As Long
 
+    ' tk 21.6.21 One Person has one skill , i.e Junior, Senior, Expert
+    Private _onePersonOneRole As Boolean
+
     Private _allianzIstDatenReferate As String
     Private _autoSetActualDataDate As Boolean
     Private _actualDataMonth As Date
@@ -353,6 +356,16 @@
         End Set
     End Property
 
+    Public Property onePersonOneRole As Boolean
+        Get
+            onePersonOneRole = _onePersonOneRole
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _onePersonOneRole = value
+            End If
+        End Set
+    End Property
 
 
     Public Property allianzIstDatenReferate As String
@@ -752,6 +765,9 @@
         businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
         phaseDefinitions = New clsPhasen
         milestoneDefinitions = New clsMeilensteine
+
+        ' tk 21.6.21 
+        _onePersonOneRole = False
 
         showtimezone_color = 0
         noshowtimezone_color = 0

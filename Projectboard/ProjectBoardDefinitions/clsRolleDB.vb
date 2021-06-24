@@ -19,6 +19,30 @@ Public Class clsRolleDB
     Sub copyFrom(ByVal role As clsRolle)
 
         With role
+
+            ' now in case there is true: onePersonHasOneRole
+            ' added 21.6.21
+            Try
+                If awinSettings.onePersonOneRole Then
+                    ' substitute team by the one and only one team / role that person has 
+                    ' is relevant for instart and all other customers working with Junior, Expert, Senior Roles
+                    Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(.uid)
+                    If Not IsNothing(myRole) Then
+                        If Not myRole.isCombinedRole Then
+                            Dim mySkills As SortedList(Of Integer, Double) = myRole.getSkillIDs
+                            If mySkills.Count = 1 Then
+                                .teamID = mySkills.First.Key
+                            End If
+                        End If
+                    End If
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
             Me.RollenTyp = .uid
             Me.Bedarf = .Xwerte
             Me.teamID = .teamID
@@ -39,7 +63,27 @@ Public Class clsRolleDB
             .uid = Me.RollenTyp
             .Xwerte = Me.Bedarf
             .teamID = Me.teamID
-            '.isCalculated = Me.isCalculated
+            ' now in case there is true: onePersonHasOneRole
+            Try
+                If awinSettings.onePersonOneRole Then
+                    ' substitute team by the one and only one team / role that person has 
+                    ' is relevant for instart and all other customers working with Junior, Expert, Senior Roles
+                    Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(.uid)
+                    If Not IsNothing(myRole) Then
+                        If Not myRole.isCombinedRole Then
+                            Dim mySkills As SortedList(Of Integer, Double) = myRole.getSkillIDs
+                            If mySkills.Count = 1 Then
+                                .teamID = mySkills.First.Key
+                            End If
+                        End If
+                    End If
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
         End With
 
     End Sub

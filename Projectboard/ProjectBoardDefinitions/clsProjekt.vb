@@ -91,7 +91,7 @@ Public Class clsProjekt
         End Get
         Set(value As Date)
             If Not IsNothing(value) Then
-                If value > StartofCalendar Then
+                If value > startDate Then
                     ' Actual Data Until kann aber nicht größer werden als das Projektende ...
                     ' das gilt aber nur, wenn das Projekt nicht gerade erst aufgebaut wird, es also schon eine Dauer gibt 
                     If dauerInDays > 0 Then
@@ -4443,6 +4443,185 @@ Public Class clsProjekt
 
     End Sub
 
+
+    ''' <summary>
+    ''' merges roleListNameValues into Phase rootPhaseName, beginning with arrayOffset
+    ''' starting at monthVon until monthBis
+    ''' </summary>
+    ''' <param name="roleListNameValues"></param>
+    ''' <param name="monthVon"></param>
+    ''' <param name="monthBis"></param>
+    ''' <param name="arrayOffset"></param>
+    Public Function mergeForecastValues(ByVal roleListNameValues As SortedList(Of String, Double()),
+                                   ByVal monthVon As Integer,
+                                   ByVal monthBis As Integer,
+                                   ByVal arrayOffset As Integer,
+                                   ByVal offsetCorrection As Integer,
+                                   ByRef meldungen As Collection) As Boolean
+
+        Dim result As Boolean = False
+        Dim formerRoleList As New SortedList(Of String, Double())
+        Dim outputLine As String = ""
+        Dim vName As String = Me.variantName
+
+        Dim pStartCol As Integer = getColumnOfDate(Me.startDate)
+        Dim pEndCol As Integer = getColumnOfDate(Me.endeDate)
+
+        Dim arrayDimension As Integer = monthBis - monthVon
+        Dim forecastDate As Date = getDateofColumn(monthVon, False)
+
+        ' check whether it is ok with ActualData 
+        If Me.hasActualValues Then
+
+            If (getColumnOfDate(Me.actualDataUntil) - getColumnOfDate(forecastDate) >= 0) Then
+                ' Error !
+                If awinSettings.englishLanguage Then
+                    outputLine = "Forecast Values must not overwrite ActualData .. Name / ActualData Date / Forecast Date: " & Me.name & " / " & Me.actualDataUntil.ToShortDateString & " / " & forecastDate.ToShortDateString
+                Else
+                    outputLine = "Forecast Werte dürfen ActualData nicht überschreiben .. Name / ActualData Date / Forecast Date: " & Me.name & Me.actualDataUntil.ToShortDateString & " / " & forecastDate.ToShortDateString
+                End If
+                meldungen.Add(outputLine)
+
+                Call logger(ptErrLevel.logError, outputLine, "updateProjectsWithConfig", anzFehler)
+
+                mergeForecastValues = False
+                Exit Function
+            End If
+        End If
+
+
+        ' now it is guaranteed that forecast is not interfering with ActualData ...
+        ' If (arrayOffset - offsetCorrection >= 0) And (arrayDimension + 1 - offsetCorrection <= Me.dauerInMths) Then
+        If (arrayOffset - offsetCorrection >= 0) Then
+
+            result = True
+            Try
+                ' now iterate through all roleNames / Orga-Units
+                For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+                    ' get currentValues in hproj 
+
+                    Dim currentValues As Double() = Me.getResourceValuesInTimeFrame(monthVon, monthBis, kvp.Key, inclSubRoles:=True)
+                    Dim completeValues As Double() = Me.getRessourcenBedarf(kvp.Key, inclSubRoles:=True)
+
+                    ' for testing purposes 
+                    formerRoleList.Add(kvp.Key, completeValues)
+                    ' end testing purposes
+                    Dim myValues As Double() = Me.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
+
+                    Dim kvpLength As Integer = kvp.Value.Length
+
+                    If currentValues.Sum = 0 Then
+                        ' just add 
+                        For ix As Integer = arrayOffset To kvpLength - 1
+                            If ((ix - offsetCorrection) <= myValues.Length - 1) Then
+                                myValues(ix - offsetCorrection) = kvp.Value(ix)
+                            End If
+                        Next
+                    Else
+                        ' for each month ... 
+                        For ix As Integer = arrayOffset To kvpLength - 1
+                            If ((ix - offsetCorrection) <= myValues.Length - 1) Then
+                                If completeValues(ix - offsetCorrection) <= kvp.Value(ix) Then
+                                    myValues(ix - offsetCorrection) = kvp.Value(ix) - (completeValues(ix - offsetCorrection) - myValues(ix - offsetCorrection))
+                                Else
+                                    myValues(ix - offsetCorrection) = kvp.Value(ix)
+                                    Me.resetValueOfRolesInMonth(kvp.Key, ix - offsetCorrection + 1)
+                                End If
+                            End If
+                        Next
+                    End If
+
+                    ' now add to ProjectPhase 
+                    Dim cPhase As clsPhase = Me.getPhaseByID(rootPhaseName)
+                    Dim myRole As New clsRolle
+                    myRole.uid = RoleDefinitions.getRoledef(kvp.Key).UID
+                    myRole.Xwerte = myValues
+
+                    ' hier wählen: addToExisting = false
+                    cPhase.addRole(myRole, addToExisting:=False)
+
+                Next
+
+            Catch ex As Exception
+                result = False
+
+            End Try
+
+            ' now do the testing 
+            If result Then
+                Dim atleastOne1 As Boolean = False
+                Dim atleastOne2 As Boolean = False
+
+                For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+                    Dim formerValues As Double() = formerRoleList.Item(kvp.Key)
+                    Dim currentValues As Double() = Me.getRessourcenBedarf(kvp.Key, inclSubRoles:=True)
+
+                    ' all before arrayOffset need to be identical 
+                    For ix As Integer = 0 To (arrayOffset - offsetCorrection) - 1
+                        If formerValues(ix) <> currentValues(ix) Then
+                            ' Error !
+                            If awinSettings.englishLanguage Then
+                                outputLine = "old Values are different " & vName & ": " & ix & ": " & formerValues(ix) & " <> " & currentValues(ix)
+                            Else
+                                outputLine = "alte Werte sind unterschiedlich: " & vName & ": " & ix & ": " & formerValues(ix) & " <> " & currentValues(ix)
+                            End If
+                            If Not atleastOne1 Then
+                                meldungen.Add(outputLine)
+                                atleastOne1 = True
+                            End If
+
+                            Call logger(ptErrLevel.logError, outputLine, "updateProjectsWithConfig", anzFehler)
+                        End If
+                    Next
+
+                    For ix As Integer = arrayOffset To kvp.Value.Length - 1
+                        If ((ix - offsetCorrection) <= currentValues.Length - 1) Then
+                            If currentValues(ix - offsetCorrection) <> kvp.Value(ix) Then
+                                ' Error! 
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "current/new Values are different " & vName & ": " & ix & ": " & kvp.Value(ix) & " <> " & currentValues(ix)
+                                Else
+                                    outputLine = "Soll-/Ist Werte sind unterschiedlich: " & vName & ": " & ix & ": " & kvp.Value(ix) & " <> " & currentValues(ix)
+                                End If
+                                If Not atleastOne2 Then
+                                    meldungen.Add(outputLine)
+                                    atleastOne2 = True
+                                End If
+
+                                Call logger(ptErrLevel.logError, outputLine, "updateProjectsWithConfig", anzFehler)
+                            End If
+                        End If
+                    Next
+                Next
+
+            Else
+                If awinSettings.englishLanguage Then
+                    outputLine = "Error when creating version - exit ... " & Me.name & "[ " & vName & " ]"
+                Else
+                    outputLine = "Fehler beim Erzeugen der Planning Version - Exit ..." & Me.name & "[ " & vName & " ]"
+                End If
+            End If
+            '
+
+
+        Else
+            ' ProtoCol error ...
+            If awinSettings.englishLanguage Then
+                outputLine = "Dimensions do not fit " & vName & ": " & arrayDimension & ", " & arrayOffset & ", " & offsetCorrection & ", " & Me.dauerInMths
+            Else
+                outputLine = "Array Dimensionen passen nicht: " & vName & ": " & arrayDimension & ", " & arrayOffset & ", " & offsetCorrection & ", " & Me.dauerInMths
+            End If
+
+            meldungen.Add(outputLine)
+            Call logger(ptErrLevel.logError, outputLine, "updateProjectsWithConfig", anzFehler)
+        End If
+
+
+        mergeForecastValues = result
+
+    End Function
+
+
     ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
     ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
@@ -4734,6 +4913,56 @@ Public Class clsProjekt
         getPhaseRCActualValues = tmpResult
 
     End Function
+
+
+
+    ''' <summary>
+    ''' resets the value of role and all child-/parent-child roles in all Phases in according month to 0  
+    ''' </summary>
+    ''' <param name="parentRoleNameID"></param>
+    ''' <param name="relMonthCol"></param>
+    Sub resetValueOfRolesInMonth(ByVal parentRoleNameID As String, ByVal relMonthCol As Integer)
+        Dim teamID As Integer = -1
+        Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(parentRoleNameID, teamID)
+
+        If Not IsNothing(currentRoleDef) Then
+
+            Dim tmpCollection As New Collection
+            tmpCollection.Add(currentRoleDef.name)
+            Dim listOfPhases As Collection = getPhaseIdsWithRoleCost(tmpCollection, True)
+
+
+            For Each phNameID As String In listOfPhases
+
+                Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+                If Not IsNothing(cPhase) Then
+
+                    If cPhase.relStart <= relMonthCol And cPhase.relEnde >= relMonthCol Then
+                        Dim phOffset As Integer = relMonthCol - cPhase.relStart
+
+                        For Each tmpRole As clsRolle In cPhase.rollenListe
+
+                            If teamID = -1 Then
+                                If RoleDefinitions.hasAnyChildParentRelationsship(tmpRole.uid, currentRoleDef.UID) Then
+                                    tmpRole.Xwerte(phOffset) = 0
+                                End If
+                            Else
+                                If RoleDefinitions.hasAnyChildParentRelationsship(tmpRole.uid, currentRoleDef.UID) And (teamID = tmpRole.teamID) Then
+                                    tmpRole.Xwerte(phOffset) = 0
+                                End If
+                            End If
+
+
+                        Next
+
+                    End If
+
+                End If
+
+            Next
+
+        End If
+    End Sub
 
     ''' <summary>
     ''' wenn für Externe Rollen keine Istdaten eingelesen werden: passiert nur für Rollen, die nicht als Extern gekennzeichnet sind 

@@ -26,6 +26,35 @@
     Public Property objType As String
     Public Property content As String
 
+    ''' <summary>
+    ''' used when content carries offset Information for row, column
+    ''' where to find the real values for the identifier field
+    ''' need to be in form +(rowOffset, ColOffset)
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getRowColumnOffset() As Integer()
+        Get
+            Dim result As Integer()
+            ReDim result(1)
+            Try
+                If content.StartsWith("+(") And
+                    content.Contains(",") And
+                    (content.EndsWith(")") Or content.EndsWith("):")) Then
+
+                    Dim hstr() As String = content.Split(New Char() {CChar("("), CChar(","), CChar(")")})
+                    result(0) = CInt(hstr(1))
+                    result(1) = CInt(hstr(2))
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+            getRowColumnOffset = result
+        End Get
+    End Property
+
     Public Sub New()
         Titel = ""
         Identifier = ""

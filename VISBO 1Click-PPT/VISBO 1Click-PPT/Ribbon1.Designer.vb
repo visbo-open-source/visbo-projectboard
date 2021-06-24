@@ -47,7 +47,8 @@
         Me.VISBO = Me.Factory.CreateRibbonGroup
         Me.EinzelprojektReport = Me.Factory.CreateRibbonButton
         Me.DBspeichern = Me.Factory.CreateRibbonButton
-        Me.Einstellung = Me.Factory.CreateRibbonButton
+        Me.Baseline = Me.Factory.CreateRibbonButton
+        Me.Einstellungen = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
         Me.VISBO.SuspendLayout()
@@ -69,7 +70,8 @@
         '
         Me.VISBO.Items.Add(Me.EinzelprojektReport)
         Me.VISBO.Items.Add(Me.DBspeichern)
-        Me.VISBO.Items.Add(Me.Einstellung)
+        Me.VISBO.Items.Add(Me.Baseline)
+        Me.VISBO.Items.Add(Me.Einstellungen)
         Me.VISBO.Name = "VISBO"
         '
         'EinzelprojektReport
@@ -89,15 +91,24 @@
         Me.DBspeichern.Name = "DBspeichern"
         Me.DBspeichern.ShowImage = True
         '
-        'Einstellung
+        'Baseline
         '
-        Me.Einstellung.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Einstellung.Image = CType(resources.GetObject("Einstellung.Image"), System.Drawing.Image)
-        Me.Einstellung.Label = "Einstellungen"
-        Me.Einstellung.Name = "Einstellung"
-        Me.Einstellung.ScreenTip = "Einstellung"
-        Me.Einstellung.ShowImage = True
-        Me.Einstellung.Visible = False
+        Me.Baseline.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.Baseline.Image = CType(resources.GetObject("Baseline.Image"), System.Drawing.Image)
+        Me.Baseline.Label = "Publish Baseline in VISBO"
+        Me.Baseline.Name = "Baseline"
+        Me.Baseline.ScreenTip = "Publish Baseline in VISBO"
+        Me.Baseline.ShowImage = True
+        '
+        'Einstellungen
+        '
+        Me.Einstellungen.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.Einstellungen.Image = CType(resources.GetObject("Einstellungen.Image"), System.Drawing.Image)
+        Me.Einstellungen.Label = "Einstellungen"
+        Me.Einstellungen.Name = "Einstellungen"
+        Me.Einstellungen.ScreenTip = "Einstellung"
+        Me.Einstellungen.ShowImage = True
+        Me.Einstellungen.Visible = False
         '
         'Ribbon1
         '
@@ -119,8 +130,9 @@
     Friend WithEvents oneClickPPT As Microsoft.Office.Tools.Ribbon.RibbonTab
     Friend WithEvents VISBO As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents EinzelprojektReport As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents Einstellung As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Baseline As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents DBspeichern As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Einstellungen As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

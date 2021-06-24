@@ -279,6 +279,11 @@ Public Class ThisAddIn
                     If Not IsNothing(hproj) Then
                         If hproj.name <> "" And Not IsNothing(hproj.name) Then
                             Try
+                                ' synchronize with earlier version , if existent 
+                                ' i.e take values resources, budget, lead person, description 
+
+                                Call synchronizeWithValuesOFExisting(hproj)
+
                                 ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
                                 If awinSettings.visboMapping <> "" Then
                                     Call speichereProjektToDB(hproj)
@@ -299,6 +304,7 @@ Public Class ThisAddIn
                     If Not IsNothing(mapProj) Then
                         If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
                             Try
+                                Call synchronizeWithValuesOFExisting(mapProj)
                                 Call speichereProjektToDB(mapProj, True)
                             Catch ex As System.Exception
                                 If awinSettings.englishLanguage Then

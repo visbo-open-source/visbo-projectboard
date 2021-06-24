@@ -17,6 +17,23 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' returns the specifics of the first PMO userRole 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPMOSpecifics As String
+        Get
+            Dim result As String = ""
+            For Each kvp As KeyValuePair(Of String, clsCustomUserRole) In _customUserRoles
+                If kvp.Value.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    result = kvp.Value.specifics
+                    Exit For
+                End If
+            Next
+            getPMOSpecifics = result
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' liefert das Element an der Stelle index. Index kann von 9 bis count-1 gehen
