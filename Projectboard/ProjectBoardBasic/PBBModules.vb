@@ -2,7 +2,7 @@
 Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports DBAccLayer
-Imports ClassLibrary1
+Imports ProjectboardReports
 'Imports WPFPieChart ' wird nicht verwendet 
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel

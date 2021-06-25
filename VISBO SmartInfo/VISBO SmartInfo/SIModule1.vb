@@ -1,10 +1,10 @@
 ﻿Imports ProjectBoardDefinitions
-Imports ClassLibrary1
-Imports DBAccLayer
+'Imports ProjectboardReports
+'Imports DBAccLayer
 Imports ProjectBoardBasic
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports PowerPoint = Microsoft.Office.Interop.PowerPoint
-Imports Microsoft.Office.Core.MsoThemeColorIndex
+'Imports Microsoft.Office.Core.MsoThemeColorIndex
 
 Module SIModule1
     ' benötigt zum Lesen customization
@@ -28,9 +28,6 @@ Module SIModule1
 
 
     Friend myPPTWindow As PowerPoint.DocumentWindow = Nothing
-
-    'Friend xlApp As New xlNS.Application
-    'Friend updateWorkbook As xlNS.Workbook = Nothing
 
     Friend Const changeColor As Integer = Excel.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide

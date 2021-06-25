@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports System.Windows.Forms
-Imports ClassLibrary1
+Imports ProjectboardReports
 Imports Microsoft.Office.Core
 Imports System.Collections
 Imports ProjectBoardBasic

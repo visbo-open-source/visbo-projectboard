@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
-Imports ClassLibrary1
+Imports ProjectboardReports
 Imports DBAccLayer
 Imports Microsoft.Office.Core
 Imports Excel = Microsoft.Office.Interop.Excel

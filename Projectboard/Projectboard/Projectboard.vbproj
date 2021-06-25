@@ -26,7 +26,7 @@
     <PublishUrl>c:\publish\VISBO Visual Board\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>4.2.1.0</ApplicationVersion>
+    <ApplicationVersion>4.2.2.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -101,6 +101,10 @@
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Office.Interop.PowerPoint1">
+      <HintPath>..\..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.PowerPoint\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.PowerPoint.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -111,6 +115,10 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -285,9 +293,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.vbproj">
+    <ProjectReference Include="..\ClassLibrary1\ProjectboardReports.vbproj">
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
-      <Name>ClassLibrary1</Name>
+      <Name>ProjectboardReports</Name>
     </ProjectReference>
     <ProjectReference Include="..\DBAccLayer\DBAccLayer.vbproj">
       <Project>{68c4cab8-fc59-47b1-bdd7-68aa31fbb63f}</Project>
@@ -377,15 +385,6 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
-    <COMReference Include="Microsoft.Office.Interop.PowerPoint">
-      <Guid>{91493440-5A91-11CF-8700-00AA0060263B}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>11</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
     <COMReference Include="VBIDE">
       <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
       <VersionMajor>5</VersionMajor>
@@ -426,7 +425,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>B7FCEFD6591B5C2F4D3E3AC3CE012FEFBBEC9D62</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>29904B01FF23BDEB2FDDC56D0C1D99E3E1EDD59C</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -443,7 +442,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files (x86)\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Projectboard.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="4CE1966EBBC6E22F558E7D1CF5A18A8064579582">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="MPT" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />

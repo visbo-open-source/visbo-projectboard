@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
-Imports ClassLibrary1
+Imports ProjectboardReports
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports MongoDbAccess
