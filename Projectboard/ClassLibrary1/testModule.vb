@@ -1,5 +1,4 @@
-﻿Imports ClassLibrary1
-Imports ProjectBoardDefinitions
+﻿Imports ProjectBoardDefinitions
 Imports DBAccLayer
 Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint

@@ -285,9 +285,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.vbproj">
+    <ProjectReference Include="..\ClassLibrary1\ProjectboardReports.vbproj">
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
-      <Name>ClassLibrary1</Name>
+      <Name>ProjectboardReports</Name>
     </ProjectReference>
     <ProjectReference Include="..\DBAccLayer\DBAccLayer.vbproj">
       <Project>{68c4cab8-fc59-47b1-bdd7-68aa31fbb63f}</Project>

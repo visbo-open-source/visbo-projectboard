@@ -148,10 +148,6 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
-    <Reference Include="ClassLibrary1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Projectboard\ClassLibrary1\bin\Debug\ClassLibrary1.dll</HintPath>
-    </Reference>
     <Reference Include="DBAccLayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Projectboard\DBAccLayer\bin\Debug\DBAccLayer.dll</HintPath>
@@ -180,6 +176,9 @@
     </Reference>
     <Reference Include="ProjectBoardDefinitions">
       <HintPath>..\..\Projectboard\ProjectBoardDefinitions\bin\Debug\ProjectBoardDefinitions.dll</HintPath>
+    </Reference>
+    <Reference Include="ProjectboardReports">
+      <HintPath>..\..\Projectboard\ClassLibrary1\bin\Debug\ProjectboardReports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing">

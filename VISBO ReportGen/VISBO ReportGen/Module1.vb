@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
-Imports ClassLibrary1
+Imports clsLib1Visbo
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports MongoDbAccess
@@ -105,7 +105,7 @@ Module Module1
                     Dim ok As Boolean = request.createIndicesOnce()
                     ok = request.pingMongoDb()
                     If Not ok Then
-                        Call logfileSchreiben("Datenbank-Zugriff verweigert", "ReportBatch", anzFehler)
+                        Call logger("Datenbank-Zugriff verweigert", "ReportBatch", anzFehler)
                         noDB = True
                         Throw New ArgumentException("Datenbank-Zugriff verweigert")
                     Else
@@ -186,7 +186,7 @@ Module Module1
                                     profilname = Trim(profilname)
                                     portfolio_projname = Trim(portfolio_projname)
                                     variantname = Trim(variantname)
-                                    Call logfileSchreiben("Report-Erstellen für Zeile:  " & zeile & " '" & reportname & "' '" & profilname & "' '" & portfolio_projname & "' '" & variantname, "ReportBatch", 0)
+                                    Call logger("Report-Erstellen für Zeile:  " & zeile & " '" & reportname & "' '" & profilname & "' '" & portfolio_projname & "' '" & variantname, "ReportBatch", 0)
 
                                     Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname, timestamp, rangeleft, rangeright, _
                                                                                  reportname, speicherModus = "a", username, password)
@@ -194,9 +194,9 @@ Module Module1
                                         ' Powerpoint-Report wurde unter dem Namen reportname in reportErstellen gespeichert
                                         ShowProjekte.Clear()
                                         AlleProjekte.Clear()
-                                        Call logfileSchreiben("Report-Erstellen erfolgreich", "ReportBatch", 0)
+                                        Call logger("Report-Erstellen erfolgreich", "ReportBatch", 0)
                                     Else
-                                        Call logfileSchreiben("Fehler beim Report-Erstellen für Zeile:  " & zeile & " in der Vorgabe!", "Main", 0)
+                                        Call logger("Fehler beim Report-Erstellen für Zeile:  " & zeile & " in der Vorgabe!", "Main", 0)
                                         ShowProjekte.Clear()
                                         AlleProjekte.Clear()
                                     End If
@@ -221,7 +221,7 @@ Module Module1
                 Catch ex As Exception
 
                     Call MsgBox("Fehler beim Einlesen der Report Batch Datei:" & ex.Message)
-                    Call logfileSchreiben("Fehler beim Einlesen der Report Batch Datei:" & ex.Message, "ReportBatch", anzFehler)
+                    Call logger("Fehler beim Einlesen der Report Batch Datei:" & ex.Message, "ReportBatch", anzFehler)
                 End Try
 
 
@@ -233,7 +233,7 @@ Module Module1
                         ' Schließen des Eingabe-Files
                         xlsBatchFile.Close(SaveChanges:=False)
                     Catch ex As Exception
-                        Call logfileSchreiben("Fehler beim Schliessen des BatchReport-Files", "ReportBatch: " & ex.Message, anzFehler)
+                        Call logger("Fehler beim Schliessen des BatchReport-Files", "ReportBatch: " & ex.Message, anzFehler)
                     End Try
                 End If
 
@@ -248,10 +248,10 @@ Module Module1
                     End If
 
                 Catch ex As Exception
-                    Call logfileSchreiben("Fehler beim Schliessen des CustomizationFiles", "ReportBatch: " & ex.Message, anzFehler)
+                    Call logger("Fehler beim Schliessen des CustomizationFiles", "ReportBatch: " & ex.Message, anzFehler)
                 End Try
 
-                Call logfileSchliessen()
+                'Call logger()
 
             End If
 
@@ -265,7 +265,7 @@ Module Module1
                     ' Schließen des Eingabe-Files
                     xlsBatchFile.Close(SaveChanges:=False)
                 Catch ex1 As Exception
-                    Call logfileSchreiben("Fehler beim Schliessen des BatchReport-Files", "ReportBatch: " & ex1.Message, anzFehler)
+                    Call logger("Fehler beim Schliessen des BatchReport-Files", "ReportBatch: " & ex1.Message, anzFehler)
                 End Try
             End If
 
@@ -280,14 +280,14 @@ Module Module1
                 End If
 
             Catch ex1 As Exception
-                Call logfileSchreiben("Fehler beim Schliessen des CustomizationFiles", "ReportBatch" & ex1.Message, anzFehler)
+                Call logger("Fehler beim Schliessen des CustomizationFiles", "ReportBatch" & ex1.Message, anzFehler)
             End Try
 
 
             Console.WriteLine("{0} => {1}", "Fehler", ex.Message)
             Call MsgBox(ex.Message)
 
-            Call logfileSchliessen()
+            'Call logfileSchliessen()
 
 
         End Try
