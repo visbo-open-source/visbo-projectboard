@@ -8112,6 +8112,8 @@ Imports System.Web
                 ' wenn es gibt - lesen der Modifier Kapas, wo interne wie externe angegeben sein können ..
                 Call readMonthlyModifierKapas(outputCollection, listOfArchivExtern)
 
+
+
                 ' wenn es gibt - lesen der Externen Verträge 
                 Call readMonthlyExternKapasEV(outputCollection, listOfArchivExtern)
 
@@ -8126,8 +8128,13 @@ Imports System.Web
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
-
                     listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                    If outputCollection.Count > 0 And allesOK And listOfArchivExtern.Count > 0 Then
+                        For Each tmpOutputLine As String In outputCollection
+                            Call logger(ptErrLevel.logWarning, tmpOutputLine, "PTImportKapas", anzFehler)
+                        Next
+                        outputCollection.Clear()
+                    End If
                 Else
                     outPutline = "There is no Config-File for the capacities!"
                     Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)

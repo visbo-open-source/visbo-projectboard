@@ -25059,6 +25059,8 @@ Public Module agm2
             Else
                 outputline = "Es sind Fehler beim Lesen des Config-File aufgetreten"
             End If
+
+            meldungen.Add(outputline)
         End If
 
         ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
