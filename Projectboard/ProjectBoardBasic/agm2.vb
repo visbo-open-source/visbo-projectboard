@@ -21579,6 +21579,8 @@ Public Module agm2
 
         If Not IsNothing(allCustomUserRoles) Then
 
+            Call allCustomUserRoles.setSpecifics()
+
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
@@ -21616,6 +21618,24 @@ Public Module agm2
                 If Not IsNothing(myCustomUserRole) Then
                     ' jetzt gibt es eine currentUserRole: myCustomUserRole
                     Call myCustomUserRole.setNonAllowances()
+                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
+                    '    Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
+                    '    Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
+
+                    '    With myCustomUserRole
+                    '        Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
+                    '        Dim myCustSpecifics As String = ""
+                    '        For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
+                    '            If myCustSpecifics <> "" Then
+                    '                myCustSpecifics = myCustSpecifics & ";" & CStr(kvp.Key)
+                    '            Else
+                    '                myCustSpecifics = myCustSpecifics & CStr(kvp.Key)
+                    '            End If
+                    '        Next
+                    '        .specifics = myCustSpecifics
+                    '    End With
+                    'End If
+
                 Else
                     Dim message As String
                     If awinSettings.englishLanguage Then
@@ -21649,6 +21669,28 @@ Public Module agm2
         End If
 
     End Sub
+
+    'Public Sub setPMOSpecifics(ByRef allCusomUserRoles As Collection)
+    '    For Each myCustomUserRole In allCusomUserRoles
+    '        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
+    '                   Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
+    '                   Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
+
+    '            With myCustomUserRole
+    '                Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
+    '                Dim myCustSpecifics As String = ""
+    '                For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
+    '                    If myCustSpecifics <> "" Then
+    '                        myCustSpecifics = myCustSpecifics & ";" & CStr(kvp.Key)
+    '                    Else
+    '                        myCustSpecifics = myCustSpecifics & CStr(kvp.Key)
+    '                    End If
+    '                Next
+    '                .specifics = myCustSpecifics
+    '            End With
+    '        End If
+    '    Next
+    'End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -23490,6 +23532,9 @@ Public Module agm2
         Dim relAliasesCol As Integer
         Dim relIsExternRoleCol As Integer
         Dim relIsTeamCol As Integer
+        Dim relIsAggrRoleCol As Integer
+        Dim relIsSumRoleCol As Integer
+        Dim relIsActDataRelevantCol As Integer
         Dim valuestart As Integer
         Dim valueend As Integer
         Try
@@ -23510,6 +23555,9 @@ Public Module agm2
                 relentryDateCol = configListe("entryDate").column.von - nameCol
                 relpercentCol = configListe("percent").column.von - nameCol
                 relAliasesCol = configListe("aliases").column.von - nameCol
+                relIsAggrRoleCol = configListe("isAggregationRole").column.von - nameCol
+                relIsSumRoleCol = configListe("isSummaryRole").column.von - nameCol
+                relIsActDataRelevantCol = configListe("isActDataRelevant").column.von - nameCol
 
             Else
                 If awinSettings.englishLanguage Then
@@ -23923,8 +23971,6 @@ Public Module agm2
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
-
-
                                     If Not IsNothing(c.Offset(0, relIsExternRoleCol).Value) Then
                                         Dim tmpValue As String = CStr(c.Offset(0, relIsExternRoleCol).Value)
                                         tmpValue = tmpValue.Trim
@@ -23951,6 +23997,38 @@ Public Module agm2
                                         End If
                                         meldungen.Add(errMsg)
                                     End Try
+
+                                    ' ur:08.07.2021 Aufnahme isAggregationRole
+                                    If Not IsNothing(c.Offset(0, relIsAggrRoleCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsAggrRoleCol).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isAggregationRole = True
+                                        End If
+                                    End If
+                                    ' ur:08.07.2021 Aufnahme isSummaryRole
+                                    If Not IsNothing(c.Offset(0, relIsSumRoleCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsSumRoleCol).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isSummaryRole = True
+                                        End If
+                                    End If
+                                    ' ur:08.07.2021 Aufnahme isActDataRelvant
+                                    If Not IsNothing(c.Offset(0, relIsActDataRelevantCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsActDataRelevantCol).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isActDataRelevant = True
+                                        End If
+                                    End If
+
 
                                     ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                     Try

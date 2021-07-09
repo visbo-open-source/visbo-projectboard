@@ -271,6 +271,52 @@
     Public Property farbe As Object
 
     Public Property tagessatzIntern As Double
+
+    ' gibt an, ob es sich um eine Rolle handelt, auf die die darunterliegenden Rollenbedarfe aggregiert werden sollen
+    Private _isAggregationRole As Boolean
+    Public Property isAggregationRole As Boolean
+        Get
+            isAggregationRole = _isAggregationRole
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _isAggregationRole = value
+            Else
+                _isAggregationRole = False
+            End If
+        End Set
+    End Property
+
+    ' gibt an, ob es sich um eine Rolle handelt, die keine Person ist
+    Private _isSummaryRole As Boolean
+    Public Property isSummaryRole As Boolean
+        Get
+            isSummaryRole = Me.isCombinedRole
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _isSummaryRole = Me.isCombinedRole
+            Else
+                _isSummaryRole = False
+            End If
+        End Set
+    End Property
+
+    ' gibt an, ob es sich um eine Rolle handelt, die/oder deren Kinder IstDaten erhalten => vor Eintragung der Istdaten werden deren Bedarfe genullt
+    Private _isActDataRelevant As Boolean
+    Public Property isActDataRelevant As Boolean
+        Get
+            isActDataRelevant = _isActDataRelevant
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _isActDataRelevant = value
+            Else
+                _isActDataRelevant = False
+            End If
+        End Set
+    End Property
+
     Public Property kapazitaet As Double()
 
 
@@ -589,6 +635,9 @@
         _exitDate = DateAndTime.DateSerial(2200, 12, 31)
         _defaultDayCapa = -1
         _aliases = Nothing
+        _isAggregationRole = False
+        _isSummaryRole = False
+        _isActDataRelevant = False
 
     End Sub
 

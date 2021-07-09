@@ -232,7 +232,7 @@ Public Class clsCustomUserRole
             Dim teamID As Integer = -1
             If _customUserRole = ptCustomUserRoles.RessourceManager Or
                     _customUserRole = ptCustomUserRoles.TeamManager Or
-                    customUserRole = ptCustomUserRoles.InternalViewer Then
+                    _customUserRole = ptCustomUserRoles.InternalViewer Then
 
                 tmpResult = RoleDefinitions.getRoleDefByIDKennung(_specifics, teamID).name
 

@@ -971,6 +971,56 @@ Public Class clsRollen
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste (uid, roleName) zurück, die nur die Rollen enthält , die als AggregationRoles definiert sind und zwar sortiert nach uid
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAggregationRoles As SortedList(Of Integer, String)
+        Get
+            Dim tmpList As New SortedList(Of Integer, String)
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If tmpRole.isAggregationRole Then
+                    If Not tmpList.ContainsKey(tmpRole.UID) Then
+                        tmpList.Add(tmpRole.UID, tmpRole.name)
+                    End If
+                End If
+            Next
+
+            getAggregationRoles = tmpList
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste (uid, roleName) zurück, die nur die Rollen enthält , die beim Einlesen der Istdaten berücksichtigt werden sollen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getActualDataRelevantRoles As SortedList(Of Integer, String)
+        Get
+            Dim tmpList As New SortedList(Of Integer, String)
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If tmpRole.isActDataRelevant Then
+                    If Not tmpList.ContainsKey(tmpRole.UID) Then
+                        tmpList.Add(tmpRole.UID, tmpRole.name)
+                    End If
+                End If
+            Next
+
+            getActualDataRelevantRoles = tmpList
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' calculates for all intern employees fullCost, consisting of defaultKapa per month , multiplied with generalCostFactor multiplied with dayRate
     ''' </summary>
