@@ -149,7 +149,10 @@ Public Class clsRollenDefinitionWeb
             If Not IsNothing(Me.kapazitaet) Then
                 Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
 
-                logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+                If awinSettings.visboDebug Then
+                    logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+                End If
+
 
                 If startingIndex > 0 Then
                     For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1

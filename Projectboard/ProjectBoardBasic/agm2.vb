@@ -7229,7 +7229,7 @@ Public Module agm2
         Dim responsiblePerson As String = ""
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
-        Dim nrOfStdColumns As Integer = 15
+        Dim nrOfStdColumns As Integer = 14
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
@@ -7278,7 +7278,7 @@ Public Module agm2
 
 
         Try
-            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Liste"),
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Batch List"),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
@@ -7314,10 +7314,16 @@ Public Module agm2
                     ' hier muss jetzt alles zurückgesetzt werden 
                     ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    If Not IsNothing(pName) Then
+                        pName = pName.Trim
+                    Else
+                        pName = ""
+                    End If
+
                     If IsNothing(pName) Then
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
-                    ElseIf pName.Trim.Length < 2 Then
+                    ElseIf pName.Length < 2 Then
 
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
@@ -7334,24 +7340,26 @@ Public Module agm2
 
                         End Try
                     Else
-                        variantName = ""
+                        ' Read Variant Name
+                        variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(variantName) Then
+                            variantName = ""
+                        Else
+                            variantName = variantName.Trim
+                        End If
                         custFields.Clear()
                         capacityNeeded = ""
 
-                        ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
-                        Try
-                            Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
-                            If tmpStr.Length > 1 Then
-                                pName = makeValidProjectName(tmpStr(0))
-                                variantName = tmpStr(1).Trim
-                            End If
-                        Catch ex As Exception
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            variantName = ""
-                        End Try
 
-                        vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        lastSpaltenValue = spalte + 1
+                        ' Read Template 
+                        vorlageName = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(vorlageName) Then
+                            vorlageName = ""
+                        Else
+                            vorlageName = vorlageName.Trim
+                        End If
+
+                        lastSpaltenValue = spalte + 2
 
                         If IsNothing(vorlageName) Then
                             CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
@@ -7367,42 +7375,50 @@ Public Module agm2
 
                                 Try
 
-                                    lastSpaltenValue = spalte + 2
-                                    responsiblePerson = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
                                     lastSpaltenValue = spalte + 3
-                                    start = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    responsiblePerson = CStr(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    If IsNothing(responsiblePerson) Then
+                                        responsiblePerson = ""
+                                    Else
+                                        responsiblePerson = responsiblePerson.Trim
+                                    End If
+
+                                    lastSpaltenValue = spalte + 4
+                                    start = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     ' eines der beiden Daten Start bzw Ende darf ohne Angabe bleiben ...
                                     'If start < StartofCalendar Then
                                     '    Throw New ArgumentException("Datum vor Kalender-Start")
                                     'End If
 
-                                    lastSpaltenValue = spalte + 4
-                                    ende = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 5
+                                    ende = CDate(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
 
                                     If start < StartofCalendar And ende < StartofCalendar Then
                                         Throw New ArgumentException("sowohl Start wie Ende-Datum liegen vor dem Kalender-Start")
                                     End If
 
-                                    lastSpaltenValue = spalte + 5
-                                    startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    ' tk 16.7.21 nicht mehr nötig 
+                                    'lastSpaltenValue = spalte + 5
+                                    'startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    'lastSpaltenValue = spalte + 6
+                                    'endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     lastSpaltenValue = spalte + 6
-                                    endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
-                                    lastSpaltenValue = spalte + 7
-                                    dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     ' Konsistenzprüfung 
                                     If start > StartofCalendar And ende > StartofCalendar And dauer > 0 Then
                                         Throw New ArgumentException("Überbestimmt: es kann nicht Start, Ende und Dauer angegeben werden .. ")
                                     End If
 
-                                    lastSpaltenValue = spalte + 8
-                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 7
+                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
                                     If budgetInput <> "calcNeeded" And IsNumeric(budgetInput) Then
-                                        budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                         If budget < 0 Then
                                             Throw New ArgumentException("negative Werte nicht zugelassen!")
                                         End If
@@ -7416,14 +7432,14 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 9
-                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 8
+                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(capacityNeeded, True) Then
                                         Throw New ArgumentException("ungültige Kapa-Angabe")
                                     End If
 
-                                    lastSpaltenValue = spalte + 10
-                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 9
+                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(externCostInput, False) Then
                                         Throw New ArgumentException("ungültige Kosten-Angabe")
                                     End If
@@ -7434,21 +7450,21 @@ Public Module agm2
                                         Throw New ArgumentException("unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden")
                                     End If
 
-                                    lastSpaltenValue = spalte + 11
-                                    risk = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 10
+                                    risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If risk < 0 Or risk > 10.0 Then
-                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
+                                        Throw New ArgumentException("Kennzahl Risiko muss zwischen [0 und 10] liegen")
                                     End If
+
+                                    lastSpaltenValue = spalte + 11
+                                    sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If sfit < 0 Or sfit > 10.0 Then
+                                        Throw New ArgumentException("Kennzahl Strategie muss zwischen [0 und 10] liegen")
+                                    End If
+
 
                                     lastSpaltenValue = spalte + 12
-                                    sfit = CDbl(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                    If sfit < 0 Or risk > 10.0 Then
-                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
-                                    End If
-
-
-                                    lastSpaltenValue = spalte + 13
-                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not IsNothing(businessUnit) Then
                                         Dim bi As Integer = 0
                                         Dim found As Boolean = False
@@ -7466,8 +7482,8 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 14
-                                    description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 13
+                                    description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
 
                                     If lastColumn > nrOfStdColumns Then
@@ -20612,6 +20628,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
             importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
             importOrdnerNames(PTImpExp.projectWithConfig) = awinPath & "Import\Projects With Config"
+            importOrdnerNames(PTImpExp.rpa) = awinPath & "Import\RPA"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"

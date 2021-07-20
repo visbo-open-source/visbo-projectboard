@@ -296,6 +296,7 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
     Public divClients() As String = {"VISBO Projectboard / ", "VISBO Smartinfo / ", "VISBO MSProjectAddIn / "}
+
     Public Enum client
         Projectboard = 0
         VisboSmartInfo = 1
@@ -916,6 +917,85 @@ Public Module Module1
         loadMultiPVInPPT = 13
     End Enum
 
+    ' tk 16.7.21 - wird benötigt für RPA - robotic process automation
+    Public Enum ptConfigFiles
+        vcOrganisation = 0
+        tagetikCreateProjects = 2
+        tagetikUpdateProjects = 3
+        zeussCapa = 4
+        telairActualData = 5 ' TimeSheets in Excel 
+        eGeckoCapa = 6
+        instartCalcTemplate = 7
+    End Enum
+
+    Public Enum PTRpa
+        ' represents the standard VISBO Projectbrief with Stammdaten, Ressources, Termine, Attribute 
+        visboProject = 0
+
+        ' represents the standard VISBO Excel project with just only name and Schedules, Appearances, and the like 
+        visboExcelSchedules = 1
+
+        ' represents the standard MS Project *.mpp File 
+        visboMPP = 2
+
+        ' represents the Jira File, as customized in JiraConfig customized  
+        visboJira = 3
+
+        ' represents the Instart AngebotsKalkulation Template 
+        visboInstartProposal = 4
+
+        ' represents the VISBO AngebotsKalkulation Template 
+        visboProposal = 5
+
+        ' represents the Telair Tagetik New Projects List
+        visboNewTagetik = 6
+
+        ' represents the Telair Update Project File
+        visboUpdateTagetik = 7
+
+        ' represents the standard VISBO Project Creation by BatchList 
+        visboProjectList = 8
+
+        ' represents the AllianzType Istdaten Import 
+        visboActualData1 = 9
+
+        ' represents the InstartType Istdaten Import 
+        visboActualData2 = 10
+
+        ' represents the Telair Istdaten Import 
+        visboActualData3 = 11
+
+        ' represents the initial VISBO Excel Organisation
+        visboInitialOrga = 12
+
+        ' represents the roundtrip VISBO Excel Organisation
+        visboRoundtripOrga = 13
+
+        ' represents the default Urlaubskalender from VISBO 
+        visboDefaultCapacity = 14
+
+        ' represents the Zeuss Urlaubskalender from VISBO 
+        visboZeussCapacity = 15
+
+        ' represents the Instart Type of Urlaubs-Information 
+        visboEGeckoCapacity = 16
+
+        ' represents the Allianz-Type Daten of Externe Rahmenverträge 
+        visboExternalContracts = 17
+
+        ' represents the classic modifier strcture 
+        visboModifierCapacities = 18
+
+        ' represents the unknown 
+        visboUnknown = 19
+
+        ' represents the Automatic Team Allocation
+        'visboSuggestResourceAllocation = 
+
+
+
+    End Enum
+
     ''' <summary>
     ''' alle Bezeichner, die sowohl lesend wie schreibend sind , stehen am Anfang; 
     ''' dann kommen die, die nur lesend sind ... 
@@ -939,6 +1019,7 @@ Public Module Module1
         customization = 14
         appearances = 15
         projectWithConfig = 16
+        rpa = 17
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

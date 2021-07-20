@@ -32,6 +32,7 @@ Public Class Request
     Private pwd As String
 
 
+
     ''' <summary>
     '''  'Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort)
     ''' </summary>
