@@ -4996,7 +4996,8 @@ Public Module agm2
 
                                                         Dim newRoleDef As New clsRollenDefinition
                                                         newRoleDef.name = ass.ResourceName
-                                                        newRoleDef.farbe = RGB(120, 120, 120)
+                                                        ' tk 20.07.21 keine individuelen Farben mehr für Rollen 
+                                                        'newRoleDef.farbe = RGB(120, 120, 120)
                                                         newRoleDef.defaultKapa = 18
 
                                                         ' OvertimeRate in Tagessatz umrechnen
@@ -23249,7 +23250,8 @@ Public Module agm2
                                         End If
 
                                     Next
-                                    .farbe = c.Interior.Color
+                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
+                                    '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
 
@@ -24081,7 +24083,8 @@ Public Module agm2
                                         End If
 
                                     Next
-                                    .farbe = c.Interior.Color
+                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
+                                    '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
 

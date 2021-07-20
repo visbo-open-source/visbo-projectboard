@@ -268,7 +268,13 @@
     End Property
 
     Public Property name As String
-    Public Property farbe As Object
+
+    Public ReadOnly Property farbe As Integer
+        Get
+            farbe = visboFarbeBlau
+        End Get
+    End Property
+
 
     Public Property tagessatzIntern As Double
     Public Property kapazitaet As Double()

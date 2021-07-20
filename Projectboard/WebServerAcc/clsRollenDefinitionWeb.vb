@@ -94,7 +94,8 @@ Public Class clsRollenDefinitionWeb
 
         roleDef.UID = Me.uid
         roleDef.name = Me.name
-        roleDef.farbe = Me.farbe
+        ' tk 20.7.21 keine individuelle Farbe mehr für Rollen 
+        'roleDef.farbe = Me.farbe
         roleDef.defaultKapa = Me.defaultKapa
 
         ' tk 8.1.20
@@ -413,7 +414,8 @@ Public Class clsRollenDefinitionWeb
 
             uid = .UID
             name = .name
-            farbe = CLng(.farbe)
+            ' tk 20.7.21 nicht mehr nötig
+            'farbe = CLng(.farbe)
             defaultKapa = .defaultKapa
 
             ' tk 23.11.18 
