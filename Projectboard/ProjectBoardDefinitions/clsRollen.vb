@@ -1453,7 +1453,6 @@ Public Class clsRollen
             End If
         End If
 
-
         hasAnyChildParentRelationsship = tmpResult
 
     End Function
@@ -1572,6 +1571,37 @@ Public Class clsRollen
         hasAnyChildParentRelationsship = found
 
     End Function
+
+    ''' <summary>
+    ''' gibt die RoleIds in einem String zurück, die ActualData-relevant sind und hat die eventuell falsch gesetzten korrigiert
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getActualdataOrgaUnits() As String
+        Dim result As String = ""
+        Dim UnitList As New List(Of Integer)
+        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+            If kvp.Value.isActDataRelevant Then
+                Dim parents As Integer() = getParentArray(kvp.Value, False)
+                For i As Integer = 0 To parents.Length - 1
+                    If _allRollen.Item(parents(i)).isActDataRelevant Then
+                        kvp.Value.isActDataRelevant = False
+                        Exit For
+                    End If
+                Next
+                ' ist immer noch actDataRelevant
+                If kvp.Value.isActDataRelevant Then
+                    If result = "" Then
+                        result = kvp.Key.ToString
+                    Else
+                        result = result & ";" & kvp.Key.ToString
+                    End If
+                End If
+            End If
+        Next
+        Return result
+    End Function
+
+
     ''' <summary>
     ''' bestimmt für eine Rolle im TreeView den Namen, der setzt sich zusammen aus RoleUid und ggf Membership Kennung 
     ''' </summary>

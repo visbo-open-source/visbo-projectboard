@@ -6988,6 +6988,7 @@ Imports System.Web
                         If Not IsNothing(currentOrga) Then
                             RoleDefinitions = currentOrga.allRoles
                             CostDefinitions = currentOrga.allCosts
+                            awinSettings.ActualdataOrgaUnits = RoleDefinitions.getActualdataOrgaUnits
                         Else
                             If awinSettings.englishLanguage Then
                                 Call MsgBox("You don't have any valid (time now) Organisation in the system!")
@@ -8106,6 +8107,7 @@ Imports System.Web
 
                 RoleDefinitions = changedOrga.allRoles
                 CostDefinitions = changedOrga.allCosts
+                awinSettings.ActualdataOrgaUnits = changedOrga.allRoles.getActualdataOrgaUnits
 
                 ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
                 Dim listOfArchivExtern As New List(Of String)

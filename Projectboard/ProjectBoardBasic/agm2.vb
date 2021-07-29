@@ -8938,6 +8938,8 @@ Public Module agm2
                             End If
                         End With
 
+                        ' es werden die ActualData relevante OrgaUnits geholt und ggfs. auch korrigiert
+                        Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -21078,9 +21080,10 @@ Public Module agm2
                         awinSettings.gridLineColor = customizations.gridLineColor
 
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-
-                        awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-
+                        ' ur:20210729 kommt nun eigentlich von Organisation
+                        If awinSettings.ActualdataOrgaUnits = "" Then
+                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                        End If
                         awinSettings.onePersonOneRole = customizations.onePersonOneRole
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
@@ -21177,6 +21180,7 @@ Public Module agm2
                         CostDefinitions = currentOrga.allCosts
                         RoleDefinitions = currentOrga.allRoles
 
+                        awinSettings.ActualdataOrgaUnits = currentOrga.allRoles.getActualdataOrgaUnits
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
