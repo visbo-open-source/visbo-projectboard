@@ -127,8 +127,8 @@ Public Class clsRollenDefinitionWeb
 
         ' neu ur: 08.07.2021
         roleDef.isAggregationRole = Me.isAggregationRole
-        'roleDef.isCombinedRole = Me.isSummaryRole
         roleDef.isActDataRelevant = Me.isActDataRelevant
+        roleDef.isSummaryRole = Me.isSummaryRole
 
         ' jetzt die Übernahme der Kapazitäten 
         ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
@@ -443,7 +443,7 @@ Public Class clsRollenDefinitionWeb
 
             ' ur: 8.7.21 neu mit VS-943
             isAggregationRole = .isAggregationRole
-            isSummaryRole = .isCombinedRole
+            isSummaryRole = .isCombinedRole Or .isSummaryRole
             isActDataRelevant = .isActDataRelevant
 
             ' tk 17.5.20 effiziente Organisation
