@@ -8938,6 +8938,8 @@ Public Module agm2
                             End If
                         End With
 
+                        ' es werden die ActualData relevante OrgaUnits geholt und ggfs. auch korrigiert
+                        Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -21078,9 +21080,10 @@ Public Module agm2
                         awinSettings.gridLineColor = customizations.gridLineColor
 
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-
-                        awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-
+                        ' ur:20210729 kommt nun eigentlich von Organisation
+                        If awinSettings.ActualdataOrgaUnits = "" Then
+                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                        End If
                         awinSettings.onePersonOneRole = customizations.onePersonOneRole
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
@@ -21177,6 +21180,7 @@ Public Module agm2
                         CostDefinitions = currentOrga.allCosts
                         RoleDefinitions = currentOrga.allRoles
 
+                        awinSettings.ActualdataOrgaUnits = currentOrga.allRoles.getActualdataOrgaUnits
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
@@ -21580,7 +21584,6 @@ Public Module agm2
         If Not IsNothing(allCustomUserRoles) Then
 
             Call allCustomUserRoles.setSpecifics()
-
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
@@ -21660,7 +21663,8 @@ Public Module agm2
         Else
             ' muss ins logfile
             meldungen.Add(err.errorMsg)
-            Call MsgBox(err.errorMsg)
+            Call logger(ptErrLevel.logError, "setUserRoles", err.errorCode & ":" & err.errorMsg)
+            ' Call MsgBox(err.errorMsg)
         End If
 
         ' jetzt sicherstellen, dass die Grundeinstellung bei Portfolio Manager loadPfv ist 
@@ -23131,8 +23135,36 @@ Public Module agm2
                                         End If
 
                                     End If
+                                    ' ur:08.07.2021 Aufnahme isAggregationRole
+                                    If Not IsNothing(c.Offset(0, 9).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isAggregationRole = True
+                                        End If
+                                    End If
+                                    ' ur:08.07.2021 Aufnahme isSummaryRole
+                                    If Not IsNothing(c.Offset(0, 10).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isSummaryRole = True
+                                        End If
+                                    End If
+                                    ' ur:08.07.2021 Aufnahme isActDataRelvant
+                                    If Not IsNothing(c.Offset(0, 11).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isActDataRelevant = True
+                                        End If
+                                    End If
 
                                     If Not readingGroups Then
                                         ' tk 5.12 Aufnahme extern
@@ -23162,6 +23194,37 @@ Public Module agm2
                                             End If
                                             meldungen.Add(errMsg)
                                         End Try
+
+                                        '' ur:08.07.2021 Aufnahme isAggregationRole
+                                        'If Not IsNothing(c.Offset(0, 9).Value) Then
+                                        '    Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
+                                        '    tmpValue = tmpValue.Trim
+                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        '    If positiveCriterias.Contains(tmpValue) Then
+                                        '        .isAggregationRole = True
+                                        '    End If
+                                        'End If
+                                        '' ur:08.07.2021 Aufnahme isSummaryRole
+                                        'If Not IsNothing(c.Offset(0, 10).Value) Then
+                                        '    Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
+                                        '    tmpValue = tmpValue.Trim
+                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        '    If positiveCriterias.Contains(tmpValue) Then
+                                        '        .isSummaryRole = True
+                                        '    End If
+                                        'End If
+                                        '' ur:08.07.2021 Aufnahme isActDataRelvant
+                                        'If Not IsNothing(c.Offset(0, 11).Value) Then
+                                        '    Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
+                                        '    tmpValue = tmpValue.Trim
+                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        '    If positiveCriterias.Contains(tmpValue) Then
+                                        '        .isActDataRelevant = True
+                                        '    End If
+                                        'End If
 
                                         ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                         Try
@@ -23298,6 +23361,10 @@ Public Module agm2
                                                 meldungen.Add(errMsg)
                                             Else
                                                 neueRollendefinitionen.Add(hrole)
+                                                ' ur: 20210728: isSkill wird gesetzt
+                                                If hrole.isSummaryRole Then
+                                                    hrole.isSkill = True
+                                                End If
                                             End If
                                         End If
                                     Catch ex As Exception

@@ -291,11 +291,17 @@
     Private _isSummaryRole As Boolean
     Public Property isSummaryRole As Boolean
         Get
-            isSummaryRole = Me.isCombinedRole
+            isSummaryRole = Me.isCombinedRole Or _isSummaryRole
         End Get
         Set(value As Boolean)
             If Not IsNothing(value) Then
-                _isSummaryRole = Me.isCombinedRole
+                ' ur:20210728 restructure of Organisation
+                If (value) Then
+                    _isSummaryRole = value
+                Else
+                    _isSummaryRole = Me.isCombinedRole
+                End If
+
             Else
                 _isSummaryRole = False
             End If

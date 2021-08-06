@@ -277,12 +277,25 @@
         keepRoleInNewOrga = True
     End Function
 
+    'Public Function getActualdataOrgaUnits() As String
+    '    Dim result As String = ""
+    '    For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In Me.allRoles.liste
+    '        If kvp.Value.isActDataRelevant Then
+    '            If result = "" Then
+    '                result = kvp.Key.ToString
+    '            Else
+    '                result = result & ";" & kvp.Key.ToString
+    '            End If
+    '        End If
+    '    Next
+    '    Return result
+    'End Function
+
 
     Public Sub New()
         _allRoles = New clsRollen
         _allCosts = New clsKostenarten
         _validFrom = Date.Now.Date
-
         '_OrgaStartOfCalendar = StartofCalendar
     End Sub
 End Class
