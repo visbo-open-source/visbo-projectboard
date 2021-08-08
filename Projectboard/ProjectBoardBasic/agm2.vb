@@ -7205,7 +7205,7 @@ Public Module agm2
     ''' das wird sichergestellt über Eintrag der tfzeile in hproj ... 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub awinImportProjektInventur()
+    Public Function awinImportProjektInventur(ByRef readProjects As Integer, ByRef createdProjs As Integer) As Boolean
         Dim zeile As Integer, spalte As Integer
 
         Dim tfZeile As Integer = 2
@@ -7223,6 +7223,8 @@ Public Module agm2
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
         Dim externCostInput As String = ""
+
+        Dim atLeastOneError As Boolean = False
 
         Dim description As String = ""
         Dim businessUnit As String = ""
@@ -7696,8 +7698,11 @@ Public Module agm2
 
                                     End If
 
+                                Else
+                                    atLeastOneError = True
                                 End If
-
+                            Else
+                                atLeastOneError = True
                             End If
                         End If
 
@@ -7718,12 +7723,12 @@ Public Module agm2
 
         End Try
 
+        readProjects = geleseneProjekte
+        createdProjs = createdProjects
+        awinImportProjektInventur = Not atLeastOneError
 
-        Call MsgBox("gelesen: " & geleseneProjekte & vbLf &
-                    "erzeugt: " & createdProjects & vbLf &
-                    "importiert: " & ImportProjekte.Count)
 
-    End Sub
+    End Function
 
 
     ''' <summary>
@@ -20610,6 +20615,12 @@ Public Module agm2
             reportOrdnerName = awinPath & "Reports\"
             Try
                 My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                My.Computer.FileSystem.CreateDirectory(logfileOrdnerName)
             Catch ex As Exception
 
             End Try

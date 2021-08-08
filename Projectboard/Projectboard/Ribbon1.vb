@@ -6127,7 +6127,16 @@ Imports System.Web
                                 Call importAllianzType4()
 
                             Else
-                                Call awinImportProjektInventur()
+                                Dim readProjects As Integer = 0
+                                Dim createdProjects As Integer = 0
+                                Dim allOk As Boolean = awinImportProjektInventur(readProjects, createdProjects)
+
+                                Dim msgTxt As String = "gelesen: " & readProjects & vbLf &
+                                                          "erzeugt: " & createdProjects & vbLf &
+                                                          "importiert: " & ImportProjekte.Count
+
+                                Call MsgBox(msgTxt)
+
                             End If
 
                             listOfArchivFiles.Add(dateiName)

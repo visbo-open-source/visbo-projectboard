@@ -1143,6 +1143,8 @@ Public Module Module1
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
     Public reportOrdnerName As String
+    ' ergänzt 4.8.21 
+    Public logfileOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"
@@ -7605,6 +7607,7 @@ Public Module Module1
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
             ' FileNamen zusammenbauen
+
             Dim logfileOrdner As String = "logfiles"
             If IsNothing(awinPath) Then
                 Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments

@@ -26,12 +26,13 @@ Module rpaModule1
         Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
         Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
         Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
-        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfile")
+        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
         Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
         Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
         Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
 
-        Dim listToProcess As New SortedList(Of String, String)
+
+        Dim listToProcess As New SortedList(Of String, Integer)
 
         Try
             If My.Computer.FileSystem.FileExists(settingJsonFile) Then
@@ -77,11 +78,11 @@ Module rpaModule1
                             ' move file to unknown Folder ... 
                             Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
                             My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
                         Else
-                            Dim key As String = CInt(rpaCategory).ToString("0000") & "_" & myName
 
-                            If Not listToProcess.ContainsKey(key) Then
-                                listToProcess.Add(key, myName)
+                            If Not listToProcess.ContainsKey(myName) Then
+                                listToProcess.Add(fullFileName, CInt(rpaCategory))
                             End If
                         End If
 
@@ -96,14 +97,82 @@ Module rpaModule1
                         Dim myName As String = My.Computer.FileSystem.GetName(fullFileName)
                         Dim rpaCategory As PTRpa = PTRpa.visboMPP
 
-                        Dim key As String = CInt(rpaCategory).ToString("0000") & "_" & myName
-
-                        If Not listToProcess.ContainsKey(key) Then
-                            listToProcess.Add(key, myName)
+                        If Not listToProcess.ContainsKey(myName) Then
+                            listToProcess.Add(fullFileName, CInt(rpaCategory))
                         End If
 
                     Next
 
+
+                    ImportProjekte.Clear()
+                    Dim importOrganisations As New clsOrganisations
+                    Dim importCustomization As New clsCustomization
+                    Dim importAppearances As New clsAppearances
+
+
+                    For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
+
+                        Dim myName As String = My.Computer.FileSystem.GetName(kvp.Key)
+                        Dim currentWB As xlns.Workbook = Nothing
+                        Dim allOk As Boolean = False
+
+                        Try
+
+                            If Not kvp.Value = PTRpa.visboMPP Then
+                                currentWB = appInstance.Workbooks.Open(kvp.Key)
+                            End If
+
+
+                            Select Case kvp.Value
+                                Case CInt(PTRpa.visboProjectList)
+
+                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProjectList.ToString, myName)
+                                    Dim readProjects As Integer = 0
+                                    Dim createdProjects As Integer = 0
+                                    Dim importedProjects As Integer = ImportProjekte.Count
+                                    allOk = awinImportProjektInventur(readProjects, createdProjects)
+                                    If allOk Then
+                                        allOk = storeImportProjekte
+                                    Else
+                                        Call logger(ptErrLevel.logError, "failure in Processing: " & PTRpa.visboProjectList.ToString, myName)
+                                    End If
+
+
+                                Case CInt(PTRpa.visboMPP)
+                                Case CInt(PTRpa.visboProject)
+                                Case CInt(PTRpa.visboJira)
+                                Case CInt(PTRpa.visboDefaultCapacity)
+                                Case Else
+
+                            End Select
+
+                            If Not kvp.Value = PTRpa.visboMPP Then
+                                currentWB.Close(SaveChanges:=True)
+                            End If
+
+                            If allOk Then
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                Call logger(ptErrLevel.logInfo, "success: ", myName)
+                            Else
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                Call logger(ptErrLevel.logError, "failed: ", myName)
+                            End If
+
+                        Catch ex As Exception
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                            My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                            Call logger(ptErrLevel.logError, "failed: ", ex.Message)
+                            currentWB.Close(SaveChanges:=True)
+                        End Try
+
+                    Next
+
+
+                    ' now: create and modify projects -> all projects in ImportProjekte 
+                    ' create and modify organisations -> validOrganisations
+                    ' create and modify settings such as customization, custom User Roles, apperance definitions
 
                     ' read all configFiles, if available
 
@@ -164,6 +233,74 @@ Module rpaModule1
 
     End Sub
 
+    ''' <summary>
+    ''' stores all projects in ImportProjekte, then clears ImportProjekte
+    ''' returns true, if all went ok
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function storeImportProjekte() As Boolean
+
+        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+        Dim jetzt As Date = Date.Now
+        Dim ok As Boolean = True
+
+        Try
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+                Dim outputCollection As New Collection
+                Dim hproj As clsProjekt = Nothing
+                Dim Err As New clsErrorCodeMsg
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt, Err) Then
+                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, "", jetzt, Err)
+                End If
+                'Dim hproj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantDescription, AlleProjekte, Date.Now)
+                If IsNothing(hproj) Then
+                    ' does not yet exist .. 
+                    If Not AlleProjekte.Containskey(calcProjektKey(kvp.Value)) Then
+                        ' necessary because store ruft writeProtections für AllePRojekte Projekte auf 
+                        AlleProjekte.Add(kvp.Value, False)
+                    End If
+
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+
+
+
+                    If storeSingleProjectToDB(kvp.Value, outputCollection) Then
+                        ok = True
+                        Call logger(ptErrLevel.logInfo, "project created: ", kvp.Value.getShapeText)
+                    Else
+                        ok = False
+                        Call logger(ptErrLevel.logInfo, "project creation messages: ", outputCollection)
+                    End If
+
+                Else
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+                    If hproj.hasActualValues Then
+                        ' manage ActualData and so forth 
+                    End If
+
+                    If storeSingleProjectToDB(kvp.Value, outputCollection) Then
+                        ok = True
+                        Call logger(ptErrLevel.logInfo, "project updated: ", kvp.Value.getShapeText)
+                    Else
+                        ok = False
+                        Call logger(ptErrLevel.logInfo, "project update messages: ", outputCollection)
+                    End If
+
+                End If
+
+            Next
+
+        Catch ex As Exception
+            ok = False
+            Call logger(ptErrLevel.logError, "Store Projects from List failed", ex.Message)
+        End Try
+
+        ' now set back to empty 
+        ImportProjekte.Clear(False)
+
+        storeImportProjekte = ok
+    End Function
     Private Function startUpRPA(ByVal mongoName As String, ByVal path As String) As Boolean
 
         Dim result As Boolean = False
