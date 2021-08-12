@@ -259,7 +259,7 @@ Public Class clsRolle
                         ' use day-rate of skill
                         tagessatzIntern = RoleDefinitions.getRoleDefByID(_teamID).tagessatzIntern
                     Else
-                        ' use day-rate of orga-unit / skill 
+                        ' use day-rate of person / orga-unit 
                         tagessatzIntern = RoleDefinitions.getRoleDefByID(_uid).tagessatzIntern
                     End If
                 Else
