@@ -35,6 +35,7 @@
     End Property
 
 
+
     ''' <summary>
     ''' liefert das Element an der Stelle index. Index kann von 9 bis count-1 gehen
     ''' </summary>
@@ -137,5 +138,36 @@
             _customUserRoles.Add(key, curole)
         End If
 
+    End Sub
+    ''' <summary>
+    ''' setzt für alle CustomUserRoles in der Liste die entsprechenden specifics, die in der Organisation bestimmt wurden (siehe RoleDefinitions.getAggregationRoles
+    ''' </summary>
+    Public Sub setSpecifics()
+
+        For Each kvpCUR As KeyValuePair(Of String, clsCustomUserRole) In _customUserRoles
+
+            Dim thisCustomUserRole As clsCustomUserRole = kvpCUR.Value
+            If thisCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
+                       Or thisCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
+                       Or thisCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
+
+                With thisCustomUserRole
+                    Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
+                    ' Specifics nur ändern, wenn überhaupt aggregationRoles gesetzt wurden in der Organisation
+                    If aggregationRoles.Count > 0 Then
+                        Dim thisCustSpecifics As String = ""
+
+                        For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
+                            If thisCustSpecifics <> "" Then
+                                thisCustSpecifics = thisCustSpecifics & ";" & CStr(kvp.Key)
+                            Else
+                                thisCustSpecifics = thisCustSpecifics & CStr(kvp.Key)
+                            End If
+                        Next
+                        .specifics = thisCustSpecifics
+                    End If
+                End With
+            End If
+        Next
     End Sub
 End Class

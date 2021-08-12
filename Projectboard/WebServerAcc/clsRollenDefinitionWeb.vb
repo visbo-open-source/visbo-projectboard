@@ -34,6 +34,11 @@ Public Class clsRollenDefinitionWeb
 
     Public kapazitaet() As Double
 
+    '08.07.2021  neu hinzugekommen mit VS-943 Re-Structure Orga
+    Public isAggregationRole As Boolean
+    Public isSummaryRole As Boolean
+    Public isActDataRelevant As Boolean
+
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
     Public startOfCal As Date
@@ -121,6 +126,10 @@ Public Class clsRollenDefinitionWeb
             roleDef.tagessatzIntern = Me.tagessatzIntern
         End If
 
+        ' neu ur: 08.07.2021
+        roleDef.isAggregationRole = Me.isAggregationRole
+        roleDef.isActDataRelevant = Me.isActDataRelevant
+        roleDef.isSummaryRole = Me.isSummaryRole
 
         ' jetzt die Übernahme der Kapazitäten 
         ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
@@ -437,7 +446,10 @@ Public Class clsRollenDefinitionWeb
             tagessatz = .tagessatzIntern
             tagessatzIntern = tagessatz
 
-
+            ' ur: 8.7.21 neu mit VS-943
+            isAggregationRole = .isAggregationRole
+            isSummaryRole = .isCombinedRole Or .isSummaryRole
+            isActDataRelevant = .isActDataRelevant
 
             ' tk 17.5.20 effiziente Organisation
             ' jetzt nur den Array übergeben, der die vom Default abweichenden Werte enthält 
@@ -530,6 +542,9 @@ Public Class clsRollenDefinitionWeb
         'exitDate = CDate("31.12.2200").ToUniversalTime
         exitDate = DateAndTime.DateSerial(2200, 12, 31)
         Dim maxDate As Date = Date.MaxValue.ToUniversalTime
+        isAggregationRole = False
+        isActDataRelevant = False
+        isSummaryRole = False
 
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
@@ -548,6 +563,9 @@ Public Class clsRollenDefinitionWeb
         entryDate = Date.MinValue.ToUniversalTime
         'exitDate = CDate("2200.31.12").ToUniversalTime
         exitDate = DateAndTime.DateSerial(2200, 12, 31)
+        isAggregationRole = False
+        isActDataRelevant = False
+        isSummaryRole = False
 
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
