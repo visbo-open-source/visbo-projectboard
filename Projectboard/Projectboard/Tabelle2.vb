@@ -1101,10 +1101,27 @@ Public Class Tabelle2
                                             xEndDate = cphase.getEndDate
                                         End If
 
-                                        Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
-                                                                                                    xEndDate, vSum, 1)
+
 
                                         If isRole Then
+
+                                            ' jetzt muss die Rolle aktualisiert werden ...
+                                            Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                                            Dim oldValues As Double()
+
+                                            ' calculate a distribution of values over months, dependent of months and number days / per Months
+                                            Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
+                                                                                                    xEndDate, vSum, 1)
+
+                                            If IsNothing(tmpRole) Then
+                                                ReDim oldValues(xValues.Length - 1)
+                                            Else
+                                                oldValues = tmpRole.Xwerte
+                                            End If
+
+                                            ' now check and verify whether this is feasible with given capacity 
+                                            ' if not, then do corrections in a way, that free capacity is taken and the rest of needs going over free capacity is distributed equally over the timeFrame
+                                            xValues = ShowProjekte.adjustToCapacity(uid, teamID, xValues, xStartDate, oldValues)
 
                                             ' erstmal überprüfen, ob awinsettings.autoreduce = true 
                                             Dim parentRoleSum As Double = -1
@@ -1117,9 +1134,6 @@ Public Class Tabelle2
                                                 xValues = cphase.berechneBedarfeNew(xStartDate, xEndDate, vSum, 1)
 
                                             End If
-
-                                            ' jetzt muss die Rolle aktualisiert werden ...
-                                            Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
 
                                             If IsNothing(tmpRole) Then
                                                 tmpRole = New clsRolle(phEnde - phStart)
@@ -1152,6 +1166,11 @@ Public Class Tabelle2
 
 
                                         Else
+
+                                            ' calculate a distribution of values over months, dependent of months and number days / per Months
+                                            Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
+                                                                                                    xEndDate, vSum, 1)
+
                                             ' es handelt sich um eine Kostenart 
                                             Dim tmpCost As clsKostenart = cphase.getCost(rcName)
 

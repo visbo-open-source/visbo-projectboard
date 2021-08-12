@@ -2506,7 +2506,6 @@ Imports System.Web
 
         If modus = ptModus.graficboard Then
             visboZustaende.projectBoardMode = modus
-            Call visboZustaende.clearAuslastungsArray()
 
 
         Else
@@ -10152,9 +10151,6 @@ Imports System.Web
 
         awinSettings.meCompareWithLastVersion = pressed
 
-        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
-        visboZustaende.clearAuslastungsArray()
-
         ' jetzt müssen die Charts aktualisiert werden 
         Call aktualisiereCharts(visboZustaende.currentProject, False)
 
@@ -10164,21 +10160,6 @@ Imports System.Web
         PTProzAuslastung = awinSettings.mePrzAuslastung
     End Function
 
-    Sub awinPTProzAuslastung(control As IRibbonControl, ByRef pressed As Boolean)
-
-        awinSettings.mePrzAuslastung = pressed
-
-        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
-        visboZustaende.clearAuslastungsArray()
-
-        If awinSettings.meExtendedColumnsView Then
-            'Call deleteColorFormatMassEdit()
-            'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
-            'Call colorFormatMassEditRC()
-        End If
-
-
-    End Sub
 
     Public Function PTSkipChanges(control As IRibbonControl) As Boolean
         PTSkipChanges = tempSkipChanges
