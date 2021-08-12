@@ -971,6 +971,56 @@ Public Class clsRollen
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste (uid, roleName) zurück, die nur die Rollen enthält , die als AggregationRoles definiert sind und zwar sortiert nach uid
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAggregationRoles As SortedList(Of Integer, String)
+        Get
+            Dim tmpList As New SortedList(Of Integer, String)
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If tmpRole.isAggregationRole Then
+                    If Not tmpList.ContainsKey(tmpRole.UID) Then
+                        tmpList.Add(tmpRole.UID, tmpRole.name)
+                    End If
+                End If
+            Next
+
+            getAggregationRoles = tmpList
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste (uid, roleName) zurück, die nur die Rollen enthält , die beim Einlesen der Istdaten berücksichtigt werden sollen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getActualDataRelevantRoles As SortedList(Of Integer, String)
+        Get
+            Dim tmpList As New SortedList(Of Integer, String)
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If tmpRole.isActDataRelevant Then
+                    If Not tmpList.ContainsKey(tmpRole.UID) Then
+                        tmpList.Add(tmpRole.UID, tmpRole.name)
+                    End If
+                End If
+            Next
+
+            getActualDataRelevantRoles = tmpList
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' calculates for all intern employees fullCost, consisting of defaultKapa per month , multiplied with generalCostFactor multiplied with dayRate
     ''' </summary>
@@ -1403,7 +1453,6 @@ Public Class clsRollen
             End If
         End If
 
-
         hasAnyChildParentRelationsship = tmpResult
 
     End Function
@@ -1522,6 +1571,37 @@ Public Class clsRollen
         hasAnyChildParentRelationsship = found
 
     End Function
+
+    ''' <summary>
+    ''' gibt die RoleIds in einem String zurück, die ActualData-relevant sind und hat die eventuell falsch gesetzten korrigiert
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getActualdataOrgaUnits() As String
+        Dim result As String = ""
+        Dim UnitList As New List(Of Integer)
+        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+            If kvp.Value.isActDataRelevant Then
+                Dim parents As Integer() = getParentArray(kvp.Value, False)
+                For i As Integer = 0 To parents.Length - 1
+                    If _allRollen.Item(parents(i)).isActDataRelevant Then
+                        kvp.Value.isActDataRelevant = False
+                        Exit For
+                    End If
+                Next
+                ' ist immer noch actDataRelevant
+                If kvp.Value.isActDataRelevant Then
+                    If result = "" Then
+                        result = kvp.Key.ToString
+                    Else
+                        result = result & ";" & kvp.Key.ToString
+                    End If
+                End If
+            End If
+        Next
+        Return result
+    End Function
+
+
     ''' <summary>
     ''' bestimmt für eine Rolle im TreeView den Namen, der setzt sich zusammen aus RoleUid und ggf Membership Kennung 
     ''' </summary>

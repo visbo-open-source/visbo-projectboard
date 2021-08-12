@@ -251,6 +251,7 @@ Public Module Module1
     Public Const vp_strategicFit = "_strategicFit"
     Public Const vp_risk = "_risk"
     Public Const vp_businessUnit = "_businessUnit"
+    Public Const vp_pmCommit = "_pmCommit"
 
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
