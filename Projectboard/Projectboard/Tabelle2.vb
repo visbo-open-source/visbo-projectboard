@@ -1121,7 +1121,8 @@ Public Class Tabelle2
 
                                             ' now check and verify whether this is feasible with given capacity 
                                             ' if not, then do corrections in a way, that free capacity is taken and the rest of needs going over free capacity is distributed equally over the timeFrame
-                                            xValues = ShowProjekte.adjustToCapacity(uid, teamID, xValues, xStartDate, oldValues)
+                                            Dim allowOvertime As Boolean = False
+                                            xValues = ShowProjekte.adjustToCapacity(uid, teamID, allowOvertime, xValues, xStartDate, oldValues)
 
                                             ' erstmal überprüfen, ob awinsettings.autoreduce = true 
                                             Dim parentRoleSum As Double = -1
@@ -1156,6 +1157,9 @@ Public Class Tabelle2
                                                     tmpRole.Xwerte(i) = xValues(i)
                                                 Next
                                             End If
+
+                                            ' jetzt die tatsächliche Summe zeigen 
+                                            Target.Cells(1, 1).value = xValues.Sum
 
                                             auslastungChanged = True
 

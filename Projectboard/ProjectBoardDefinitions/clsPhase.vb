@@ -2505,6 +2505,161 @@ Public Class clsPhase
     End Sub
 
     ''' <summary>
+    ''' returns a sortedList of (freeCapacity, RoleID), highest values are at the end 
+    ''' returns only such roles having a freeCapacity amount of at least requiredSum
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="requiredSum"></param>
+    ''' <returns></returns>
+    Public Function getCandidates(ByVal roleNameID As String, ByVal requiredSum As Double) As SortedList(Of Double, Integer)
+        Dim result As New SortedList(Of Double, Integer)
+        Dim candidates As List(Of Integer)
+        Dim skillID As Integer = -1
+        Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, skillID)
+        Dim mySkill As clsRollenDefinition = Nothing
+
+        If skillID > 0 Then
+            mySkill = RoleDefinitions.getRoleDefByID(skillID)
+            candidates = RoleDefinitions.getCommonChildsOfParents(mySkill.UID, myRole.UID)
+        Else
+            candidates = RoleDefinitions.getSubRoleIDsOf(myRole.name, type:=PTcbr.realRoles).Keys.ToList
+        End If
+
+        ' now create a sortedList of freeCapacity for all the candidates
+
+        For Each roleID As Integer In candidates
+            ' now only people are considered - therefore skill dows not play a role any more ...
+            Dim tmpSkill As Integer = -1
+            Dim von As Integer = getColumnOfDate(getStartDate)
+            Dim foreCastDataOffset As Integer = 0
+
+            If hasActualData Then
+                foreCastDataOffset = getColumnOfDate(parentProject.actualDataUntil) - von + 1
+                von = von + foreCastDataOffset
+            End If
+
+            Dim bis As Integer = getColumnOfDate(getEndDate)
+            Dim freeCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(myRole.UID, tmpSkill, von, bis)
+            Dim freeAmount As Double = freeCapacity.Sum
+
+            If freeAmount >= requiredSum Then
+                If Not result.ContainsKey(freeAmount) Then
+                    result.Add(freeAmount, myRole.UID)
+                Else
+                    ' make sure it can be sorted into the sortedList ... 
+                    Do While result.ContainsKey(freeAmount)
+                        freeAmount = freeAmount + 0.000001
+                    Loop
+                    result.Add(freeAmount, myRole.UID)
+                End If
+            End If
+
+        Next
+
+        getCandidates = result
+    End Function
+
+    ''' <summary>
+    ''' substitues a given role, i.e summary role by a provided (grand)child- or sister role
+    ''' if newNameID does not have amn according relation, i.e is (grand)child or having the given skill then returns false
+    ''' </summary>
+    ''' <param name="oldNameID"></param>
+    ''' <param name="newNameID"></param>
+    ''' <param name="newValue"></param>
+    ''' <returns></returns>
+    Public Function substituteRole(ByVal oldNameID As String, ByVal newNameID As String, ByVal newValue As Double) As Boolean
+        Dim wasOK As Boolean = True
+        Dim errTxt As String = ""
+
+        ' first of all - is there a oldNameID role in the phase 
+        Dim myOldRole As clsRolle = getRoleByRoleNameID(oldNameID)
+        Dim myNewRole As clsRolle = getRoleByRoleNameID(newNameID)
+
+        If IsNothing(myOldRole) Then
+            ' Exit 
+            wasOK = False
+            errTxt = "there is such role ... -> Exit"
+        End If
+
+        If wasOK Then
+
+            ' now it is guaranteed that there is a oldRole
+            Dim oldValue As Double = myOldRole.summe
+
+            ' further Validation checks
+            ' If skill Is provided: old and new skill need to be the same
+            ' if no skill is provided: if person: then other person is allowed; if summaryRole - no other summary role is allowed
+
+            Dim oldSkillID As Integer = -1
+            Dim oldRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(oldNameID, oldSkillID)
+            Dim oldRoleID As Integer = oldRole.UID
+
+            Dim newSkillID As Integer = -1
+            Dim newRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(newNameID, newSkillID)
+            Dim newRoleID As Integer = newRole.UID
+
+            If oldSkillID = newSkillID Then
+                ' so far ok 
+                If oldSkillID = -1 And oldRole.isCombinedRole Then
+                    ' no skill provided , oldRole is SummaryRole 
+                    wasOK = RoleDefinitions.hasAnyChildParentRelationsship(newRoleID, oldRoleID)
+                    If Not wasOK Then
+                        errTxt = "not having any parent/child relationsships"
+                    End If
+                End If
+            Else
+                wasOK = False
+                errTxt = "only allowed when skills are identical ..."
+            End If
+
+            If wasOK Then
+
+                Dim foreCastDataOffset As Integer = 0
+
+                If hasActualData Then
+                    foreCastDataOffset = getColumnOfDate(parentProject.actualDataUntil) - getColumnOfDate(getStartDate) + 1
+                End If
+
+                Dim leftDate As Date = getStartDate
+                If foreCastDataOffset > 0 Then
+                    leftDate = leftDate.AddMonths(foreCastDataOffset).AddDays(-1 * leftDate.Day + 1)
+                End If
+
+                Dim rightDate As Date = getEndDate
+                Dim inputValues As Double()
+                ReDim inputValues(0)
+                inputValues(0) = newValue
+
+                Dim myValues As Double()
+                ReDim myValues(getColumnOfDate(rightDate) - getColumnOfDate(leftDate))
+
+                If Not IsNothing(myNewRole) Then
+                    For ix As Integer = foreCastDataOffset To relEnde
+                        myValues(ix - foreCastDataOffset) = myNewRole.Xwerte(ix)
+                    Next
+
+                    ' in this case the already existing amount need to considered as well 
+                    ' Example: Entwickler: 100, Erich: 50 . now Erich should also do the rest of placeholder role Entwickler
+                    ' Erich = 50 + 100 
+                    inputValues(0) = inputValues(0) + myValues.Sum
+                End If
+
+                inputValues = calcVerteilungAufMonate(leftDate, rightDate, inputValues, 1.0)
+                Dim newValues As Double() = ShowProjekte.adjustToCapacity(newRoleID, newSkillID, False, inputValues, leftDate, myValues)
+
+
+                ' now the substitution needs to take place 
+                ' adjust the summary Role 
+
+                ' adjust the new Role 
+            End If
+
+        End If
+
+        substituteRole = wasOK
+    End Function
+
+    ''' <summary>
     ''' fügt der Phase die Rollen und Kosten hinzu, wie angegeben
     ''' </summary>
     ''' <param name="roleNames">die Namen der Rollen</param>

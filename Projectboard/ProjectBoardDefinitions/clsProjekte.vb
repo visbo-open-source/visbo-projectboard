@@ -3490,14 +3490,16 @@ Public Class clsProjekte
     ''' <summary>
     ''' returns an array which takes avaibale capacity into account
     ''' it redistibutes values such that availabe capacity does cover it
-    ''' if there is an overutilization then the part of overutilization is distributed equally over the complete timeframe 
+    ''' if there is an overutilization then the part of overutilization is distributed equally over the complete timeframe , if allowOvertime = true
     ''' </summary>
     ''' <param name="uid"></param>
     ''' <param name="teamID"></param>
-    ''' <param name="xValues"></param>
+    ''' <param name="xValues">the desired distribution of values, need to be fitted to available capacity</param>
     ''' <param name="xStartDate"></param>
+    ''' <param name="allowOvertime">distribute all, even it leads to overtime</param>
+    ''' <param name="oldRoleValues">current values of the respective role </param>
     ''' <returns></returns>
-    Public ReadOnly Property adjustToCapacity(ByVal uid As Integer, ByVal teamID As Integer, ByVal xValues As Double(), ByVal xStartDate As Date,
+    Public ReadOnly Property adjustToCapacity(ByVal uid As Integer, ByVal teamID As Integer, ByVal allowOvertime As Boolean, ByVal xValues As Double(), ByVal xStartDate As Date,
                                               ByVal oldRoleValues As Double()) As Double()
         Get
 
@@ -3511,6 +3513,9 @@ Public Class clsProjekte
 
             Dim freeCapacity As Double()
             ReDim freeCapacity(length - 1)
+
+            Dim stillFreeCapacity As Double()
+            ReDim stillFreeCapacity(length - 1)
 
             Dim addOvertime As Double()
             ReDim addOvertime(length - 1)
@@ -3533,7 +3538,7 @@ Public Class clsProjekte
                 myTeam = RoleDefinitions.getRoleDefByID(teamID)
             End If
 
-            freeCapacity = getAuslastungsArrayOfRole(uid, teamID, von, bis)
+            freeCapacity = getFreeCapacityOfRole(uid, teamID, von, bis)
             ' now put the oldRoleValues on top of freeCapacity; if role had already some values this need to be added to the freeCapacity 
             ' because the oldValues will be substituted 
             If oldRoleValues.Sum > 0 Then
@@ -3561,6 +3566,11 @@ Public Class clsProjekte
                         result(ix) = xValues(ix)
                     End If
 
+                    ' remember when there is still capacity left when it comes to distribute the amount of stillTodistribute
+                    If freeCapacity(ix) > result(ix) Then
+                        stillFreeCapacity(ix) = freeCapacity(ix) - result(ix)
+                    End If
+
 
                 ElseIf freeCapacity(ix) < xValues(ix) Then
 
@@ -3579,19 +3589,41 @@ Public Class clsProjekte
             Next
 
             If stillToDistribute > 0 Then
-                Dim i As Integer = 0
-                Do While stillToDistribute >= 1
-                    result(i) = result(i) + 1
-                    stillToDistribute = stillToDistribute - 1
-                    i = i + 1
-                    If i > length - 1 Then
-                        i = 0
-                    End If
-                Loop
 
-                If stillToDistribute > 0 Then
-                    result(i) = result(i) + stillToDistribute
+                ' first of all : use all stillFreeCapacity
+                If stillFreeCapacity.Sum > 0 Then
+                    For cf As Integer = 0 To length - 1
+                        If stillFreeCapacity(cf) > 0 Then
+                            If stillToDistribute > stillFreeCapacity(cf) Then
+                                result(cf) = result(cf) + stillFreeCapacity(cf)
+                                stillToDistribute = stillToDistribute - stillFreeCapacity(cf)
+                            Else
+                                result(cf) = result(cf) + stillToDistribute
+                                stillToDistribute = 0
+                            End If
+                        End If
+                        If stillToDistribute <= 0 Then
+                            Exit For
+                        End If
+                    Next
                 End If
+
+                If allowOvertime Then
+                    Dim i As Integer = 0
+                    Do While stillToDistribute >= 1
+                        result(i) = result(i) + 1
+                        stillToDistribute = stillToDistribute - 1
+                        i = i + 1
+                        If i > length - 1 Then
+                            i = 0
+                        End If
+                    Loop
+
+                    If stillToDistribute > 0 Then
+                        result(i) = result(i) + stillToDistribute
+                    End If
+                End If
+
 
             End If
 
@@ -3615,7 +3647,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsArrayOfRole(ByVal roleID As Integer, ByVal skillID As Integer, ByVal von As Integer, ByVal bis As Integer) As Double()
+    Public ReadOnly Property getFreeCapacityOfRole(ByVal roleID As Integer, ByVal skillID As Integer, ByVal von As Integer, ByVal bis As Integer) As Double()
         Get
             Dim tmpArray() As Double
             ReDim tmpArray(bis - von)
@@ -3681,7 +3713,7 @@ Public Class clsProjekte
                 ReDim tmpArray(bis - von)
             End Try
 
-            getAuslastungsArrayOfRole = tmpArray
+            getFreeCapacityOfRole = tmpArray
 
         End Get
     End Property

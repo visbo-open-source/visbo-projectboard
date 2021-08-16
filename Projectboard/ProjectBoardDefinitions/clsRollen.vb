@@ -2239,11 +2239,16 @@ Public Class clsRollen
     ''' <remarks></remarks>
     Public ReadOnly Property getRoleDefByID(ByVal uid As Integer) As clsRollenDefinition
         Get
-            If _allRollen.ContainsKey(uid) Then
-                getRoleDefByID = _allRollen.Item(uid)
+            If Not IsNothing(uid) Then
+                If _allRollen.ContainsKey(uid) Then
+                    getRoleDefByID = _allRollen.Item(uid)
+                Else
+                    getRoleDefByID = Nothing
+                End If
             Else
                 getRoleDefByID = Nothing
             End If
+
         End Get
     End Property
 

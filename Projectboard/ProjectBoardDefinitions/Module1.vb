@@ -7602,7 +7602,11 @@ Public Module Module1
 
         Try
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
@@ -7673,7 +7677,11 @@ Public Module Module1
             Dim anzZeilen As Integer = meldungen.Count
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
@@ -7717,7 +7725,12 @@ Public Module Module1
             Dim anzSpalten As Integer = text.Length
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
@@ -7761,7 +7774,12 @@ Public Module Module1
             Dim anzSpaltenValues As Integer = values.Length
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
@@ -7831,7 +7849,12 @@ Public Module Module1
         Try
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")

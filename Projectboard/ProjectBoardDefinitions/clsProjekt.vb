@@ -4674,7 +4674,7 @@ Public Class clsProjekt
     End Sub
     ''' <summary>
     ''' liest den geldwerten Betrag der Rollen bis zum Monat , ggf werden sie in Abhängigkeit von resetValuesToNull auf Null gesetzt 
-    ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich untilMonthIncl auf Null, die in der roleCostCollection verzeichnet sind   
+    ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich relMonthCol auf Null, die in der roleCostCollection verzeichnet sind   
     ''' </summary>
     ''' <param name="roleCostCollection"></param>
     ''' <param name="relMonthCol"></param>
@@ -4966,7 +4966,7 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' wenn für Externe Rollen keine Istdaten eingelesen werden: passiert nur für Rollen, die nicht als Extern gekennzeichnet sind 
-    ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
+    ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich relMothCol auf Null
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
     ''' <param name="roleNameID"></param>
