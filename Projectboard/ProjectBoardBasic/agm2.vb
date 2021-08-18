@@ -20621,11 +20621,12 @@ Public Module agm2
 
             End Try
 
-            Try
-                My.Computer.FileSystem.CreateDirectory(logfileOrdnerName)
-            Catch ex As Exception
+            ' tk 17.8.21 logfileORdnerName ist "" , deshalb ausgeblendet .. jetzt wird ja der logger verwendet ...
+            'Try
+            '    My.Computer.FileSystem.CreateDirectory(logfileOrdnerName)
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
             importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
             importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
@@ -21608,13 +21609,13 @@ Public Module agm2
 
         Dim err As New clsErrorCodeMsg
 
-        Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+        customUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
 
-        If Not IsNothing(allCustomUserRoles) Then
+        If Not IsNothing(customUserRoles) Then
 
-            Call allCustomUserRoles.setSpecifics()
+            Call customUserRoles.setSpecifics()
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-            Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
+            Dim allMyCustomUserRoles As Collection = customUserRoles.getCustomUserRoles(dbUsername)
 
             If encryptedUserRole.Length > 0 Then
                 ' bestimme die UserRole., wenn es aus SmartInfo heraus aufgerufen wird;
@@ -21682,7 +21683,7 @@ Public Module agm2
                     With myCustomUserRole
                         .customUserRole = ptCustomUserRoles.ProjektleitungRestricted
                         .userName = dbUsername
-                        .specifics = allCustomUserRoles.getPMOSpecifics
+                        .specifics = customUserRoles.getPMOSpecifics
                     End With
 
                 End If

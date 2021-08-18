@@ -27633,6 +27633,47 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' calculates sum of values starting at 0 until and including index  
+    ''' </summary>
+    ''' <param name="ar"></param>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public Function calcPartSum2ix(ByVal ar As Double(), ByVal index As Integer) As Double
+        Dim result As Double = 0
+
+        Dim arLength As Integer = ar.Length
+        If index >= arLength Or index < 0 Then
+            ' do nothing 
+        Else
+            For ix As Integer = 0 To index
+                result = result + ar(ix)
+            Next
+        End If
+
+        calcPartSum2ix = result
+    End Function
+
+    ''' <summary>
+    ''' calculates sum of values starting with and including index until end of array 
+    ''' </summary>
+    ''' <param name="ar"></param>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public Function calcPartSum2End(ByVal ar As Double(), ByVal index As Integer) As Double
+        Dim result As Double = 0
+        Dim arLength As Integer = ar.Length
+        If index >= arLength Or index < 0 Then
+            ' do nothing 
+        Else
+            For ix As Integer = index To arLength - 1
+                result = result + ar(ix)
+            Next
+        End If
+
+        calcPartSum2End = result
+    End Function
+
+    ''' <summary>
     ''' gibt den Schnittmengen-Array zurück, der Array tmpValues hat die Dimension pEnde-PStart
     ''' und stellt die Werte dar, die im Monat pStart .. PEnde gelten. 
     ''' Im Schnittmengen Array sind die Werte der Dimension bis-von

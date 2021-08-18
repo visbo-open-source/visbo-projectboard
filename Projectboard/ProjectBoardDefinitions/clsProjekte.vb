@@ -3608,7 +3608,7 @@ Public Class clsProjekte
                     Next
                 End If
 
-                If allowOvertime Then
+                If allowOvertime Or myRole.isExternRole Then
                     Dim i As Integer = 0
                     Do While stillToDistribute >= 1
                         result(i) = result(i) + 1
@@ -3651,6 +3651,13 @@ Public Class clsProjekte
         Get
             Dim tmpArray() As Double
             ReDim tmpArray(bis - von)
+
+            ' save showrangeLeft and showrangeRight 
+            Dim srlSav As Integer = showRangeLeft
+            Dim srrSav As Integer = showRangeRight
+
+            showRangeLeft = von
+            showRangeRight = bis
 
             Try
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
@@ -3712,6 +3719,11 @@ Public Class clsProjekte
             Catch ex As Exception
                 ReDim tmpArray(bis - von)
             End Try
+
+
+            ' Restore showRangeLeft and showRangeRight 
+            showRangeLeft = srlSav
+            showRangeRight = srrSav
 
             getFreeCapacityOfRole = tmpArray
 

@@ -1648,6 +1648,10 @@ Public Class clsRollen
         Dim tmpResult As String = ""
         Dim tmpRole As clsRollenDefinition = Me.getRoledef(roleName)
 
+        If IsNothing(skillName) Then
+            skillName = ""
+        End If
+
         Try
             If Not IsNothing(tmpRole) Then
 
@@ -1683,6 +1687,73 @@ Public Class clsRollen
         bestimmeRoleNameID = tmpResult
     End Function
 
+    Public ReadOnly Property getSiblingRoleIDsOf(ByVal roleID As Integer) As List(Of Integer)
+        Get
+            Dim result As New List(Of Integer)
+            Dim myAggregationRole As clsRollenDefinition = Nothing
+
+            Dim myRole As clsRollenDefinition = getRoleDefByID(roleID)
+
+            ' check whether or not it is the new or the old way of definitng aggregation roles 
+            Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
+            ' old stuff - info is in customUserRole ..
+            If aggregationRoles.Count = 0 Then
+
+                Dim aggregationIDs As Integer() = RoleDefinitions.getIDArray(customUserRoles.getPMOSpecifics)
+
+                If IsNothing(myRole) Then
+                Else
+                    Dim parentIDArray As Integer() = getParentArray(myRole)
+                    Dim found As Boolean = False
+                    Dim i As Integer = 1
+                    Do While Not found And i <= parentIDArray.Length - 1
+
+                        found = aggregationIDs.Contains(parentIDArray(i))
+
+                        If found Then
+                            myAggregationRole = RoleDefinitions.getRoleDefByID(parentIDArray(i))
+                        Else
+                            i = i + 1
+                        End If
+
+                    Loop
+
+                    If Not IsNothing(myAggregationRole) Then
+                        result = getSubRoleIDsOf(myAggregationRole.name, type:=PTcbr.realRoles).Keys.ToList
+                    End If
+
+
+                End If
+
+            Else
+                ' new stuff: info is in Organisation
+                If IsNothing(myRole) Then
+                Else
+                    Dim parentIDArray As Integer() = getParentArray(myRole)
+                    Dim found As Boolean = False
+                    Dim i As Integer = 1
+                    Do While Not found And i <= parentIDArray.Length - 1
+
+                        myAggregationRole = getRoleDefByID(parentIDArray(i))
+                        If Not IsNothing(myAggregationRole) Then
+                            found = myAggregationRole.isAggregationRole
+                        End If
+
+                        If Not found Then
+                            i = i + 1
+                        End If
+
+                    Loop
+
+                    result = getSubRoleIDsOf(myAggregationRole.name, type:=PTcbr.realRoles).Keys.ToList
+
+                End If
+
+            End If
+
+            getSiblingRoleIDsOf = result
+        End Get
+    End Property
 
 
     ''' <summary>
@@ -1997,15 +2068,16 @@ Public Class clsRollen
         Get
             Dim tmpValue As clsRollenDefinition = Nothing
 
-            Dim found As Boolean = _allNames.ContainsKey(myitem)
+            If Not IsNothing(myitem) Then
+                Dim found As Boolean = _allNames.ContainsKey(myitem)
 
-            If found Then
-                tmpValue = _allRollen.Item(_allNames.Item(myitem))
+                If found Then
+                    tmpValue = _allRollen.Item(_allNames.Item(myitem))
+                End If
+
             End If
 
-
             getRoledef = tmpValue
-
 
         End Get
 

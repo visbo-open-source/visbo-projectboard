@@ -515,11 +515,7 @@
           <!--label="Änderungen verwerfen"-->
           <!--<checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>-->
           <!--label="prozentuale Auslastungs-Werte anzeigen"-->
-          <!--<checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>-->
-          <!--label="Platzhalter Rollen automatisch reduzieren"-->
-          <!--<checkBox id="PT6G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>-->
-          <!--label="nachfrage, ob in Folgemonaten oder Vorgängermonaten reduziert werden soll"-->
-          <!--<checkBox id="PT6G2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTdontAskWhenAutoReduce" onAction ="awinPTdontAskWhenAutoReduce" supertip ="wenn gesetzt, werden beim Zuordnen von  Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; ohne erneutes Nachfragen"/>-->
+          <!--<checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>-->          
           <!--<separator id="PT6G2s1"></separator>-->
           <!--label="Sortierung ermöglichen"-->
           <!--<checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>-->

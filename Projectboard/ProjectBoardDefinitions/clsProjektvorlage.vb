@@ -3420,7 +3420,7 @@
         End Get
     End Property
     '
-    ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
+    ' übergibt in getRoleNames eine Collection von Rollen Namen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
     ''' <summary>
     ''' gibt die Liste aller im Projekt vergebenen Rollen aus; 
