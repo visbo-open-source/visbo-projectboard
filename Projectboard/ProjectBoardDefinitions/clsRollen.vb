@@ -1370,7 +1370,7 @@ Public Class clsRollen
         Dim smallerList As List(Of Integer)
         Dim biggerList As List(Of Integer)
 
-        If allChilds1.Count < allChilds1.Count Then
+        If allChilds1.Count < allChilds2.Count Then
             smallerList = allChilds1.Keys.ToList
             biggerList = allChilds2.Keys.ToList
         Else
