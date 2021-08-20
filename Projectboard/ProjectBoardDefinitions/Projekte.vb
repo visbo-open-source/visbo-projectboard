@@ -9781,7 +9781,110 @@ Public Module Projekte
         getSortedListOfCapaUtilization = sortierteListe
     End Function
 
+    ''' <summary>
+    ''' returns true if uid has a value which is in the upper segment of ranking list
+    ''' </summary>
+    ''' <param name="rankingList"></param>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Private Function isAmongTopGroup(ByVal rankingList As SortedList(Of Double, Integer), ByVal uid As Integer) As Boolean
+        Dim result As Boolean = False
 
+        Try
+
+            Dim bestValue As Double = rankingList.Last.Key
+            Dim worstValue As Double = rankingList.First.Key
+            Dim borderLine As Double = worstValue + 0.51 * (bestValue - worstValue)
+
+            Dim myIndex As Integer = rankingList.IndexOfValue(uid)
+            Dim myValue As Double = rankingList.ElementAt(myIndex).Key
+
+            result = (myValue > borderLine)
+        Catch ex As Exception
+
+        End Try
+
+
+        isAmongTopGroup = result
+    End Function
+    Public Function calcBestCandidates(ByVal priorityPeople As SortedList(Of String, Double),
+                                       ByVal myCurrentskillID As Integer,
+                                       ByVal candidates As SortedList(Of Double, Integer),
+                                       ByVal projectScopeCandidates As SortedList(Of Double, Integer),
+                                       ByVal valueToSubstitute As Double) As SortedList(Of Double, Integer)
+
+        Dim result As New SortedList(Of Double, Integer)
+
+        Dim prioPeopleIDs As New List(Of Integer)
+
+        ' are priority candidates in the candidates list? 
+        For Each prioPerson As KeyValuePair(Of String, Double) In priorityPeople
+
+            Dim prioPersonSkillID As Integer = -1
+            Dim prioPersonID As Integer = RoleDefinitions.parseRoleNameID(prioPerson.Key, prioPersonSkillID)
+
+            If Not prioPeopleIDs.Contains(prioPersonID) Then
+                prioPeopleIDs.Add(prioPersonID)
+            End If
+
+            Dim found As Boolean = False
+            Dim i As Integer = candidates.Count - 1
+
+            Do While Not found And i >= 0
+                found = (candidates.ElementAt(i).Value = prioPersonID)
+                If Not found Then
+                    i = i - 1
+                End If
+            Loop
+
+
+            If found And valueToSubstitute > 0 Then
+
+                Dim myValue As Double = System.Math.Min(candidates.ElementAt(i).Key, valueToSubstitute)
+
+                If myValue < 0 Then
+                    myValue = 0
+                End If
+
+                valueToSubstitute = valueToSubstitute - myValue
+
+                If myValue > 0 Then
+                    result.Add(myValue, prioPersonID)
+                End If
+
+            End If
+
+        Next
+
+        ' now do the rest ..
+        If valueToSubstitute > 0 Then
+            Dim ix As Integer = candidates.Count - 1
+            ' greatest value is at the end
+            Do While ix >= 0 And valueToSubstitute > 0
+
+                Dim candidate As KeyValuePair(Of Double, Integer) = candidates.ElementAt(ix)
+                If Not prioPeopleIDs.Contains(candidate.Value) Then
+                    If candidate.Key >= valueToSubstitute Then
+                        If ((result.Count > 0) Or (isAmongTopGroup(projectScopeCandidates, candidate.Value))) Then
+                            result.Add(valueToSubstitute, candidate.Value)
+                            valueToSubstitute = 0
+                        Else
+                            Dim myValue As Double = System.Math.Truncate(0.6 * valueToSubstitute)
+                            result.Add(myValue, candidate.Value)
+                            valueToSubstitute = valueToSubstitute - myValue
+                        End If
+                    Else
+                        result.Add(candidate.Key, candidate.Value)
+                        valueToSubstitute = valueToSubstitute - candidate.Key
+                    End If
+                End If
+                ix = ix - 1
+            Loop
+
+        End If
+
+        calcBestCandidates = result
+    End Function
     ''' <summary>
     ''' 
     ''' </summary>

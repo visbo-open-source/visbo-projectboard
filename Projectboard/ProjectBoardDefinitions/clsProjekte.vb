@@ -3488,6 +3488,97 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
+    ''' does an automatic allocation of people for all summary Roles / Skills  
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="errMsg"></param>
+    Public Sub autoAllocate(ByVal pName As String, ByVal variantName As String, ByRef errMsg As String)
+
+        Dim hproj As clsProjekt = Nothing
+        Dim placeHolderNeeds As New SortedList(Of String, Double())
+
+        Dim projectScopeCandidates As SortedList(Of Double, Integer) = Nothing
+
+        ' 1. create a variant, if variantName is provided 
+        If variantName <> "" Then
+            Dim baseProject As clsProjekt = getProject(pName)
+            hproj = baseProject.createVariant(variantName, "created for auto-allocation")
+        Else
+            hproj = getProject(pName)
+        End If
+
+
+        ' get a list of summary roles used in hproj 
+        Dim placeholderIDs As SortedList(Of String, Double) = hproj.getPlaceholderRoles
+
+
+
+        ' now define freeAmount of capacity over the whole project scope ...
+        Dim projectPhase As clsPhase = hproj.getPhase(1)
+
+
+        ' now checkout the resource needs and available capacities
+        For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
+
+            Dim myCollection As New Collection
+            myCollection.Add(kvp.Key)
+            Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
+
+            If Not placeHolderNeeds.ContainsKey(kvp.Key) Then
+                placeHolderNeeds.Add(kvp.Key, bedarf)
+            Else
+                ' kann eigentlich nicht sein ,,
+                Call MsgBox("unexpected Error 3522 cP")
+            End If
+
+        Next
+
+        ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
+        ' for this just go over each phase 
+        For p = 1 To hproj.CountPhases
+
+            Dim cPhase As clsPhase = hproj.getPhase(p)
+            Dim phasePlaceHolderNeeds As SortedList(Of String, Double) = cPhase.getRoleNameIDsAndValues(onlySummaryRoles:=True)
+
+            ' who is already on the team ? 
+            Dim peopleIDs As SortedList(Of String, Double) = hproj.getPeople()
+
+            For Each phasePlaceHolder As KeyValuePair(Of String, Double) In phasePlaceHolderNeeds
+
+                Dim myCurrentSkillID As Integer = -1
+                Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
+
+                Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5)
+                projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2)
+
+                Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
+                                                                                          myCurrentSkillID,
+                                                                                            candidates,
+                                                                                            projectScopeCandidates,
+                                                                                            phasePlaceHolder.Value)
+
+                ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
+                For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
+                    Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
+                    Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, substitution.Key)
+                    If Not ok Then
+                        Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
+                        Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
+                    End If
+                Next
+
+            Next
+
+        Next
+
+        ' ok, Done ! 
+
+    End Sub
+
+
+
+    ''' <summary>
     ''' returns an array which takes avaibale capacity into account
     ''' it redistibutes values such that availabe capacity does cover it
     ''' if there is an overutilization then the part of overutilization is distributed equally over the complete timeframe , if allowOvertime = true

@@ -2903,6 +2903,13 @@ Imports System.Web
                     tmpLabel = "Modify budget"
                 End If
 
+            Case "PT2G1M1B5"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Autom. Allokation"
+                Else
+                    tmpLabel = "Auto-Allocation"
+                End If
+
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Strategie/Risiko/Abhängigkeiten"
@@ -5730,8 +5737,74 @@ Imports System.Web
         appInstance.EnableEvents = formerEE
     End Sub
 
+    Sub PT2AutoAllocate(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Dim outPutCollection As New Collection
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Dim errMsg As String = ""
+                            Call ShowProjekte.autoAllocate(.Name, "", errMsg)
+
+
+                            If errMsg <> "" Then
+                                Call MsgBox(errMsg)
+                            Else
+                                outPutCollection.Add(.Name & " : success")
+                            End If
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection, "Auto-Allocation", "")
+            End If
+
+        Else
+            Dim msgTxt As String = "vorher Projekt selektieren ..."
+            If awinSettings.englishLanguage Then
+                msgTxt = "please select AddressOf project first .."
+            End If
+            Call MsgBox(msgTxt)
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+    End Sub
+
     ''' <summary>
-    ''' den Status eines Projekts ändern, aktuell nur auf Projekt-status = 1 
+    ''' die Platzhalter Rollen durhc Personen ersetzen ...
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
@@ -5767,18 +5840,24 @@ Imports System.Web
                     If isProjectType(shapeArt) Then
 
                         If ShowProjekte.contains(.Name) Then
+
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
-                            If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
-
+                            If hproj.variantName <> "" Then
+                                Call MsgBox("this action can not be applied to a variant ... ")
                             Else
-                                If awinSettings.englishLanguage Then
-                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
-                                                "and cannot be modified. You could instead create a variant.")
+
+                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+                                    Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
+
                                 Else
-                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
-                                                "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
+                                                    "and cannot be modified at the moment. ")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
+                                                    "und kann aktuell nicht verändert werden. ")
+                                    End If
                                 End If
                             End If
                         End If

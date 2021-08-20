@@ -2229,6 +2229,37 @@ Public Class clsPhase
 
     End Property
 
+    Public ReadOnly Property getRoleNameIDsAndValues(ByVal Optional onlySummaryRoles As Boolean = False) As SortedList(Of String, Double)
+        Get
+            Dim zwResult As New SortedList(Of String, Double)
+
+            For i As Integer = 1 To _allRoles.Count
+
+                Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+
+                Dim weiterMachen As Boolean = True
+
+                If onlySummaryRoles Then
+                    weiterMachen = RoleDefinitions.getRoleDefByID(tmpRole.uid).isCombinedRole
+                End If
+
+                If weiterMachen Then
+                    If tmpRole.summe > 0 Then
+                        Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
+
+                        If Not zwResult.ContainsKey(tmpNameID) Then
+                            zwResult.Add(tmpNameID, tmpRole.summe)
+                        Else
+                            zwResult.Item(tmpNameID) = zwResult.Item(tmpNameID) + tmpRole.summe
+                        End If
+                    End If
+
+                End If
+            Next
+
+            getRoleNameIDsAndValues = zwResult
+        End Get
+    End Property
 
     ''' <summary>
     ''' liefert die Namen und Bedarfs-Summen aller Rollen, die in der Phase referenziert werden ...
@@ -2236,17 +2267,29 @@ Public Class clsPhase
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleNamesAndValues() As SortedList(Of String, Double)
+    Public ReadOnly Property getRoleNamesAndValues(ByVal Optional onlySummaryRoles As Boolean = False) As SortedList(Of String, Double)
         Get
             Dim zwResult As New SortedList(Of String, Double)
 
             For i As Integer = 1 To _allRoles.Count
+
                 Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
 
-                If Not zwResult.ContainsKey(tmpRole.name) Then
-                    zwResult.Add(tmpRole.name, tmpRole.summe)
-                Else
-                    zwResult.Item(tmpRole.name) = zwResult.Item(tmpRole.name) + tmpRole.summe
+                Dim weiterMachen As Boolean = True
+
+                If onlySummaryRoles Then
+                    weiterMachen = RoleDefinitions.getRoleDefByID(tmpRole.uid).isCombinedRole
+                End If
+
+                If weiterMachen Then
+                    If tmpRole.summe > 0 Then
+                        If Not zwResult.ContainsKey(tmpRole.name) Then
+                            zwResult.Add(tmpRole.name, tmpRole.summe)
+                        Else
+                            zwResult.Item(tmpRole.name) = zwResult.Item(tmpRole.name) + tmpRole.summe
+                        End If
+                    End If
+
                 End If
             Next
 
