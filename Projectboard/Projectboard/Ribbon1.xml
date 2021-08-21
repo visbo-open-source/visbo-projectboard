@@ -524,6 +524,7 @@
           <!--label="Header anzeigen"-->
           <checkBox id="PT6G2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTshowHeader" onAction ="awinPTshowHeader" supertip ="wenn gesetzt, können die Spaltenbreiten verändert werden."/>
           <checkBox id="PT6G2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTmeLastPlanCompare" onAction ="awinMELastOrBasline" supertip ="wenn gesetzt, dann wird im Vergleichs-Chart gegen den Stand vom .. verglichen"/>
+        <checkBox id="PT6G2B9" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTmeAllowOvertime" onAction ="awinMEOvertime" supertip ="wenn gesetzt, dann können Personen interaktiv überbucht werden"/>
         </group>
       </tab>  
      </tabs>

@@ -134,7 +134,7 @@ Public Class frmAllocateRessources
 
                 lblSum.Text = amountToSubstitute.ToString("###0.#")
 
-                Dim candidatesList As SortedList(Of Double, Integer) = cPhase.getCandidates(rcNameID, 1)
+                Dim candidatesList As SortedList(Of Double, Integer) = cPhase.getCandidates(rcNameID, 1, amountToSubstitute)
 
                 Dim tableIndex As Integer = 0
                 For Each kvp As KeyValuePair(Of Double, Integer) In candidatesList

@@ -2587,18 +2587,28 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
-    ''' returns a sortedList of (freeCapacity, RoleID), highest values are at the end 
-    ''' returns only such roles having a freeCapacity amount of at least requiredSum
+    ''' returns a sortedList of (freeCapacity, RoleID), highest values are at the end  of the sortedList
+    ''' returns only such roles having a freeCapacity amount of at least requiredFreeAmountInAvg
+    ''' Externs are only shown as candidates if there are no other possibilities or the candidates are not bringing 
+    ''' enough to the table : if the total sum of free amount of candidates is less than the requiredTotalSum 
     ''' </summary>
     ''' <param name="roleNameID"></param>
-    ''' <param name="requiredSum"></param>
+    ''' <param name="requiredFreeAmountInAvg">amount which each role has to have in avg per month so that it appears in CandidatesList </param>
     ''' <returns></returns>
-    Public Function getCandidates(ByVal roleNameID As String, ByVal requiredSum As Double) As SortedList(Of Double, Integer)
+    Public Function getCandidates(ByVal roleNameID As String,
+                                  ByVal requiredFreeAmountInAvg As Double,
+                                  ByVal requiredTotalSum As Double) As SortedList(Of Double, Integer)
         Dim result As New SortedList(Of Double, Integer)
+
+        ' if there are not enough People to fulfill the requiredTotalSum, biut still externes without enough contracts, then show them as well 
+        Dim externsToExtend As New SortedList(Of Double, Integer)
+
         Dim candidates As New List(Of Integer)
         Dim skillID As Integer = -1
         Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, skillID)
         Dim mySkill As clsRollenDefinition = Nothing
+
+        Dim freeAmountTotal As Double = 0
 
         If skillID > 0 Then
 
@@ -2651,7 +2661,11 @@ Public Class clsPhase
                 Dim freeAmount As Double = freeCapacity.Sum
 
                 ' bigger than avg per month capacity needed
-                If freeAmount >= requiredSum * (bis - von + 1) Then
+                If freeAmount >= requiredFreeAmountInAvg * (bis - von + 1) Then
+
+                    ' now consider ... 
+                    freeAmountTotal = freeAmountTotal + freeAmount
+
                     If Not result.ContainsKey(freeAmount) Then
                         result.Add(freeAmount, roleID)
                     Else
@@ -2661,13 +2675,41 @@ Public Class clsPhase
                         Loop
                         result.Add(freeAmount, roleID)
                     End If
+                Else
+                    If candidateRole.isExternRole Then
+                        If Not externsToExtend.ContainsKey(freeAmount) Then
+                            externsToExtend.Add(freeAmount, roleID)
+                        Else
+                            ' make sure it can be sorted into the sortedList ... 
+                            Do While externsToExtend.ContainsKey(freeAmount)
+                                freeAmount = freeAmount + 0.000001
+                            Loop
+                            externsToExtend.Add(freeAmount, roleID)
+                        End If
+                    End If
                 End If
 
             End If
-
-
-
         Next
+
+        ' if requiredTotalSum is bigger than sum of freeAmounts of candidates 
+        ' offer externs as well: here a contract need to be closed afterwards
+        If requiredTotalSum > freeAmountTotal Then
+            ' add further extern candidates even if the don't have capacity at the moment 
+            For Each furthercandidate As KeyValuePair(Of Double, Integer) In externsToExtend
+                Dim freeAmount As Double = furthercandidate.Key
+                If Not result.ContainsKey(freeAmount) Then
+                    result.Add(freeAmount, furthercandidate.Value)
+                Else
+                    ' make sure it can be sorted into the sortedList ... 
+                    Do While result.ContainsKey(freeAmount)
+                        freeAmount = freeAmount + 0.000001
+                    Loop
+                    result.Add(freeAmount, furthercandidate.Value)
+                End If
+            Next
+
+        End If
 
         getCandidates = result
     End Function
@@ -2680,7 +2722,8 @@ Public Class clsPhase
     ''' <param name="newNameID"></param>
     ''' <param name="newValue"></param>
     ''' <returns></returns>
-    Public Function substituteRole(ByVal oldNameID As String, ByVal newNameID As String, ByVal newValue As Double) As Boolean
+    Public Function substituteRole(ByVal oldNameID As String, ByVal newNameID As String,
+                                   ByVal allowOvertime As Boolean, ByVal newValue As Double) As Boolean
         Dim wasOK As Boolean = True
         Dim errTxt As String = ""
 
@@ -2760,7 +2803,7 @@ Public Class clsPhase
                 End If
 
                 inputValues = calcVerteilungAufMonate(leftDate, rightDate, inputValues, 1.0)
-                Dim newValues As Double() = ShowProjekte.adjustToCapacity(newRoleID, newSkillID, False, inputValues, leftDate, myValues)
+                Dim newValues As Double() = ShowProjekte.adjustToCapacity(newRoleID, newSkillID, allowOvertime, inputValues, leftDate, myValues)
 
 
                 ' now the substitution needs to take place 

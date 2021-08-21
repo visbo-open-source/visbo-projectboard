@@ -16,6 +16,11 @@ Public Class clsawinSettings
     ' tk 22.6.21, for Instart Role Definition 
     Public Property onePersonOneRole As Boolean
 
+    ' tk 21.08.21 allowOvertime: when it comes to automatically allocate resources and distribute new value 
+    ' Default: false; when it is true , then people maybe overloaded 
+    Public Property meAllowOverTime As Boolean
+
+
     Public Property meCompareVsLastPlan As Boolean
     Public Property meDateForLastPlan As Date
 
@@ -313,6 +318,7 @@ Public Class clsawinSettings
 
         ReDim _importSettings(17)
 
+        _meAllowOverTime = False
         _onePersonOneRole = False
         _meCompareVsLastPlan = False
         _meDateForLastPlan = Date.Now.AddDays(-1 * Date.Now.Day)

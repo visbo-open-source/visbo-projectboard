@@ -243,7 +243,7 @@ Public Class Tabelle2
                                         existingZeile = findeZeileInMeRC(meWS, hproj.name, phaseNameID, kvp.Key)
                                     End If
 
-                                    Dim ok As Boolean = cphase.substituteRole(rcNameID, kvp.Key, kvp.Value)
+                                    Dim ok As Boolean = cphase.substituteRole(rcNameID, kvp.Key, awinSettings.meAllowOverTime, kvp.Value)
 
                                     If ok Then
                                         Dim mytmpSkill As Integer = -1
@@ -1148,7 +1148,7 @@ Public Class Tabelle2
 
                                             ' now check and verify whether this is feasible with given capacity 
                                             ' if not, then do corrections in a way, that free capacity is taken and the rest of needs going over free capacity is distributed equally over the timeFrame
-                                            Dim allowOvertime As Boolean = False
+                                            Dim allowOvertime As Boolean = awinSettings.meAllowOverTime
                                             xValues = ShowProjekte.adjustToCapacity(uid, teamID, allowOvertime, xValues, xStartDate, oldValues)
 
 

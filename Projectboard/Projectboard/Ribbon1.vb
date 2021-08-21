@@ -3371,6 +3371,13 @@ Imports System.Web
                     tmpLabel = "compare with last version"
                 End If
 
+            Case "PT6G2B9" ' Allow Overtime 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Überbuchung zulassen"
+                Else
+                    tmpLabel = "allow Overtime"
+                End If
+
             Case "PTfreezeB1" ' Fixieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Fixieren"
@@ -5772,7 +5779,8 @@ Imports System.Web
                         If ShowProjekte.contains(.Name) Then
 
                             Dim errMsg As String = ""
-                            Call ShowProjekte.autoAllocate(.Name, "", errMsg)
+                            Dim allowOvertime As Boolean = False
+                            Call ShowProjekte.autoAllocate(.Name, "", allowOvertime, errMsg)
 
 
                             If errMsg <> "" Then
@@ -10256,19 +10264,23 @@ Imports System.Web
         PTmeLastPlanCompare = awinSettings.meCompareVsLastPlan
     End Function
 
+    Public Function PTmeAllowOvertime(control As IRibbonControl) As Boolean
+        PTmeAllowOvertime = awinSettings.meAllowOverTime
+    End Function
+
+    Public Sub awinMEOvertime(control As IRibbonControl, ByRef pressed As Boolean)
+        Dim result As Boolean = pressed
+    End Sub
+
     ''' <summary>
     ''' wenn Header gezeigt werden , können Spaltenbreiten verändert werden ..
     ''' </summary>
     ''' <param name="control"></param>
     ''' <param name="pressed"></param>
     Public Sub awinPTshowHeader(control As IRibbonControl, ByRef pressed As Boolean)
-        tempShowHeaders = pressed
 
-        If tempShowHeaders Then
-            appInstance.ActiveWindow.DisplayHeadings = True
-        Else
-            appInstance.ActiveWindow.DisplayHeadings = False
-        End If
+        awinSettings.meAllowOverTime = pressed
+        
     End Sub
 
     Public Sub awinMELastOrBasline(control As IRibbonControl, ByRef pressed As Boolean)

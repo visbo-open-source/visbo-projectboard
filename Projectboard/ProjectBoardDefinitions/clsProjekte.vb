@@ -3493,7 +3493,8 @@ Public Class clsProjekte
     ''' <param name="pName"></param>
     ''' <param name="variantName"></param>
     ''' <param name="errMsg"></param>
-    Public Sub autoAllocate(ByVal pName As String, ByVal variantName As String, ByRef errMsg As String)
+    Public Sub autoAllocate(ByVal pName As String, ByVal variantName As String,
+                            ByVal allowOvertime As Boolean, ByRef errMsg As String)
 
         Dim hproj As clsProjekt = Nothing
         Dim placeHolderNeeds As New SortedList(Of String, Double())
@@ -3549,8 +3550,8 @@ Public Class clsProjekte
                 Dim myCurrentSkillID As Integer = -1
                 Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
 
-                Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5)
-                projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2)
+                Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5, phasePlaceHolder.Value)
+                projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2, phasePlaceHolder.Value)
 
                 Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
                                                                                           myCurrentSkillID,
@@ -3561,7 +3562,7 @@ Public Class clsProjekte
                 ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
                 For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
                     Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
-                    Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, substitution.Key)
+                    Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, allowOvertime, substitution.Key)
                     If Not ok Then
                         Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
                         Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
