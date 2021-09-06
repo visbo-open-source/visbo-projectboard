@@ -13372,7 +13372,7 @@ Public Module agm2
     ''' <summary>
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
-    ''' <param name="readAll"></param>
+    ''' <param name="readAll">hat aktuell keine Relevanz mehr, war für Allianz-Istdaten und Prognose Daten</param>
     ''' <param name="outputCollection"></param>
     Public Sub ImportIstdatenStdFormat(ByVal readAll As Boolean, ByRef outputCollection As Collection)
 
@@ -13387,6 +13387,14 @@ Public Module agm2
         End If
 
         If IsNothing(istDatenReferatsliste) Then
+            Dim actDataString As String = RoleDefinitions.getActualdataOrgaUnits
+            If actDataString <> "" Then
+                istDatenReferatsliste = RoleDefinitions.getIDArray(actDataString)
+            End If
+        End If
+
+
+        If IsNothing(istDatenReferatsliste) Then
             outPutLine = "no Information what plan-data needs to be substituted ... "
             outputCollection.Add(outPutLine)
             Exit Sub
@@ -13398,7 +13406,8 @@ Public Module agm2
             Exit Sub
         End If
 
-
+        ' Remember setting whether or not externRoles are carrying actualData
+        Dim externsWithActualData As Boolean = awinSettings.ExternRessourcesWithActualData
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -13584,6 +13593,7 @@ Public Module agm2
                         ' Abfrage #1 : ist es ein Team, dann dem Team zuordnen, nicht der dort angegebenen Person 
                         ' dann, wenn kein Team bekannt: ist es eine bekannte Person, wenn nein: wer ist das Referat ... 
                         If teamName.Length > 0 Then
+                            ' tk 26.08.21 : in diesen Zweig kommt das Programm heute nie - wenn doch, muss dieser Teil überarbeitet werden !! 
                             ' dann ist bereits sichergestellt, dass es sich um ein Team handelt ... 
 
                             ' jetzt muss geprüft werden, ob die Rolle bekannt ist
@@ -13654,6 +13664,12 @@ Public Module agm2
 
                             parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
 
+                            ' if there is a extern role , then make sure that awinsettings.externRessourcesWithActualData is set to true 
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                            If tmpRole.isExternRole Then
+                                awinSettings.ExternRessourcesWithActualData = True
+                            End If
+
                             If parentReferat.Length > 0 Then
                                 ' Beste Alternative 
                                 weitermachen = True
@@ -13714,7 +13730,8 @@ Public Module agm2
 
 
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
-                            Dim pName As String = makeValidProjectName(tmpPName)
+
+                            Dim pName As String = ""
                             If Not isValidPVName(tmpPName) Then
                                 pName = makeValidProjectName(tmpPName)
                             Else
@@ -13929,7 +13946,9 @@ Public Module agm2
                         Dim oldPlanValue As Double = 0.0
                         Dim newIstValue As Double = 0.0
 
+                        Dim firstValidMonth As Integer = MinMaxInformations.Item(hproj.name)(0)
                         Dim lastValidMonth As Integer = MinMaxInformations.Item(hproj.name)(1)
+
 
                         If Not IsNothing(hproj) Then
                             ' es wird pro Projekt eine Variante erzeugt 
@@ -13954,7 +13973,7 @@ Public Module agm2
                             gesamtIstValue = gesamtIstValue + newIstValue
 
                             ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
-                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value, firstValidMonth)
 
                             Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
@@ -13994,7 +14013,8 @@ Public Module agm2
 
                             Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
                             With newProj
-                                .actualDataUntil = newProj.startDate.AddMonths(relMonthCol - 1).AddDays(15)
+                                Dim anzDays As Integer = newProj.startDate.Day
+                                .actualDataUntil = newProj.startDate.AddMonths(relMonthCol - 1).AddDays(-1 * (anzDays) + 16)
                                 .variantName = ""   ' eliminieren von VariantenName acd
                                 .variantDescription = ""
                             End With
@@ -14073,6 +14093,9 @@ Public Module agm2
             Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
+
+        ' set it back to where it was initially 
+        awinSettings.ExternRessourcesWithActualData = externsWithActualData
 
 
         'logmessage = vbLf & "Zeilen gelesen: " & lastRow - 1 & vbLf &
@@ -21210,33 +21233,39 @@ Public Module agm2
                         CostDefinitions = currentOrga.allCosts
                         RoleDefinitions = currentOrga.allRoles
 
-                        awinSettings.ActualdataOrgaUnits = currentOrga.allRoles.getActualdataOrgaUnits
+                        Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                        If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                            ' do nothing, leave it as is 
+                        Else
+                            awinSettings.ActualdataOrgaUnits = tmpActDataString
+                        End If
+
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
-                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                                customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
-                            If IsNothing(customFieldDefinitions) Then
-                                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                                Try
-                                    Call readCustomFieldDefinitions(wsName4)
-                                Catch ex As Exception
+                                If IsNothing(customFieldDefinitions) Then
+                                    ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                                    Try
+                                        Call readCustomFieldDefinitions(wsName4)
+                                    Catch ex As Exception
 
-                                End Try
-                            ElseIf customFieldDefinitions.count = 0 Then
-                                Try
-                                    Call readCustomFieldDefinitions(wsName4)
-                                Catch ex As Exception
+                                    End Try
+                                ElseIf customFieldDefinitions.count = 0 Then
+                                    Try
+                                        Call readCustomFieldDefinitions(wsName4)
+                                    Catch ex As Exception
 
-                                End Try
-                            End If
-                        Catch ex As Exception
+                                    End Try
+                                End If
+                            Catch ex As Exception
 
-                        End Try
+                            End Try
 
 
-                    Else
-                        awinSettings.readCostRolesFromDB = False
+                        Else
+                            awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
                         Else
