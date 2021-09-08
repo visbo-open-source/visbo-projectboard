@@ -13382,15 +13382,15 @@ Public Module agm2
         ' für die Meldungen
         Dim outPutLine As String = ""
 
-        If IsNothing(istDatenReferatsliste) And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
-            istDatenReferatsliste = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
-        End If
-
         If IsNothing(istDatenReferatsliste) Then
             Dim actDataString As String = RoleDefinitions.getActualdataOrgaUnits
             If actDataString <> "" Then
                 istDatenReferatsliste = RoleDefinitions.getIDArray(actDataString)
             End If
+        End If
+
+        If IsNothing(istDatenReferatsliste) And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+            istDatenReferatsliste = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
         End If
 
 
