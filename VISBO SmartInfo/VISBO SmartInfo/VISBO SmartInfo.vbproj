@@ -42,7 +42,7 @@
     <PublishUrl>c:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>4.2.2.1</ApplicationVersion>
+    <ApplicationVersion>4.2.3.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
