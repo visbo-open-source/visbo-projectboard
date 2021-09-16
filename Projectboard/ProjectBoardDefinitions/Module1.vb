@@ -964,6 +964,16 @@ Public Module Module1
     End Enum
 
 
+    Public Enum PTVPStati
+        initialized = 0
+        proposed = 1
+        ordered = 2
+        paused = 3
+        finished = 4
+        stopped = 5
+    End Enum
+
+
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
@@ -985,13 +995,13 @@ Public Module Module1
     ' Vorgabe, geplant
     ' Vorgabe beauftragt
     Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen", "geplanteVorgabe", "beauftragteVorgabe"}
+    Public VProjectStatus() As String = {"initialized", "proposed", "ordered", "paused", "finished", "stopped"}
 
 
     '
     ' aktuell angewendetes ReportProfil
     '
     Public currentReportProfil As New clsReportAll
-
 
     '
     'ReportSprache kann sein:

@@ -19,6 +19,8 @@ Public Class clsProjekt
     Private _earliestStart As Integer
     Private _latestStart As Integer
     Private _Status As String
+    ' new projectStatus impelmented in the Server
+    Private _vpStatus As String
     Private _earliestStartDate As Date
     Private _startDate As Date
     Private _latestStartDate As Date
@@ -2973,6 +2975,7 @@ Public Class clsProjekt
             .latestStart = _latestStart
             .leadPerson = _leadPerson
             .Status = _Status
+            .vpStatus = Me.vpStatus
             .extendedView = Me.extendedView
             .actualDataUntil = Me.actualDataUntil
             .kundenNummer = Me.kundenNummer
@@ -6319,6 +6322,31 @@ Public Class clsProjekt
             End If
         End Set
     End Property
+
+
+    Public Property vpStatus() As String
+        Get
+            vpStatus = _vpStatus
+        End Get
+        Set(value As String)
+
+            _vpStatus = value
+
+            'If IsNothing(value) Or
+            '    value = vpStatus(0) Or
+            '    value = vpStatus(1) Or
+            '    value = vpStatus(2) Or
+            '    value = vpStatus(4) Or
+            '    value = vpStatus(5) Then
+
+            '    _vpStatus = value
+            '    _Status = value
+            'Else
+            '    Call MsgBox("Wert als Status nicht zugelassen: " & value)
+            'End If
+        End Set
+    End Property
+
 
     Public Property StartOffset As Integer
         Get

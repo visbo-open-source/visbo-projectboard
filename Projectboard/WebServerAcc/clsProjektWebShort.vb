@@ -9,6 +9,9 @@ Public Class clsProjektWebShort
     Public Property startDate As Date
     Public Property endDate As Date
     Public Property status As String
+
+    ' ur: 20210915 property vpStatus wird aus dem vp übernommen
+    Public Property vpStatus As String
     Public Property variantName As String
     Public Property ampelStatus As String
 
@@ -21,7 +24,8 @@ Public Class clsProjektWebShort
         _Erloes = 0
         _startDate = Date.MinValue
         _endDate = Date.MaxValue
-        _status = Projektstatus(0)
+        _status = ProjektStatus(0)
+        _vpStatus = ""
         _variantName = ""
         _ampelStatus = ""
 

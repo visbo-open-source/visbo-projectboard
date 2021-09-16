@@ -21038,6 +21038,7 @@ Public Module Projekte
         Dim schriftFarbe As Long
         Dim schriftGroesse As Integer
         Dim status As String = ""
+        Dim vpStatus As String = ""
         Dim pMarge As Double
         Dim pname As String
         Dim markTheShape As Boolean
@@ -21080,6 +21081,7 @@ Public Module Projekte
                 schriftFarbe = CLng(.Schriftfarbe)
                 schriftGroesse = .Schrift
                 status = .Status
+                vpStatus = .vpStatus
                 pMarge = .ProjectMarge
                 pname = .name
                 ampel = .ampelStatus
@@ -21131,6 +21133,16 @@ Public Module Projekte
                             .DashStyle = core.MsoLineDashStyle.msoLineSolid
                         End If
 
+                        ' ur: 20210915 neue Property für Status bestimmt die Darstellung eines Projektes
+                        If Not IsNothing(vpStatus) Then
+                            If vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                    vpStatus = VProjectStatus(PTVPStati.proposed) Then
+                                .DashStyle = core.MsoLineDashStyle.msoLineDash
+                            Else
+                                .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                            End If
+                        End If
+
                     End With
                 Catch ex As Exception
 
@@ -21140,7 +21152,9 @@ Public Module Projekte
                 Try
 
                     With .Line
-                        If status = ProjektStatus(PTProjektStati.geplant) Then
+                        If status = ProjektStatus(PTProjektStati.geplant) Or
+                            vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                            vpStatus = VProjectStatus(PTVPStati.proposed) Then
 
                             If myproject.movable Then
                                 .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
@@ -21151,7 +21165,10 @@ Public Module Projekte
                             End If
 
 
-                        ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Then
+                        ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Or
+                            vpStatus = VProjectStatus(PTVPStati.ordered) Or
+                            vpStatus = VProjectStatus(PTVPStati.paused) Or
+                            vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
                             If myproject.movable Then
                                 .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
@@ -21171,12 +21188,14 @@ Public Module Projekte
                                 .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
                             End If
 
-                        ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Then
+                        ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Or
+                            vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
                             .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
                             .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
 
-                        ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Then
+                        ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Or
+                            vpStatus = VProjectStatus(PTVPStati.finished) Then
 
                             .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
                             .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen

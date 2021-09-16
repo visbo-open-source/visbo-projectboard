@@ -246,7 +246,7 @@
               <!--label=" Projekt Umbenennen"-->
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
               <!--label="den Status eines Projektes ändern"-->
-              <button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
+              <!--<button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>-->
             </menu>
           <!--</splitButton>-->
         </group>        

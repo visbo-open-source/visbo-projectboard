@@ -25,6 +25,7 @@ Public Class clsProjektWeb
     ''Public startDate As Date
     ''Public endDate As Date
     ''Public status As String
+    ''Public vpStatus as String
 
     ''Public variantName As String
     ''Public ampelStatus As Integer
@@ -140,6 +141,8 @@ Public Class clsProjektWeb
             Me.earliestStart = .earliestStart
             Me.latestStart = .latestStart
             Me.status = .Status
+            ' ur: 20210915 neues Property übernommen aus VP kann in Projectboard nicht geändert werden
+            Me.vpStatus = .vpStatus
             Me.ampelStatus = .ampelStatus
             Me.ampelErlaeuterung = .ampelErlaeuterung
             Me.farbe = .farbe
@@ -438,6 +441,9 @@ Public Class clsProjektWeb
                     '    End If
                     'Next
                 End If
+
+                ' ur: 20210915 neue Property aus vp übernommen, kann in projectboard nicht geändert werden
+                .vpStatus = vp.vpStatus
 
             End If
 
