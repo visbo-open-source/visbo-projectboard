@@ -108,6 +108,7 @@ Module rpaModule1
                     Dim importOrganisations As New clsOrganisations
                     Dim importCustomization As New clsCustomization
                     Dim importAppearances As New clsAppearances
+                    Dim importDate As Date = Date.Now()
 
 
                     For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
@@ -132,14 +133,60 @@ Module rpaModule1
                                     Dim importedProjects As Integer = ImportProjekte.Count
                                     allOk = awinImportProjektInventur(readProjects, createdProjects)
                                     If allOk Then
-                                        allOk = storeImportProjekte
+                                        Call logger(ptErrLevel.logInfo, "Project List imported: " & myName, readProjects & " read; " & createdProjects & " created")
+                                        allOk = storeImportProjekte()
                                     Else
-                                        Call logger(ptErrLevel.logError, "failure in Processing: " & PTRpa.visboProjectList.ToString, myName)
+                                        Call logger(ptErrLevel.logError, "failure in Processing: " & myName, PTRpa.visboProjectList.ToString)
                                     End If
 
+                                    Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProjectList.ToString, myName)
 
                                 Case CInt(PTRpa.visboMPP)
+                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboMPP, myName)
+
+                                    Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboMPP, myName)
+
                                 Case CInt(PTRpa.visboProject)
+
+                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
+
+                                    'read Project Brief and put it into ImportProjekte
+                                    Try
+                                        Dim hproj As clsProjekt = Nothing
+
+                                        ' read the file and import into hproj
+                                        Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+
+                                        allOk = Not IsNothing(hproj)
+                                        If allOk Then
+                                            Try
+                                                Dim keyStr As String = calcProjektKey(hproj)
+                                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                                                'AlleProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                                                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+                                            Catch ex2 As Exception
+                                                allOk = False
+                                                Call logger(ptErrLevel.logError, "Main Module Error Importing  project brief " & PTRpa.visboProject.ToString, myName)
+                                            End Try
+                                        Else
+                                            Call logger(ptErrLevel.logError, "Main Module Error Importing  project brief " & PTRpa.visboProject.ToString, myName)
+                                        End If
+
+
+                                    Catch ex1 As Exception
+                                        currentWB.Close(SaveChanges:=False)
+                                        Call logger(ptErrLevel.logError, ex1.Message, "Tom2G4M1Import", anzFehler)
+                                    End Try
+
+                                    ' store Project 
+                                    allOk = storeImportProjekte()
+
+                                    ' empty session 
+                                    Call emptyRPASession()
+
+                                    Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProject.ToString, myName)
+
                                 Case CInt(PTRpa.visboJira)
                                 Case CInt(PTRpa.visboDefaultCapacity)
                                 Case Else
@@ -172,6 +219,31 @@ Module rpaModule1
 
                     ' now: create and modify projects -> all projects in ImportProjekte 
                     ' create and modify organisations -> validOrganisations
+                    '
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     ' create and modify settings such as customization, custom User Roles, apperance definitions
 
                     ' read all configFiles, if available
@@ -233,6 +305,13 @@ Module rpaModule1
 
     End Sub
 
+    Private Sub emptyRPASession()
+        ImportProjekte.Clear()
+        ShowProjekte.Clear(False)
+        AlleProjekte.Clear(False)
+        AlleProjektSummaries.Clear(False)
+    End Sub
+
     ''' <summary>
     ''' stores all projects in ImportProjekte, then clears ImportProjekte
     ''' returns true, if all went ok
@@ -252,7 +331,7 @@ Module rpaModule1
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt, Err) Then
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, "", jetzt, Err)
                 End If
-                'Dim hproj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantDescription, AlleProjekte, Date.Now)
+
                 If IsNothing(hproj) Then
                     ' does not yet exist .. 
                     If Not AlleProjekte.Containskey(calcProjektKey(kvp.Value)) Then
@@ -266,18 +345,14 @@ Module rpaModule1
 
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                         ok = True
-                        Call logger(ptErrLevel.logInfo, "project created: ", kvp.Value.getShapeText)
+                        Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
                     Else
                         ok = False
-                        Call logger(ptErrLevel.logInfo, "project creation messages: ", outputCollection)
+                        Call logger(ptErrLevel.logError, "project store messages: ", outputCollection)
                     End If
 
                 Else
                     myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
-
-                    If hproj.hasActualValues Then
-                        ' manage ActualData and so forth 
-                    End If
 
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                         ok = True
@@ -295,9 +370,6 @@ Module rpaModule1
             ok = False
             Call logger(ptErrLevel.logError, "Store Projects from List failed", ex.Message)
         End Try
-
-        ' now set back to empty 
-        ImportProjekte.Clear(False)
 
         storeImportProjekte = ok
     End Function

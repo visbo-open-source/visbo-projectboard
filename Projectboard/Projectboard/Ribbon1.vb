@@ -5851,23 +5851,24 @@ Imports System.Web
 
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
-                            If hproj.variantName <> "" Then
-                                Call MsgBox("this action can not be applied to a variant ... ")
-                            Else
+                            If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
 
-                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+                                Try
                                     Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
+                                Catch ex As Exception
+                                    Call MsgBox(ex.Message)
+                                End Try
 
-                                Else
-                                    If awinSettings.englishLanguage Then
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
                                                     "and cannot be modified at the moment. ")
-                                    Else
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
+                                Else
+                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
                                                     "und kann aktuell nicht verändert werden. ")
-                                    End If
                                 End If
                             End If
+
                         End If
 
                     End If
