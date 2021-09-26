@@ -2682,12 +2682,43 @@ Public Class clsProjekte
         End Get
     End Property
 
-    Public ReadOnly Property getCashFlow() As Double()
+    ''' <summary>
+    ''' calculates cashFlow values in months starting in column von and ending in column bis
+    ''' if von > bis then change values accordingly 
+    ''' if values are negativ: consider showRangeLeft and showrangeRight 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCashFlow(Optional ByVal von As Integer = -1, Optional ByVal bis As Integer = -1) As Double()
         Get
-            ' darf nicht mehr automatisch gesetzt werden 
-            'awinSettings.kurzarbeitActivated = True
+            ' check validity
+
+            If ((von < 0) Or (bis < 0)) Then
+                If ((showRangeRight > 0) And (showRangeRight - showRangeLeft > 0)) Then
+                    von = showRangeLeft
+                    bis = showRangeRight
+                Else
+                    ' define next month a timeframe of 6 months 
+                    von = getColumnOfDate(Date.Now) + 1
+                    bis = von + 5
+                End If
+            Else
+                ' take values of von and bis
+            End If
+
+            If bis < von Then
+                Dim sav As Integer = von
+                von = bis
+                bis = sav
+            End If
 
             Dim saveShowrangeLeft As Integer = showRangeLeft
+            Dim saveShowrangeRight As Integer = showRangeRight
+
+            ' now consider von and bis 
+            showRangeLeft = von
+            showRangeRight = bis
 
             Dim zeitraum As Integer = showRangeRight - showRangeLeft
             Dim kugCome As Double()
@@ -2804,24 +2835,6 @@ Public Class clsProjekte
                     prAnfang = .Start + .StartOffset
                     prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                     projektMarge = .ProjectMarge
-
-                    'If projektMarge < 0 Then
-                    '    ' jetzt wird das Gewicht als Quotient Risiko / strategic Fit betrachtet 
-                    '    If .StrategicFit > 1 Then
-                    '        SRweight = .Risiko / .StrategicFit
-                    '    Else
-                    '        SRweight = .Risiko
-                    '    End If
-                    '    If SRweight = 0 Then
-                    '        SRweight = 1
-                    '    End If
-                    'Else
-                    '    If .Risiko > 1 Then
-                    '        SRweight = .StrategicFit / .Risiko
-                    '    Else
-                    '        SRweight = .StrategicFit
-                    '    End If
-                    'End If
 
                 End With
 

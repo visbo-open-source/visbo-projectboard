@@ -1742,7 +1742,7 @@ Public Module awinDiagrams
                     ' Cash-Flow
                     einheit = " T€"
                     objektFarbe = visboFarbeOrange
-                    datenreihe = ShowProjekte.getCashFlow
+                    datenreihe = ShowProjekte.getCashFlow()
 
                 End If
 

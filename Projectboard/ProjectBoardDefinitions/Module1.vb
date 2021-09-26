@@ -6208,9 +6208,7 @@ Public Module Module1
             'End If
 
 
-
-
-            Dim testCashFlow As Double() = ShowProjekte.getCashFlow
+            Dim testCashFlow As Double() = ShowProjekte.getCashFlow()
 
             For ix = 1 To 5
                 testCashFlow(ix) = testCashFlow(ix - 1) + testCashFlow(ix)
