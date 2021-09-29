@@ -961,6 +961,7 @@ Public Module Module1
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
     Public StartofCalendar As Date = New Date(2015, 1, 1)
+    Public EndOfCalendar As Date = StartofCalendar.AddYears(20)
     Public weightStrategicFit As Double
 
     '
