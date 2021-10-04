@@ -4337,12 +4337,13 @@ Public Module agm3
                         While taskList.ElementAt(i).Key <= Date.MinValue
                             i = i + 1
                         End While
-                        projStart = taskList.ElementAt(i).Key
+                        projStart = taskList.ElementAt(i).Key.Date  ' Uhrzweit wird nicht berücksichtigt
                     End If
 
                     If epicCollection.Count > 0 Then
                         Dim oneEpic As clsJIRA_Task = epicCollection.ElementAt(0).Value
                     End If
+
 
                     ' find the project-End
                     Dim projEnde As Date = EndOfCalendar
@@ -4361,7 +4362,7 @@ Public Module agm3
                         End If
                     Next
 
-                    hproj = New clsProjekt(projectName, False, projStart, projEnde)
+                    hproj = New clsProjekt(projectName, False, projStart.Date, projEnde.Date)
 
 
                     ' jeden epic-Vorgang einzeln filtern und als Phase in das Projekt eintragen
@@ -4487,6 +4488,7 @@ Public Module agm3
                         Dim vgphase As clsPhase
                         Dim phaseStart As Date = ephase.getStartDate
                         Dim phaseEnd As Date = ephase.getEndDate
+                        Dim erledigteVgCount As Integer = 0
 
                         For Each itemVg As KeyValuePair(Of Date, clsJIRA_Task) In epicVorg
 
@@ -4598,24 +4600,32 @@ Public Module agm3
 
                                     ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
                                     Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                    Dim hrole As New clsRolle(vgende - vganfang + 1)
+                                    Dim otherRoledef As clsRollenDefinition
+                                    Dim roledef As clsRollenDefinition
                                     If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
-                                        Dim hrole As New clsRolle(vgende - vganfang + 1)
-                                        Dim otherRoledef As clsRollenDefinition = RoleDefinitions.getRoledef(vgphase.verantwortlich)
-                                        Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
-                                        hrole.uid = roledef.UID
-                                        hrole.teamID = -1
-
-                                        ReDim vgoldXwerte(0)
-                                        vgoldXwerte(0) = itemVg.Value.StoryPoints
-
-                                        With vgphase
-                                            ReDim vgXwerte(vgende - vganfang + 1)
-                                            .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
-                                        End With
-                                        hrole.Xwerte = vgXwerte
-
-                                        vgphase.addRole(hrole)
+                                        otherRoledef = RoleDefinitions.getRoledef(vgphase.verantwortlich)
+                                        roledef = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
+                                    Else
+                                        Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                        otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                        roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
                                     End If
+
+                                    hrole.uid = roledef.UID
+                                    hrole.teamID = -1
+
+                                    ReDim vgoldXwerte(0)
+                                    vgoldXwerte(0) = itemVg.Value.StoryPoints
+
+                                    With vgphase
+                                        ReDim vgXwerte(vgende - vganfang + 1)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
+                                    End With
+                                    hrole.Xwerte = vgXwerte
+
+                                    vgphase.addRole(hrole)
+
                                 End If
 
                                 ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
@@ -4644,6 +4654,10 @@ Public Module agm3
                             If vgphase.getEndDate > phaseEnd Then
                                 phaseEnd = vgphase.getEndDate
                             End If
+                            ' hier werden die Anzahl erledigter Issues je epic gezählt
+                            If itemVg.Value.erledigt > Date.MinValue Then
+                                erledigteVgCount = erledigteVgCount + 1
+                            End If
 
                             Call logger(ptErrLevel.logInfo, "JIRA-Task " & itemVg.Value.Jira_ID & ":" & itemVg.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
@@ -4658,6 +4672,13 @@ Public Module agm3
                         End If
                         ' Dauer ist nun korrigiert
 
+                        ' wieviel vorgänge des Epic erledigt sind in Prozent
+                        If epicVorg.Count > 0 Then
+                            ephase.percentDone = erledigteVgCount / epicVorg.Count
+                        Else
+                            ephase.percentDone = 0
+                        End If
+
                         ' Ressources der Phase (= Summe der Tasks zu einem Epic) auf die Dauer verteilen
                         Dim Xwerte As Double() = Nothing
                         Dim oldXwerte As Double()
@@ -4667,24 +4688,33 @@ Public Module agm3
                         If epicStoryPoints > 0.0 Then
                             ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
                             Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                            Dim hrole As New clsRolle(ende - anfang + 1)
+                            Dim otherRoledef As clsRollenDefinition
+                            Dim roledef As clsRollenDefinition
+
                             If (aktOrga.allRoles.containsName(ephase.verantwortlich)) Then
-                                Dim hrole As New clsRolle(ende - anfang)
-                                Dim otherRoledef As clsRollenDefinition = RoleDefinitions.getRoledef(ephase.verantwortlich)
-                                Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(ephase.verantwortlich)
-                                hrole.uid = roledef.UID
-                                hrole.teamID = -1
-
-                                ReDim oldXwerte(0)
-                                oldXwerte(0) = item.Value.StoryPoints
-
-                                With ephase
-                                    ReDim Xwerte(ende - anfang)
-                                    .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                End With
-                                hrole.Xwerte = Xwerte
-
-                                ephase.addRole(hrole)
+                                otherRoledef = RoleDefinitions.getRoledef(ephase.verantwortlich)
+                                roledef = aktOrga.allRoles.getRoledef(ephase.verantwortlich)
+                            Else
+                                Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
                             End If
+
+                            hrole.uid = roledef.UID
+                            hrole.teamID = -1
+
+                            ReDim oldXwerte(0)
+                            oldXwerte(0) = item.Value.StoryPoints
+
+                            With ephase
+                                    ReDim Xwerte(ende - anfang)
+                                .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                            End With
+                            hrole.Xwerte = Xwerte
+
+                            ephase.addRole(hrole)
+
                         End If
 
                         ie = ie + 1
@@ -4771,25 +4801,35 @@ Public Module agm3
                                 If backlogItem.Value.StoryPoints > 0.0 Then
                                     ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
                                     Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+                                    Dim hrole As New clsRolle(ende - anfang)
+                                    Dim otherRoledef As clsRollenDefinition
+                                    Dim roledef As clsRollenDefinition
+
                                     If (aktOrga.allRoles.containsName(backphase.verantwortlich)) Then
-                                        Dim hrole As New clsRolle(ende - anfang)
-                                        Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(backphase.verantwortlich)
-                                        'Dim roledef As clsRollenDefinition = aktOrga.allRoles.getRoledef(backphase.verantwortlich)
-                                        hrole.uid = roledef.UID
-                                        hrole.teamID = -1
-
-                                        ReDim oldXwerte(0)
-                                        oldXwerte(0) = backlogItem.Value.StoryPoints
-
-                                        With backphase
-                                            ReDim Xwerte(ende - anfang)
-                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                        End With
-                                        hrole.Xwerte = Xwerte
-
-                                        backphase.addRole(hrole)
+                                        otherRoledef = RoleDefinitions.getRoledef(backphase.verantwortlich)
+                                        roledef = aktOrga.allRoles.getRoledef(backphase.verantwortlich)
+                                    Else
+                                        Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                        otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                        roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
                                     End If
+
+                                    hrole.uid = roledef.UID
+                                    hrole.teamID = -1
+
+                                    ReDim oldXwerte(0)
+                                    oldXwerte(0) = backlogItem.Value.StoryPoints
+
+                                    With backphase
+                                        ReDim Xwerte(ende - anfang)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                    End With
+                                    hrole.Xwerte = Xwerte
+
+                                    backphase.addRole(hrole)
                                 End If
+
                                 ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 

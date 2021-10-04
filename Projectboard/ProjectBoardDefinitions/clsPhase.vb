@@ -4324,9 +4324,11 @@ Public Class clsPhase
 
         Dim newPhase As clsPhase = Me
         ' jetzt werden die Attribute neu gesetzt ...
+        Dim duration As Long
+        Dim offset As Long
         With newPhase
-            Dim duration As Long = DateDiff(DateInterval.Day, newStart, newEnde)
-            Dim offset As Long = DateDiff(DateInterval.Day, Me.parentProject.startDate, newStart)
+            duration = DateDiff(DateInterval.Day, newStart, newEnde) + 1
+            offset = DateDiff(DateInterval.Day, Me.parentProject.startDate, newStart)
             newPhase.offset = CInt(offset)
             newPhase.changeStartandDauer(offset, duration)
         End With
