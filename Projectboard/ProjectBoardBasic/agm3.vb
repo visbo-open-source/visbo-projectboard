@@ -4278,238 +4278,129 @@ Public Module agm3
 
                 result = readJIRATasks(projectConfig, tmpDatei, projtaskList, projListSortedName, projsprintList, meldungen)
 
-                Call logger(ptErrLevel.logInfo, "JIRA-Projekte eingelesen", "readProjectsJIRA", anzFehler)
-
-                For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsJIRA_Task)) In projListSortedName
-
-                    Dim projectName As String = kvp.Key
-                    Dim taskList As SortedList(Of Date, clsJIRA_Task) = projtaskList(projectName)
-                    Dim sprintList As SortedList(Of String, clsJIRA_sprint) = projsprintList(projectName)
-                    Dim taskListSorted As SortedList(Of String, clsJIRA_Task) = kvp.Value
-
-                    ' Neu Initialisierung bei jedem anderen Projekt
-                    tasksInserted = New SortedList(Of String, clsJIRA_Task)
-                    tasksRemaining = New SortedList(Of String, clsJIRA_Task)
-                    tasksBacklog = New SortedList(Of String, clsJIRA_Task)
-                    tasksFertigOSprint = New SortedList(Of String, clsJIRA_Task)
-
-                    ' Bestimme SprintEndDate vom letzen Sprint 
-                    Dim lastSprintEnd As Date = StartofCalendar
-                    Dim firstSprintStart As Date = EndOfCalendar
-                    For Each sprint As KeyValuePair(Of String, clsJIRA_sprint) In sprintList
-                        If sprint.Value.SprintStartDate < firstSprintStart Then
-                            firstSprintStart = sprint.Value.SprintStartDate
-                        End If
-                        If sprint.Value.SprintEndDate > lastSprintEnd Then
-                            lastSprintEnd = sprint.Value.SprintEndDate
-                        End If
-                    Next
-
-
-
-                    Dim projStart As Date = StartofCalendar
-
-                    ' Projekt erzeugen mit Name, Start- und Ende-Datum
-                    Dim hproj As clsProjekt
-                    Dim anzTasks As Integer = taskList.Count
-
-                    ' taskList nach Vorgangstyp filtern
-                    Dim epicCollection As SortedList(Of Date, clsJIRA_Task) = filternNach("Vorgangstyp", "Epic", taskList)
-
-                    ' find the project-Start
-                    For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
-                        If Not IsNothing(item.Value.SprintName) Then
-                            If (item.Value.SprintStartDate > Date.MinValue) And (item.Value.SprintStartDate < projStart) Then
-                                projStart = item.Value.SprintStartDate
-                            End If
-                        Else
-                            If (item.Value.StartDate > Date.MinValue) And (item.Value.StartDate < projStart) Then
-                                projStart = item.Value.StartDate
-                            End If
-                        End If
-
-                    Next
-                    If projStart <= StartofCalendar Or projStart >= EndOfCalendar Then
-
-                        ' StartDatum fürs Projekt ist dann das Erstellt-Datum der ersten Task, die nicht nothing ist,  in Tasklist
-                        ' Projektstart bestimmen
-                        Dim i As Integer = 0
-                        While taskList.ElementAt(i).Key <= Date.MinValue
-                            i = i + 1
-                        End While
-                        projStart = taskList.ElementAt(i).Key.Date  ' Uhrzweit wird nicht berücksichtigt
+                If Not result Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(meldungen, " Import Jira-Projects", "Errors that occured")
+                    Else
+                        Call showOutPut(meldungen, " Import Jira-Projekte", "folgende Fehler sind aufgetreten")
                     End If
+                Else
 
-                    If epicCollection.Count > 0 Then
-                        Dim oneEpic As clsJIRA_Task = epicCollection.ElementAt(0).Value
-                    End If
+                    Call logger(ptErrLevel.logInfo, "JIRA-Projekte eingelesen", "readProjectsJIRA", anzFehler)
 
+                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsJIRA_Task)) In projListSortedName
 
-                    ' find the project-End
-                    Dim projEnde As Date = EndOfCalendar
-                    For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
-                        If item.Value.SprintEndDate > projEnde Then
-                            projEnde = item.Value.SprintEndDate
-                        End If
-                        If item.Value.fällig > projEnde Then
-                            projEnde = item.Value.fällig
-                        End If
-                        If item.Value.erledigt > projEnde Then
-                            projEnde = item.Value.erledigt
-                        End If
-                        If item.Value.aktualisiert > projEnde Then
-                            projEnde = item.Value.aktualisiert
-                        End If
-                    Next
+                        Dim projectName As String = kvp.Key
+                        Dim taskList As SortedList(Of Date, clsJIRA_Task) = projtaskList(projectName)
+                        Dim sprintList As SortedList(Of String, clsJIRA_sprint) = projsprintList(projectName)
+                        Dim taskListSorted As SortedList(Of String, clsJIRA_Task) = kvp.Value
 
-                    hproj = New clsProjekt(projectName, False, projStart.Date, projEnde.Date)
+                        ' Neu Initialisierung bei jedem anderen Projekt
+                        tasksInserted = New SortedList(Of String, clsJIRA_Task)
+                        tasksRemaining = New SortedList(Of String, clsJIRA_Task)
+                        tasksBacklog = New SortedList(Of String, clsJIRA_Task)
+                        tasksFertigOSprint = New SortedList(Of String, clsJIRA_Task)
 
-
-                    ' jeden epic-Vorgang einzeln filtern und als Phase in das Projekt eintragen
-                    Dim epics() As SortedList(Of Date, clsJIRA_Task)
-                    ReDim epics(epicCollection.Count - 1)
-
-                    Dim ie As Integer = 0
-
-                    ' Phasen aus den Epics erzeugen
-                    Dim ephase As clsPhase
-
-                    For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
-
-                        ephase = New clsPhase(hproj)
-                        Dim ephasenameNew As String = item.Value.Jira_ID & " " & item.Value.Zusammenfassung
-                        ephase.nameID = calcHryElemKey(ephasenameNew, False)
-
-                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
-                        Dim origPhName As String = ephase.name
-                        ephasenameNew = phaseMappings.mapToStdName(".", ephasenameNew)
-
-                        ' nachsehen, ob newPhaseName in PhaseDefinitions definiert ist
-                        If Not PhaseDefinitions.Contains(ephasenameNew) Then
-                            Dim newPhaseDef As New clsPhasenDefinition
-                            newPhaseDef.name = ephasenameNew
-                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
-                            'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
-                            '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
-                            'Else
-                            newPhaseDef.shortName = item.Value.Jira_ID
-                            'End If
-
-                            ' Task Class, falls Customfield visbo_taskclass definiert ist
-                            'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
-                            '    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
-                            'Else
-                            newPhaseDef.darstellungsKlasse = ""
-                            'End If
-                            ephase.appearanceName = newPhaseDef.darstellungsKlasse
-
-                            newPhaseDef.UID = PhaseDefinitions.Count + 1
-                            'PhaseDefinitions.Add(newPhaseDef)
-                            missingPhaseDefinitions.Add(newPhaseDef)
-                        Else
-                            'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
-                            '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
-                            'Else
-                            ephase.appearanceName = appearanceDefinitions.getPhaseAppearance(ephasenameNew, "").name
-                            'End If
-                        End If
-
-                        Dim duration As Integer
-                        Dim ephaseStart As Date
-                        Dim ephaseEnd As Date
-
-                        If Not IsNothing(item.Value.SprintName) Then          ' Epic wurde einem Sprint zugeordnet
-                            ephaseStart = item.Value.SprintStartDate
-                            ephaseEnd = item.Value.SprintEndDate
-                            If item.Value.SprintCompleteDate >= Date.MinValue Then
-                                ephaseEnd = item.Value.SprintCompleteDate
+                        ' Bestimme SprintEndDate vom letzen Sprint 
+                        Dim lastSprintEnd As Date = StartofCalendar
+                        Dim firstSprintStart As Date = EndOfCalendar
+                        For Each sprint As KeyValuePair(Of String, clsJIRA_sprint) In sprintList
+                            If sprint.Value.SprintStartDate < firstSprintStart Then
+                                firstSprintStart = sprint.Value.SprintStartDate
                             End If
-                            duration = calcDauerIndays(ephaseStart, ephaseEnd)
-                        Else
-                            If (item.Value.StartDate >= item.Value.Erstellt) Then
-                                ephaseStart = item.Value.StartDate
-                                ephaseEnd = item.Value.fällig
+                            If sprint.Value.SprintEndDate > lastSprintEnd Then
+                                lastSprintEnd = sprint.Value.SprintEndDate
+                            End If
+                        Next
+
+
+
+                        Dim projStart As Date = StartofCalendar
+
+                        ' Projekt erzeugen mit Name, Start- und Ende-Datum
+                        Dim hproj As clsProjekt
+                        Dim anzTasks As Integer = taskList.Count
+
+                        ' taskList nach Vorgangstyp filtern
+                        Dim epicCollection As SortedList(Of Date, clsJIRA_Task) = filternNach("Vorgangstyp", "Epic", taskList)
+
+                        ' find the project-Start
+                        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
+                            If Not IsNothing(item.Value.SprintName) Then
+                                If (item.Value.SprintStartDate > Date.MinValue) And (item.Value.SprintStartDate < projStart) Then
+                                    projStart = item.Value.SprintStartDate
+                                End If
                             Else
-                                ephaseStart = item.Value.Erstellt
-                                ephaseEnd = item.Value.fällig
+                                If (item.Value.StartDate > Date.MinValue) And (item.Value.StartDate < projStart) Then
+                                    projStart = item.Value.StartDate
+                                End If
                             End If
 
-                            duration = calcDauerIndays(ephaseStart, ephaseEnd)
-                            If duration < 0 Then
+                        Next
+                        If projStart <= StartofCalendar Or projStart >= EndOfCalendar Then
 
-                                If Not IsNothing(item.Value.erledigt) Then
-                                    ephaseEnd = item.Value.erledigt
-                                End If
-                                If item.Value.fällig <= ephaseStart Then
-                                    If ephaseStart <= item.Value.aktualisiert Then
-                                        ephaseEnd = item.Value.aktualisiert
-                                    Else
-                                        ephaseEnd = projEnde
-                                    End If
-                                End If
-                                If ephaseEnd <= Date.MinValue Then
-                                    ephaseEnd = projEnde
-                                End If
-
-                                'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
-                                duration = calcDauerIndays(ephaseStart, ephaseEnd)
-                            End If
-
+                            ' StartDatum fürs Projekt ist dann das Erstellt-Datum der ersten Task, die nicht nothing ist,  in Tasklist
+                            ' Projektstart bestimmen
+                            Dim i As Integer = 0
+                            While taskList.ElementAt(i).Key <= Date.MinValue
+                                i = i + 1
+                            End While
+                            projStart = taskList.ElementAt(i).Key.Date  ' Uhrzweit wird nicht berücksichtigt
                         End If
 
-                        If duration > 0 Then
-
-                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, ephaseStart.Date)
-                            ephase.offset = offset
-                            ephase.changeStartandDauer(offset, duration)
-                            If item.Value.TaskStatus = "Fertig" Then
-                                ephase.percentDone = 1.0
-                            Else
-                                ephase.percentDone = 0.0
-                            End If
-                            ephase.verantwortlich = item.Value.zugewPerson
-
-                            ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
-                            Dim hrchynode As New clsHierarchyNode
-                            hrchynode.elemName = ephase.name
-                            hrchynode.parentNodeKey = rootPhaseName
-                            hproj.AddPhase(ephase, origName:=origPhName, parentID:=rootPhaseName)
-                            hrchynode.indexOfElem = hproj.AllPhases.Count
-                            tasksInserted.Add(item.Value.Jira_ID, item.Value)
+                        If epicCollection.Count > 0 Then
+                            Dim oneEpic As clsJIRA_Task = epicCollection.ElementAt(0).Value
                         End If
 
 
+                        ' find the project-End
+                        Dim projEnde As Date = EndOfCalendar
+                        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
+                            If item.Value.SprintEndDate > projEnde Then
+                                projEnde = item.Value.SprintEndDate
+                            End If
+                            If item.Value.fällig > projEnde Then
+                                projEnde = item.Value.fällig
+                            End If
+                            If item.Value.erledigt > projEnde Then
+                                projEnde = item.Value.erledigt
+                            End If
+                            If item.Value.aktualisiert > projEnde Then
+                                projEnde = item.Value.aktualisiert
+                            End If
+                        Next
 
-                        '  Tasks filtern nach JIRA_ID des Epics
-                        Dim epicStoryPoints As Double = 0.0
-                        Dim epicVorg As New SortedList(Of Date, clsJIRA_Task)
-                        epicVorg = filternNach("Übergeordnet", item.Value.Jira_ID, taskList)
-                        epics(ie) = epicVorg
-                        Dim vgphase As clsPhase
-                        Dim phaseStart As Date = ephase.getStartDate
-                        Dim phaseEnd As Date = ephase.getEndDate
-                        Dim erledigteVgCount As Integer = 0
+                        hproj = New clsProjekt(projectName, False, projStart.Date, projEnde.Date)
 
-                        For Each itemVg As KeyValuePair(Of Date, clsJIRA_Task) In epicVorg
 
-                            vgphase = New clsPhase(hproj)
-                            Dim vgphaseNameNew As String = itemVg.Value.Jira_ID & " " & itemVg.Value.Zusammenfassung
-                            vgphase.nameID = calcHryElemKey(vgphaseNameNew, False)
+                        ' jeden epic-Vorgang einzeln filtern und als Phase in das Projekt eintragen
+                        Dim epics() As SortedList(Of Date, clsJIRA_Task)
+                        ReDim epics(epicCollection.Count - 1)
+
+                        Dim ie As Integer = 0
+
+                        ' Phasen aus den Epics erzeugen
+                        Dim ephase As clsPhase
+
+                        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
+
+                            ephase = New clsPhase(hproj)
+                            Dim ephasenameNew As String = item.Value.Jira_ID & " " & item.Value.Zusammenfassung
+                            ephase.nameID = calcHryElemKey(ephasenameNew, False)
 
                             ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
-                            Dim origPhNameVG As String = vgphaseNameNew
-                            vgphaseNameNew = phaseMappings.mapToStdName("", vgphaseNameNew)
+                            Dim origPhName As String = ephase.name
+                            ephasenameNew = phaseMappings.mapToStdName(".", ephasenameNew)
 
-
-                            ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
-                            If Not PhaseDefinitions.Contains(vgphaseNameNew) Then
+                            ' nachsehen, ob newPhaseName in PhaseDefinitions definiert ist
+                            If Not PhaseDefinitions.Contains(ephasenameNew) Then
                                 Dim newPhaseDef As New clsPhasenDefinition
-                                newPhaseDef.name = vgphaseNameNew
+                                newPhaseDef.name = ephasenameNew
                                 ' Abbreviation, falls Customfield visbo_abbrev definiert ist
                                 'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
                                 '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
                                 'Else
-                                newPhaseDef.shortName = itemVg.Value.Jira_ID
+                                newPhaseDef.shortName = item.Value.Jira_ID
                                 'End If
 
                                 ' Task Class, falls Customfield visbo_taskclass definiert ist
@@ -4518,7 +4409,7 @@ Public Module agm3
                                 'Else
                                 newPhaseDef.darstellungsKlasse = ""
                                 'End If
-                                vgphase.appearanceName = newPhaseDef.darstellungsKlasse
+                                ephase.appearanceName = newPhaseDef.darstellungsKlasse
 
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 'PhaseDefinitions.Add(newPhaseDef)
@@ -4527,355 +4418,475 @@ Public Module agm3
                                 'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
                                 '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
                                 'Else
-                                vgphase.appearanceName = appearanceDefinitions.getPhaseAppearance(vgphaseNameNew, "").name
+                                ephase.appearanceName = appearanceDefinitions.getPhaseAppearance(ephasenameNew, "").name
                                 'End If
                             End If
 
+                            Dim duration As Integer
+                            Dim ephaseStart As Date
+                            Dim ephaseEnd As Date
 
-                            ' Bestimmung von Start und Ende der Task - evt. durch Sprint definiert
-                            Dim durationVg As Integer = 0
-                            Dim taskStart As Date
-                            Dim taskEnd As Date
-
-                            If Not IsNothing(item.Value.SprintName) Then          ' Task wurde einem Sprint zugeordnet
-                                taskStart = item.Value.SprintStartDate
-                                taskEnd = item.Value.SprintEndDate
+                            If Not IsNothing(item.Value.SprintName) Then          ' Epic wurde einem Sprint zugeordnet
+                                ephaseStart = item.Value.SprintStartDate
+                                ephaseEnd = item.Value.SprintEndDate
                                 If item.Value.SprintCompleteDate >= Date.MinValue Then
-                                    taskEnd = item.Value.SprintCompleteDate
+                                    ephaseEnd = item.Value.SprintCompleteDate
                                 End If
-                                durationVg = calcDauerIndays(taskStart, taskEnd)
+                                duration = calcDauerIndays(ephaseStart, ephaseEnd)
                             Else
-                                If (itemVg.Value.StartDate >= itemVg.Value.Erstellt) Then
-                                    taskStart = itemVg.Value.StartDate
-                                    taskEnd = itemVg.Value.fällig
+                                If (item.Value.StartDate >= item.Value.Erstellt) Then
+                                    ephaseStart = item.Value.StartDate
+                                    ephaseEnd = item.Value.fällig
                                 Else
-                                    taskStart = itemVg.Value.Erstellt
-                                    taskEnd = itemVg.Value.fällig
+                                    ephaseStart = item.Value.Erstellt
+                                    ephaseEnd = item.Value.fällig
                                 End If
 
-                                durationVg = calcDauerIndays(taskStart, taskEnd)
-                                If durationVg < 0 Then
+                                duration = calcDauerIndays(ephaseStart, ephaseEnd)
+                                If duration < 0 Then
 
-                                    If Not IsNothing(itemVg.Value.erledigt) Then
-                                        taskEnd = itemVg.Value.erledigt
+                                    If Not IsNothing(item.Value.erledigt) Then
+                                        ephaseEnd = item.Value.erledigt
                                     End If
-                                    If itemVg.Value.fällig <= taskStart Then
-                                        If taskStart <= itemVg.Value.aktualisiert Then
-                                            taskEnd = itemVg.Value.aktualisiert
+                                    If item.Value.fällig <= ephaseStart Then
+                                        If ephaseStart <= item.Value.aktualisiert Then
+                                            ephaseEnd = item.Value.aktualisiert
                                         Else
-                                            taskEnd = projEnde
+                                            ephaseEnd = projEnde
                                         End If
                                     End If
-                                    If taskEnd <= Date.MinValue Then
-                                        taskEnd = projEnde
+                                    If ephaseEnd <= Date.MinValue Then
+                                        ephaseEnd = projEnde
                                     End If
 
                                     'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
-                                    durationVg = calcDauerIndays(taskStart, itemVg.Value.fällig)
+                                    duration = calcDauerIndays(ephaseStart, ephaseEnd)
                                 End If
 
                             End If
 
-                            If durationVg > 0 Then
-                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, taskStart.Date)
-                                vgphase.offset = offset
-                                vgphase.changeStartandDauer(offset, durationVg)
-                                If itemVg.Value.TaskStatus = "Fertig" Then
-                                    vgphase.percentDone = 1.0
+                            If duration > 0 Then
+
+                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, ephaseStart.Date)
+                                ephase.offset = offset
+                                ephase.changeStartandDauer(offset, duration)
+                                If item.Value.TaskStatus = "Fertig" Then
+                                    ephase.percentDone = 1.0
                                 Else
-                                    vgphase.percentDone = 0.0
+                                    ephase.percentDone = 0.0
                                 End If
-                                vgphase.verantwortlich = itemVg.Value.zugewPerson
+                                ephase.verantwortlich = item.Value.zugewPerson
+
+                                ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                Dim hrchynode As New clsHierarchyNode
+                                hrchynode.elemName = ephase.name
+                                hrchynode.parentNodeKey = rootPhaseName
+                                hproj.AddPhase(ephase, origName:=origPhName, parentID:=rootPhaseName)
+                                hrchynode.indexOfElem = hproj.AllPhases.Count
+                                tasksInserted.Add(item.Value.Jira_ID, item.Value)
+                            End If
 
 
-                                ' Ressources auf Vorgang verteilen
-                                Dim vgXwerte As Double() = Nothing
-                                Dim vgoldXwerte As Double()
-                                Dim vganfang As Integer = vgphase.relStart
-                                Dim vgende As Integer = vgphase.relEnde
-                                If itemVg.Value.StoryPoints > 0.0 Then
 
-                                    ' Aufsammeln der StoryPoints aller Tasks zu einer Epic
-                                    epicStoryPoints = epicStoryPoints + itemVg.Value.StoryPoints
+                            '  Tasks filtern nach JIRA_ID des Epics
+                            Dim epicStoryPoints As Double = 0.0
+                            Dim epicVorg As New SortedList(Of Date, clsJIRA_Task)
+                            epicVorg = filternNach("Übergeordnet", item.Value.Jira_ID, taskList)
+                            epics(ie) = epicVorg
+                            Dim vgphase As clsPhase
+                            Dim phaseStart As Date = ephase.getStartDate
+                            Dim phaseEnd As Date = ephase.getEndDate
+                            Dim erledigteVgCount As Integer = 0
 
-                                    ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
-                                    Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
-                                    Dim hrole As New clsRolle(vgende - vganfang + 1)
-                                    Dim otherRoledef As clsRollenDefinition
-                                    Dim roledef As clsRollenDefinition
-                                    If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
-                                        otherRoledef = RoleDefinitions.getRoledef(vgphase.verantwortlich)
-                                        roledef = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
+                            For Each itemVg As KeyValuePair(Of Date, clsJIRA_Task) In epicVorg
+
+                                vgphase = New clsPhase(hproj)
+                                Dim vgphaseNameNew As String = itemVg.Value.Jira_ID & " " & itemVg.Value.Zusammenfassung
+                                vgphase.nameID = calcHryElemKey(vgphaseNameNew, False)
+
+                                ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                                Dim origPhNameVG As String = vgphaseNameNew
+                                vgphaseNameNew = phaseMappings.mapToStdName("", vgphaseNameNew)
+
+
+                                ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                                If Not PhaseDefinitions.Contains(vgphaseNameNew) Then
+                                    Dim newPhaseDef As New clsPhasenDefinition
+                                    newPhaseDef.name = vgphaseNameNew
+                                    ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                                    'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                    '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                                    'Else
+                                    newPhaseDef.shortName = itemVg.Value.Jira_ID
+                                    'End If
+
+                                    ' Task Class, falls Customfield visbo_taskclass definiert ist
+                                    'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    '    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                                    'Else
+                                    newPhaseDef.darstellungsKlasse = ""
+                                    'End If
+                                    vgphase.appearanceName = newPhaseDef.darstellungsKlasse
+
+                                    newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                    'PhaseDefinitions.Add(newPhaseDef)
+                                    missingPhaseDefinitions.Add(newPhaseDef)
+                                Else
+                                    'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
+                                    'Else
+                                    vgphase.appearanceName = appearanceDefinitions.getPhaseAppearance(vgphaseNameNew, "").name
+                                    'End If
+                                End If
+
+
+                                ' Bestimmung von Start und Ende der Task - evt. durch Sprint definiert
+                                Dim durationVg As Integer = 0
+                                Dim taskStart As Date
+                                Dim taskEnd As Date
+
+                                If Not IsNothing(item.Value.SprintName) Then          ' Task wurde einem Sprint zugeordnet
+                                    taskStart = item.Value.SprintStartDate
+                                    taskEnd = item.Value.SprintEndDate
+                                    If item.Value.SprintCompleteDate >= Date.MinValue Then
+                                        taskEnd = item.Value.SprintCompleteDate
+                                    End If
+                                    durationVg = calcDauerIndays(taskStart, taskEnd)
+                                Else
+                                    If (itemVg.Value.StartDate >= itemVg.Value.Erstellt) Then
+                                        taskStart = itemVg.Value.StartDate
+                                        taskEnd = itemVg.Value.fällig
                                     Else
-                                        Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
-                                        otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
-                                        roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                        taskStart = itemVg.Value.Erstellt
+                                        taskEnd = itemVg.Value.fällig
                                     End If
 
-                                    hrole.uid = roledef.UID
-                                    hrole.teamID = -1
+                                    durationVg = calcDauerIndays(taskStart, taskEnd)
+                                    If durationVg < 0 Then
 
-                                    ReDim vgoldXwerte(0)
-                                    vgoldXwerte(0) = itemVg.Value.StoryPoints
+                                        If Not IsNothing(itemVg.Value.erledigt) Then
+                                            taskEnd = itemVg.Value.erledigt
+                                        End If
+                                        If itemVg.Value.fällig <= taskStart Then
+                                            If taskStart <= itemVg.Value.aktualisiert Then
+                                                taskEnd = itemVg.Value.aktualisiert
+                                            Else
+                                                taskEnd = projEnde
+                                            End If
+                                        End If
+                                        If taskEnd <= Date.MinValue Then
+                                            taskEnd = projEnde
+                                        End If
 
-                                    With vgphase
-                                        ReDim vgXwerte(vgende - vganfang + 1)
-                                        .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
-                                    End With
-                                    hrole.Xwerte = vgXwerte
-
-                                    vgphase.addRole(hrole)
+                                        'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
+                                        durationVg = calcDauerIndays(taskStart, itemVg.Value.fällig)
+                                    End If
 
                                 End If
 
-                                ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
-                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                If durationVg > 0 Then
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, taskStart.Date)
+                                    vgphase.offset = offset
+                                    vgphase.changeStartandDauer(offset, durationVg)
+                                    If itemVg.Value.TaskStatus = "Fertig" Then
+                                        vgphase.percentDone = 1.0
+                                    Else
+                                        vgphase.percentDone = 0.0
+                                    End If
+                                    vgphase.verantwortlich = itemVg.Value.zugewPerson
 
-                                    tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+
+                                    ' Ressources auf Vorgang verteilen
+                                    Dim vgXwerte As Double() = Nothing
+                                    Dim vgoldXwerte As Double()
+                                    Dim vganfang As Integer = vgphase.relStart
+                                    Dim vgende As Integer = vgphase.relEnde
+                                    If itemVg.Value.StoryPoints > 0.0 Then
+
+                                        ' Aufsammeln der StoryPoints aller Tasks zu einer Epic
+                                        epicStoryPoints = epicStoryPoints + itemVg.Value.StoryPoints
+
+                                        ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                        Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                        Dim hrole As New clsRolle(vgende - vganfang + 1)
+                                        Dim otherRoledef As clsRollenDefinition
+                                        Dim roledef As clsRollenDefinition
+                                        If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
+                                            otherRoledef = RoleDefinitions.getRoledef(vgphase.verantwortlich)
+                                            roledef = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
+                                        Else
+                                            Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                            otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                            roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                        End If
+
+                                        hrole.uid = roledef.UID
+                                        hrole.teamID = -1
+
+                                        ReDim vgoldXwerte(0)
+                                        vgoldXwerte(0) = itemVg.Value.StoryPoints
+
+                                        With vgphase
+                                            ReDim vgXwerte(vgende - vganfang + 1)
+                                            .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
+                                        End With
+                                        hrole.Xwerte = vgXwerte
+
+                                        vgphase.addRole(hrole)
+
+                                    End If
+
                                     ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
-                                    ephase.unionizeWith(vgphase)
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
-                                Else
-                                    ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
-                                    Dim hrchynode As New clsHierarchyNode
-                                    hrchynode.elemName = vgphase.name
-                                    hrchynode.parentNodeKey = ephase.nameID
-                                    hproj.AddPhase(vgphase, origName:=itemVg.Value.Jira_ID, parentID:=ephase.nameID)
-                                    tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
-                                    hrchynode.indexOfElem = hproj.AllPhases.Count
+                                        tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+                                        ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                        ephase.unionizeWith(vgphase)
+
+                                    Else
+                                        ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                        Dim hrchynode As New clsHierarchyNode
+                                        hrchynode.elemName = vgphase.name
+                                        hrchynode.parentNodeKey = ephase.nameID
+                                        hproj.AddPhase(vgphase, origName:=itemVg.Value.Jira_ID, parentID:=ephase.nameID)
+                                        tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+                                        hrchynode.indexOfElem = hproj.AllPhases.Count
+                                    End If
+
                                 End If
 
+                                ' bestimme retrospektiv phaseStart und phaseEnd
+                                If vgphase.getStartDate < phaseStart Then
+                                    phaseStart = vgphase.getStartDate
+                                End If
+                                If vgphase.getEndDate > phaseEnd Then
+                                    phaseEnd = vgphase.getEndDate
+                                End If
+                                ' hier werden die Anzahl erledigter Issues je epic gezählt
+                                If itemVg.Value.erledigt > Date.MinValue Then
+                                    erledigteVgCount = erledigteVgCount + 1
+                                End If
+
+                                Call logger(ptErrLevel.logInfo, "JIRA-Task " & itemVg.Value.Jira_ID & ":" & itemVg.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                            Next     ' itemvg = Vorgang
+
+                            ' Dauer der Phase anpassen an Tasks-Dates
+                            duration = calcDauerIndays(phaseStart, phaseEnd)
+                            If duration > 0 Then
+                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, phaseStart.Date)
+                                ephase.offset = offset
+                                ephase.changeStartandDauer(offset, duration)
                             End If
+                            ' Dauer ist nun korrigiert
 
-                            ' bestimme retrospektiv phaseStart und phaseEnd
-                            If vgphase.getStartDate < phaseStart Then
-                                phaseStart = vgphase.getStartDate
-                            End If
-                            If vgphase.getEndDate > phaseEnd Then
-                                phaseEnd = vgphase.getEndDate
-                            End If
-                            ' hier werden die Anzahl erledigter Issues je epic gezählt
-                            If itemVg.Value.erledigt > Date.MinValue Then
-                                erledigteVgCount = erledigteVgCount + 1
-                            End If
-
-                            Call logger(ptErrLevel.logInfo, "JIRA-Task " & itemVg.Value.Jira_ID & ":" & itemVg.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
-
-                        Next     ' itemvg = Vorgang
-
-                        ' Dauer der Phase anpassen an Tasks-Dates
-                        duration = calcDauerIndays(phaseStart, phaseEnd)
-                        If duration > 0 Then
-                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, phaseStart.Date)
-                            ephase.offset = offset
-                            ephase.changeStartandDauer(offset, duration)
-                        End If
-                        ' Dauer ist nun korrigiert
-
-                        ' wieviel vorgänge des Epic erledigt sind in Prozent
-                        If epicVorg.Count > 0 Then
-                            ephase.percentDone = erledigteVgCount / epicVorg.Count
-                        Else
-                            ephase.percentDone = 0
-                        End If
-
-                        ' Ressources der Phase (= Summe der Tasks zu einem Epic) auf die Dauer verteilen
-                        Dim Xwerte As Double() = Nothing
-                        Dim oldXwerte As Double()
-                        Dim anfang As Integer = ephase.relStart
-                        Dim ende As Integer = ephase.relEnde
-
-                        If epicStoryPoints > 0.0 Then
-                            ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
-                            Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
-                            Dim hrole As New clsRolle(ende - anfang + 1)
-                            Dim otherRoledef As clsRollenDefinition
-                            Dim roledef As clsRollenDefinition
-
-                            If (aktOrga.allRoles.containsName(ephase.verantwortlich)) Then
-                                otherRoledef = RoleDefinitions.getRoledef(ephase.verantwortlich)
-                                roledef = aktOrga.allRoles.getRoledef(ephase.verantwortlich)
+                            ' wieviel vorgänge des Epic erledigt sind in Prozent
+                            If epicVorg.Count > 0 Then
+                                ephase.percentDone = erledigteVgCount / epicVorg.Count
                             Else
-                                Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
-                                otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
-                                roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                ephase.percentDone = 0
                             End If
 
-                            hrole.uid = roledef.UID
-                            hrole.teamID = -1
+                            ' Ressources der Phase (= Summe der Tasks zu einem Epic) auf die Dauer verteilen
+                            Dim Xwerte As Double() = Nothing
+                            Dim oldXwerte As Double()
+                            Dim anfang As Integer = ephase.relStart
+                            Dim ende As Integer = ephase.relEnde
 
-                            ReDim oldXwerte(0)
-                            oldXwerte(0) = item.Value.StoryPoints
+                            If epicStoryPoints > 0.0 Then
+                                ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                Dim hrole As New clsRolle(ende - anfang + 1)
+                                Dim otherRoledef As clsRollenDefinition
+                                Dim roledef As clsRollenDefinition
 
-                            With ephase
+                                If (aktOrga.allRoles.containsName(ephase.verantwortlich)) Then
+                                    otherRoledef = RoleDefinitions.getRoledef(ephase.verantwortlich)
+                                    roledef = aktOrga.allRoles.getRoledef(ephase.verantwortlich)
+                                Else
+                                    Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                    otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                    roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                End If
+
+                                hrole.uid = roledef.UID
+                                hrole.teamID = -1
+
+                                ReDim oldXwerte(0)
+                                oldXwerte(0) = item.Value.StoryPoints
+
+                                With ephase
                                     ReDim Xwerte(ende - anfang)
-                                .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                            End With
-                            hrole.Xwerte = Xwerte
+                                    .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                End With
+                                hrole.Xwerte = Xwerte
 
-                            ephase.addRole(hrole)
+                                ephase.addRole(hrole)
 
-                        End If
-
-                        ie = ie + 1
-                        Call logger(ptErrLevel.logInfo, "JIRA-Phase " & item.Value.Jira_ID & ":" & item.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
-
-                    Next    ' item = epic
-
-                    'restliche Tasks des Projektes in die RootPhase eintragen und wenn einem Sprint zugeordnet
-                    For Each task As KeyValuePair(Of String, clsJIRA_Task) In taskListSorted
-
-                        If Not tasksInserted.ContainsKey(task.Key) Then
-                            tasksRemaining.Add(task.Key, task.Value)
-                            If (task.Value.SprintName = "" Or IsNothing(task.Value.SprintName)) And task.Value.TaskStatus <> "Fertig" Then
-                                tasksBacklog.Add(task.Key, task.Value)
-                            ElseIf task.Value.TaskStatus = "Fertig" Then
-                                tasksFertigOSprint.Add(task.Key, task.Value)
                             End If
-                        End If
-                    Next  ' Ende bestimmen der restl. Tasks
 
-                    ' Backlog bearbeiten, sofern es gibt
+                            ie = ie + 1
+                            Call logger(ptErrLevel.logInfo, "JIRA-Phase " & item.Value.Jira_ID & ":" & item.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
-                    If tasksBacklog.Count <= 0 Then
-                        Call logger(ptErrLevel.logInfo, "Es gibt keine Backlog-Tasks", "readProjectsJIRA", anzFehler)
-                    Else
-                        ' Backlog-Tasks eintragen last SprintEnde - ProjektEnde
-                        ' Bestimmung von Start und Ende der Tasks - evt. durch last SprintEnde und ProjektEnde definiert
-                        Dim bphase As clsPhase
-                        'Dim testDate As Date = sprintList.ElementAt(sprintList.Count - 1).Value.SprintEndDate
-                        Dim backStart As Date = lastSprintEnd
-                        Dim backEnd As Date = hproj.endeDate
+                        Next    ' item = epic
 
-                        bphase = New clsPhase(hproj)
-                        Dim backphaseNameNew As String = "Backlog without epics"
-                        bphase.nameID = calcHryElemKey(backphaseNameNew, False)
-                        Dim durationBL As Integer = 0
+                        'restliche Tasks des Projektes in die RootPhase eintragen und wenn einem Sprint zugeordnet
+                        For Each task As KeyValuePair(Of String, clsJIRA_Task) In taskListSorted
 
-                        durationBL = calcDauerIndays(backStart, backEnd)
-
-                        If durationBL > 0 Then
-                            If backStart < hproj.startDate Then
-                                backStart = hproj.startDate
+                            If Not tasksInserted.ContainsKey(task.Key) Then
+                                tasksRemaining.Add(task.Key, task.Value)
+                                If (task.Value.SprintName = "" Or IsNothing(task.Value.SprintName)) And task.Value.TaskStatus <> "Fertig" Then
+                                    tasksBacklog.Add(task.Key, task.Value)
+                                ElseIf task.Value.TaskStatus = "Fertig" Then
+                                    tasksFertigOSprint.Add(task.Key, task.Value)
+                                End If
                             End If
-                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, backStart.Date)
-                            bphase.offset = offset
-                            bphase.changeStartandDauer(offset, durationBL)
+                        Next  ' Ende bestimmen der restl. Tasks
 
-                            ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
-                            Dim hrchynode As New clsHierarchyNode
-                            hrchynode.elemName = bphase.name
-                            hrchynode.parentNodeKey = rootPhaseName
-                            hproj.AddPhase(bphase, origName:=backphaseNameNew, parentID:=rootPhaseName)
-                            hrchynode.indexOfElem = hproj.AllPhases.Count
-                        End If
+                        ' Backlog bearbeiten, sofern es gibt
 
-                        Dim backphase As clsPhase
-                        Dim backlogPhaseID As String = bphase.nameID         ' ist der Parent der Backlog - Tasks
-                        For Each backlogItem As KeyValuePair(Of String, clsJIRA_Task) In tasksBacklog
+                        If tasksBacklog.Count <= 0 Then
+                            Call logger(ptErrLevel.logInfo, "Es gibt keine Backlog-Tasks", "readProjectsJIRA", anzFehler)
+                        Else
+                            ' Backlog-Tasks eintragen last SprintEnde - ProjektEnde
+                            ' Bestimmung von Start und Ende der Tasks - evt. durch last SprintEnde und ProjektEnde definiert
+                            Dim bphase As clsPhase
+                            'Dim testDate As Date = sprintList.ElementAt(sprintList.Count - 1).Value.SprintEndDate
+                            Dim backStart As Date = lastSprintEnd
+                            Dim backEnd As Date = hproj.endeDate
 
-                            backphase = New clsPhase(hproj)
-                            backphaseNameNew = backlogItem.Value.Jira_ID & " " & backlogItem.Value.Zusammenfassung
-                            backphase.nameID = calcHryElemKey(backphaseNameNew, False)
+                            bphase = New clsPhase(hproj)
+                            Dim backphaseNameNew As String = "Backlog without epics"
+                            bphase.nameID = calcHryElemKey(backphaseNameNew, False)
+                            Dim durationBL As Integer = 0
 
-                            ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
-                            Dim origPhNameVG As String = backphaseNameNew
-                            backphaseNameNew = phaseMappings.mapToStdName("", backphaseNameNew)
+                            durationBL = calcDauerIndays(backStart, backEnd)
 
                             If durationBL > 0 Then
-                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, backStart.Date)
-                                backphase.offset = offset
-                                backphase.changeStartandDauer(offset, durationBL)
-                                If backlogItem.Value.TaskStatus = "Fertig" Then
-                                    backphase.percentDone = 1.0
-                                Else
-                                    backphase.percentDone = 0.0
+                                If backStart < hproj.startDate Then
+                                    backStart = hproj.startDate
                                 End If
-                                backphase.verantwortlich = backlogItem.Value.zugewPerson
+                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, backStart.Date)
+                                bphase.offset = offset
+                                bphase.changeStartandDauer(offset, durationBL)
 
-                                ' Ressources eintragen für Backlog-Tasks
-                                Dim Xwerte As Double() = Nothing
-                                Dim oldXwerte As Double()
-                                Dim anfang As Integer = backphase.relStart
-                                Dim ende As Integer = backphase.relEnde
-                                If backlogItem.Value.StoryPoints > 0.0 Then
-                                    ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
-                                    Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                Dim hrchynode As New clsHierarchyNode
+                                hrchynode.elemName = bphase.name
+                                hrchynode.parentNodeKey = rootPhaseName
+                                hproj.AddPhase(bphase, origName:=backphaseNameNew, parentID:=rootPhaseName)
+                                hrchynode.indexOfElem = hproj.AllPhases.Count
+                            End If
 
-                                    Dim hrole As New clsRolle(ende - anfang)
-                                    Dim otherRoledef As clsRollenDefinition
-                                    Dim roledef As clsRollenDefinition
+                            Dim backphase As clsPhase
+                            Dim backlogPhaseID As String = bphase.nameID         ' ist der Parent der Backlog - Tasks
+                            For Each backlogItem As KeyValuePair(Of String, clsJIRA_Task) In tasksBacklog
 
-                                    If (aktOrga.allRoles.containsName(backphase.verantwortlich)) Then
-                                        otherRoledef = RoleDefinitions.getRoledef(backphase.verantwortlich)
-                                        roledef = aktOrga.allRoles.getRoledef(backphase.verantwortlich)
+                                backphase = New clsPhase(hproj)
+                                backphaseNameNew = backlogItem.Value.Jira_ID & " " & backlogItem.Value.Zusammenfassung
+                                backphase.nameID = calcHryElemKey(backphaseNameNew, False)
+
+                                ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                                Dim origPhNameVG As String = backphaseNameNew
+                                backphaseNameNew = phaseMappings.mapToStdName("", backphaseNameNew)
+
+                                If durationBL > 0 Then
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, backStart.Date)
+                                    backphase.offset = offset
+                                    backphase.changeStartandDauer(offset, durationBL)
+                                    If backlogItem.Value.TaskStatus = "Fertig" Then
+                                        backphase.percentDone = 1.0
                                     Else
-                                        Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
-                                        otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
-                                        roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                        backphase.percentDone = 0.0
+                                    End If
+                                    backphase.verantwortlich = backlogItem.Value.zugewPerson
+
+                                    ' Ressources eintragen für Backlog-Tasks
+                                    Dim Xwerte As Double() = Nothing
+                                    Dim oldXwerte As Double()
+                                    Dim anfang As Integer = backphase.relStart
+                                    Dim ende As Integer = backphase.relEnde
+                                    If backlogItem.Value.StoryPoints > 0.0 Then
+                                        ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                        Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+                                        Dim hrole As New clsRolle(ende - anfang)
+                                        Dim otherRoledef As clsRollenDefinition
+                                        Dim roledef As clsRollenDefinition
+
+                                        If (aktOrga.allRoles.containsName(backphase.verantwortlich)) Then
+                                            otherRoledef = RoleDefinitions.getRoledef(backphase.verantwortlich)
+                                            roledef = aktOrga.allRoles.getRoledef(backphase.verantwortlich)
+                                        Else
+                                            Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                            otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                            roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                        End If
+
+                                        hrole.uid = roledef.UID
+                                        hrole.teamID = -1
+
+                                        ReDim oldXwerte(0)
+                                        oldXwerte(0) = backlogItem.Value.StoryPoints
+
+                                        With backphase
+                                            ReDim Xwerte(ende - anfang)
+                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                        End With
+                                        hrole.Xwerte = Xwerte
+
+                                        backphase.addRole(hrole)
                                     End If
 
-                                    hrole.uid = roledef.UID
-                                    hrole.teamID = -1
-
-                                    ReDim oldXwerte(0)
-                                    oldXwerte(0) = backlogItem.Value.StoryPoints
-
-                                    With backphase
-                                        ReDim Xwerte(ende - anfang)
-                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                    End With
-                                    hrole.Xwerte = Xwerte
-
-                                    backphase.addRole(hrole)
-                                End If
-
-                                ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
-                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-
                                     ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
-                                    bphase.unionizeWith(backphase)
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
-                                Else
-                                    ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
-                                    Dim hrchynode As New clsHierarchyNode
-                                    hrchynode.elemName = backphase.name
-                                    hrchynode.parentNodeKey = rootPhaseName
-                                    hproj.AddPhase(backphase, origName:=backlogItem.Value.Jira_ID, parentID:=backlogPhaseID)
-                                    'tasksInserted.Add(backlogItem.Value.Jira_ID, backlogItem.Value)
-                                    hrchynode.indexOfElem = hproj.AllPhases.Count
+                                        ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                        bphase.unionizeWith(backphase)
+
+                                    Else
+                                        ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                        Dim hrchynode As New clsHierarchyNode
+                                        hrchynode.elemName = backphase.name
+                                        hrchynode.parentNodeKey = rootPhaseName
+                                        hproj.AddPhase(backphase, origName:=backlogItem.Value.Jira_ID, parentID:=backlogPhaseID)
+                                        'tasksInserted.Add(backlogItem.Value.Jira_ID, backlogItem.Value)
+                                        hrchynode.indexOfElem = hproj.AllPhases.Count
+                                    End If
+
+                                End If
+                                Call logger(ptErrLevel.logInfo, "JIRA-Task " & backlogItem.Value.Jira_ID & ":" & backlogItem.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                            Next     ' backlogItem
+                        End If
+
+                        If result Then
+
+                            Dim keyStr As String = ""
+                            Try
+                                keyStr = calcProjektKey(hproj)
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                                Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekte erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
+                                ' hier: merken der erfolgreich importierten Projects Dateien
+                                If Not listOfArchivFiles.Contains(tmpDatei) Then
+                                    listOfArchivFiles.Add(tmpDatei)
                                 End If
 
-                            End If
-                            Call logger(ptErrLevel.logInfo, "JIRA-Task " & backlogItem.Value.Jira_ID & ":" & backlogItem.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
 
-                        Next     ' backlogItem
-                    End If
+                            Catch ex2 As Exception
+                                Call MsgBox("Projekt " & keyStr & " kann nicht zweimal importiert werden ...")
+                            End Try
 
-                    If result Then
+                        Else
+                            Call logger(ptErrLevel.logWarning, "Einlesen JIRA-Projekt nicht erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
+                        End If
 
-                        Dim keyStr As String = ""
-                        Try
-                            keyStr = calcProjektKey(hproj)
-                            ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                    Next        ' for each kvp in projListSortedName
 
-                            Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekte erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
-                            ' hier: merken der erfolgreich importierten Projects Dateien
-                            If Not listOfArchivFiles.Contains(tmpDatei) Then
-                                listOfArchivFiles.Add(tmpDatei)
-                            End If
+                End If      ' reading of all tasks ok
 
-
-                        Catch ex2 As Exception
-                            Call MsgBox("Projekt " & keyStr & " kann nicht zweimal importiert werden ...")
-                        End Try
-
-                    Else
-                        Call logger(ptErrLevel.logWarning, "Einlesen JIRA-Projekt nicht erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
-                    End If
-
-                Next        ' for each kvp in projListSortedName
-            Next
+            Next    ' for each tmpDatei
 
         Else
             Dim errMsg As String = "Es gibt keine Datei zur Projekt-Anlage" & vbLf _
