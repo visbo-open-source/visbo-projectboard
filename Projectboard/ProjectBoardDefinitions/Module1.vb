@@ -940,6 +940,7 @@ Public Module Module1
         customization = 14
         appearances = 15
         projectWithConfig = 16
+        JiraProjects = 17
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung
@@ -978,6 +979,7 @@ Public Module Module1
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
     Public StartofCalendar As Date = New Date(2015, 1, 1)
+    Public EndOfCalendar As Date = StartofCalendar.AddYears(20)
     Public weightStrategicFit As Double
 
     '

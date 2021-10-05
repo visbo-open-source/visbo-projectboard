@@ -4218,7 +4218,7 @@ Public Class clsPhase
     ''' <param name="oldXwerte"></param>
     ''' <param name="corrFakt"></param>
     ''' <remarks></remarks>
-    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double,
                                ByVal corrFakt As Double) As Double()
 
         ' wenn sich der bewährt: übernehmen ..
@@ -4408,5 +4408,93 @@ Public Class clsPhase
         berechneBedarfeNew = newXwerte
 
     End Function
+
+
+    ''' <summary>
+    ''' gibt eine Phase zurück,die die Vereinigung beider Phasen beinhaltet. 
+    ''' Es werden die Ressourcenbedarfe vereinigt. Wenn die Projekte zu unterschiedlichen Zeiten beginnen und unterschiedlich lang sind, so wird das 
+    ''' ebenfalls berücksichtigt - im Vergleich zu addProject. Das neue Projekt hat keinerlei Phasen-Struktur
+    ''' </summary>
+    ''' <param name="otherPhase"></param>
+    Public sub unionizeWith(ByVal otherPhase As clsPhase)
+
+        Dim newStart As Date
+        Dim newEnde As Date
+
+        If Me.getStartDate <= otherPhase.getStartDate Then
+            newStart = Me.getStartDate
+        Else
+            newStart = otherPhase.getStartDate
+        End If
+
+        If Me.getEndDate >= otherPhase.getEndDate Then
+            newEnde = Me.getEndDate
+        Else
+            newEnde = otherPhase.getEndDate
+        End If
+
+        Dim newPhase As clsPhase = Me
+        ' jetzt werden die Attribute neu gesetzt ...
+        Dim duration As Long
+        Dim offset As Long
+        With newPhase
+            duration = DateDiff(DateInterval.Day, newStart, newEnde) + 1
+            offset = DateDiff(DateInterval.Day, Me.parentProject.startDate, newStart)
+            newPhase.offset = CInt(offset)
+            newPhase.changeStartandDauer(offset, duration)
+        End With
+
+        ' ------------------------------------------------------------------------------------------------------
+        ' newPhase wurde nun angelegt
+        ' ------------------------------------------------------------------------------------------------------
+
+        Dim myLength As Integer = Me.relEnde - Me.relStart + 1
+        Dim otherLength As Integer = otherPhase.relEnde - otherPhase.relStart + 1
+        Dim newLength As Integer = newPhase.relEnde - newPhase.relStart + 1
+
+        Dim myStartColumn As Integer = Me.relStart
+        Dim otherStartColumn As Integer = otherPhase.relStart
+        Dim myIndexStart As Integer, otherIndexStart As Integer
+        If myStartColumn <= otherStartColumn Then
+            myIndexStart = 0
+            otherIndexStart = otherStartColumn - myStartColumn
+        Else
+            otherIndexStart = 0
+            myIndexStart = myStartColumn - otherStartColumn
+        End If
+
+        ' jetzt werden die Role-Values von other in new übertragen 
+        Dim tmpRoles As List(Of clsRolle) = otherPhase.rollenListe
+        Dim newValues() As Double
+
+        ' Rollen von otherPhase in newPhase
+        For i = 0 To tmpRoles.Count - 1
+            Dim otherRole As clsRolle = tmpRoles(i)
+            ' zurücksetzen 
+            ReDim newValues(newLength - 1)
+            For ix As Integer = 0 To otherRole.Xwerte.Length - 1
+                newValues(ix + otherIndexStart) = newValues(ix + otherIndexStart) + otherRole.Xwerte(ix)
+            Next
+            otherRole.Xwerte = newValues
+            newPhase.addRole(otherRole)
+        Next
+
+        ' jetzt werden die Role-Values von other in new übertragen 
+        Dim tmpCosts As List(Of clsKostenart) = otherPhase.kostenListe
+        Dim newCostValues() As Double
+
+        ' Rollen von otherPhase in newPhase
+        For i = 0 To tmpCosts.Count - 1
+            Dim otherCost As clsKostenart = tmpCosts(i)
+            ' zurücksetzen 
+            ReDim newCostValues(newLength - 1)
+            For ix As Integer = 0 To otherCost.Xwerte.Length - 1
+                newCostValues(ix + otherIndexStart) = newCostValues(ix + otherIndexStart) + otherCost.Xwerte(ix)
+            Next
+            otherCost.Xwerte = newCostValues
+            newPhase.AddCost(otherCost)
+        Next
+
+    End sub
 
 End Class

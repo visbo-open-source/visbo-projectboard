@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports DBAccLayer
-Imports ProjectboardReports
+Imports ClassLibrary1
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
@@ -6245,7 +6245,8 @@ Public Module agm2
 
                                             hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
                                             '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
-                                            hrchynode.indexOfElem = hproj.AllPhases.Count
+
+
                                             ' merken von letzem Element (Knoten,Phase,Meilenstein)
                                             lasthrchynode = hrchynode
                                             lastelemID = cphase.nameID
@@ -8298,7 +8299,7 @@ Public Module agm2
                                        ByRef TEroleNamesToConsider() As String,
                                        ByRef TEcolRoleNamesToConsider() As Integer,
                                        ByVal currentWS As Excel.Worksheet,
-                                       ByVal importTyp As ptImportTypen)
+                                       ByVal importTyp As ptVisboImportTypen)
 
         Dim tmpRoleNames() As String = Nothing
         Dim tmpColBz() As String = Nothing
@@ -8318,7 +8319,7 @@ Public Module agm2
 
 
 
-        If importTyp = ptImportTypen.allianzMassImport1 Then
+        If importTyp = ptVisboImportTypen.allianzMassImport1 Then
 
             zeile = 2
             ' am besten hier aus awinsettings einlesen ...
@@ -8334,7 +8335,7 @@ Public Module agm2
             tmpTEcolBZ = Nothing
             ReDim tmpTECols(0)
 
-        ElseIf importTyp = ptImportTypen.allianzMassImport2 Then
+        ElseIf importTyp = ptVisboImportTypen.allianzMassImport2 Then
             zeile = 3
             tmpRoleNames = {"D-BITSV-KB0", "D-BITSV-KB1", "D-BITSV-KB2", "D-BITSV-KB3", "D-BITSV-SBF1", "D-BITSV-SBF2", "D-BITSV-SBF-DRUCK", "D-BITSV-SBP1", "D-BITSV-SBP2", "D-BITSV-SBP3", "AMIS"}
             tmpColBz = {"CP1", "CQ1", "CR1", "CS1", "CU1", "CV1", "CW1", "CY1", "CZ1", "DA1", "DB1"}
@@ -8375,7 +8376,7 @@ Public Module agm2
 
         End If
 
-        If importTyp = ptImportTypen.allianzBOBImport Then
+        If importTyp = ptVisboImportTypen.allianzBOBImport Then
 
             For i As Integer = 0 To endCol - startCol - 1
                 If Not RoleDefinitions.containsName(tmpTEroleNames(i)) Then
@@ -8478,7 +8479,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="importType"></param>
     ''' <returns></returns>
-    Private Function bestimmeWsAndImporttype(ByRef importType As ptImportTypen) As Excel.Worksheet
+    Private Function bestimmeWsAndImporttype(ByRef importType As ptVisboImportTypen) As Excel.Worksheet
         Dim resultWS As Excel.Worksheet = Nothing
         Dim wb As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim tmpImportType As Integer = -1
@@ -8487,11 +8488,11 @@ Public Module agm2
 
             If wb.Name = "BOBundScope" Then
                 resultWS = wb
-                importType = ptImportTypen.allianzBOBImport
+                importType = ptVisboImportTypen.allianzBOBImport
             Else
                 tmpImportType = CInt(wb.Range(visboImportKennung).Value)
 
-                If [Enum].IsDefined(GetType(ptImportTypen), tmpImportType) Then
+                If [Enum].IsDefined(GetType(ptVisboImportTypen), tmpImportType) Then
                     resultWS = CType(CType(wb.Range(visboImportKennung), Excel.Range).Parent, Excel.Worksheet)
                     importType = tmpImportType
                 End If
@@ -8691,7 +8692,6 @@ Public Module agm2
 
                 importedCustomization.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
-                importedCustomization.onePersonOneRole = awinSettings.onePersonOneRole
                 importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
                 importedCustomization.actualDataMonth = awinSettings.actualDataMonth
@@ -8906,7 +8906,7 @@ Public Module agm2
                     Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
                     If outputCollection.Count > 0 Then
-                        ' wird an der aufrufenden Stelle ausgegeben ... 
+                        ' wird an der aurufenden Stelle ausgegeben ... 
                     ElseIf TeamsAreNotOK Or existingOverloads Then
                         ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
                     Else
@@ -8938,8 +8938,6 @@ Public Module agm2
                             End If
                         End With
 
-                        ' es werden die ActualData relevante OrgaUnits geholt und ggfs. auch korrigiert
-                        Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -9140,7 +9138,7 @@ Public Module agm2
 
         Dim zeile As Integer, spalte As Integer
 
-        Dim importType As ptImportTypen
+        Dim importType As ptVisboImportTypen
 
         ' tk : nimmt die Start- bzw Ende-Daten auf ...
         Dim pStartDatum As Date
@@ -9262,7 +9260,7 @@ Public Module agm2
 
         Try
 
-            importType = ptImportTypen.allianzBOBImport
+            importType = ptVisboImportTypen.allianzBOBImport
             Dim currentWS As Excel.Worksheet = bestimmeWsAndImporttype(importType)
 
 
@@ -10282,7 +10280,7 @@ Public Module agm2
 
         Dim zeile As Integer, spalte As Integer
 
-        Dim importType As ptImportTypen
+        Dim importType As ptVisboImportTypen
 
         Dim tfZeile As Integer = 2
 
@@ -10406,12 +10404,12 @@ Public Module agm2
 
             If IsNothing(currentWS) Then
                 Call MsgBox("Import File nicht erkannt - bitte " & visboImportKennung & "-Feld in Excel-Datei eintragen!")
-            ElseIf (importType <> ptImportTypen.allianzMassImport1 And importType <> ptImportTypen.allianzMassImport2) Then
+            ElseIf (importType <> ptVisboImportTypen.allianzMassImport1 And importType <> ptVisboImportTypen.allianzMassImport2) Then
                 Call MsgBox("keine Allianz-Projektliste: " & visboImportKennung & "muss Wert 5 oder 6 haben!")
                 Exit Sub
             End If
 
-            Dim isOldAllianzImport As Boolean = (importType = ptImportTypen.allianzMassImport1)
+            Dim isOldAllianzImport As Boolean = (importType = ptVisboImportTypen.allianzMassImport1)
 
 
             With currentWS
@@ -10560,7 +10558,7 @@ Public Module agm2
 
                 If Not IsNothing(roleNamesToConsider) Then
 
-                    If importType = ptImportTypen.allianzMassImport2 Then
+                    If importType = ptVisboImportTypen.allianzMassImport2 Then
 
                         If Not IsNothing(TEroleNamesToConsider) Then
                             tmpLen = tmpLen + TEroleNamesToConsider.Length
@@ -19941,8 +19939,7 @@ Public Module agm2
 
                         Next
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
                         If awinSettings.englishLanguage Then
                             CType(.Cells(1, 1), Excel.Range).Value = "Project-Number"
                             CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
@@ -20606,6 +20603,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\Modulare Szenarien"
             importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\AddOn Regeln"
             importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+            importOrdnerNames(PTImpExp.JiraProjects) = awinPath & "Import\JIRA Project"
             importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\MassEdit"
             importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
             importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
@@ -21080,11 +21078,9 @@ Public Module agm2
                         awinSettings.gridLineColor = customizations.gridLineColor
 
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-                        ' ur:20210729 kommt nun eigentlich von Organisation
-                        If awinSettings.ActualdataOrgaUnits = "" Then
-                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-                        End If
-                        awinSettings.onePersonOneRole = customizations.onePersonOneRole
+
+                        awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
                         awinSettings.actualDataMonth = customizations.actualDataMonth
@@ -21180,7 +21176,6 @@ Public Module agm2
                         CostDefinitions = currentOrga.allCosts
                         RoleDefinitions = currentOrga.allRoles
 
-                        awinSettings.ActualdataOrgaUnits = currentOrga.allRoles.getActualdataOrgaUnits
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
@@ -21259,7 +21254,7 @@ Public Module agm2
                             If awinSettings.visboServer Then
                                 .customUserRole = ptCustomUserRoles.OrgaAdmin
                             Else
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .customUserRole = ptCustomUserRoles.ProjektLeitung
                             End If
                             .specifics = ""
                             .userName = dbUsername
@@ -21583,7 +21578,6 @@ Public Module agm2
 
         If Not IsNothing(allCustomUserRoles) Then
 
-            Call allCustomUserRoles.setSpecifics()
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
@@ -21621,41 +21615,16 @@ Public Module agm2
                 If Not IsNothing(myCustomUserRole) Then
                     ' jetzt gibt es eine currentUserRole: myCustomUserRole
                     Call myCustomUserRole.setNonAllowances()
-                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
-                    '    Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
-                    '    Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
-
-                    '    With myCustomUserRole
-                    '        Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
-                    '        Dim myCustSpecifics As String = ""
-                    '        For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
-                    '            If myCustSpecifics <> "" Then
-                    '                myCustSpecifics = myCustSpecifics & ";" & CStr(kvp.Key)
-                    '            Else
-                    '                myCustSpecifics = myCustSpecifics & CStr(kvp.Key)
-                    '            End If
-                    '        Next
-                    '        .specifics = myCustSpecifics
-                    '    End With
-                    'End If
-
                 Else
                     Dim message As String
                     If awinSettings.englishLanguage Then
-                        message = "User hasn't got any role - Projectlead restricted Role assumed ..."
+                        message = "User hasn't got any role" & vbLf & "Please contact your administrator"
                         meldungen.Add("User hasn't got any role")
                     Else
-                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen - Projektleiter Restricted Angenommen"
+                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen" & vbLf & "Bitte kontaktieren Sie ihren Administrator"
                         meldungen.Add("Dem User wurde noch keine Rolle zugewiesen")
                     End If
-
-                    myCustomUserRole = New clsCustomUserRole
-                    With myCustomUserRole
-                        .customUserRole = ptCustomUserRoles.ProjektleitungRestricted
-                        .userName = dbUsername
-                        .specifics = allCustomUserRoles.getPMOSpecifics
-                    End With
-
+                    Throw New ArgumentException(message)
                 End If
 
             End If
@@ -21663,8 +21632,7 @@ Public Module agm2
         Else
             ' muss ins logfile
             meldungen.Add(err.errorMsg)
-            Call logger(ptErrLevel.logError, "setUserRoles", err.errorCode & ":" & err.errorMsg)
-            ' Call MsgBox(err.errorMsg)
+            Call MsgBox(err.errorMsg)
         End If
 
         ' jetzt sicherstellen, dass die Grundeinstellung bei Portfolio Manager loadPfv ist 
@@ -21673,28 +21641,6 @@ Public Module agm2
         End If
 
     End Sub
-
-    'Public Sub setPMOSpecifics(ByRef allCusomUserRoles As Collection)
-    '    For Each myCustomUserRole In allCusomUserRoles
-    '        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
-    '                   Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
-    '                   Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
-
-    '            With myCustomUserRole
-    '                Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
-    '                Dim myCustSpecifics As String = ""
-    '                For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
-    '                    If myCustSpecifics <> "" Then
-    '                        myCustSpecifics = myCustSpecifics & ";" & CStr(kvp.Key)
-    '                    Else
-    '                        myCustSpecifics = myCustSpecifics & CStr(kvp.Key)
-    '                    End If
-    '                Next
-    '                .specifics = myCustSpecifics
-    '            End With
-    '        End If
-    '    Next
-    'End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -22829,9 +22775,6 @@ Public Module agm2
         Dim defaultTagessatz As Double = 800.0
         Dim errMsg As String = ""
 
-        ' nimmt die People auf, also die in Orga sind, nicht in Gruppen Definition und keine Kinder haben ... 
-        Dim listOFPeople = New Collection
-
         Try
             Dim hasHierarchy As Boolean = False
             Dim atleastOneWithIndent As Boolean = False
@@ -22860,7 +22803,7 @@ Public Module agm2
                     End If
 
                     rolesRange = wsname.Range("awin_Rollen_Definition")
-                    przSatz = 0.0
+                    przSatz = 1.0
                 Catch ex As Exception
                     rolesRange = Nothing
                 End Try
@@ -22872,10 +22815,6 @@ Public Module agm2
                 meldungen.Add(errMsg)
                 Exit Sub
             Else
-                ' still to do for Instart and others
-                ' now perform validity check
-                ' each cell c has an entry within the whole Range
-
                 errMsg = ""
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
@@ -22894,8 +22833,7 @@ Public Module agm2
                 For i = 2 To anzZeilen - 1
 
                     Try
-                        'Dim tmpIDValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
-                        Dim tmpIDValue As String = getStringFromExcelCell(CType(rolesRange.Cells(i, 1).offset(0, -1), Excel.Range))
+                        Dim tmpIDValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
                         Dim tmpOrgaName As String = getStringFromExcelCell(CType(rolesRange.Cells(i, 1), Excel.Range))
 
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
@@ -23072,7 +23010,6 @@ Public Module agm2
 
                             index = index + 1
                             If anzWithID > 0 Then
-
                                 Try
                                     If Not IsNothing(c.Offset(0, -1).Value) Then
                                         If IsNumeric(c.Offset(0, -1).Value) Then
@@ -23080,12 +23017,7 @@ Public Module agm2
                                         End If
                                     End If
                                 Catch ex As Exception
-                                    If awinSettings.englishLanguage Then
-                                        errMsg = "RoleID couldn't be read, perhaps a problem excel"
-                                    Else
-                                        errMsg = "RoleId kann nicht gelesen werden, evt. existiert hier ein Problem mit Excel"
-                                    End If
-                                    Call logger(ptErrLevel.logsevereError, "readRoleDefinitions", errMsg)
+                                    Call MsgBox("i = ", i)
                                 End Try
 
                             Else
@@ -23095,11 +23027,9 @@ Public Module agm2
                             tmpStr = CType(c.Value, String)
                             If isValidRoleName(tmpStr, errMsg) Then
                                 If readingGroups Then
-                                    ' tk 7.6.21 nicht mehr relevant
-                                    'przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
-                                    przSatz = 0.0
+                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
                                 Else
-                                    przSatz = 0.0
+                                    przSatz = 1.0
                                 End If
 
                                 ' jetzt kommt die Rollen Definition 
@@ -23109,155 +23039,81 @@ Public Module agm2
                                     .name = tmpStr.Trim
                                     .defaultKapa = 0.0
 
-                                    If Not readingGroups Then
-                                        If Not IsNothing(c.Offset(0, 1).Value) Then
-                                            If IsNumeric(c.Offset(0, 1).Value) Then
-                                                If CDbl(c.Offset(0, 1).Value) > 0 Then
-                                                    .defaultKapa = CDbl(c.Offset(0, 1).Value)
-                                                End If
+                                    If Not IsNothing(c.Offset(0, 1).Value) Then
+                                        If IsNumeric(c.Offset(0, 1).Value) Then
+                                            If CDbl(c.Offset(0, 1).Value) > 0 Then
+                                                .defaultKapa = CDbl(c.Offset(0, 1).Value)
                                             End If
                                         End If
                                     End If
 
                                     If Not IsNothing(c.Offset(0, 2).Value) Then
-
                                         If IsNumeric(c.Offset(0, 2).Value) Then
                                             .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-
                                             If .tagessatzIntern <= 0 Then
                                                 .tagessatzIntern = defaultTagessatz
                                             End If
                                         End If
-
-                                    Else
-                                        If Not readingGroups Then
-                                            .tagessatzIntern = defaultTagessatz
-                                        End If
-
                                     End If
-                                    ' ur:08.07.2021 Aufnahme isAggregationRole
-                                    If Not IsNothing(c.Offset(0, 9).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
+
+                                    ' tk 5.12 Aufnahme extern
+                                    If Not IsNothing(c.Offset(0, 3).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
                                         tmpValue = tmpValue.Trim
                                         Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
                                         If positiveCriterias.Contains(tmpValue) Then
-                                            .isAggregationRole = True
-                                        End If
-                                    End If
-                                    ' ur:08.07.2021 Aufnahme isSummaryRole
-                                    If Not IsNothing(c.Offset(0, 10).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
-                                        tmpValue = tmpValue.Trim
-                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        If positiveCriterias.Contains(tmpValue) Then
-                                            .isSummaryRole = True
-                                        End If
-                                    End If
-                                    ' ur:08.07.2021 Aufnahme isActDataRelvant
-                                    If Not IsNothing(c.Offset(0, 11).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
-                                        tmpValue = tmpValue.Trim
-                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        If positiveCriterias.Contains(tmpValue) Then
-                                            .isActDataRelevant = True
+                                            .isExternRole = True
                                         End If
                                     End If
 
-                                    If Not readingGroups Then
-                                        ' tk 5.12 Aufnahme extern
-                                        If Not IsNothing(c.Offset(0, 3).Value) Then
-                                            Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
-                                            tmpValue = tmpValue.Trim
-                                            Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                            If positiveCriterias.Contains(tmpValue) Then
-                                                .isExternRole = True
-                                            End If
+                                    ' jetzt die neuen Attribute aufnehmen
+                                    ' Personal-Nummer
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 4).Value) Then
+                                            .employeeNr = CStr(c.Offset(0, 4).Value).Trim
+                                        Else
+                                            .employeeNr = ""
                                         End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for employeeNr: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Personal-Nummer: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
 
-                                        ' jetzt die neuen Attribute aufnehmen
-                                        ' Personal-Nummer
-                                        Try
-                                            If Not IsNothing(c.Offset(0, 4).Value) Then
-                                                .employeeNr = CStr(c.Offset(0, 4).Value).Trim
-                                            Else
-                                                .employeeNr = ""
-                                            End If
-                                        Catch ex As Exception
-                                            If awinSettings.englishLanguage Then
-                                                errMsg = "invalid value for employeeNr: " & .name
-                                            Else
-                                                errMsg = "ungültiger Wert für Personal-Nummer: " & .name
-                                            End If
-                                            meldungen.Add(errMsg)
-                                        End Try
-
-                                        '' ur:08.07.2021 Aufnahme isAggregationRole
-                                        'If Not IsNothing(c.Offset(0, 9).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isAggregationRole = True
-                                        '    End If
-                                        'End If
-                                        '' ur:08.07.2021 Aufnahme isSummaryRole
-                                        'If Not IsNothing(c.Offset(0, 10).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isSummaryRole = True
-                                        '    End If
-                                        'End If
-                                        '' ur:08.07.2021 Aufnahme isActDataRelvant
-                                        'If Not IsNothing(c.Offset(0, 11).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isActDataRelevant = True
-                                        '    End If
-                                        'End If
-
-                                        ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
-                                        Try
-                                            If Not IsNothing(c.Offset(0, 5).Value) Then
-                                                If CStr(c.Offset(0, 5).Value).Trim = "" Then
-                                                    .defaultDayCapa = -1
-                                                ElseIf IsNumeric(c.Offset(0, 5).Value) Then
-                                                    Dim tmpValue As Double = CDbl(c.Offset(0, 5).Value)
-                                                    If tmpValue >= 0 And tmpValue <= 12 Then
-                                                        .defaultDayCapa = tmpValue
-                                                    Else
-                                                        ' 
-                                                        If awinSettings.englishLanguage Then
-                                                            errMsg = "invalid value for default capacity per day: " & .name
-                                                        Else
-                                                            errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
-                                                        End If
-                                                        meldungen.Add(errMsg)
-                                                    End If
-                                                End If
-                                            Else
+                                    ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 5).Value) Then
+                                            If CStr(c.Offset(0, 5).Value).Trim = "" Then
                                                 .defaultDayCapa = -1
+                                            ElseIf IsNumeric(c.Offset(0, 5).Value) Then
+                                                Dim tmpValue As Double = CDbl(c.Offset(0, 5).Value)
+                                                If tmpValue >= 0 And tmpValue <= 12 Then
+                                                    .defaultDayCapa = tmpValue
+                                                Else
+                                                    ' 
+                                                    If awinSettings.englishLanguage Then
+                                                        errMsg = "invalid value for default capacity per day: " & .name
+                                                    Else
+                                                        errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                                    End If
+                                                    meldungen.Add(errMsg)
+                                                End If
                                             End If
-                                        Catch ex As Exception
-                                            If awinSettings.englishLanguage Then
-                                                errMsg = "invalid value for default capacity per day: " & .name
-                                            Else
-                                                errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
-                                            End If
-                                            meldungen.Add(errMsg)
-                                        End Try
-
-                                    End If
+                                        Else
+                                            .defaultDayCapa = -1
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for default capacity per day: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
 
                                     ' Eintrittsdatum der Ressourcen 
                                     Try
@@ -23284,6 +23140,7 @@ Public Module agm2
                                     Try
                                         If Not IsNothing(c.Offset(0, 7).Value) Then
                                             If CStr(c.Offset(0, 7).Value).Trim = "" Then
+                                                '.exitDate = CDate("31.12.2200")
                                                 .exitDate = DateAndTime.DateSerial(2200, 12, 31).Date
                                             Else
                                                 Dim tmpValue As Date = CDate(c.Offset(0, 7).Value)
@@ -23342,35 +23199,7 @@ Public Module agm2
                                 End With
 
                                 ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                                If readingGroups Then
-                                    Try
-                                        If neueRollendefinitionen.containsName(hrole.name) Then
-                                            If neueRollendefinitionen.getRoledef(hrole.name).getSubRoleCount = 0 Then
-                                                ' ListOfPeople
-                                                If Not listOFPeople.Contains(hrole.name) Then
-                                                    listOFPeople.Add(hrole.name, hrole.name)
-                                                End If
-                                            End If
-                                        Else
-                                            If neueRollendefinitionen.containsUid(hrole.UID) Then
-                                                If awinSettings.englishLanguage Then
-                                                    errMsg = "ID has multiple occurrences: " & hrole.UID
-                                                Else
-                                                    errMsg = "ID kommt mehrfach vor: " & hrole.UID
-                                                End If
-                                                meldungen.Add(errMsg)
-                                            Else
-                                                neueRollendefinitionen.Add(hrole)
-                                                ' ur: 20210728: isSkill wird gesetzt
-                                                If hrole.isSummaryRole Then
-                                                    hrole.isSkill = True
-                                                End If
-                                            End If
-                                        End If
-                                    Catch ex As Exception
-
-                                    End Try
-
+                                If readingGroups And neueRollendefinitionen.containsName(hrole.name) Then
                                     ' nichts tun, alles gut : 
                                 Else
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
@@ -23385,13 +23214,7 @@ Public Module agm2
                                         Else
                                             neueRollendefinitionen.Add(hrole)
                                         End If
-                                    Else
-                                        If awinSettings.englishLanguage Then
-                                            errMsg = "Name has multiple occurrences: " & hrole.name
-                                        Else
-                                            errMsg = "Name kommt mehrfach vor: " & hrole.name
-                                        End If
-                                        meldungen.Add(errMsg)
+
                                     End If
 
                                 End If
@@ -23439,8 +23262,12 @@ Public Module agm2
                                 curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                 curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
-
-                                przSatz = 0.0 ' not any more relevant, tk 7.6.21
+                                If readingGroups Then
+                                    ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
+                                    przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                Else
+                                    przSatz = 1.0
+                                End If
 
                                 Do While curLevel = lastLevel And ix <= anzZeilen - 1
 
@@ -23452,9 +23279,23 @@ Public Module agm2
                                         parentRole.addSubRole(subRole.UID, przSatz)
                                         parentRole.isSkill = readingGroups            'Team-Marker setzen
 
-                                        If readingGroups Then
+                                        If curLevel = maxIndent And readingGroups Then
 
-                                            If listOFPeople.Contains(curRoleName) Then
+                                            ' ur:2.1.21 wird oben gesetzt
+                                            'If Not parentRole.isSkill Then
+                                            '    parentRole.isSkill = True
+                                            'End If
+
+                                            If subRole.getSubRoleCount > 0 Then
+                                                ' Fehler ! 
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                Else
+                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                End If
+
+                                                meldungen.Add(errMsg)
+                                            Else
                                                 subRole.addSkill(parentRole.UID, przSatz)
                                             End If
 
@@ -23475,10 +23316,9 @@ Public Module agm2
                                         curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                         curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                         If readingGroups Then
-                                            przSatz = 0.0
-                                            'przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                            przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                         Else
-                                            przSatz = 0.0
+                                            przSatz = 1.0
                                         End If
 
                                     Else
@@ -23507,12 +23347,31 @@ Public Module agm2
                                         parentRole.isSkill = readingGroups            'Team-Marker setzen
 
                                         If readingGroups Then
+                                            ' hier kann er eigentlich nie hinkommen ...
+                                            If curLevel = maxIndent Then
+                                                'If Not parentRole.isSkill Then
+                                                '    parentRole.isSkill = True
+                                                'End If
+                                                If subRole.getSubRoleCount > 0 Then
+                                                    ' Fehler ! 
+                                                    If awinSettings.englishLanguage Then
+                                                        errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                    Else
+                                                        errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                    End If
+                                                    meldungen.Add(errMsg)
+                                                Else
+                                                    subRole.addSkill(parentRole.UID, przSatz)
+                                                End If
 
-                                            If listOFPeople.Contains(curRoleName) Then
-                                                subRole.addSkill(parentRole.UID, przSatz)
+                                            Else
+
+                                                If subRole.getSubRoleCount = 0 Then
+                                                    subRole.isSkill = readingGroups
+                                                End If
                                             End If
-
                                         End If
+
 
                                     Else
                                         ' nichts tun 
@@ -23599,9 +23458,6 @@ Public Module agm2
         Dim relAliasesCol As Integer
         Dim relIsExternRoleCol As Integer
         Dim relIsTeamCol As Integer
-        Dim relIsAggrRoleCol As Integer
-        Dim relIsSumRoleCol As Integer
-        Dim relIsActDataRelevantCol As Integer
         Dim valuestart As Integer
         Dim valueend As Integer
         Try
@@ -23622,9 +23478,6 @@ Public Module agm2
                 relentryDateCol = configListe("entryDate").column.von - nameCol
                 relpercentCol = configListe("percent").column.von - nameCol
                 relAliasesCol = configListe("aliases").column.von - nameCol
-                relIsAggrRoleCol = configListe("isAggregationRole").column.von - nameCol
-                relIsSumRoleCol = configListe("isSummaryRole").column.von - nameCol
-                relIsActDataRelevantCol = configListe("isActDataRelevant").column.von - nameCol
 
             Else
                 If awinSettings.englishLanguage Then
@@ -24038,6 +23891,8 @@ Public Module agm2
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
+
+
                                     If Not IsNothing(c.Offset(0, relIsExternRoleCol).Value) Then
                                         Dim tmpValue As String = CStr(c.Offset(0, relIsExternRoleCol).Value)
                                         tmpValue = tmpValue.Trim
@@ -24064,38 +23919,6 @@ Public Module agm2
                                         End If
                                         meldungen.Add(errMsg)
                                     End Try
-
-                                    ' ur:08.07.2021 Aufnahme isAggregationRole
-                                    If Not IsNothing(c.Offset(0, relIsAggrRoleCol).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, relIsAggrRoleCol).Value)
-                                        tmpValue = tmpValue.Trim
-                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        If positiveCriterias.Contains(tmpValue) Then
-                                            .isAggregationRole = True
-                                        End If
-                                    End If
-                                    ' ur:08.07.2021 Aufnahme isSummaryRole
-                                    If Not IsNothing(c.Offset(0, relIsSumRoleCol).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, relIsSumRoleCol).Value)
-                                        tmpValue = tmpValue.Trim
-                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        If positiveCriterias.Contains(tmpValue) Then
-                                            .isSummaryRole = True
-                                        End If
-                                    End If
-                                    ' ur:08.07.2021 Aufnahme isActDataRelvant
-                                    If Not IsNothing(c.Offset(0, relIsActDataRelevantCol).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, relIsActDataRelevantCol).Value)
-                                        tmpValue = tmpValue.Trim
-                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        If positiveCriterias.Contains(tmpValue) Then
-                                            .isActDataRelevant = True
-                                        End If
-                                    End If
-
 
                                     ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                     Try
@@ -24717,12 +24540,6 @@ Public Module agm2
                 End Try
 
                 Try
-                    awinSettings.onePersonOneRole = CBool(.Range("onePersonOneRole").Value)
-                Catch ex As Exception
-                    awinSettings.onePersonOneRole = False
-                End Try
-
-                Try
                     awinSettings.autoSetActualDataDate = CBool(.Range("autoSetActualDataDate").Value)
                 Catch ex As Exception
                     awinSettings.autoSetActualDataDate = False
@@ -25204,8 +25021,6 @@ Public Module agm2
             Else
                 outputline = "Es sind Fehler beim Lesen des Config-File aufgetreten"
             End If
-
-            meldungen.Add(outputline)
         End If
 
         ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
@@ -25804,9 +25619,6 @@ Public Module agm2
         customizations.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
         customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
-
-        ' steuert, ob eine Person immer exakt eine Rolle/Skill hat. Wird benötigt, wenn Personen Junior, Senior, Expert zugewiesen wird 
-        customizations.onePersonOneRole = awinSettings.onePersonOneRole
 
         customizations.actualDataMonth = awinSettings.actualDataMonth
         customizations.ergebnisfarbe1 = ergebnisfarbe1
