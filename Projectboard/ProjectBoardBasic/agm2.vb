@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports DBAccLayer
-Imports ClassLibrary1
+Imports ProjectboardReports
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
@@ -8299,7 +8299,7 @@ Public Module agm2
                                        ByRef TEroleNamesToConsider() As String,
                                        ByRef TEcolRoleNamesToConsider() As Integer,
                                        ByVal currentWS As Excel.Worksheet,
-                                       ByVal importTyp As ptVisboImportTypen)
+                                       ByVal importTyp As ptImportTypen)
 
         Dim tmpRoleNames() As String = Nothing
         Dim tmpColBz() As String = Nothing
@@ -8319,7 +8319,7 @@ Public Module agm2
 
 
 
-        If importTyp = ptVisboImportTypen.allianzMassImport1 Then
+        If importTyp = ptImportTypen.allianzMassImport1 Then
 
             zeile = 2
             ' am besten hier aus awinsettings einlesen ...
@@ -8335,7 +8335,7 @@ Public Module agm2
             tmpTEcolBZ = Nothing
             ReDim tmpTECols(0)
 
-        ElseIf importTyp = ptVisboImportTypen.allianzMassImport2 Then
+        ElseIf importTyp = ptImportTypen.allianzMassImport2 Then
             zeile = 3
             tmpRoleNames = {"D-BITSV-KB0", "D-BITSV-KB1", "D-BITSV-KB2", "D-BITSV-KB3", "D-BITSV-SBF1", "D-BITSV-SBF2", "D-BITSV-SBF-DRUCK", "D-BITSV-SBP1", "D-BITSV-SBP2", "D-BITSV-SBP3", "AMIS"}
             tmpColBz = {"CP1", "CQ1", "CR1", "CS1", "CU1", "CV1", "CW1", "CY1", "CZ1", "DA1", "DB1"}
@@ -8376,7 +8376,7 @@ Public Module agm2
 
         End If
 
-        If importTyp = ptVisboImportTypen.allianzBOBImport Then
+        If importTyp = ptImportTypen.allianzBOBImport Then
 
             For i As Integer = 0 To endCol - startCol - 1
                 If Not RoleDefinitions.containsName(tmpTEroleNames(i)) Then
@@ -8479,7 +8479,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="importType"></param>
     ''' <returns></returns>
-    Private Function bestimmeWsAndImporttype(ByRef importType As ptVisboImportTypen) As Excel.Worksheet
+    Private Function bestimmeWsAndImporttype(ByRef importType As ptImportTypen) As Excel.Worksheet
         Dim resultWS As Excel.Worksheet = Nothing
         Dim wb As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim tmpImportType As Integer = -1
@@ -8488,11 +8488,11 @@ Public Module agm2
 
             If wb.Name = "BOBundScope" Then
                 resultWS = wb
-                importType = ptVisboImportTypen.allianzBOBImport
+                importType = ptImportTypen.allianzBOBImport
             Else
                 tmpImportType = CInt(wb.Range(visboImportKennung).Value)
 
-                If [Enum].IsDefined(GetType(ptVisboImportTypen), tmpImportType) Then
+                If [Enum].IsDefined(GetType(ptImportTypen), tmpImportType) Then
                     resultWS = CType(CType(wb.Range(visboImportKennung), Excel.Range).Parent, Excel.Worksheet)
                     importType = tmpImportType
                 End If
@@ -9138,7 +9138,7 @@ Public Module agm2
 
         Dim zeile As Integer, spalte As Integer
 
-        Dim importType As ptVisboImportTypen
+        Dim importType As ptImportTypen
 
         ' tk : nimmt die Start- bzw Ende-Daten auf ...
         Dim pStartDatum As Date
@@ -9260,7 +9260,7 @@ Public Module agm2
 
         Try
 
-            importType = ptVisboImportTypen.allianzBOBImport
+            importType = ptImportTypen.allianzBOBImport
             Dim currentWS As Excel.Worksheet = bestimmeWsAndImporttype(importType)
 
 
@@ -10280,7 +10280,7 @@ Public Module agm2
 
         Dim zeile As Integer, spalte As Integer
 
-        Dim importType As ptVisboImportTypen
+        Dim importType As ptImportTypen
 
         Dim tfZeile As Integer = 2
 
@@ -10404,12 +10404,12 @@ Public Module agm2
 
             If IsNothing(currentWS) Then
                 Call MsgBox("Import File nicht erkannt - bitte " & visboImportKennung & "-Feld in Excel-Datei eintragen!")
-            ElseIf (importType <> ptVisboImportTypen.allianzMassImport1 And importType <> ptVisboImportTypen.allianzMassImport2) Then
+            ElseIf (importType <> ptImportTypen.allianzMassImport1 And importType <> ptImportTypen.allianzMassImport2) Then
                 Call MsgBox("keine Allianz-Projektliste: " & visboImportKennung & "muss Wert 5 oder 6 haben!")
                 Exit Sub
             End If
 
-            Dim isOldAllianzImport As Boolean = (importType = ptVisboImportTypen.allianzMassImport1)
+            Dim isOldAllianzImport As Boolean = (importType = ptImportTypen.allianzMassImport1)
 
 
             With currentWS
@@ -10558,7 +10558,7 @@ Public Module agm2
 
                 If Not IsNothing(roleNamesToConsider) Then
 
-                    If importType = ptVisboImportTypen.allianzMassImport2 Then
+                    If importType = ptImportTypen.allianzMassImport2 Then
 
                         If Not IsNothing(TEroleNamesToConsider) Then
                             tmpLen = tmpLen + TEroleNamesToConsider.Length
