@@ -465,7 +465,6 @@ Module SIModule1
                     Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
                     allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
-
                 Else
                     With myCustomUserRole
                         .userName = dbUsername
@@ -593,7 +592,7 @@ Module SIModule1
         Dim result As New clsCustomUserRole
         With result
             .userName = dbUsername
-            .customUserRole = ptCustomUserRoles.OrgaAdmin
+            .customUserRole = ptCustomUserRoles.ProjektLeitung
         End With
 
         'Dim result As clsCustomUserRole = Nothing

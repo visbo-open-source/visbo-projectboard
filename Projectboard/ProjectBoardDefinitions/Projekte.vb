@@ -28054,5 +28054,50 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' moves project to new start- and end-Date
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="newStartDate"></param>
+    ''' <param name="newEndDate"></param>
+    ''' <returns></returns>
+    Public Function moveProject(ByVal hproj As clsProjekt,
+                                 ByVal newStartDate As Date,
+                                 ByVal newEndDate As Date) As clsProjekt
+
+        Dim resultingProject As clsProjekt = Nothing
+
+        Try
+            ' make sure things can be moved ...
+            hproj.movable = True
+
+            Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+            Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate.Date, newEndDate.Date) + 1
+
+            Dim cphase As clsPhase = hproj.getPhase(1)
+
+            Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+            hproj.startDate = newStartDate.Date.AddHours(8)
+
+            If diffDays <> 0 Then
+                ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
+                ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
+                ' 
+                Call hproj.syncXWertePhases()
+            End If
+
+            newOffsetInTagen = 0
+
+            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, True)
+
+            resultingProject = hproj
+        Catch ex As Exception
+
+        End Try
+
+        moveProject = resultingProject
+    End Function
+
+
 
 End Module

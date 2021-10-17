@@ -3496,6 +3496,53 @@
     End Property
 
     ''' <summary>
+    ''' if there are any skills defined, it will be returned by this
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getSkillNameIds() As Collection
+        Get
+
+            Dim phase As clsPhase
+            Dim tmpRoleNameIDs As New Collection
+
+            Dim skillNameID As String
+            Dim hrole As clsRolle
+            Dim p As Integer, r As Integer
+
+            'Dim ende As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+                    phase = AllPhases.Item(p)
+                    With phase
+                        For r = 1 To .countRoles
+                            hrole = .getRole(r)
+                            If hrole.summe > 0 Then
+                                If hrole.teamID > 0 Then
+                                    Dim containingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(hrole.teamID).UID
+                                    skillNameID = RoleDefinitions.bestimmeRoleNameID(containingRoleID, hrole.teamID)
+
+                                    '
+                                    ' das ist performanter als der Weg über try .. catch 
+                                    '
+                                    If Not tmpRoleNameIDs.Contains(skillNameID) Then
+                                        tmpRoleNameIDs.Add(skillNameID, skillNameID)
+                                    End If
+                                End If
+                            End If
+                        Next r
+                    End With
+                Next p
+
+            End If
+
+            getSkillNameIds = tmpRoleNameIDs
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die RoleNameIDs in einer Collection of Strings zurück; jeder Eintrag hat die Form roleId;teamID bzw. roleID  
     ''' </summary>
     ''' <returns></returns>

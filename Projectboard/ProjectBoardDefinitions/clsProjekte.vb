@@ -659,6 +659,27 @@ Public Class clsProjekte
         End Get
     End Property
 
+    Public ReadOnly Property getRoleSkillIDs() As Collection
+        Get
+
+            Dim roleSkillIDs As New Collection
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getSkillNameIds
+
+                For Each tmpName As String In tmpCollection
+                    If Not roleSkillIDs.Contains(tmpName) Then
+                        roleSkillIDs.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getRoleSkillIDs = roleSkillIDs
+        End Get
+    End Property
 
     ''' <summary>
     ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
@@ -2022,7 +2043,52 @@ Public Class clsProjekte
         End Get
 
     End Property
+    ''' <summary>
+    ''' returns true if in any month there is a overutilization of more than three time overloadCriterion
+    ''' 
+    ''' </summary>
+    ''' <param name="roleIDs"></param>
+    ''' <param name="overloadCriterion">returns true, if any month is overloaded more than overloadCriterion and onlyStrictly=false </param>
+    ''' <param name="onlyStrictly">false: single months overloads should be taken into account even when overall timeframe is not overloaded at all </param>
+    ''' <param name="totalOverloadCriterion">returns true if total sum of roles is larger than totalOverloadCriterion * kapa </param>
+    ''' <returns></returns>
+    Public Function overLoadFound(ByVal roleIDs As List(Of String),
+                                  ByVal onlyStrictly As Boolean,
+                                  ByVal overloadCriterion As Double,
+                                  ByVal totalOverloadCriterion As Double) As Boolean
 
+        Dim overloaded As Boolean = False
+        Dim monthlyCriterion As Double = 3 * overloadCriterion
+
+        For Each roleIDstr As String In roleIDs
+
+            Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
+            Dim myCollection As New Collection From {
+                roleIDstr
+            }
+            Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
+
+            If Not onlyStrictly Then
+                For i As Integer = 0 To roleValues.Length - 1
+                    If roleValues(i) >= overloadCriterion * kapaValues(i) Then
+                        overloaded = True
+                        Exit For
+                    End If
+                Next
+            End If
+
+            If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
+                overloaded = True
+            End If
+
+            If overloaded Then
+                Exit For
+            End If
+
+        Next
+
+        overLoadFound = overloaded
+    End Function
 
     ''' <summary>
     ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
@@ -3535,8 +3601,9 @@ Public Class clsProjekte
         ' now checkout the resource needs and available capacities
         For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
 
-            Dim myCollection As New Collection
-            myCollection.Add(kvp.Key)
+            Dim myCollection As New Collection From {
+                kvp.Key
+            }
             Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
 
             If Not placeHolderNeeds.ContainsKey(kvp.Key) Then

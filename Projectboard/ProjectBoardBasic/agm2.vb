@@ -4500,7 +4500,12 @@ Public Module agm2
                 prj = CType(CreateObject("msproject.application"), MSProject.Application)
 
                 If IsNothing(prj) Then
-                    Call MsgBox("MSproject ist nicht installiert")
+                    If modus <> "RPA" Then
+                        Call MsgBox("MSproject ist nicht installiert")
+                    Else
+                        Call logger(ptErrLevel.logError, "Import MS Project", "not installed ... Exit")
+                    End If
+
                     Exit Sub
                 End If
             End Try
@@ -4511,7 +4516,7 @@ Public Module agm2
                 ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
 
                 prj.FileOpen(Name:=filename,
-                            ReadOnly:=True, FormatID:="MSProject.MPP")
+                            ReadOnly:=True, FormatID:="MSProject.MPP", NoAuto:=True)
 
 
             End If
@@ -5371,7 +5376,12 @@ Public Module agm2
 
                 ' Ausgabe der Checks-Fehler
                 If outputCollection.Count > 0 Then
-                    Call showOutPut(outputCollection, "Import " & hproj.name & " Standard", "folgende Ungereimtheiten in den Daten wurden festgestellt")
+                    If modus <> "RPA" Then
+                        Call showOutPut(outputCollection, "Import " & hproj.name & " Standard", "folgende Ungereimtheiten in den Daten wurden festgestellt")
+                    Else
+                        Call logger(ptErrLevel.logWarning, "MS Project Import Warnings: ", outputCollection)
+                    End If
+
                 End If
 
 
@@ -5392,7 +5402,12 @@ Public Module agm2
 
                                 Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
                                 If hrchynode.childCount > 0 Then
-                                    Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                    If modus <> "RPA" Then
+                                        Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                    Else
+                                        Call logger(ptErrLevel.logWarning, "MS Project Import Warnings ", "Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                    End If
+
                                 Else
                                     hproj.removeMeilenstein(elemID)
                                 End If
@@ -5444,6 +5459,7 @@ Public Module agm2
                     End If
 
                     AlleProjekte.Add(hproj)
+                    ShowProjekte.Clear()
 
                 Else
                     If ImportProjekte.Containskey(key) Then
@@ -5452,25 +5468,27 @@ Public Module agm2
 
                     ' immer mit updateCurrentConstellation = false aufrufen, nur bei AlleProjekte bzw. bei ShowProjekte ggf mit optionaler Setzung aufrufen ..
                     ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-
                 End If
 
-                If modus = "BHTC" Then
-                    ' Alle Projekte in ShowProjekte löschen
-                    ShowProjekte.Clear()
+
+                If modus <> "RPA" Then
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    Else
+                        ShowProjekte.Remove(hproj.name)
+                        ShowProjekte.Add(hproj)
+                    End If
                 End If
 
-                If Not ShowProjekte.contains(hproj.name) Then
-                    ShowProjekte.Add(hproj)
-                Else
-                    ShowProjekte.Remove(hproj.name)
-                    ShowProjekte.Add(hproj)
-                    'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
-                End If
 
                 ' Fehlermeldung: Falsche Währung vordefiniert.
                 If msproj.CurrencyCode <> "EUR" Then
-                    Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                    If modus <> "RPA" Then
+                        Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                    Else
+                        Call logger(ptErrLevel.logWarning, "MS Project Import: ", "Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                    End If
+
                 End If
 
 
@@ -5536,12 +5554,6 @@ Public Module agm2
 
                         End If
 
-                        ' Fehlermeldung: Falsche Währung vordefiniert.
-                        If msproj.CurrencyCode <> "EUR" Then
-                            Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
-                        End If
-
-
                     End If
 
                 End If
@@ -5553,11 +5565,21 @@ Public Module agm2
 
             Else
 
-                Call MsgBox("Bitte zunächst ein Projekt öffnen !")
+                If modus <> "RPA" Then
+                    Call MsgBox("Bitte zunächst ein Projekt öffnen !")
+                Else
+                    Call logger(ptErrLevel.logError, "MS Project Import ", "no project ... ")
+                End If
+
 
             End If
         Catch ex As Exception
-            Call MsgBox(ex)
+            If modus <> "RPA" Then
+                Call MsgBox(ex.Message)
+            Else
+                Call logger(ptErrLevel.logError, "MS Project Import ", ex.Message)
+            End If
+
         End Try
 
 
@@ -8855,16 +8877,6 @@ Public Module agm2
                 oldOrga = validOrganisations.getOrganisationValidAt(validFrom)
             End If
         End If
-
-        '' OldOrga kopieren
-        'Dim orgaCopy As New clsOrganisation
-        'If Not IsNothing(oldOrga) Then
-        '    orgaCopy = oldOrga.copy(outputCollection)
-        'Else
-        '    orgaCopy = Nothing
-        'End If
-
-        'newRoleDefinitions = orgaCopy.allRoles
 
 
 

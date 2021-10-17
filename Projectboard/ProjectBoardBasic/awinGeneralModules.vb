@@ -1496,14 +1496,14 @@ Public Module awinGeneralModules
                 'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
             End Try
 
-
-
-
-
         Next
 
         If calledFromRPA Then
-            ImportProjekte = AlleProjekte
+            ' for later store in RPA
+            ImportProjekte.Clear(updateCurrentConstellation:=False)
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+                ImportProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+            Next
         Else
             ' interactive Excel Client
             If ImportProjekte.Count < 1 Then

@@ -8365,10 +8365,6 @@ Imports System.Web
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        ' öffnen des LogFiles
-        'Call logfileOpen()
-
-
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
             weiterMachen = True
@@ -8881,7 +8877,7 @@ Imports System.Web
             appInstance.ScreenUpdating = False
             enableOnUpdate = False
 
-            Dim myCollection As New Collection
+            'Dim myCollection As New Collection
 
 
 
@@ -8915,12 +8911,12 @@ Imports System.Web
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
                         ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-                        myCollection.Add(calcProjektKey(hproj))
+                        'myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
                             ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
-                            myCollection.Add(calcProjektKey(mapProj))
+                            'myCollection.Add(calcProjektKey(mapProj))
 
                         End If
                     Catch ex2 As Exception

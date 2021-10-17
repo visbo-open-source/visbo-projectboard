@@ -5655,7 +5655,8 @@ Public Module Module1
                                         ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, ByVal vpid As String,
                                         ByVal q1 As String, ByVal q2 As String,
                                         ByVal bigtype As Integer, ByVal detailID As Integer,
-                                        ByVal nameIDS As Collection)
+                                        ByVal nameIDS As Collection,
+                                        ByVal nameIDSPh As Collection)
 
         If nameIDS.Count = 0 And bigtype = ptReportBigTypes.charts Then
             Exit Sub
@@ -5663,6 +5664,9 @@ Public Module Module1
 
         Dim nameIDString As String = ""
         nameIDString = convertCollToNids(nameIDS)
+
+        Dim nameIDStringPh As String = ""
+        nameIDStringPh = convertCollToNids(nameIDSPh)
 
         Try
 
@@ -5734,6 +5738,14 @@ Public Module Module1
                         .Tags.Add("NIDS", nameIDString)
                     End If
 
+                    ' tk ergänzt am 28.9.21
+                    If .Tags.Item("NIDSP").Length > 0 Then
+                        .Tags.Delete("NIDSP")
+                    End If
+                    If Not IsNothing(nameIDStringPh) Then
+                        .Tags.Add("NIDSP", nameIDStringPh)
+                    End If
+
                     ' tk ergänzt am 20.10.20 
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft And showRangeRight < 240 Then
                         If .Tags.Item("SRLD").Length > 0 Then
@@ -5768,11 +5780,11 @@ Public Module Module1
     ''' <param name="hproj"></param>
     ''' <param name="bproj"></param>
     ''' <param name="lproj"></param>
-    ''' <param name="toDoCollection">enthält die NAmen, ggf incl P:, V: oder C: Qualifier und ggf inkl Breadcrumb Anteilen </param>
+    ''' <param name="toDoMilestones">enthält die NAmen, ggf incl P:, V: oder C: Qualifier und ggf inkl Breadcrumb Anteilen </param>
     ''' <param name="q1">0, später die Anzahl Phasen </param>
     ''' <param name="q2">Anzahl Milestones; aktuell redundant, da identisch mit Anzahl in der Collection</param>
     Public Sub zeichneTableMilestoneAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
-                                     ByVal toDoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+                                     ByVal toDoPhases As Collection, ByVal toDoMilestones As Collection, ByVal q1 As String, ByVal q2 As String)
 
         Dim repmsg() As String
         ' Performance Ratio 1 ist das Verhältnis zwischen der Anzahl aktuell erreichter Meilensteine im betrachteten Monat versus der Anzahl erreichter Meilensteine im betrachteten Monat im stand zur Beauftragung 
@@ -5822,14 +5834,12 @@ Public Module Module1
 
         End Try
 
-        Dim showOverviewOnly As Boolean = (toDoCollection.Count = 0)
-
         ' jetzt wird SmartTableInfo gesetzt 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  toDoCollection)
+                                  toDoPhases, toDoMilestones)
 
         ' jetzt werden die einzelnen Zeilen geschrieben 
 
@@ -5879,37 +5889,106 @@ Public Module Module1
                 Dim tabellenzeile As Integer = 2
                 Try
 
-                    If Not showOverviewOnly Then
+                    einrueckung = 1
 
-                        einrueckung = 1
+                    ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                    Dim firstMilestone As Boolean = True
 
-                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
-                        Dim firstMilestone As Boolean = True
+                    Dim curValue As Date = Date.MinValue ' not defined
+                    Dim faprValue As Date = Date.MinValue  ' first approved version 
+                    Dim laprValue As Date = Date.MinValue  ' last approved version
 
-                        Dim curValue As Date = Date.MinValue ' not defined
-                        Dim faprValue As Date = Date.MinValue  ' first approved version 
-                        Dim laprValue As Date = Date.MinValue  ' last approved version
+                    If anzPhases > 0 Then
+                        ' 
+                        'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                        tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = "Phases"
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
+                    End If
 
-                        If anzPhases > 0 Then
-                            ' 
-                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = "Phases"
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        End If
+                    ' nimmt die eindeutigen IDs auf 
+                    Dim listOfIDs As New Collection
 
-                        ' nimmt die eindeutigen IDs auf 
-                        Dim listOfIDs As New Collection
 
-                        For m As Integer = 1 To toDoCollection.Count
+                    If CInt(q1) > 0 And Not IsNothing(toDoPhases) Then
+
+                        For p As Integer = 1 To toDoPhases.Count
 
                             Dim tmpCollection As New Collection From {
-                                CStr(toDoCollection.Item(m))
+                                CStr(toDoPhases.Item(p))
                             }
 
-                            'Dim hprojBreadcrumbs() As String = hproj.getBreadCrumbArray(Nothing, hproj.getElemIdsOf(tmpCollection, True))
-                            'Dim bprojBreadCrumbs() As String = Nothing
-                            'Dim lprojBreadCrumbs() As String = Nothing
+
+                            Dim hprojLIDs As Collection = hproj.getElemIdsOf(tmpCollection, True)
+                            Dim bProjLIDs As Collection = Nothing
+                            Dim lprojLIDs As Collection = Nothing
+
+                            If considerFapr Then
+                                bProjLIDs = bproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            If considerLapr Then
+                                lprojLIDs = lproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            ' hproj steuert jetzt die Schleife 
+                            For hix As Integer = 1 To hprojLIDs.Count
+
+                                Dim hprojPhID As String = CStr(hprojLIDs.Item(hix))
+                                Dim curItem As String = elemNameOfElemID(hprojPhID)
+
+                                curValue = Date.MinValue
+                                faprValue = Date.MinValue
+                                laprValue = Date.MinValue
+
+                                Dim hPhase As clsPhase = hproj.getPhaseByID(hprojPhID)
+
+                                If Not IsNothing(hPhase) Then
+                                    curValue = hPhase.getEndDate
+                                End If
+
+                                Dim bPhase As clsPhase = Nothing
+                                If considerFapr Then
+                                    If hix <= bProjLIDs.Count Then
+                                        bPhase = bproj.getPhaseByID(CStr(bProjLIDs.Item(hix)))
+                                        If Not IsNothing(bPhase) Then
+                                            faprValue = bPhase.getEndDate
+                                        End If
+                                    End If
+                                End If
+
+                                Dim lPhase As clsPhase = Nothing
+                                If considerLapr Then
+                                    If hix <= lprojLIDs.Count Then
+                                        lPhase = lproj.getPhaseByID(CStr(lprojLIDs.Item(hix)))
+                                        If Not IsNothing(lPhase) Then
+                                            laprValue = lPhase.getEndDate
+                                        End If
+                                    End If
+                                End If
+
+                                Call schreibeMilestoneAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+
+                                tabelle.Rows.Add()
+                                tabellenzeile = tabellenzeile + 1
+
+
+                            Next
+
+                        Next
+
+                    End If
+
+
+                    If CInt(q2) > 0 And Not IsNothing(toDoMilestones) Then
+
+                        For m As Integer = 1 To toDoMilestones.Count
+
+                            Dim tmpCollection As New Collection From {
+                                CStr(toDoMilestones.Item(m))
+                            }
+
 
                             Dim hprojLIDs As Collection = hproj.getElemIdsOf(tmpCollection, True)
                             Dim bProjLIDs As Collection = Nothing
@@ -5970,12 +6049,8 @@ Public Module Module1
 
                         Next
 
-
-                    Else
-
-                        Call MsgBox("noch nicht implementiert ...")
-
                     End If
+
 
                     ' jetzt letzte Zeile löschen  ...
                     tabelle.Rows(tabellenzeile).Delete()
@@ -6460,7 +6535,7 @@ Public Module Module1
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  emptyCollection)
+                                  emptyCollection, emptyCollection)
 
         ' jetzt werden die einzelnen Zeilen geschrieben 
 
@@ -7365,18 +7440,22 @@ Public Module Module1
     ''' <returns></returns>
     Public Function convertCollToNids(ByVal nameCollection As Collection) As String
         Dim nids As String = ""
-        For Each tmpName As String In nameCollection
 
-            If tmpName.Contains("#") Then
-                tmpName = tmpName.Replace("#", "^")
-            End If
+        If Not IsNothing(nameCollection) Then
+            For Each tmpName As String In nameCollection
 
-            If nids = "" Then
-                nids = tmpName.Trim
-            Else
-                nids = nids & "#" & tmpName.Trim
-            End If
-        Next
+                If tmpName.Contains("#") Then
+                    tmpName = tmpName.Replace("#", "^")
+                End If
+
+                If nids = "" Then
+                    nids = tmpName.Trim
+                Else
+                    nids = nids & "#" & tmpName.Trim
+                End If
+            Next
+        End If
+
         convertCollToNids = nids
     End Function
 
@@ -9603,46 +9682,5 @@ Public Module Module1
 
     End Function
 
-    'Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
-
-    '' Returns an array with the local IP addresses (as strings).
-    '' Author: Christian d'Heureuse, www.source-code.biz
-    'Public Function GetIpAddrTable() As String()
-    '    Dim Buf(0 To 511) As Byte
-    '    Dim BufSize As Long : BufSize = UBound(Buf) + 1
-    '    Dim rc As Long
-    '    rc = GetIpAddrTable_API(Buf(0), BufSize, 1)
-    '    If rc <> 0 Then
-    '        Err.Raise(vbObjectError, , "GetIpAddrTable failed with return value " & rc)
-    '    End If
-    '    Dim NrOfEntries As Integer : NrOfEntries = Buf(1) * 256 + Buf(0)
-    '    Dim IpAddrs() As String
-    '    ReDim IpAddrs(0 To NrOfEntries - 1)
-    '    If NrOfEntries = 0 Then
-    '        GetIpAddrTable = IpAddrs
-    '        Exit Function
-    '    End If
-
-    '    Dim i As Integer
-    '    For i = 0 To NrOfEntries - 1
-    '        Dim j As Integer, s As String : s = ""
-    '        For j = 0 To 3 : s = s & IIf(j > 0, ".", "") & Buf(4 + i * 24 + j) : Next
-    '        IpAddrs(i) = s
-    '    Next
-    '    GetIpAddrTable = IpAddrs
-    'End Function
-
-
-
-    '' Test program for GetIpAddrTable.
-    'Public Sub Test()
-    '    Dim IpAddrs() As String
-    '    IpAddrs = GetIpAddrTable()
-    '    Debug.Print("Nr of IP addresses: " & (UBound(IpAddrs) - LBound(IpAddrs) + 1).ToString)
-    '    Dim i As Integer
-    '    For i = LBound(IpAddrs) To UBound(IpAddrs)
-    '        Debug.Print(IpAddrs(i))
-    '    Next
-    'End Sub
 
 End Module
