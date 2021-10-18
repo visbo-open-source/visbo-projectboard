@@ -1709,7 +1709,7 @@ Public Class clsPhase
             ElseIf missingPhaseDefinitions.Contains(tmpName) Then
                 abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
             Else
-                abbrev = ""
+                abbrev = _shortName
             End If
 
             shortName = abbrev
