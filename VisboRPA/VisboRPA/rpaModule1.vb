@@ -134,6 +134,10 @@ Module rpaModule1
 
                                     Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
 
+                                    Dim overloadAllowedinMonths As Double = 1.0
+                                    Dim overloadAllowedTotal As Double = 1.03
+
+
                                     Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProjectList.ToString, myName)
                                     Dim readProjects As Integer = 0
                                     Dim createdProjects As Integer = 0
@@ -226,10 +230,10 @@ Module rpaModule1
                                                 ShowProjekte.Add(hproj)
                                             End If
 
-                                            Dim overutilizationFound As Boolean = ShowProjekte.overLoadFound(aggregationList, False, 1.3, 1.05)
+                                            Dim overutilizationFound As Boolean = ShowProjekte.overLoadFound(aggregationList, False, overloadAllowedinMonths, overloadAllowedTotal)
 
                                             If Not overutilizationFound Then
-                                                overutilizationFound = ShowProjekte.overLoadFound(skillList, False, 1.3, 1.05)
+                                                overutilizationFound = ShowProjekte.overLoadFound(skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
                                             End If
 
                                             If overutilizationFound Then
@@ -268,10 +272,10 @@ Module rpaModule1
                                                         AlleProjekte.Add(tmpProj)
                                                         ShowProjekte.Add(tmpProj)
 
-                                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, True, 1.3, 1.05)
+                                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, False, overloadAllowedinMonths, overloadAllowedTotal)
 
                                                         If Not overutilizationFound Then
-                                                            overutilizationFound = ShowProjekte.overLoadFound(skillList, True, 1.3, 1.05)
+                                                            overutilizationFound = ShowProjekte.overLoadFound(skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
                                                         End If
 
                                                         If overutilizationFound Then
@@ -289,13 +293,13 @@ Module rpaModule1
                                                     ' it is already in there ... but now needed to be stored
                                                     Dim myMessages As New Collection
                                                     If storeSingleProjectToDB(hproj, myMessages) Then
-                                                        Dim infomsg As String = "store created variant " & hproj.getShapeText
+                                                        Dim infomsg As String = "created variant to avoid bottlenecks " & hproj.getShapeText
                                                         Call logger(ptErrLevel.logInfo, infomsg, myMessages)
                                                         Console.WriteLine(infomsg)
                                                     Else
                                                         ' take it out again , because there was no solution
                                                         ShowProjekte.Remove(hproj.name)
-                                                        Dim infomsg As String = "store of created variant failed " & hproj.getShapeText
+                                                        Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
                                                         Call logger(ptErrLevel.logError, infomsg, myMessages)
                                                         Console.WriteLine(infomsg)
                                                     End If
