@@ -89,12 +89,6 @@
     <Compile Include="clsDocumentsDB.vb" />
     <Compile Include="clsErrorCodeMsg.vb" />
     <Compile Include="clsJIRA_Task.vb" />
-    <Compile Include="frmProvideDate.Designer.vb">
-      <DependentUpon>frmProvideDate.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmProvideDate.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="clsHierarchyDB.vb" />
     <Compile Include="clsHierarchyNodeDB.vb" />
     <Compile Include="clsKeyMetrics.vb" />
@@ -184,6 +178,18 @@
     <Compile Include="clsRollenDefinition.vb" />
     <Compile Include="clsVerknuepfung.vb" />
     <Compile Include="clsWriteProtections.vb" />
+    <Compile Include="frmAllocateRessources.Designer.vb">
+      <DependentUpon>frmAllocateRessources.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAllocateRessources.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProvideDate.Designer.vb">
+      <DependentUpon>frmProvideDate.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProvideDate.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmEditDates.Designer.vb">
       <DependentUpon>frmEditDates.vb</DependentUpon>
     </Compile>
@@ -342,6 +348,9 @@
     <Compile Include="Settings.vb" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="frmAllocateRessources.resx">
+      <DependentUpon>frmAllocateRessources.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmProvideDate.resx">
       <DependentUpon>frmProvideDate.vb</DependentUpon>
     </EmbeddedResource>

@@ -1818,15 +1818,21 @@ Public Module testModule
                                     ' wenn es im Qualifier angegebene Rollen und Kostenarten gibt, dann haben die Prio vor der interaktiven Auswahl 
                                     ' erstmal werden nur Meilensteinen betrachtet ...
                                     Dim sMilestones As Collection = selectedMilestones
+                                    Dim sPhases As Collection = selectedPhases
 
                                     If Not IsNothing(qualifier2) Then
                                         If qualifier2.Length > 0 Then
                                             sMilestones = New Collection
+                                            sPhases = New Collection
                                             Dim tmpStr() As String = qualifier2.Split(New Char() {vbLf, vbCr})
 
                                             For Each tmpPMName As String In tmpStr
+                                                If PhaseDefinitions.Contains(tmpPMName) Then
+                                                    sPhases.Add(tmpPMName)
 
-                                                sMilestones.Add(tmpPMName)
+                                                ElseIf MilestoneDefinitions.Contains(tmpPMName) Then
+                                                    sMilestones.Add(tmpPMName)
+                                                End If
                                             Next
 
                                         End If
@@ -1837,16 +1843,12 @@ Public Module testModule
 
 
                                     ' in Q2 steht die Anzahl der Meilensteine , in q1 könnte später die Anzahl der Phasen stehen  
+                                    q1 = sPhases.Count
                                     q2 = sMilestones.Count.ToString
-
-
-
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
-                                    Call zeichneTableMilestoneAPVCV(pptShape, hproj, bproj, lproj, sMilestones, q1, q2)
-                                    'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
-
+                                    Call zeichneTableMilestoneAPVCV(pptShape, hproj, bproj, lproj, sPhases, sMilestones, q1, q2)
 
                                 Catch ex As Exception
 
@@ -9999,11 +10001,13 @@ Public Module testModule
 
         End If
 
+        Dim todoCollectionPh As New Collection
+
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  todoCollection)
+                                  todoCollectionPh, todoCollection)
 
         Try
             tabelle = pptShape.Table

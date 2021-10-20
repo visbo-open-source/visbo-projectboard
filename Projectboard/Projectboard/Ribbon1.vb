@@ -2444,7 +2444,6 @@ Imports System.Web
 
         If modus = ptModus.graficboard Then
             visboZustaende.projectBoardMode = modus
-            Call visboZustaende.clearAuslastungsArray()
 
 
         Else
@@ -2840,6 +2839,13 @@ Imports System.Web
                     tmpLabel = "Budget ändern"
                 Else
                     tmpLabel = "Modify budget"
+                End If
+
+            Case "PT2G1M1B5"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Autom. Allokation"
+                Else
+                    tmpLabel = "Auto-Allocation"
                 End If
 
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
@@ -3301,6 +3307,13 @@ Imports System.Web
                     tmpLabel = "mit letzter Version vergleichen"
                 Else
                     tmpLabel = "compare with last version"
+                End If
+
+            Case "PT6G2B9" ' Allow Overtime 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Überbuchung zulassen"
+                Else
+                    tmpLabel = "allow Overtime"
                 End If
 
             Case "PTfreezeB1" ' Fixieren
@@ -5659,8 +5672,75 @@ Imports System.Web
         appInstance.EnableEvents = formerEE
     End Sub
 
+    Sub PT2AutoAllocate(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Dim outPutCollection As New Collection
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Dim errMsg As String = ""
+                            Dim allowOvertime As Boolean = False
+                            Call ShowProjekte.autoAllocate(.Name, "", allowOvertime, errMsg)
+
+
+                            If errMsg <> "" Then
+                                Call MsgBox(errMsg)
+                            Else
+                                outPutCollection.Add(.Name & " : success")
+                            End If
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection, "Auto-Allocation", "")
+            End If
+
+        Else
+            Dim msgTxt As String = "vorher Projekt selektieren ..."
+            If awinSettings.englishLanguage Then
+                msgTxt = "please select AddressOf project first .."
+            End If
+            Call MsgBox(msgTxt)
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+    End Sub
+
     ''' <summary>
-    ''' den Status eines Projekts ändern, aktuell nur auf Projekt-status = 1 
+    ''' die Platzhalter Rollen durhc Personen ersetzen ...
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
@@ -5696,20 +5776,27 @@ Imports System.Web
                     If isProjectType(shapeArt) Then
 
                         If ShowProjekte.contains(.Name) Then
+
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
                             If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
+
+                                Try
+                                    Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
+                                Catch ex As Exception
+                                    Call MsgBox(ex.Message)
+                                End Try
 
                             Else
                                 If awinSettings.englishLanguage Then
                                     Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
-                                                "and cannot be modified. You could instead create a variant.")
+                                                    "and cannot be modified at the moment. ")
                                 Else
                                     Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
-                                                "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                                    "und kann aktuell nicht verändert werden. ")
                                 End If
                             End If
+
                         End If
 
                     End If
@@ -6055,7 +6142,16 @@ Imports System.Web
                                 Call importAllianzType4()
 
                             Else
-                                Call awinImportProjektInventur()
+                                Dim readProjects As Integer = 0
+                                Dim createdProjects As Integer = 0
+                                Dim allOk As Boolean = awinImportProjektInventur(readProjects, createdProjects)
+
+                                Dim msgTxt As String = "gelesen: " & readProjects & vbLf &
+                                                          "erzeugt: " & createdProjects & vbLf &
+                                                          "importiert: " & ImportProjekte.Count
+
+                                Call MsgBox(msgTxt)
+
                             End If
 
                             listOfArchivFiles.Add(dateiName)
@@ -8100,10 +8196,6 @@ Imports System.Web
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        ' öffnen des LogFiles
-        'Call logfileOpen()
-
-
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
             weiterMachen = True
@@ -8606,7 +8698,7 @@ Imports System.Web
             appInstance.ScreenUpdating = False
             enableOnUpdate = False
 
-            Dim myCollection As New Collection
+            'Dim myCollection As New Collection
 
 
 
@@ -8640,12 +8732,12 @@ Imports System.Web
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
                         ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-                        myCollection.Add(calcProjektKey(hproj))
+                        'myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
                             ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
-                            myCollection.Add(calcProjektKey(mapProj))
+                            'myCollection.Add(calcProjektKey(mapProj))
 
                         End If
                     Catch ex2 As Exception
@@ -9975,9 +10067,6 @@ Imports System.Web
 
         awinSettings.meCompareWithLastVersion = pressed
 
-        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
-        visboZustaende.clearAuslastungsArray()
-
         ' jetzt müssen die Charts aktualisiert werden 
         Call aktualisiereCharts(visboZustaende.currentProject, False)
 
@@ -9987,21 +10076,6 @@ Imports System.Web
         PTProzAuslastung = awinSettings.mePrzAuslastung
     End Function
 
-    Sub awinPTProzAuslastung(control As IRibbonControl, ByRef pressed As Boolean)
-
-        awinSettings.mePrzAuslastung = pressed
-
-        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
-        visboZustaende.clearAuslastungsArray()
-
-        If awinSettings.meExtendedColumnsView Then
-            'Call deleteColorFormatMassEdit()
-            'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
-            'Call colorFormatMassEditRC()
-        End If
-
-
-    End Sub
 
     Public Function PTSkipChanges(control As IRibbonControl) As Boolean
         PTSkipChanges = tempSkipChanges
@@ -10019,19 +10093,23 @@ Imports System.Web
         PTmeLastPlanCompare = awinSettings.meCompareVsLastPlan
     End Function
 
+    Public Function PTmeAllowOvertime(control As IRibbonControl) As Boolean
+        PTmeAllowOvertime = awinSettings.meAllowOverTime
+    End Function
+
+    Public Sub awinMEOvertime(control As IRibbonControl, ByRef pressed As Boolean)
+        Dim result As Boolean = pressed
+    End Sub
+
     ''' <summary>
     ''' wenn Header gezeigt werden , können Spaltenbreiten verändert werden ..
     ''' </summary>
     ''' <param name="control"></param>
     ''' <param name="pressed"></param>
     Public Sub awinPTshowHeader(control As IRibbonControl, ByRef pressed As Boolean)
-        tempShowHeaders = pressed
 
-        If tempShowHeaders Then
-            appInstance.ActiveWindow.DisplayHeadings = True
-        Else
-            appInstance.ActiveWindow.DisplayHeadings = False
-        End If
+        awinSettings.meAllowOverTime = pressed
+        
     End Sub
 
     Public Sub awinMELastOrBasline(control As IRibbonControl, ByRef pressed As Boolean)
@@ -10075,99 +10153,6 @@ Imports System.Web
             End With
         End If
     End Sub
-
-    Public Function PTautomaticReduce(control As IRibbonControl) As Boolean
-        PTautomaticReduce = awinSettings.meAutoReduce
-    End Function
-
-    Sub awinPTautomaticReduce(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.meAutoReduce = pressed
-    End Sub
-    Public Function PTdontAskWhenAutoReduce(control As IRibbonControl) As Boolean
-        PTdontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
-    End Function
-
-    Sub awinPTdontAskWhenAutoReduce(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.meDontAskWhenAutoReduce = pressed
-    End Sub
-    'Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    pressed = awinSettings.mppStrict
-
-    'End Sub
-
-    'Public Sub PT6SetStrict(control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    If pressed Then
-    '        awinSettings.mppStrict = True
-    '    Else
-    '        awinSettings.mppStrict = False
-    '    End If
-
-    'End Sub
-
-    'Public Sub PT6fullyContainedPressed(control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    pressed = awinSettings.mppFullyContained
-
-    'End Sub
-
-    'Public Sub PT6SetfullyContained(control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    If pressed Then
-    '        awinSettings.mppFullyContained = True
-    '    Else
-    '        awinSettings.mppFullyContained = False
-    '    End If
-
-    'End Sub
-
-
-    'Public Sub PT6DateTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
-    '    pressed = awinSettings.mppShowMsDate
-    'End Sub
-
-
-    'Public Sub PT6SetShowDate(Control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    If pressed Then
-    '        awinSettings.mppShowMsDate = True
-    '    Else
-    '        awinSettings.mppShowMsDate = False
-    '    End If
-
-    'End Sub
-
-
-    'Public Sub PT6NameTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
-    '    pressed = awinSettings.mppShowMsName
-    'End Sub
-
-
-    'Public Sub PT6SetShowName(Control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    If pressed Then
-    '        awinSettings.mppShowMsName = True
-    '    Else
-    '        awinSettings.mppShowMsName = False
-    '    End If
-
-    'End Sub
-
-    'Public Sub PT6ProjectLinePressed(control As IRibbonControl, ByRef pressed As Boolean)
-    '    pressed = awinSettings.mppShowProjectLine
-    'End Sub
-
-
-    'Public Sub PT6SetShowProjectLine(Control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    If pressed Then
-    '        awinSettings.mppShowProjectLine = True
-    '    Else
-    '        awinSettings.mppShowProjectLine = False
-    '    End If
-
-    'End Sub
 
     Public Function PT6AmpelnPressed(control As IRibbonControl) As Boolean
         PT6AmpelnPressed = awinSettings.mppShowAmpel

@@ -212,7 +212,9 @@ Public Class clsRolle
 
         Get
 
-            farbe = RoleDefinitions.getRoleDefByID(_uid).farbe
+            farbe = visboFarbeBlau
+            ' tk 20.7.21 keine individuelle Farbe mehr für Rollen 
+            'farbe = RoleDefinitions.getRoleDefByID(_uid).farbe
 
         End Get
 

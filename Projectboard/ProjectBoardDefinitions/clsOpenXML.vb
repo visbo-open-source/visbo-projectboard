@@ -461,7 +461,8 @@ Public Class clsOpenXML
 
                         Dim newRoleDef As New clsRollenDefinition
                         newRoleDef.name = roleXML.resourceName
-                        newRoleDef.farbe = RGB(120, 120, 120)
+                        ' keine Farbe mehr für die Rolle , tk 21.7.21
+                        'newRoleDef.farbe = RGB(120, 120, 120)
                         newRoleDef.defaultKapa = 20
 
 

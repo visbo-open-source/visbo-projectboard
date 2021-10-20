@@ -9781,7 +9781,110 @@ Public Module Projekte
         getSortedListOfCapaUtilization = sortierteListe
     End Function
 
+    ''' <summary>
+    ''' returns true if uid has a value which is in the upper segment of ranking list
+    ''' </summary>
+    ''' <param name="rankingList"></param>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Private Function isAmongTopGroup(ByVal rankingList As SortedList(Of Double, Integer), ByVal uid As Integer) As Boolean
+        Dim result As Boolean = False
 
+        Try
+
+            Dim bestValue As Double = rankingList.Last.Key
+            Dim worstValue As Double = rankingList.First.Key
+            Dim borderLine As Double = worstValue + 0.51 * (bestValue - worstValue)
+
+            Dim myIndex As Integer = rankingList.IndexOfValue(uid)
+            Dim myValue As Double = rankingList.ElementAt(myIndex).Key
+
+            result = (myValue > borderLine)
+        Catch ex As Exception
+
+        End Try
+
+
+        isAmongTopGroup = result
+    End Function
+    Public Function calcBestCandidates(ByVal priorityPeople As SortedList(Of String, Double),
+                                       ByVal myCurrentskillID As Integer,
+                                       ByVal candidates As SortedList(Of Double, Integer),
+                                       ByVal projectScopeCandidates As SortedList(Of Double, Integer),
+                                       ByVal valueToSubstitute As Double) As SortedList(Of Double, Integer)
+
+        Dim result As New SortedList(Of Double, Integer)
+
+        Dim prioPeopleIDs As New List(Of Integer)
+
+        ' are priority candidates in the candidates list? 
+        For Each prioPerson As KeyValuePair(Of String, Double) In priorityPeople
+
+            Dim prioPersonSkillID As Integer = -1
+            Dim prioPersonID As Integer = RoleDefinitions.parseRoleNameID(prioPerson.Key, prioPersonSkillID)
+
+            If Not prioPeopleIDs.Contains(prioPersonID) Then
+                prioPeopleIDs.Add(prioPersonID)
+            End If
+
+            Dim found As Boolean = False
+            Dim i As Integer = candidates.Count - 1
+
+            Do While Not found And i >= 0
+                found = (candidates.ElementAt(i).Value = prioPersonID)
+                If Not found Then
+                    i = i - 1
+                End If
+            Loop
+
+
+            If found And valueToSubstitute > 0 Then
+
+                Dim myValue As Double = System.Math.Min(candidates.ElementAt(i).Key, valueToSubstitute)
+
+                If myValue < 0 Then
+                    myValue = 0
+                End If
+
+                valueToSubstitute = valueToSubstitute - myValue
+
+                If myValue > 0 Then
+                    result.Add(myValue, prioPersonID)
+                End If
+
+            End If
+
+        Next
+
+        ' now do the rest ..
+        If valueToSubstitute > 0 Then
+            Dim ix As Integer = candidates.Count - 1
+            ' greatest value is at the end
+            Do While ix >= 0 And valueToSubstitute > 0
+
+                Dim candidate As KeyValuePair(Of Double, Integer) = candidates.ElementAt(ix)
+                If Not prioPeopleIDs.Contains(candidate.Value) Then
+                    If candidate.Key >= valueToSubstitute Then
+                        If ((result.Count > 0) Or (isAmongTopGroup(projectScopeCandidates, candidate.Value))) Then
+                            result.Add(valueToSubstitute, candidate.Value)
+                            valueToSubstitute = 0
+                        Else
+                            Dim myValue As Double = System.Math.Truncate(0.6 * valueToSubstitute)
+                            result.Add(myValue, candidate.Value)
+                            valueToSubstitute = valueToSubstitute - myValue
+                        End If
+                    Else
+                        result.Add(candidate.Key, candidate.Value)
+                        valueToSubstitute = valueToSubstitute - candidate.Key
+                    End If
+                End If
+                ix = ix - 1
+            Loop
+
+        End If
+
+        calcBestCandidates = result
+    End Function
     ''' <summary>
     ''' 
     ''' </summary>
@@ -27652,6 +27755,47 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' calculates sum of values starting at 0 until and including index  
+    ''' </summary>
+    ''' <param name="ar"></param>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public Function calcPartSum2ix(ByVal ar As Double(), ByVal index As Integer) As Double
+        Dim result As Double = 0
+
+        Dim arLength As Integer = ar.Length
+        If index >= arLength Or index < 0 Then
+            ' do nothing 
+        Else
+            For ix As Integer = 0 To index
+                result = result + ar(ix)
+            Next
+        End If
+
+        calcPartSum2ix = result
+    End Function
+
+    ''' <summary>
+    ''' calculates sum of values starting with and including index until end of array 
+    ''' </summary>
+    ''' <param name="ar"></param>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public Function calcPartSum2End(ByVal ar As Double(), ByVal index As Integer) As Double
+        Dim result As Double = 0
+        Dim arLength As Integer = ar.Length
+        If index >= arLength Or index < 0 Then
+            ' do nothing 
+        Else
+            For ix As Integer = index To arLength - 1
+                result = result + ar(ix)
+            Next
+        End If
+
+        calcPartSum2End = result
+    End Function
+
+    ''' <summary>
     ''' gibt den Schnittmengen-Array zurück, der Array tmpValues hat die Dimension pEnde-PStart
     ''' und stellt die Werte dar, die im Monat pStart .. PEnde gelten. 
     ''' Im Schnittmengen Array sind die Werte der Dimension bis-von
@@ -27928,6 +28072,51 @@ Public Module Projekte
 
 
     End Function
+
+    ''' <summary>
+    ''' moves project to new start- and end-Date
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="newStartDate"></param>
+    ''' <param name="newEndDate"></param>
+    ''' <returns></returns>
+    Public Function moveProject(ByVal hproj As clsProjekt,
+                                 ByVal newStartDate As Date,
+                                 ByVal newEndDate As Date) As clsProjekt
+
+        Dim resultingProject As clsProjekt = Nothing
+
+        Try
+            ' make sure things can be moved ...
+            hproj.movable = True
+
+            Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+            Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate.Date, newEndDate.Date) + 1
+
+            Dim cphase As clsPhase = hproj.getPhase(1)
+
+            Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+            hproj.startDate = newStartDate.Date.AddHours(8)
+
+            If diffDays <> 0 Then
+                ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
+                ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
+                ' 
+                Call hproj.syncXWertePhases()
+            End If
+
+            newOffsetInTagen = 0
+
+            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, True)
+
+            resultingProject = hproj
+        Catch ex As Exception
+
+        End Try
+
+        moveProject = resultingProject
+    End Function
+
 
 
 End Module

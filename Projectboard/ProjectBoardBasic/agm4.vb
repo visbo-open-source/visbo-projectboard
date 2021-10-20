@@ -60,7 +60,7 @@ Public Module agm4
         ' nimmt die Texte für die LogFile Zeile auf
         ' Array kann beliebig lang werden 
         Dim logArray() As String
-        Dim logDblArray() As Double
+        'Dim logDblArray() As Double
 
 
 

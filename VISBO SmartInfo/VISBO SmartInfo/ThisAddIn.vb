@@ -55,6 +55,10 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
         End If
 
+        ' PMO soll immer auch die aktuelle Planungs-Variante lesen 
+        awinSettings.loadPFV = False
+
+
         ' visboClient = "VISBO Smartinfo / "
         visboClient = divClients(client.VisboSmartinfo)
         ' Refresh von Projekte im Cache  in Minuten

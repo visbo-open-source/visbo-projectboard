@@ -1132,7 +1132,8 @@ Public Module awinGeneralModules
     Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean,
                                        ByVal fileFrom3rdParty As Boolean,
                                        ByVal getSomeValuesFromOldProj As Boolean,
-                                       Optional ByVal calledFromActualDataImport As Boolean = False)
+                                       Optional ByVal calledFromActualDataImport As Boolean = False,
+                                       Optional ByVal calledFromRPA As Boolean = False)
 
         Dim err As New clsErrorCodeMsg
 
@@ -1496,77 +1497,84 @@ Public Module awinGeneralModules
                 'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
             End Try
 
-
-
-
-
         Next
 
-
-
-        If ImportProjekte.Count < 1 Then
-            If awinSettings.englishLanguage Then
-                Call MsgBox(" no projects imported ...")
-            Else
-                Call MsgBox(" es wurden keine Projekte importiert ...")
-            End If
-
+        If calledFromRPA Then
+            ' for later store in RPA
+            ImportProjekte.Clear(updateCurrentConstellation:=False)
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+                ImportProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+            Next
         Else
+            ' interactive Excel Client
+            If ImportProjekte.Count < 1 Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox(" no projects imported ...")
+                Else
+                    Call MsgBox(" es wurden keine Projekte importiert ...")
+                End If
 
-            If awinSettings.englishLanguage Then
+            Else
 
-                Dim txtMsg As String = ImportProjekte.Count & " projects were read " & vbLf & vbLf &
+                If awinSettings.englishLanguage Then
+
+                    Dim txtMsg As String = ImportProjekte.Count & " projects were read " & vbLf & vbLf &
                         anzNeuProjekte.ToString & " New projects" & vbLf &
                         anzAktualisierungen.ToString & " project updates"
-                nameChangeCollection.Add(txtMsg)
-                'Call MsgBox(ImportProjekte.Count & " projects were read " & vbLf & vbLf &
-                '        anzNeuProjekte.ToString & " New projects" & vbLf &
-                '        anzAktualisierungen.ToString & " project updates")
-            Else
+                    nameChangeCollection.Add(txtMsg)
+                    'Call MsgBox(ImportProjekte.Count & " projects were read " & vbLf & vbLf &
+                    '        anzNeuProjekte.ToString & " New projects" & vbLf &
+                    '        anzAktualisierungen.ToString & " project updates")
+                Else
 
-                Dim txtMsg As String = "es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & vbLf & vbLf &
+                    Dim txtMsg As String = "es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & vbLf & vbLf &
                         anzNeuProjekte.ToString & " neue Projekte" & vbLf &
                         anzAktualisierungen.ToString & " Projekt-Aktualisierungen"
 
-                nameChangeCollection.Add(txtMsg)
+                    nameChangeCollection.Add(txtMsg)
 
-            End If
-
-            If nameChangeCollection.Count > 0 Then
-                Dim headerMsg As String = "project Names were changed To DB-Names"
-                Call showOutPut(nameChangeCollection, headerMsg, "")
-            End If
-
-
-            If anzNeuProjekte > 0 Or anzAktualisierungen > 0 Then
-                ' jetzt muss wieder entsprechend der 
-                currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-            End If
-
-            ' Änderung tk: jetzt wird das neu gezeichnet 
-            ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
-            If currentConstellationPvName <> calcLastSessionScenarioName() Then
-                currentConstellationPvName = calcLastSessionScenarioName()
-            End If
-
-
-            If drawPlanTafel Then
-                If wasNotEmpty Then
-                    Call awinClearPlanTafel()
                 End If
 
-                'Call awinZeichnePlanTafel(True)
-                Call awinZeichnePlanTafel(True)
-                Call awinNeuZeichnenDiagramme(2)
+                If nameChangeCollection.Count > 0 Then
+                    Dim headerMsg As String = "project Names were changed To DB-Names"
+                    Call showOutPut(nameChangeCollection, headerMsg, "")
+                End If
+
+
+                If anzNeuProjekte > 0 Or anzAktualisierungen > 0 Then
+                    ' jetzt muss wieder entsprechend der 
+                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                End If
+
+                ' Änderung tk: jetzt wird das neu gezeichnet 
+                ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
+                If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                    currentConstellationPvName = calcLastSessionScenarioName()
+                End If
+
+
+                If drawPlanTafel Then
+                    If wasNotEmpty Then
+                        Call awinClearPlanTafel()
+                    End If
+
+                    'Call awinZeichnePlanTafel(True)
+                    Call awinZeichnePlanTafel(True)
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+
+                'Call storeSessionConstellation("Last")
+
             End If
 
-            'Call storeSessionConstellation("Last")
+            ImportProjekte.Clear(False)
 
         End If
 
 
 
-        ImportProjekte.Clear(False)
+
+
 
     End Sub
 
@@ -2413,7 +2421,7 @@ Public Module awinGeneralModules
                 Dim i As Integer = 1
                 While i <= completeStr.Length And resultValue = True
 
-                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType("", Char)}, 2)
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
 
                     If roleCostStr.Length = 2 Then
 

@@ -3316,8 +3316,116 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gets all people;skill pairs or only people, dependent on setting includingSkill plus their total sum 
+    ''' Default value is false
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPeople(ByVal Optional includingSkill As Boolean = False) As SortedList(Of String, Double)
+
+        Get
+            Dim phase As clsPhase
+            Dim result As New SortedList(Of String, Double)
+
+            Dim hrole As clsRolle
+            Dim p As Integer, r As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+                    phase = AllPhases.Item(p)
+                    With phase
+                        For r = 1 To .countRoles
+
+                            hrole = .getRole(r)
+
+                            Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(hrole.uid)
+                            Dim mySum As Double = hrole.summe
+
+                            If mySum > 0 And Not myRole.isCombinedRole Then
+
+                                Dim teamID As Integer = -1
+                                If includingSkill Then
+                                    teamID = hrole.teamID
+                                End If
+
+                                Dim myNameID As String = RoleDefinitions.bestimmeRoleNameID(hrole.uid, teamID)
+
+                                If Not result.ContainsKey(myNameID) Then
+                                    result.Add(myNameID, mySum)
+                                Else
+                                    result.Item(myNameID) = result.Item(myNameID) + mySum
+                                End If
+
+                            End If
+                        Next r
+                    End With
+
+                Next p
+
+            End If
+
+            getPeople = result
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gets all Placeholder;Skill pairs and the total sum from all phases within the project 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPlaceholderRoles() As SortedList(Of String, Double)
+
+        Get
+            Dim phase As clsPhase
+            Dim result As New SortedList(Of String, Double)
+
+            Dim hrole As clsRolle
+            Dim p As Integer, r As Integer
+            Dim weiterMachen As Boolean = False
+
+            'Dim ende As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+                    phase = AllPhases.Item(p)
+                    With phase
+                        For r = 1 To .countRoles
+
+                            hrole = .getRole(r)
+
+                            Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(hrole.uid)
+                            Dim mySkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(hrole.teamID)
+                            Dim mySum As Double = hrole.summe
+
+                            If mySum > 0 And myRole.isCombinedRole Then
+
+
+                                Dim myNameID As String = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
+
+                                If Not result.ContainsKey(myNameID) Then
+                                    result.Add(myNameID, mySum)
+                                Else
+                                    result.Item(myNameID) = mySum + result.Item(myNameID)
+                                End If
+
+                            End If
+                        Next r
+                    End With
+
+                Next p
+
+            End If
+
+            getPlaceholderRoles = result
+
+        End Get
+    End Property
     '
-    ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
+    ' übergibt in getRoleNames eine Collection von Rollen Namen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
     ''' <summary>
     ''' gibt die Liste aller im Projekt vergebenen Rollen aus; 
@@ -3390,6 +3498,53 @@
 
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' if there are any skills defined, it will be returned by this
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getSkillNameIds() As Collection
+        Get
+
+            Dim phase As clsPhase
+            Dim tmpRoleNameIDs As New Collection
+
+            Dim skillNameID As String
+            Dim hrole As clsRolle
+            Dim p As Integer, r As Integer
+
+            'Dim ende As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+                    phase = AllPhases.Item(p)
+                    With phase
+                        For r = 1 To .countRoles
+                            hrole = .getRole(r)
+                            If hrole.summe > 0 Then
+                                If hrole.teamID > 0 Then
+                                    Dim containingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(hrole.teamID).UID
+                                    skillNameID = RoleDefinitions.bestimmeRoleNameID(containingRoleID, hrole.teamID)
+
+                                    '
+                                    ' das ist performanter als der Weg über try .. catch 
+                                    '
+                                    If Not tmpRoleNameIDs.Contains(skillNameID) Then
+                                        tmpRoleNameIDs.Add(skillNameID, skillNameID)
+                                    End If
+                                End If
+                            End If
+                        Next r
+                    End With
+                Next p
+
+            End If
+
+            getSkillNameIds = tmpRoleNameIDs
+        End Get
     End Property
 
     ''' <summary>

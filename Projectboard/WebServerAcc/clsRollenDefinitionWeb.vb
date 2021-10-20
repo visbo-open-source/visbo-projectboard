@@ -99,7 +99,8 @@ Public Class clsRollenDefinitionWeb
 
         roleDef.UID = Me.uid
         roleDef.name = Me.name
-        roleDef.farbe = Me.farbe
+        ' tk 20.7.21 keine individuelle Farbe mehr für Rollen 
+        'roleDef.farbe = Me.farbe
         roleDef.defaultKapa = Me.defaultKapa
 
         ' tk 8.1.20
@@ -158,7 +159,10 @@ Public Class clsRollenDefinitionWeb
             If Not IsNothing(Me.kapazitaet) Then
                 Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
 
-                logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+                If awinSettings.visboDebug Then
+                    logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+                End If
+
 
                 If startingIndex > 0 Then
                     For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
@@ -419,7 +423,8 @@ Public Class clsRollenDefinitionWeb
 
             uid = .UID
             name = .name
-            farbe = CLng(.farbe)
+            ' tk 20.7.21 nicht mehr nötig
+            'farbe = CLng(.farbe)
             defaultKapa = .defaultKapa
 
             ' tk 23.11.18 

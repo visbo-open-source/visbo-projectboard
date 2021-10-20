@@ -4632,7 +4632,8 @@ Public Class clsProjekt
     ''' </summary>
     ''' <param name="phNameID"></param>
     ''' <param name="actualValues"></param>
-    Public Sub mergeActualValues(ByVal phNameID As String, ByVal actualValues As SortedList(Of String, Double()))
+    Public Sub mergeActualValues(ByVal phNameID As String, ByVal actualValues As SortedList(Of String, Double()),
+                                 ByVal Optional acdIsStartingInMonthCol As Integer = -1)
 
         Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
 
@@ -4640,6 +4641,12 @@ Public Class clsProjekt
 
             Dim roleXwerte() As Double
             Dim dimension As Integer = cPhase.relEnde - cPhase.relStart
+
+            Dim startIndex As Integer = 0
+            If acdIsStartingInMonthCol > 0 Then
+                ' es wurde die Column angegeben, ab der die Istdaten-Werte starten 
+                startIndex = acdIsStartingInMonthCol - (getColumnOfDate(startDate) + cPhase.relStart - 1)
+            End If
 
 
             For Each rvkvp As KeyValuePair(Of String, Double()) In actualValues
@@ -4653,7 +4660,11 @@ Public Class clsProjekt
 
                     Dim ixEnde As Integer = System.Math.Min(rvkvp.Value.Length - 1, dimension)
                     For ix As Integer = 0 To ixEnde
-                        roleXwerte(ix) = rvkvp.Value(ix)
+
+                        If ix + startIndex <= dimension Then
+                            roleXwerte(ix + startIndex) = rvkvp.Value(ix)
+                        End If
+
                     Next
 
                     Dim curRoleName As String = hroleDef.name
@@ -4664,6 +4675,7 @@ Public Class clsProjekt
                         .teamID = teamID
                         .Xwerte = roleXwerte
                     End With
+
                     ' wenn es schon existiert, werden die Werte addiert ...
                     cPhase.addRole(curRole)
 
@@ -4677,7 +4689,7 @@ Public Class clsProjekt
     End Sub
     ''' <summary>
     ''' liest den geldwerten Betrag der Rollen bis zum Monat , ggf werden sie in Abhängigkeit von resetValuesToNull auf Null gesetzt 
-    ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich untilMonthIncl auf Null, die in der roleCostCollection verzeichnet sind   
+    ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich relMonthCol auf Null, die in der roleCostCollection verzeichnet sind   
     ''' </summary>
     ''' <param name="roleCostCollection"></param>
     ''' <param name="relMonthCol"></param>
@@ -4969,7 +4981,7 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' wenn für Externe Rollen keine Istdaten eingelesen werden: passiert nur für Rollen, die nicht als Extern gekennzeichnet sind 
-    ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
+    ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich relMothCol auf Null
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
     ''' <param name="roleNameID"></param>

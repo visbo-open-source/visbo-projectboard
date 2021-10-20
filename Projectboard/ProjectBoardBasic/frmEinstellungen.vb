@@ -18,6 +18,7 @@ Public Class frmEinstellungen
         chkbxInvoices.Checked = awinSettings.enableInvoices
 
         chkbx_TakeCapaFromOldOrga.Checked = awinSettings.takeCapasFromOldOrga
+        chkbx_autoSetActualDataDate.Checked = awinSettings.autoSetActualDataDate
 
 
         If chkbx_KUG_active.Checked <> awinSettings.kurzarbeitActivated Then
@@ -94,6 +95,7 @@ Public Class frmEinstellungen
             chkbxInvoices.Text = "Edit Invoices & Penalties"
             chkbx_KUG_active.Text = "Short-time work possible"
             chkbx_TakeCapaFromOldOrga.Text = "Take capacities from old Organisation"
+            chkbx_autoSetActualDataDate.Text = "implicit confirming current plan as actual Data"
             Label1.Text = "Language for Reports"
         Else
             GroupBox1.Text = "Vergleich mit welcher Version"
@@ -109,6 +111,7 @@ Public Class frmEinstellungen
             chkboxAmpel.Text = "Ampel anzeigen"
             chkbxInvoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"
             chkbx_KUG_active.Text = "Kurzarbeit ist möglich"
+            chkbx_autoSetActualDataDate.Text = "Vergangenheit im aktuellen Plan werden als Ist-Daten bestätigt"
             Label1.Text = "Sprache für Reports"
         End If
 
@@ -215,6 +218,12 @@ Public Class frmEinstellungen
     Private Sub chkbx_TakeCapaFromOldOrga_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_TakeCapaFromOldOrga.CheckedChanged
 
         awinSettings.takeCapasFromOldOrga = chkbx_TakeCapaFromOldOrga.Checked
+
+    End Sub
+
+    Private Sub chkbx_autoSetActualDataDate_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_autoSetActualDataDate.CheckedChanged
+
+        awinSettings.autoSetActualDataDate = chkbx_autoSetActualDataDate.Checked
 
     End Sub
 End Class
