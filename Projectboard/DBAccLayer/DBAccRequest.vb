@@ -930,7 +930,7 @@ Public Class Request
 
                             Case 409 ' Conflict
 
-                                Call MsgBox(err.errorMsg)
+                                'Call MsgBox(err.errorMsg)
 
                             Case Else ' all others
                                 Throw New ArgumentException(err.errorMsg)

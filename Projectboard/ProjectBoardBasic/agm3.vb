@@ -6194,7 +6194,7 @@ Public Module agm3
             ' Schliessen der Excel-Ausleitung von Jira
 
 
-            appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=False)
+            appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
 
         Catch ex As Exception
             outputline = "problems reading project: catch from the beginning of readJIRATasks : " & ex.Message

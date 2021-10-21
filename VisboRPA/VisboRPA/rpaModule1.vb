@@ -482,6 +482,73 @@ Module rpaModule1
 
                                 Case CInt(PTRpa.visboJira)
                                     allOk = True
+
+                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
+
+                                    'read File with Jira-Projects and put it into ImportProjekte
+                                    Try
+
+                                        'Dim hproj As clsProjekt = Nothing
+
+                                        '' read the file and import into hproj
+                                        'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+                                        Dim JIRAProjectsConfig As New SortedList(Of String, clsConfigProjectsImport)
+                                        Dim projectsFile As String = ""
+                                        Dim lastrow As Integer = 0
+                                        Dim outputString As String = ""
+                                        Dim dateiName As String = ""
+                                        Dim listofArchivAllg As New List(Of String)
+                                        Dim outPutCollection As New Collection
+
+                                        Dim outputLine As String = ""
+
+                                        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+                                        ' Konfigurationsdatei lesen und Validierung durchführen
+
+                                        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+                                        Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
+
+                                        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+                                        Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+
+                                        If allesOK Then
+
+                                            Dim listofVorlagen As New Collection
+                                            listofVorlagen.Add(kvp.Key)
+                                            listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                                            Try
+                                                ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                                                ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+
+                                                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+                                            Catch ex As Exception
+                                                If awinSettings.englishLanguage Then
+                                                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                                                Else
+                                                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                                                End If
+
+                                            End Try
+
+                                        End If
+
+                                        ' store Projects
+                                        If allOk Then
+                                            allOk = storeImportProjekte()
+                                        End If
+
+                                        ' empty session 
+                                        Call emptyRPASession()
+
+                                        Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboJira.ToString, myName)
+
+                                    Catch ex1 As Exception
+                                        allOk = False
+                                        Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
+                                    End Try
+
                                 Case CInt(PTRpa.visboDefaultCapacity)
                                     allOk = True
 
@@ -548,7 +615,7 @@ Module rpaModule1
 
                             End Select
 
-                            If Not kvp.Value = PTRpa.visboMPP Then
+                            If Not (kvp.Value = PTRpa.visboMPP Or kvp.Value = PTRpa.visboJira) Then
 
                                 If allOk Then
                                     CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
@@ -676,12 +743,12 @@ Module rpaModule1
 
 
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
-                        ok = True
+                        ok = ok And True
                         Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
                         Console.WriteLine("project stored: " & kvp.Value.getShapeText)
                     Else
-                        ok = False
-                        Call logger(ptErrLevel.logError, "project store fgailed: ", outputCollection)
+                        ok = ok And False
+                        Call logger(ptErrLevel.logError, "project store failed: ", outputCollection)
                         Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
                     End If
 
@@ -689,11 +756,11 @@ Module rpaModule1
                     myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
-                        ok = True
+                        ok = ok And True
                         Call logger(ptErrLevel.logInfo, "project updated: ", kvp.Value.getShapeText)
                         Console.WriteLine("project updated: " & kvp.Value.getShapeText)
                     Else
-                        ok = False
+                        ok = ok And False
                         Call logger(ptErrLevel.logInfo, "project update failed: ", outputCollection)
                         Console.WriteLine("!! ... project update failed: " & kvp.Value.getShapeText)
                     End If
@@ -1272,6 +1339,9 @@ Module rpaModule1
                         End If
 
                         ' Check auf Jira Ausleitung
+                        If result = PTRpa.visboUnknown Then
+                            result = checkJiraProjects(currentWB)
+                        End If
 
                         ' Check auf VISBO Project Template  
 
@@ -1582,6 +1652,69 @@ Module rpaModule1
 
 
         checkVCOrganisation = result
+    End Function
+
+    ''' <summary>
+    ''' checks whether or not a file is a visbo project list 
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkJiraProjects(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Tabelle1"
+
+        Try
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+                Try
+                    verifiedStructure = ersteZeile.Cells(1, 1).value.trim = "Vorgangstyp" And
+                        CStr(ersteZeile.Cells(1, 2).value).Trim = "Schlüssel" And
+                        CStr(ersteZeile.Cells(1, 3).value).Trim = "Zusammenfassung" And
+                        CStr(ersteZeile.Cells(1, 4).value).Trim = "Zugewiesene Person" And
+                        CStr(ersteZeile.Cells(1, 5).value).Trim = "Autor" And
+                        CStr(ersteZeile.Cells(1, 6).value).Trim = "Priorität" And
+                        CStr(ersteZeile.Cells(1, 7).value).Trim = "Status" And
+                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Lösung") And
+                        CStr(ersteZeile.Cells(1, 9).value).Trim.StartsWith("Erstellt") And
+                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Story Point-Schätzung") And
+                        CStr(ersteZeile.Cells(1, 11).value).Trim.Contains("Aktualisiert") And
+                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Fälligkeitsdatum" And
+                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Fortschritt" And
+                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Erledigt" And
+                        CStr(ersteZeile.Cells(1, 15).value).Trim.Contains("Übergeordnet") And
+                        ersteZeile.Cells(1, 16).value.trim = "Verknüpfte Vorgänge" And
+                        ersteZeile.Cells(1, 17).value.trim = "Area" And
+                        ersteZeile.Cells(1, 18).value.trim = "Sprint.name" And
+                        ersteZeile.Cells(1, 19).value.trim = "Sprint.startDate" And
+                        ersteZeile.Cells(1, 20).value.trim = "Sprint.endDate" And
+                        ersteZeile.Cells(1, 21).value.trim = "Sprint.completeDate" And
+                        ersteZeile.Cells(1, 22).value.trim = "Sprint.goal" And
+                        ersteZeile.Cells(1, 23).value.trim = "Start date" And
+                        ersteZeile.Cells(1, 24).value.trim = "Rank" And
+                        ersteZeile.Cells(1, 25).value.trim = "Projekt"
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboJira
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkJiraProjects = result
     End Function
 
     ''' <summary>
