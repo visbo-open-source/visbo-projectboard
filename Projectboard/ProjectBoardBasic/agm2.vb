@@ -6268,8 +6268,7 @@ Public Module agm2
 
                                             hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
                                             '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
-
-
+                                            hrchynode.indexOfElem = hproj.AllPhases.Count
                                             ' merken von letzem Element (Knoten,Phase,Meilenstein)
                                             lasthrchynode = hrchynode
                                             lastelemID = cphase.nameID
@@ -8736,6 +8735,7 @@ Public Module agm2
 
                 importedCustomization.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
+                importedCustomization.onePersonOneRole = awinSettings.onePersonOneRole
                 importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
                 importedCustomization.actualDataMonth = awinSettings.actualDataMonth
@@ -8940,7 +8940,7 @@ Public Module agm2
                     Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
                     If outputCollection.Count > 0 Then
-                        ' wird an der aurufenden Stelle ausgegeben ... 
+                        ' wird an der aufrufenden Stelle ausgegeben ... 
                     ElseIf TeamsAreNotOK Or existingOverloads Then
                         ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
                     Else
@@ -8972,6 +8972,8 @@ Public Module agm2
                             End If
                         End With
 
+                        ' es werden die ActualData relevante OrgaUnits geholt und ggfs. auch korrigiert
+                        Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -13853,7 +13855,7 @@ Public Module agm2
 
                     Else
                         ' should not come into this branch ... 
-                        ' Call MsgBox("??")
+                        Call MsgBox("??")
 
                     End If
 
@@ -19996,7 +19998,8 @@ Public Module agm2
 
                         Next
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
                         If awinSettings.englishLanguage Then
                             CType(.Cells(1, 1), Excel.Range).Value = "Project-Number"
                             CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
@@ -21143,9 +21146,11 @@ Public Module agm2
                         awinSettings.gridLineColor = customizations.gridLineColor
 
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-
-                        awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-
+                        ' ur:20210729 kommt nun eigentlich von Organisation
+                        If awinSettings.ActualdataOrgaUnits = "" Then
+                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                        End If
+                        awinSettings.onePersonOneRole = customizations.onePersonOneRole
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
                         awinSettings.actualDataMonth = customizations.actualDataMonth
@@ -21326,7 +21331,7 @@ Public Module agm2
                             If awinSettings.visboServer Then
                                 .customUserRole = ptCustomUserRoles.OrgaAdmin
                             Else
-                                .customUserRole = ptCustomUserRoles.ProjektLeitung
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
                             End If
                             .specifics = ""
                             .userName = dbUsername
@@ -21651,7 +21656,6 @@ Public Module agm2
         If Not IsNothing(customUserRoles) Then
 
             Call customUserRoles.setSpecifics()
-
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
             Dim allMyCustomUserRoles As Collection = customUserRoles.getCustomUserRoles(dbUsername)
 
@@ -21689,13 +21693,31 @@ Public Module agm2
                 If Not IsNothing(myCustomUserRole) Then
                     ' jetzt gibt es eine currentUserRole: myCustomUserRole
                     Call myCustomUserRole.setNonAllowances()
+                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
+                    '    Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
+                    '    Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
+
+                    '    With myCustomUserRole
+                    '        Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
+                    '        Dim myCustSpecifics As String = ""
+                    '        For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
+                    '            If myCustSpecifics <> "" Then
+                    '                myCustSpecifics = myCustSpecifics & ";" & CStr(kvp.Key)
+                    '            Else
+                    '                myCustSpecifics = myCustSpecifics & CStr(kvp.Key)
+                    '            End If
+                    '        Next
+                    '        .specifics = myCustSpecifics
+                    '    End With
+                    'End If
+
                 Else
                     Dim message As String
                     If awinSettings.englishLanguage Then
-                        message = "User hasn't got any role" & vbLf & "Please contact your administrator"
+                        message = "User hasn't got any role - Projectlead restricted Role assumed ..."
                         meldungen.Add("User hasn't got any role")
                     Else
-                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen" & vbLf & "Bitte kontaktieren Sie ihren Administrator"
+                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen - Projektleiter Restricted Angenommen"
                         meldungen.Add("Dem User wurde noch keine Rolle zugewiesen")
                     End If
 
@@ -21713,7 +21735,8 @@ Public Module agm2
         Else
             ' muss ins logfile
             meldungen.Add(err.errorMsg)
-            Call MsgBox(err.errorMsg)
+            Call logger(ptErrLevel.logError, "setUserRoles", err.errorCode & ":" & err.errorMsg)
+            ' Call MsgBox(err.errorMsg)
         End If
 
         ' jetzt sicherstellen, dass die Grundeinstellung bei Portfolio Manager loadPfv ist 
@@ -21722,6 +21745,28 @@ Public Module agm2
         End If
 
     End Sub
+
+    'Public Sub setPMOSpecifics(ByRef allCusomUserRoles As Collection)
+    '    For Each myCustomUserRole In allCusomUserRoles
+    '        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager _
+    '                   Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung _
+    '                   Or myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted Then
+
+    '            With myCustomUserRole
+    '                Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles
+    '                Dim myCustSpecifics As String = ""
+    '                For Each kvp As KeyValuePair(Of Integer, String) In aggregationRoles
+    '                    If myCustSpecifics <> "" Then
+    '                        myCustSpecifics = myCustSpecifics & ";" & CStr(kvp.Key)
+    '                    Else
+    '                        myCustSpecifics = myCustSpecifics & CStr(kvp.Key)
+    '                    End If
+    '                Next
+    '                .specifics = myCustSpecifics
+    '            End With
+    '        End If
+    '    Next
+    'End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -23222,6 +23267,36 @@ Public Module agm2
                                             meldungen.Add(errMsg)
                                         End Try
 
+                                        '' ur:08.07.2021 Aufnahme isAggregationRole
+                                        'If Not IsNothing(c.Offset(0, 9).Value) Then
+                                        '    Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
+                                        '    tmpValue = tmpValue.Trim
+                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        '    If positiveCriterias.Contains(tmpValue) Then
+                                        '        .isAggregationRole = True
+                                        '    End If
+                                        'End If
+                                        '' ur:08.07.2021 Aufnahme isSummaryRole
+                                        'If Not IsNothing(c.Offset(0, 10).Value) Then
+                                        '    Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
+                                        '    tmpValue = tmpValue.Trim
+                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        '    If positiveCriterias.Contains(tmpValue) Then
+                                        '        .isSummaryRole = True
+                                        '    End If
+                                        'End If
+                                        '' ur:08.07.2021 Aufnahme isActDataRelvant
+                                        'If Not IsNothing(c.Offset(0, 11).Value) Then
+                                        '    Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
+                                        '    tmpValue = tmpValue.Trim
+                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        '    If positiveCriterias.Contains(tmpValue) Then
+                                        '        .isActDataRelevant = True
+                                        '    End If
+                                        'End If
 
                                         ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                         Try
@@ -23334,6 +23409,7 @@ Public Module agm2
                                         End If
 
                                     Next
+                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
                                     '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
@@ -24206,6 +24282,7 @@ Public Module agm2
                                         End If
 
                                     Next
+                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
                                     '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
@@ -24432,6 +24509,7 @@ Public Module agm2
 
 
     End Sub
+
     Public Function mergeOldAndNewRoleDefs(ByVal oldOrga As clsOrganisation, ByVal newRoledefs As clsRollen, ByRef outputCollection As Collection) As clsRollen
 
         Dim result As New clsRollen
@@ -24710,6 +24788,12 @@ Public Module agm2
 
                 Catch ex As Exception
                     awinSettings.ActualdataOrgaUnits = ""
+                End Try
+
+                Try
+                    awinSettings.onePersonOneRole = CBool(.Range("onePersonOneRole").Value)
+                Catch ex As Exception
+                    awinSettings.onePersonOneRole = False
                 End Try
 
                 Try
@@ -25194,6 +25278,8 @@ Public Module agm2
             Else
                 outputline = "Es sind Fehler beim Lesen des Config-File aufgetreten"
             End If
+
+            meldungen.Add(outputline)
         End If
 
         ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
@@ -25792,6 +25878,9 @@ Public Module agm2
         customizations.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
         customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+        ' steuert, ob eine Person immer exakt eine Rolle/Skill hat. Wird benötigt, wenn Personen Junior, Senior, Expert zugewiesen wird 
+        customizations.onePersonOneRole = awinSettings.onePersonOneRole
 
         customizations.actualDataMonth = awinSettings.actualDataMonth
         customizations.ergebnisfarbe1 = ergebnisfarbe1

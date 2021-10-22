@@ -615,6 +615,9 @@ Module rpaModule1
                                     ' Art und Weise 1: Datei lautet auf "Istdaten*.xlsx
 
                                     allOk = True
+
+                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
+
                                     Dim weitermachen As Boolean = False
                                     Dim outPutCollection As New Collection
                                     Dim outPutline As String = ""
@@ -667,8 +670,6 @@ Module rpaModule1
                                     Next
 
                                     Call logger(ptErrLevel.logInfo, msgText, "PTImportIstdaten", anzFehler)
-
-                                    ' Art und Weise 1: Datei lautet auf "Istdaten*.xlsx
 
                                     weitermachen = True
 
