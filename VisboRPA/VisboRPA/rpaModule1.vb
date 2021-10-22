@@ -629,6 +629,13 @@ Module rpaModule1
                                     Dim istDatenReferatsliste() As Integer
 
                                     If awinSettings.ActualdataOrgaUnits = "" Then
+
+                                        'Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                                        'If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                                        '    ' do nothing, leave it as is 
+                                        'Else
+                                        '    awinSettings.ActualdataOrgaUnits = tmpActDataString
+                                        'End If
                                         Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
 
                                         ReDim istDatenReferatsliste(anzTopNodes - 1)
@@ -1310,6 +1317,13 @@ Module rpaModule1
 
                     CostDefinitions = currentOrga.allCosts
                     RoleDefinitions = currentOrga.allRoles
+
+                    Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                    If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                        ' do nothing, leave it as is 
+                    Else
+                        awinSettings.ActualdataOrgaUnits = tmpActDataString
+                    End If
 
                 Else
                     Throw New ArgumentException("No organisation in VISBO")
