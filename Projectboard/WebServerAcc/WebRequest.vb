@@ -2609,7 +2609,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg) As Boolean
 
-        Dim result As Boolean = False
+        Dim result As Boolean = True
         Dim vplist As New SortedList(Of String, clsVP)
 
         Try

@@ -609,13 +609,100 @@ Module rpaModule1
                                     allOk = True
                                 Case CInt(PTRpa.visboExternalContracts)
                                     allOk = True
+
                                 Case CInt(PTRpa.visboActualData1)
+
+                                    ' Art und Weise 1: Datei lautet auf "Istdaten*.xlsx
+
                                     allOk = True
+                                    Dim weitermachen As Boolean = False
+                                    Dim outPutCollection As New Collection
+                                    Dim outPutline As String = ""
+                                    Dim result As Boolean = False
+                                    Dim listOfArchivFiles As New List(Of String)
+                                    Dim dateiname As String = kvp.Key
+
+                                    Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+                                    ' erstmal protokollieren, zu welchen Abteilungen Istdaten gelesen und substituiert werden 
+                                    ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
+                                    Dim istDatenReferatsliste() As Integer
+
+                                    If awinSettings.ActualdataOrgaUnits = "" Then
+                                        Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+
+                                        ReDim istDatenReferatsliste(anzTopNodes - 1)
+                                        Dim i As Integer = 0
+                                        For i = 0 To anzTopNodes - 1
+                                            istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+                                        Next
+                                    Else
+                                        istDatenReferatsliste = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+                                    End If
+
+                                    ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+                                    Dim referatsCollection As New Collection
+                                    Dim msgText As String = "Actual Data Departments:  "
+                                    Dim first As Boolean = True
+                                    For Each itemID As Integer In istDatenReferatsliste
+                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+                                        If Not IsNothing(tmpRole) Then
+                                            If Not referatsCollection.Contains(tmpRole.name) Then
+                                                referatsCollection.Add(tmpRole.name, tmpRole.name)
+                                            End If
+                                            If first Then
+                                                msgTxt = msgText & tmpRole.name
+                                                first = False
+                                            Else
+                                                msgTxt = msgText & ", " & tmpRole.name
+                                            End If
+                                        End If
+                                    Next
+
+                                    Call logger(ptErrLevel.logInfo, msgText, "PTImportIstdaten", anzFehler)
+
+                                    ' Art und Weise 1: Datei lautet auf "Istdaten*.xlsx
+
+                                    weitermachen = True
+
+                                    result = readActualData(dateiname)
+                                    If result Then
+                                        listOfArchivFiles.Add(dateiname)
+                                    End If
+
+                                    allOk = allOk And result
+
+                                    Try
+                                        ' store Projects
+                                        If allOk Then
+                                            allOk = storeImportProjekte()
+                                        End If
+
+                                        ' empty session 
+                                        Call emptyRPASession()
+
+                                        Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboActualData1.ToString, myName)
+
+                                    Catch ex1 As Exception
+                                        allOk = False
+                                        Call logger(ptErrLevel.logError, "RPA Error Importing Actual Data (modus 1)", ex1.Message)
+                                    End Try
+
+
+                                    '' ImportDatei ins archive-Directory schieben
+
+                                    'If listOfArchivFiles.Count > 0 Then
+                                    '    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.actualData))
+                                    'End If
+                                    '' es kann nur die eine oder andere Art des Imports geben , falls hier importiert wurde 
+
+
                                 Case Else
 
                             End Select
 
-                            If Not (kvp.Value = PTRpa.visboMPP Or kvp.Value = PTRpa.visboJira) Then
+                            If Not (kvp.Value = PTRpa.visboMPP Or
+                                kvp.Value = PTRpa.visboJira Or kvp.Value = PTRpa.visboActualData1) Then
 
                                 If allOk Then
                                     CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
@@ -1359,6 +1446,9 @@ Module rpaModule1
                         ' Check auf Zeuss Kapazitäten
 
                         ' Check auf Ist-Daten 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkActualData1(currentWB)
+                        End If
 
                         ' Check auf Telair TimeSheets
 
@@ -1715,6 +1805,56 @@ Module rpaModule1
         End If
 
         checkJiraProjects = result
+    End Function
+
+
+    ''' <summary>
+    ''' checks whether or not a file is a visbo project list 
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkActualData1(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Istdaten"
+
+        Try
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+                Try
+
+                    verifiedStructure = ersteZeile.Cells(1, 1).value.trim = "Projektnummer" And
+                        CStr(ersteZeile.Cells(1, 2).value).Trim = "Projekt" And
+                        CStr(ersteZeile.Cells(1, 3).value).Trim = "Vorgang/Aktivität" And
+                        CStr(ersteZeile.Cells(1, 4).value).Trim = "Intern/Extern" And
+                        CStr(ersteZeile.Cells(1, 5).value).Trim = "Ressource/Personal-Nummer" And
+                        CStr(ersteZeile.Cells(1, 6).value).Trim = "Jahr" And
+                        CStr(ersteZeile.Cells(1, 7).value).Trim = "Monat" And
+                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("IST (PT)") And
+                        CStr(ersteZeile.Cells(1, 9).value).Trim.StartsWith("IST (Euro)")
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboActualData1
+
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkActualData1 = result
     End Function
 
     ''' <summary>
