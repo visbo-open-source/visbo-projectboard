@@ -23596,6 +23596,9 @@ Public Module agm2
         Dim relAliasesCol As Integer
         Dim relIsExternRoleCol As Integer
         Dim relIsTeamCol As Integer
+        Dim relIsAggrRoleCol As Integer
+        Dim relIsSumRoleCol As Integer
+        Dim relIsActDataRelevantCol As Integer
         Dim valuestart As Integer
         Dim valueend As Integer
         Try
@@ -23616,6 +23619,9 @@ Public Module agm2
                 relentryDateCol = configListe("entryDate").column.von - nameCol
                 relpercentCol = configListe("percent").column.von - nameCol
                 relAliasesCol = configListe("aliases").column.von - nameCol
+                relIsAggrRoleCol = configListe("isAggregationRole").column.von - nameCol
+                relIsSumRoleCol = configListe("isSummaryRole").column.von - nameCol
+                relIsActDataRelevantCol = configListe("isActDataRelevant").column.von - nameCol
 
             Else
                 If awinSettings.englishLanguage Then
@@ -24029,8 +24035,6 @@ Public Module agm2
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
-
-
                                     If Not IsNothing(c.Offset(0, relIsExternRoleCol).Value) Then
                                         Dim tmpValue As String = CStr(c.Offset(0, relIsExternRoleCol).Value)
                                         tmpValue = tmpValue.Trim
@@ -24057,6 +24061,38 @@ Public Module agm2
                                         End If
                                         meldungen.Add(errMsg)
                                     End Try
+
+                                    ' ur:08.07.2021 Aufnahme isAggregationRole
+                                    If Not IsNothing(c.Offset(0, relIsAggrRoleCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsAggrRoleCol).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isAggregationRole = True
+                                        End If
+                                    End If
+                                    ' ur:08.07.2021 Aufnahme isSummaryRole
+                                    If Not IsNothing(c.Offset(0, relIsSumRoleCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsSumRoleCol).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isSummaryRole = True
+                                        End If
+                                    End If
+                                    ' ur:08.07.2021 Aufnahme isActDataRelvant
+                                    If Not IsNothing(c.Offset(0, relIsActDataRelevantCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsActDataRelevantCol).Value)
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isActDataRelevant = True
+                                        End If
+                                    End If
+
 
                                     ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                     Try
@@ -24170,7 +24206,6 @@ Public Module agm2
                                         End If
 
                                     Next
-                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
                                     '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
@@ -24397,7 +24432,6 @@ Public Module agm2
 
 
     End Sub
-
     Public Function mergeOldAndNewRoleDefs(ByVal oldOrga As clsOrganisation, ByVal newRoledefs As clsRollen, ByRef outputCollection As Collection) As clsRollen
 
         Dim result As New clsRollen
