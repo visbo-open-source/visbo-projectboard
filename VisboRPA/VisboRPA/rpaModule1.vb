@@ -132,355 +132,19 @@ Module rpaModule1
                             Select Case kvp.Value
                                 Case CInt(PTRpa.visboProjectList)
 
-                                    Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
-
-                                    Dim overloadAllowedinMonths As Double = 1.0
-                                    Dim overloadAllowedTotal As Double = 1.03
-
-
-                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProjectList.ToString, myName)
-                                    Dim readProjects As Integer = 0
-                                    Dim createdProjects As Integer = 0
-                                    Dim importedProjects As Integer = ImportProjekte.Count
-                                    allOk = awinImportProjektInventur(readProjects, createdProjects)
-                                    If allOk Then
-                                        Call logger(ptErrLevel.logInfo, "Project List imported: " & myName, readProjects & " read; " & createdProjects & " created")
-                                        allOk = storeImportProjekte()
-                                    Else
-                                        Call logger(ptErrLevel.logError, "failure in Processing: " & myName, PTRpa.visboProjectList.ToString)
-                                    End If
-
-                                    If allOk Then
-
-
-                                        ' Get the Ranking out of Excel List , it is just the ordering of the rows 
-                                        ' value holds the AllProjekte.Key, i.e name#variantName
-                                        Dim rankingList As SortedList(Of Integer, String) = getRanking()
-
-                                        ' if Portfolio with active Projects is given and exists:  
-                                        ' then we probably do have a brownfield
-                                        If myActivePortfolio <> "" Then
-                                            ' load portfolio projects 
-                                        Else
-                                            myActivePortfolio = "active projects"
-                                        End If
-
-                                        AlleProjekte.Clear()
-                                        ' now make sure all projects are in AlleProjekte
-                                        For Each ppair As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
-                                            If Not AlleProjekte.Containskey(ppair.Key) Then
-                                                AlleProjekte.Add(ppair.Value)
-                                            End If
-                                        Next
-
-
-                                        For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
-
-                                            Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
-                                            If Not ShowProjekte.contains(hproj.name) Then
-                                                ShowProjekte.Add(hproj)
-                                            End If
-                                        Next
-
-                                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                                        showRangeRight = ShowProjekte.getMaxMonthColumn
-
-
-                                        Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
-                                                                                            cName:=portfolioName, vName:="")
-
-                                        Dim errMsg As New clsErrorCodeMsg
-                                        Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
-
-                                        Dim outputCollection As New Collection
-                                        Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, dbPortfolioNames)
-
-
-                                        Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles()
-                                        Dim aggregationList As New List(Of String)
-                                        Dim skillList As New List(Of String)
-                                        Dim teamID As Integer = -1
-
-                                        ' checkout aggregation Roles
-                                        For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
-                                            Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
-                                            If Not aggregationList.Contains(tmpStrID) Then
-                                                aggregationList.Add(tmpStrID)
-                                            End If
-                                        Next
-
-                                        Dim skillIDs As Collection = ShowProjekte.getRoleSkillIDs()
-
-                                        If skillIDs.Count > 0 Then
-                                            For Each tmpStrID As String In skillIDs
-                                                If Not skillList.Contains(tmpStrID) Then
-                                                    skillList.Add(tmpStrID)
-                                                End If
-                                            Next
-                                        End If
-
-                                        ' then empty ShowProjekte again 
-                                        ShowProjekte.Clear()
-
-                                        ' now check for each project , whether there are 
-                                        For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
-
-                                            Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
-                                            If Not ShowProjekte.contains(hproj.name) Then
-                                                ShowProjekte.Add(hproj)
-                                            End If
-
-                                            Dim overutilizationFound As Boolean = ShowProjekte.overLoadFound(aggregationList, False, overloadAllowedinMonths, overloadAllowedTotal)
-
-                                            If Not overutilizationFound Then
-                                                overutilizationFound = ShowProjekte.overLoadFound(skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
-                                            End If
-
-                                            If overutilizationFound Then
-                                                Dim key As String = calcProjektKey(hproj)
-                                                ' create variant if not already done
-                                                If hproj.variantName <> "arb" Then
-                                                    hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
-                                                    ' bring that into AlleProjekte
-                                                    key = calcProjektKey(hproj)
-                                                    If AlleProjekte.Containskey(key) Then
-                                                        AlleProjekte.Remove(key)
-                                                    End If
-                                                    AlleProjekte.Add(hproj)
-                                                End If
-
-                                                Dim deltaInDays As Integer = 7
-                                                Dim maxIterations As Integer = CInt(182 / deltaInDays)
-                                                Dim iterations As Integer = 0
-
-                                                Do While overutilizationFound And iterations <= maxIterations
-                                                    ' move project by deltaIndays
-
-                                                    Dim newStartDate As Date = hproj.startDate.AddDays(deltaInDays)
-                                                    Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
-
-                                                    Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
-
-                                                    If Not IsNothing(tmpProj) Then
-
-                                                        hproj = tmpProj
-
-                                                        ' now replace in ShowProjekte 
-                                                        AlleProjekte.Remove(key)
-                                                        ShowProjekte.Remove(tmpProj.name)
-                                                        ' add the new, altered version 
-                                                        AlleProjekte.Add(tmpProj)
-                                                        ShowProjekte.Add(tmpProj)
-
-                                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, False, overloadAllowedinMonths, overloadAllowedTotal)
-
-                                                        If Not overutilizationFound Then
-                                                            overutilizationFound = ShowProjekte.overLoadFound(skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
-                                                        End If
-
-                                                        If overutilizationFound Then
-                                                            iterations = iterations + 1
-                                                        End If
-
-                                                    Else
-                                                        ' Error occurred 
-                                                        Exit Do
-                                                    End If
-
-                                                Loop
-
-                                                If Not overutilizationFound Then
-                                                    ' it is already in there ... but now needed to be stored
-                                                    Dim myMessages As New Collection
-                                                    If storeSingleProjectToDB(hproj, myMessages) Then
-                                                        Dim infomsg As String = "created variant to avoid bottlenecks " & hproj.getShapeText
-                                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                                                        Console.WriteLine(infomsg)
-                                                    Else
-                                                        ' take it out again , because there was no solution
-                                                        ShowProjekte.Remove(hproj.name)
-                                                        Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
-                                                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                                                        Console.WriteLine(infomsg)
-                                                    End If
-
-
-                                                Else
-                                                    ' take it out again , because there was no solution
-                                                    AlleProjekte.Remove(key)
-                                                    ShowProjekte.Remove(hproj.name)
-                                                End If
-
-                                            Else
-                                                ' all ok, just continue
-                                            End If
-
-                                        Next
-
-                                        ' now create the portfolio Variant arb from ShowProjekte 
-                                        ' now create the Portfolio from ShowProjekte content 
-
-                                        toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
-                                                                                            cName:=portfolioName, vName:="arb")
-
-
-                                        outputCollection.Clear()
-                                        Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, dbPortfolioNames)
-
-                                        If outputCollection.Count > 0 Then
-                                            Call logger(ptErrLevel.logError, "Project List Import, Store Portfolio-Variant arb failed:", outputCollection)
-                                        End If
-
-                                    Else
-                                        ' no additional logger necessary - is done in storeImportProjekte
-                                    End If
-
-
-                                    ' now empty the complete session  
-                                    Call emptyRPASession()
-                                    Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProjectList.ToString, myName)
-
+                                    allOk = processProjectList(myName, myActivePortfolio)
 
                                 Case CInt(PTRpa.visboMPP)
 
-                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboMPP.ToString, myName)
+                                    allOk = processMppFile(kvp.Key, importDate)
 
-                                    Try
-
-                                        Dim hproj As clsProjekt = New clsProjekt
-
-                                        ' Definition für ein eventuelles Mapping
-                                        Dim mapProj As clsProjekt = Nothing
-                                        Call awinImportMSProject("RPA", kvp.Key, hproj, mapProj, importDate)
-
-                                        ' now protocol whether or not there are unknown cost and roles used in the MS projct file 
-                                        If Not IsNothing(hproj) Then
-
-                                            allOk = True
-
-                                            If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
-
-                                                Dim outputCollection As New Collection
-                                                Dim outputLine As String = ""
-                                                For Each mrd As KeyValuePair(Of Integer, clsRollenDefinition) In missingRoleDefinitions.liste
-                                                    If awinSettings.englishLanguage Then
-                                                        outputLine = "unknown Role: " & mrd.Value.name
-                                                    Else
-                                                        outputLine = "unbekannte Rolle: " & mrd.Value.name
-                                                    End If
-                                                    outputCollection.Add(outputLine)
-                                                Next
-
-                                                For Each mcd As KeyValuePair(Of Integer, clsKostenartDefinition) In missingCostDefinitions.liste
-                                                    If awinSettings.englishLanguage Then
-                                                        outputLine = "unknown Cost: " & mcd.Value.name
-                                                    Else
-                                                        outputLine = "unbekannte Kostenart: " & mcd.Value.name
-                                                    End If
-
-                                                    outputCollection.Add(outputLine)
-                                                Next
-
-                                                If awinSettings.englishLanguage Then
-                                                    outputLine = "unknown Elements: please modify organisation-file or input ..."
-                                                Else
-                                                    outputLine = "Unbekannte Elemente: bitte in Organisations-Datei korrigieren"
-                                                End If
-
-                                                outputCollection.Add(outputLine)
-
-                                                Call logger(ptErrLevel.logWarning, "RPA Import MS Project " & myName, outputCollection)
-
-                                            Else
-                                                ' everything ok
-                                            End If
-
-
-                                            Try
-                                                Dim keyStr As String = calcProjektKey(hproj)
-                                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-
-                                                If Not IsNothing(mapProj) Then
-                                                    keyStr = calcProjektKey(mapProj)
-                                                    ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
-
-                                                End If
-                                            Catch ex2 As Exception
-                                                allOk = False
-                                                Call logger(ptErrLevel.logError, "RPA Error Importing MS project file: file already exists ", myName)
-                                            End Try
-
-                                            If allOk Then
-                                                Try
-                                                    Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
-                                                Catch ex2 As Exception
-                                                    allOk = False
-                                                    Call logger(ptErrLevel.logError, "RPA Error Importing project brief " & PTRpa.visboMPP.ToString, myName)
-                                                End Try
-                                            End If
-
-                                            If allOk Then
-                                                ' store Project 
-                                                allOk = storeImportProjekte()
-                                                ' empty session 
-                                                Call emptyRPASession()
-                                                Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboMPP.ToString, myName)
-                                            End If
-
-                                        Else
-                                            allOk = False
-                                            Call logger(ptErrLevel.logError, "end Processing: " & PTRpa.visboMPP.ToString, myName)
-                                        End If
-
-
-                                    Catch ex1 As Exception
-                                        allOk = False
-                                        Call logger(ptErrLevel.logError, "end Processing: " & PTRpa.visboMPP.ToString, myName)
-                                    End Try
 
                                 Case CInt(PTRpa.visboProject)
 
-                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
-
-                                    'read Project Brief and put it into ImportProjekte
-                                    Try
-                                        Dim hproj As clsProjekt = Nothing
-
-                                        ' read the file and import into hproj
-                                        Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
-
-                                        allOk = Not IsNothing(hproj)
-                                        If allOk Then
-                                            Try
-                                                Dim keyStr As String = calcProjektKey(hproj)
-                                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-                                                'AlleProjekte.Add(hproj, updateCurrentConstellation:=False)
-
-                                                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
-                                            Catch ex2 As Exception
-                                                allOk = False
-                                                Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, ex2.Message)
-                                            End Try
-                                        Else
-                                            Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, myName)
-                                        End If
-
-                                        ' store Project 
-                                        If allOk Then
-                                            allOk = storeImportProjekte()
-                                        End If
-
-                                        ' empty session 
-                                        Call emptyRPASession()
-
-                                        Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProject.ToString, myName)
-
-                                    Catch ex1 As Exception
-                                        allOk = False
-                                        Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file ", ex1.Message)
-                                    End Try
+                                    allOk = processVisboBrief(myName, importDate)
 
                                 Case CInt(PTRpa.visboJira)
+
                                     allOk = True
 
                                     Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
@@ -549,61 +213,13 @@ Module rpaModule1
                                         Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
                                     End Try
 
+
                                 Case CInt(PTRpa.visboDefaultCapacity)
                                     allOk = True
 
                                 Case CInt(PTRpa.visboInitialOrga)
 
-                                    Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
-                                    Dim outputCollection As New Collection
-
-                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboInitialOrga.ToString, myName)
-
-                                    Try
-
-                                        ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
-                                        Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
-
-
-                                        If outputCollection.Count > 0 Then
-                                            Dim errmsg As String = vbLf & " .. Exit .. Organisation not imported  "
-                                            outputCollection.Add(errmsg)
-
-                                            Call logger(ptErrLevel.logError, "RPA Error Importing Organisation ", outputCollection)
-
-                                        ElseIf importedOrga.count > 0 Then
-
-                                            ' TopNodes und OrgaTeamChilds bauen 
-                                            Call importedOrga.allRoles.buildTopNodes()
-
-                                            Dim err As New clsErrorCodeMsg
-                                            Dim result As Boolean = False
-                                            ' ute -> überprüfen bzw. fertigstellen ... 
-                                            Dim orgaName As String = ptSettingTypes.organisation.ToString
-
-                                            ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                                                    CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                                    orgaName,
-                                                                                    importedOrga.validFrom,
-                                                                                    err)
-
-                                            If result = True Then
-                                                allOk = True
-                                                msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
-                                                Console.WriteLine(msgTxt)
-                                                Call logger(ptErrLevel.logInfo, PTRpa.visboInitialOrga.ToString, msgTxt)
-                                            Else
-                                                allOk = False
-                                                msgTxt = "Storing organisaiton failed "
-                                                Call logger(ptErrLevel.logError, PTRpa.visboInitialOrga.ToString, msgTxt)
-                                            End If
-                                        End If
-
-                                        Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboInitialOrga.ToString, myName)
-                                    Catch ex As Exception
-                                        allOk = False
-                                    End Try
+                                    allOk = processInitialOrga(myName)
 
                                 Case CInt(PTRpa.visboModifierCapacities)
                                     allOk = True
@@ -753,6 +369,7 @@ Module rpaModule1
                     Console.WriteLine("end of jobs!")
                     msgTxt = "End of RPA ..."
                     Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+
                 Else
                     msgTxt = "wrong settings - exited without performing jobs ...."
                     Call MsgBox(msgTxt)
@@ -1946,6 +1563,450 @@ Module rpaModule1
         End Try
 
         getRanking = rankingList
+    End Function
+
+    Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date) As Boolean
+
+        Dim allOK As Boolean = False
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
+
+        'read Project Brief and put it into ImportProjekte
+        Try
+            Dim hproj As clsProjekt = Nothing
+
+            ' read the file and import into hproj
+            Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+
+            allOk = Not IsNothing(hproj)
+            If allOk Then
+                Try
+                    Dim keyStr As String = calcProjektKey(hproj)
+                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                    'AlleProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                    Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+                Catch ex2 As Exception
+                    allOk = False
+                    Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, ex2.Message)
+                End Try
+            Else
+                Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, myName)
+            End If
+
+            ' store Project 
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProject.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Excel Brief ", ex1.Message)
+        End Try
+
+        processVisboBrief = allOK
+
+    End Function
+
+    Private Function processProjectList(ByVal myName As String, ByVal myActivePortfolio As String) As Boolean
+
+        Dim allOk As Boolean = False
+
+        Try
+            Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
+
+            Dim overloadAllowedinMonths As Double = 1.0
+            Dim overloadAllowedTotal As Double = 1.03
+
+            Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProjectList.ToString, myName)
+            Dim readProjects As Integer = 0
+            Dim createdProjects As Integer = 0
+            Dim importedProjects As Integer = ImportProjekte.Count
+
+            allOk = awinImportProjektInventur(readProjects, createdProjects)
+            If allOk Then
+                Call logger(ptErrLevel.logInfo, "Project List imported: " & myName, readProjects & " read; " & createdProjects & " created")
+                allOk = storeImportProjekte()
+            Else
+                Call logger(ptErrLevel.logError, "failure in Processing: " & myName, PTRpa.visboProjectList.ToString)
+            End If
+
+            If allOk Then
+
+
+                ' Get the Ranking out of Excel List , it is just the ordering of the rows 
+                ' value holds the AllProjekte.Key, i.e name#variantName
+                Dim rankingList As SortedList(Of Integer, String) = getRanking()
+
+                ' if Portfolio with active Projects is given and exists:  
+                ' then we probably do have a brownfield
+                If myActivePortfolio <> "" Then
+                    ' load portfolio projects 
+                Else
+                    myActivePortfolio = "active projects"
+                End If
+
+                AlleProjekte.Clear()
+                ' now make sure all projects are in AlleProjekte
+                For Each ppair As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+                    If Not AlleProjekte.Containskey(ppair.Key) Then
+                        AlleProjekte.Add(ppair.Value)
+                    End If
+                Next
+
+
+                For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
+
+                    Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    End If
+                Next
+
+
+                ' currentSessionConstellation is build by alle the Showprojekte.add and AlleProjekte.add Commands ...
+                ' create form that a portfolio, only containing the show-Elements 
+                Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                            cName:=portfolioName, vName:="")
+
+                ' now store the Portfolio , with name portfolioName
+                Dim errMsg As New clsErrorCodeMsg
+                Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+
+                Dim outputCollection As New Collection
+                Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, dbPortfolioNames)
+
+                ' define the range, necessary to check whether or not there are bottlenecks 
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+
+
+                ' now get the aggregation Roles
+                Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles()
+                Dim aggregationList As New List(Of String)
+                Dim skillList As New List(Of String)
+                Dim teamID As Integer = -1
+
+                ' checkout aggregation Roles
+                For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
+                    Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
+                    If Not aggregationList.Contains(tmpStrID) Then
+                        aggregationList.Add(tmpStrID)
+                    End If
+                Next
+
+                Dim skillIDs As Collection = ShowProjekte.getRoleSkillIDs()
+
+                If skillIDs.Count > 0 Then
+                    For Each tmpStrID As String In skillIDs
+                        If Not skillList.Contains(tmpStrID) Then
+                            skillList.Add(tmpStrID)
+                        End If
+                    Next
+                End If
+
+                ' then empty ShowProjekte again 
+                ShowProjekte.Clear()
+
+
+                ' 1. now start with the (next-)highest ranked project, 
+                ' 2. If there are no bottlenecks, keep it in ShowProjekte; 
+                '    if there are bottlenecks create a variant with name [arb], then move variant by 7 days until there is no bottleneck any more or until project has been moved by approx 6 months
+                '    if bottleneck cannot be solved, take project out of potential portfolio 
+                ' 3. Go to 1.
+
+
+                ' rankingList keeps the sequence within the Excel file. So user adds some fields important to him for prioritization , he add these fields , sorts it in th eExcel. 
+                ' It then represents the sequence: Row1 is the most important project 
+                For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
+
+                    Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    End If
+
+                    Dim overutilizationFound As Boolean = ShowProjekte.overLoadFound(aggregationList, False, overloadAllowedinMonths, overloadAllowedTotal)
+
+                    If Not overutilizationFound Then
+                        overutilizationFound = ShowProjekte.overLoadFound(skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+                    End If
+
+                    If overutilizationFound Then
+                        Dim key As String = calcProjektKey(hproj)
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
+                            ' bring that into AlleProjekte
+                            key = calcProjektKey(hproj)
+                            If AlleProjekte.Containskey(key) Then
+                                AlleProjekte.Remove(key)
+                            End If
+                            AlleProjekte.Add(hproj)
+                        End If
+
+                        Dim deltaInDays As Integer = 7
+                        Dim maxIterations As Integer = CInt(182 / deltaInDays)
+                        Dim iterations As Integer = 0
+
+                        Do While overutilizationFound And iterations <= maxIterations
+                            ' move project by deltaIndays
+
+                            Dim newStartDate As Date = hproj.startDate.AddDays(deltaInDays)
+                            Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
+
+                            Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+
+                            If Not IsNothing(tmpProj) Then
+
+                                hproj = tmpProj
+
+                                ' now replace in ShowProjekte 
+                                AlleProjekte.Remove(key)
+                                ShowProjekte.Remove(tmpProj.name)
+                                ' add the new, altered version 
+                                AlleProjekte.Add(tmpProj)
+                                ShowProjekte.Add(tmpProj)
+
+                                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, False, overloadAllowedinMonths, overloadAllowedTotal)
+
+                                If Not overutilizationFound Then
+                                    overutilizationFound = ShowProjekte.overLoadFound(skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+                                End If
+
+                                If overutilizationFound Then
+                                    iterations = iterations + 1
+                                End If
+
+                            Else
+                                ' Error occurred 
+                                Exit Do
+                            End If
+
+                        Loop
+
+                        If Not overutilizationFound Then
+                            ' it is already in there ... but now needed to be stored
+                            Dim myMessages As New Collection
+                            If storeSingleProjectToDB(hproj, myMessages) Then
+                                Dim infomsg As String = "created variant to avoid bottlenecks " & hproj.getShapeText
+                                Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                                Console.WriteLine(infomsg)
+                            Else
+                                ' take it out again , because there was no solution
+                                ShowProjekte.Remove(hproj.name)
+                                Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
+                                Call logger(ptErrLevel.logError, infomsg, myMessages)
+                                Console.WriteLine(infomsg)
+                            End If
+
+
+                        Else
+                            ' take it out again , because there was no solution
+                            AlleProjekte.Remove(key)
+                            ShowProjekte.Remove(hproj.name)
+                        End If
+
+                    Else
+                        ' all ok, just continue
+                    End If
+
+                Next
+
+                ' now create the portfolio Variant arb from ShowProjekte 
+                ' now create the Portfolio from ShowProjekte content 
+
+                toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                            cName:=portfolioName, vName:="arb")
+
+
+                outputCollection.Clear()
+                Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, dbPortfolioNames)
+
+                If outputCollection.Count > 0 Then
+                    Call logger(ptErrLevel.logError, "Project List Import, Store Portfolio-Variant arb failed:", outputCollection)
+                End If
+
+            Else
+                ' no additional logger necessary - is done in storeImportProjekte
+            End If
+
+
+            ' now empty the complete session  
+            Call emptyRPASession()
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProjectList.ToString, myName)
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "errors occurred when processing: " & PTRpa.visboProjectList.ToString, myName & ": " & ex.Message)
+        End Try
+
+        processProjectList = allok
+
+    End Function
+
+    Private Function processMppFile(ByVal fileName As String, ByVal importDate As Date) As Boolean
+
+        Dim myName As String = My.Computer.FileSystem.GetName(fileName)
+        Dim allOk As Boolean = False
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboMPP.ToString, myName)
+
+        Try
+
+            Dim hproj As clsProjekt = New clsProjekt
+
+            ' Definition für ein eventuelles Mapping
+            Dim mapProj As clsProjekt = Nothing
+            Call awinImportMSProject("RPA", fileName, hproj, mapProj, importDate)
+
+            ' now protocol whether or not there are unknown cost and roles used in the MS projct file 
+            If Not IsNothing(hproj) Then
+
+                allOk = True
+
+                If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
+
+                    Dim outputCollection As New Collection
+                    Dim outputLine As String = ""
+                    For Each mrd As KeyValuePair(Of Integer, clsRollenDefinition) In missingRoleDefinitions.liste
+                        If awinSettings.englishLanguage Then
+                            outputLine = "unknown Role: " & mrd.Value.name
+                        Else
+                            outputLine = "unbekannte Rolle: " & mrd.Value.name
+                        End If
+                        outputCollection.Add(outputLine)
+                    Next
+
+                    For Each mcd As KeyValuePair(Of Integer, clsKostenartDefinition) In missingCostDefinitions.liste
+                        If awinSettings.englishLanguage Then
+                            outputLine = "unknown Cost: " & mcd.Value.name
+                        Else
+                            outputLine = "unbekannte Kostenart: " & mcd.Value.name
+                        End If
+
+                        outputCollection.Add(outputLine)
+                    Next
+
+                    If awinSettings.englishLanguage Then
+                        outputLine = "unknown Elements: please modify organisation-file or input ..."
+                    Else
+                        outputLine = "Unbekannte Elemente: bitte in Organisations-Datei korrigieren"
+                    End If
+
+                    outputCollection.Add(outputLine)
+
+                    Call logger(ptErrLevel.logWarning, "RPA Import MS Project " & myName, outputCollection)
+
+                Else
+                    ' everything ok
+                End If
+
+
+                Try
+                    Dim keyStr As String = calcProjektKey(hproj)
+                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                    If Not IsNothing(mapProj) Then
+                        keyStr = calcProjektKey(mapProj)
+                        ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
+
+                    End If
+                Catch ex2 As Exception
+                    allOk = False
+                    Call logger(ptErrLevel.logError, "RPA Error Importing MS project file: file already exists ", myName)
+                End Try
+
+                If allOk Then
+                    Try
+                        Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+                    Catch ex2 As Exception
+                        allOk = False
+                        Call logger(ptErrLevel.logError, "RPA Error Importing project brief " & PTRpa.visboMPP.ToString, myName)
+                    End Try
+                End If
+
+                If allOk Then
+                    ' store Project 
+                    allOk = storeImportProjekte()
+                    ' empty session 
+                    Call emptyRPASession()
+                    Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboMPP.ToString, myName)
+                End If
+
+            Else
+                allOk = False
+                Call logger(ptErrLevel.logError, "end Processing: " & PTRpa.visboMPP.ToString, myName)
+            End If
+
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "end Processing: " & PTRpa.visboMPP.ToString, myName)
+        End Try
+
+        processMppFile = allOk
+
+    End Function
+
+    Private Function processInitialOrga(ByVal myName As String) As Boolean
+
+        Dim allOK As Boolean = False
+        Dim msgTxt As String = ""
+        Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
+        Dim outputCollection As New Collection
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboInitialOrga.ToString, myName)
+
+        Try
+
+            ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
+            Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
+
+
+            If outputCollection.Count > 0 Then
+                Dim errmsg As String = vbLf & " .. Exit .. Organisation not imported  "
+                outputCollection.Add(errmsg)
+
+                Call logger(ptErrLevel.logError, "RPA Error Importing Organisation ", outputCollection)
+
+            ElseIf importedOrga.count > 0 Then
+
+                ' TopNodes und OrgaTeamChilds bauen 
+                Call importedOrga.allRoles.buildTopNodes()
+
+                Dim err As New clsErrorCodeMsg
+                Dim result As Boolean = False
+                ' ute -> überprüfen bzw. fertigstellen ... 
+                Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
+                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                                                        CStr(settingTypes(ptSettingTypes.organisation)),
+                                                        orgaName,
+                                                        importedOrga.validFrom,
+                                                        err)
+
+                If result = True Then
+                    allOk = True
+                    msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
+                    Console.WriteLine(msgTxt)
+                    Call logger(ptErrLevel.logInfo, PTRpa.visboInitialOrga.ToString, msgTxt)
+                Else
+                    allOk = False
+                    msgTxt = "Storing organisaiton failed "
+                    Call logger(ptErrLevel.logError, PTRpa.visboInitialOrga.ToString, msgTxt)
+                End If
+            End If
+
+            Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboInitialOrga.ToString, myName)
+        Catch ex As Exception
+            allOk = False
+        End Try
+
+        processInitialOrga = allOK
+
     End Function
 
 End Module

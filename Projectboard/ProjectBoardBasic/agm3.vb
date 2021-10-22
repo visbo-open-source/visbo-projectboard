@@ -6389,6 +6389,7 @@ Public Module agm3
                     End If
 
                     Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, heute)
+                    Dim a As Integer = beauftragung.dauerInDays
                     Dim baselineValues() As Double = Nothing
 
                     If Not IsNothing(beauftragung) Then
