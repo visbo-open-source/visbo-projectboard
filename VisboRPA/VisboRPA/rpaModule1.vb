@@ -138,81 +138,13 @@ Module rpaModule1
 
                                     allOk = processMppFile(kvp.Key, importDate)
 
-
                                 Case CInt(PTRpa.visboProject)
 
                                     allOk = processVisboBrief(myName, importDate)
 
                                 Case CInt(PTRpa.visboJira)
 
-                                    allOk = True
-
-                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
-
-                                    'read File with Jira-Projects and put it into ImportProjekte
-                                    Try
-
-                                        'Dim hproj As clsProjekt = Nothing
-
-                                        '' read the file and import into hproj
-                                        'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
-                                        Dim JIRAProjectsConfig As New SortedList(Of String, clsConfigProjectsImport)
-                                        Dim projectsFile As String = ""
-                                        Dim lastrow As Integer = 0
-                                        Dim outputString As String = ""
-                                        Dim dateiName As String = ""
-                                        Dim listofArchivAllg As New List(Of String)
-                                        Dim outPutCollection As New Collection
-
-                                        Dim outputLine As String = ""
-
-                                        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
-
-                                        ' Konfigurationsdatei lesen und Validierung durchführen
-
-                                        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-                                        Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
-
-                                        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-                                        Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
-
-                                        If allesOK Then
-
-                                            Dim listofVorlagen As New Collection
-                                            listofVorlagen.Add(kvp.Key)
-                                            listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
-
-                                            Try
-                                                ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
-                                                ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-
-                                                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
-                                            Catch ex As Exception
-                                                If awinSettings.englishLanguage Then
-                                                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
-                                                Else
-                                                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
-                                                End If
-
-                                            End Try
-
-                                        End If
-
-                                        ' store Projects
-                                        If allOk Then
-                                            allOk = storeImportProjekte()
-                                        End If
-
-                                        ' empty session 
-                                        Call emptyRPASession()
-
-                                        Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboJira.ToString, myName)
-
-                                    Catch ex1 As Exception
-                                        allOk = False
-                                        Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
-                                    End Try
-
+                                    allOk = processVisboJira(kvp.Key, importDate)
 
                                 Case CInt(PTRpa.visboDefaultCapacity)
                                     allOk = True
@@ -222,104 +154,16 @@ Module rpaModule1
                                     allOk = processInitialOrga(myName)
 
                                 Case CInt(PTRpa.visboModifierCapacities)
+
                                     allOk = True
+
                                 Case CInt(PTRpa.visboExternalContracts)
+
                                     allOk = True
 
                                 Case CInt(PTRpa.visboActualData1)
 
-                                    ' Art und Weise 1: Datei lautet auf "Istdaten*.xlsx
-
-                                    allOk = True
-
-                                    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
-
-                                    Dim weitermachen As Boolean = False
-                                    Dim outPutCollection As New Collection
-                                    Dim outPutline As String = ""
-                                    Dim result As Boolean = False
-                                    Dim listOfArchivFiles As New List(Of String)
-                                    Dim dateiname As String = kvp.Key
-
-                                    Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
-
-                                    ' erstmal protokollieren, zu welchen Abteilungen Istdaten gelesen und substituiert werden 
-                                    ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
-                                    Dim istDatenReferatsliste() As Integer
-
-                                    If awinSettings.ActualdataOrgaUnits = "" Then
-
-                                        'Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
-                                        'If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
-                                        '    ' do nothing, leave it as is 
-                                        'Else
-                                        '    awinSettings.ActualdataOrgaUnits = tmpActDataString
-                                        'End If
-                                        Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
-
-                                        ReDim istDatenReferatsliste(anzTopNodes - 1)
-                                        Dim i As Integer = 0
-                                        For i = 0 To anzTopNodes - 1
-                                            istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
-                                        Next
-                                    Else
-                                        istDatenReferatsliste = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
-                                    End If
-
-                                    ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
-                                    Dim referatsCollection As New Collection
-                                    Dim msgText As String = "Actual Data Departments:  "
-                                    Dim first As Boolean = True
-                                    For Each itemID As Integer In istDatenReferatsliste
-                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
-                                        If Not IsNothing(tmpRole) Then
-                                            If Not referatsCollection.Contains(tmpRole.name) Then
-                                                referatsCollection.Add(tmpRole.name, tmpRole.name)
-                                            End If
-                                            If first Then
-                                                msgTxt = msgText & tmpRole.name
-                                                first = False
-                                            Else
-                                                msgTxt = msgText & ", " & tmpRole.name
-                                            End If
-                                        End If
-                                    Next
-
-                                    Call logger(ptErrLevel.logInfo, msgText, "PTImportIstdaten", anzFehler)
-
-                                    weitermachen = True
-
-                                    result = readActualData(dateiname)
-                                    If result Then
-                                        listOfArchivFiles.Add(dateiname)
-                                    End If
-
-                                    allOk = allOk And result
-
-                                    Try
-                                        ' store Projects
-                                        If allOk Then
-                                            allOk = storeImportProjekte()
-                                        End If
-
-                                        ' empty session 
-                                        Call emptyRPASession()
-
-                                        Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboActualData1.ToString, myName)
-
-                                    Catch ex1 As Exception
-                                        allOk = False
-                                        Call logger(ptErrLevel.logError, "RPA Error Importing Actual Data (modus 1)", ex1.Message)
-                                    End Try
-
-
-                                    '' ImportDatei ins archive-Directory schieben
-
-                                    'If listOfArchivFiles.Count > 0 Then
-                                    '    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.actualData))
-                                    'End If
-                                    '' es kann nur die eine oder andere Art des Imports geben , falls hier importiert wurde 
-
+                                    allOk = processVisboActualData1(kvp.Key, importDate)
 
                                 Case Else
 
@@ -2006,6 +1850,159 @@ Module rpaModule1
         End Try
 
         processInitialOrga = allOK
+
+    End Function
+
+    Private Function processVisboJira(ByVal myName As String, ByVal importDate As Date) As Boolean
+
+        Dim allOk As Boolean = True
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
+
+        'read File with Jira-Projects and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim JIRAProjectsConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+            ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+            Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+
+            If allesOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                Try
+                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+
+                    Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                    Else
+                        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                    End If
+
+                End Try
+
+            End If
+
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboJira.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
+        End Try
+
+        processVisboJira = allOk
+
+    End Function
+
+    Private Function processVisboActualData1(ByVal myName As String, ByVal importDate As Date) As Boolean
+
+        Dim allOk As Boolean = True
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
+
+        Dim weitermachen As Boolean = False
+        Dim outPutCollection As New Collection
+        Dim outPutline As String = ""
+        Dim result As Boolean = False
+        Dim listOfArchivFiles As New List(Of String)
+        Dim dateiname As String = myName
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+        ' erstmal protokollieren, zu welchen Abteilungen Istdaten gelesen und substituiert werden 
+        ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
+        Dim istDatenReferatsliste() As Integer
+
+        If awinSettings.ActualdataOrgaUnits = "" Then
+
+            Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+
+            ReDim istDatenReferatsliste(anzTopNodes - 1)
+            Dim i As Integer = 0
+            For i = 0 To anzTopNodes - 1
+                istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+            Next
+        Else
+            istDatenReferatsliste = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+        End If
+
+        ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+        Dim referatsCollection As New Collection
+        Dim msgTxt As String = "Actual Data Departments:  "
+        Dim first As Boolean = True
+        For Each itemID As Integer In istDatenReferatsliste
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+            If Not IsNothing(tmpRole) Then
+                If Not referatsCollection.Contains(tmpRole.name) Then
+                    referatsCollection.Add(tmpRole.name, tmpRole.name)
+                End If
+                If first Then
+                    msgTxt = msgTxt & tmpRole.name
+                    first = False
+                Else
+                    msgTxt = msgTxt & ", " & tmpRole.name
+                End If
+            End If
+        Next
+
+        Call logger(ptErrLevel.logInfo, msgTxt, "PTImportIstdaten", anzFehler)
+
+        weitermachen = True
+
+        result = readActualData(dateiname)
+        If result Then
+            listOfArchivFiles.Add(dateiname)
+        End If
+
+        allOk = allOk And result
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboActualData1.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Actual Data (modus 1)", ex1.Message)
+        End Try
+
+        processVisboActualData1 = allOk
 
     End Function
 
