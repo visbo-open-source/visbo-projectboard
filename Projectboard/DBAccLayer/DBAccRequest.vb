@@ -590,6 +590,13 @@ Public Class Request
 
         End Try
 
+        ' tk 20.10.21 - es trat ein Fehler auf , der durch diesen Befehl korrigiert wird
+        ' dadurch wird die private Varibale _Dauer gesetzt. In Manchen Fällen kann es wohl vorkommen
+        ' dass _Dauer ungleich AnzahlRasterElemente
+        If Not IsNothing(result) Then
+            Dim a As Integer = result.dauerInDays
+        End If
+
 
         retrieveOneProjectfromDB = prepProjectForRoles(result)
 
