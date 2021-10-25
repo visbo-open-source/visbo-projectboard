@@ -3323,6 +3323,13 @@ Imports System.Web
                     tmpLabel = "Offline Planning Data"
                 End If
 
+            Case "PT4G2M3B5" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Earned Values Daten"
+                Else
+                    tmpLabel = "Earned Values Daten"
+                End If
+
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einstellungen"
@@ -9579,6 +9586,68 @@ Imports System.Web
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+    End Sub
+
+    Public Sub exportExcelEarnedValues(control As IRibbonControl)
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim myCollectionR As New Collection
+            Dim myCollectionC As New Collection
+
+            ' erstmal werden hier nur die 
+            For Each element As String In frmMERoleCost.rolesToAdd
+                Dim teamID As Integer
+                Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(element, teamID)
+                If roleUID > 0 Then
+                    ' es ist eine Rolle 
+                    If Not myCollectionR.Contains(element) Then
+                        myCollectionR.Add(element, element)
+                    End If
+                ElseIf CostDefinitions.containsName(element) Then
+                    If Not myCollectionC.Contains(element) Then
+                        myCollectionC.Add(element, element)
+                    End If
+                End If
+
+                'End If
+
+            Next
+
+
+            Try
+                Dim myRoleNameID As String = CStr(myCollectionR.Item(1))
+                Call writeEarnedValuesToExcel(showRangeLeft, showRangeRight, myRoleNameID)
+                'Call writeEarnedValuesToExcel(showRangeLeft, showRangeRight, myCollectionR, myCollectionC)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
     End Sub
     ''' <summary>
     ''' schreibt pro Projekt alle ausgewählten Rollen / Kosten weg 

@@ -345,6 +345,8 @@ Module rpaModule1
                 awinSettings.rememberUserPwd = True
                 awinSettings.userNamePWD = My.Settings.userNamePWD
 
+                awinSettings.visboServer = True
+
                 ' returns false if anything goes wrong .. 
                 result = rpaSetTypen()
 

@@ -4726,7 +4726,9 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks>im Falle Kurzarbeit wird wird das für jeden Monat betrachtet, es gibt keinen ausgleich ! also Mrz ist unterausgelastet, Apr ist überausgelastet</remarks>
-    Public ReadOnly Property getCostoValuesInMonth(Optional ByVal topNodeID As Integer = -1, Optional ByVal provideKUGData As Boolean = False) As Double()
+    Public ReadOnly Property getCostoValuesInMonth(Optional ByVal topNodeID As Integer = -1,
+                                                   Optional ByVal provideKUGData As Boolean = False,
+                                                   Optional ByVal strictly As Boolean = False) As Double()
 
         Get
             Dim costValues() As Double
@@ -4800,8 +4802,18 @@ Public Class clsProjekte
                                     ' wenn rolevalue > kapavalues, dann enstehen negativeZahlen - die müssen dann nachher verrechnet werden ...
 
                                     ' d.h wenn Achim Überstunden macht, dann werden die Überstunden mit der Unterauslastung von Annabell verrechnet - sofern beide topNodeID als Parent haben 
-                                    costValues(ix) = costValues(ix) +
+                                    If strictly Then
+                                        ' Überstunden in einem Monat verringern nicht (!) die Unterauslastungen in einem anderen Monat
+                                        If kapaValues(ix) - roleValues(ix) > 0 Then
+                                            costValues(ix) = costValues(ix) +
                                                  (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                                        End If
+                                    Else
+                                        costValues(ix) = costValues(ix) +
+                                                 (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                                    End If
+
+
 
 
                                 End If

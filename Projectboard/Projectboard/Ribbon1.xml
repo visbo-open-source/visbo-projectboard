@@ -163,6 +163,7 @@
                   <button id="PT4G2M3B2" getLabel ="bestimmeLabel" onAction="exportExcelDetails" supertip ="pro Projekt werden alle ausgewählten Rollen/Kosten exportiert, sofern sie zu der angegebenen Organisations-Einheit gehören"/>
                   <button id="PT4G2M3B3" getLabel ="bestimmeLabel" onAction="exportExcelKuGDetails" supertip ="pro Interner Person werden die Auslastungswerte ausgegeben, um auf der Basis die Kurzarbeit zu beantragen"/>
                   <button id="PT4G2M3B4" getLabel ="bestimmeLabel" onAction="exportExcelPlanning" supertip ="Projekte mit monatlichen Ressourcen-/Kostenbedarfen ausleiten"/>
+                  <button id="PT4G2M3B5" getLabel ="bestimmeLabel" onAction="exportExcelEarnedValues" supertip ="Zur aktuellen Session werden die Earned Values und Opportunitätskosten bestimmt"/>
                   <!--<button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
                 </menu>
               </menu>              
