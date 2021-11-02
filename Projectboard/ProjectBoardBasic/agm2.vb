@@ -16185,35 +16185,25 @@ Public Module agm2
 
     End Sub
 
-    Public Sub writeEarnedValuesToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleNameID As String)
+    Public Sub writeEarnedValuesToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleCollection As Collection, ByVal costCollection As Collection)
 
         appInstance.EnableEvents = False
+        Dim vonDatum As Date = getDateofColumn(von, False)
+        Dim bisDatum As Date = getDateofColumn(bis, True)
+        Dim namePart As String = "Wert- & Auslastungs-Analyse "
 
-
-
-        Dim teamID As Integer = -1
-        Dim myCurrentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
+        If roleCollection.Count = 1 Then
+            namePart = namePart & CStr(roleCollection.Item(1))
+        ElseIf roleCollection.Count = 2 Then
+            namePart = namePart & CStr(roleCollection.Item(1)) & " "
+            namePart = namePart & CStr(roleCollection.Item(2))
+        Else
+            namePart = namePart & "mehrere Rollen"
+        End If
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & namePart & " " & vonDatum.ToString("MMM yy") & " - " & bisDatum.ToString("MMM yy") & ".xlsx"
 
         Dim newWB As Excel.Workbook
-
-        Dim ressCostColumn As Integer
-
-        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & printName(currentConstellationPvName) & " EV " & ".xlsx"
-
-
-        ' hier muss jetzt das entsprechende File aufgemacht werden ...
-        ' das File 
-        Try
-
-            newWB = appInstance.Workbooks.Add()
-            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
-            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-
-        Catch ex As Exception
-            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
-            appInstance.EnableEvents = True
-            Exit Sub
-        End Try
+        Dim ws As Excel.Worksheet
 
         ' jetzt schreiben der ersten Zeile 
         Dim zeile As Integer = 1
@@ -16223,185 +16213,266 @@ Public Module agm2
         Dim roleCostNames As Excel.Range = Nothing
         Dim roleCostInput As Excel.Range = Nothing
 
-        Dim tmpName As String = ""
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+            ws = CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        Try
+
+            With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                Dim ersteZeile As Excel.Range
+                ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+                CType(.Cells(1, 1), Excel.Range).Value = "Ressourcen-/Kostenart Name"
+                CType(.Cells(1, 2), Excel.Range).Value = "Kategorie"
+
+                'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+                ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+                Dim ressCostColumn As Integer = 6
+                ' jetzt wird die Zeile 1 geschrieben 
+                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+                ' jetzt werden die Daten-Spalten formatiert 
+                For m As Integer = 0 To bis - von
+                    With CType(.Columns(startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                        .NumberFormat = "#,##0.00 $"
+                        .ColumnWidth = 15
+                    End With
+                Next
+
+                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+                For m As Integer = 0 To bis - von
+                    With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = startMonat.AddMonths(m)
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                        .NumberFormat = "[$-409]mmm yy;@"
+                        .WrapText = False
+                        .Orientation = 90
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+                Next
 
 
-        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-            Dim ersteZeile As Excel.Range
-            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+            End With
 
-            CType(.Cells(1, 1), Excel.Range).Value = "Ressourcen-Name"
-            CType(.Cells(1, 2), Excel.Range).Value = "Kategorie"
+            zeile = 2
+            Dim zeitraum As Integer = bis - von
+
+            For Each roleNameID As String In roleCollection
+                Dim teamID As Integer = -1
+                Dim myCurrentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
+
+                Dim tmpName As String = ""
+
+                Dim allSummaryRoles As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleNameID, PTcbr.placeholders)
+                Dim allPeopleRoles As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleNameID, PTcbr.realRoles)
+
+                Dim earnedValues() As Double
+                Dim underUtilizationValues() As Double
+                Dim overUtilizationValues() As Double
+
+                Dim totalKapaValues() As Double
+
+                ReDim earnedValues(bis - von)
+                ReDim underUtilizationValues(bis - von)
+                ReDim overUtilizationValues(bis - von)
+
+                ReDim totalKapaValues(bis - von)
+
+                ' now summarize all needs which are given to summary Roles 
+                For i As Integer = 1 To allSummaryRoles.Count
+                    Dim myRoleUID As Integer = allSummaryRoles.ElementAt(i - 1).Key
+                    Dim myRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(myRoleUID, -1)
+                    Dim myTagessatz As Double = RoleDefinitions.getRoleDefByID(myRoleUID).tagessatzIntern
+
+                    Dim tmpEarnedValues() As Double = ShowProjekte.getRoleValuesInMonth(myRoleNameID)
+
+                    For mx As Integer = 0 To bis - von
+                        earnedValues(mx) = earnedValues(mx) + tmpEarnedValues(mx) * myTagessatz
+                    Next
+
+                Next
+
+                For pr As Integer = 1 To allPeopleRoles.Count
+                    Dim myRoleUID As Integer = allPeopleRoles.ElementAt(pr - 1).Key
+                    Dim myRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(myRoleUID, -1)
+                    Dim myTagessatz As Double = RoleDefinitions.getRoleDefByID(myRoleUID).tagessatzIntern
+                    Dim isExternRole As Boolean = RoleDefinitions.getRoleDefByID(myRoleUID).isExternRole
+
+                    ' get Auslastung
+                    Dim tmpRoleValues() As Double = ShowProjekte.getRoleValuesInMonth(myRoleNameID)
+                    ' get Überauslastung
+                    Dim myCollection As New Collection
+                    myCollection.Add(myRoleNameID)
+                    Dim tmpKapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection)
+
+                    Dim tmpUnderValues() As Double
+                    Dim tmpOverValues() As Double
+                    ReDim tmpUnderValues(bis - von)
+                    ReDim tmpOverValues(bis - von)
+
+                    If isExternRole Then
+                        For mx As Integer = 0 To bis - von
+
+                            totalKapaValues(mx) = totalKapaValues(mx) + tmpKapaValues(mx) * myTagessatz
+                            earnedValues(mx) = earnedValues(mx) + tmpRoleValues(mx) * myTagessatz
+
+                        Next
+                    Else
+                        For mx As Integer = 0 To bis - von
+
+                            totalKapaValues(mx) = totalKapaValues(mx) + tmpKapaValues(mx) * myTagessatz
+
+                            If tmpKapaValues(mx) >= tmpRoleValues(mx) Then
+                                ' underutilization 
+                                earnedValues(mx) = earnedValues(mx) + tmpRoleValues(mx) * myTagessatz
+                                underUtilizationValues(mx) = underUtilizationValues(mx) + (tmpKapaValues(mx) - tmpRoleValues(mx)) * myTagessatz
+                            Else
+                                earnedValues(mx) = earnedValues(mx) + tmpKapaValues(mx) * myTagessatz
+                                overUtilizationValues(mx) = overUtilizationValues(mx) + (tmpRoleValues(mx) - tmpKapaValues(mx)) * myTagessatz
+                            End If
+                        Next
+                    End If
 
 
-
-            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
-            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
-            ressCostColumn = 6
-            ' jetzt wird die Zeile 1 geschrieben 
-            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+                Next
 
 
-            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
-            For m As Integer = 0 To bis - von
-                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
-                    .Value = startMonat.AddMonths(m)
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                    .NumberFormat = "[$-409]mmm yy;@"
-                    .WrapText = False
-                    .Orientation = 90
-                    .AddIndent = False
-                    .IndentLevel = 0
-                    .ReadingOrder = Excel.Constants.xlContext
-                End With
+                ' now do thecheck:
+                ' this is necessary if so many summary roles do have resource needs which go beyond the total capa
+                ' then a according shift from earned values to overutilization is necessary
+                For mx As Integer = 0 To bis - von
+
+                    If earnedValues(mx) > totalKapaValues(mx) Then
+                        overUtilizationValues(mx) = overUtilizationValues(mx) + (earnedValues(mx) - totalKapaValues(mx))
+                        earnedValues(mx) = totalKapaValues(mx)
+                    End If
+                Next
+                ' if earnedValues > 
+
+                For p As Integer = 1 To 4
+
+                    If p = 1 Then
+
+                        Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                        CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
+                        CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
+
+                        CType(ws.Cells(zeile, 2), Excel.Range).Value = "in € bewertete Kapazität"
+                        editRange.Value = totalKapaValues
+                        zeile = zeile + 1
+
+                    ElseIf p = 2 Then
+
+                        Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                        CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
+                        CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
+
+                        CType(ws.Cells(zeile, 2), Excel.Range).Value = "in € bewertete Auslastung"
+                        editRange.Value = earnedValues
+                        zeile = zeile + 1
+
+                    ElseIf p = 3 Then
+
+                        Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                        CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
+                        CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
+                        CType(ws.Cells(zeile, 2), Excel.Range).Value = "in € bewertete Unterauslastung"
+                        editRange.Value = underUtilizationValues
+                        zeile = zeile + 1
+
+                    ElseIf p = 4 Then
+
+                        Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                        CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
+                        CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
+                        CType(ws.Cells(zeile, 2), Excel.Range).Value = "in € bewertete Überauslastung"
+                        editRange.Value = overUtilizationValues
+                        zeile = zeile + 1
+
+
+                    End If
+                Next
+
+
             Next
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "writeEarnedValuesToExcel, writing roles", ex.Message)
+        End Try
 
 
-        End With
+        Try
+            For Each costName As String In costCollection
+                Dim costValues() As Double = ShowProjekte.getCostValuesInMonthNew(costName)
 
-        Dim ws As Excel.Worksheet = CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                For mx As Integer = 0 To bis - von
+                    costValues(mx) = costValues(mx) * 1000
+                Next
 
-        zeile = 2
-        Dim zeitraum As Integer = bis - von
+                Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
-        Dim allSummaryRoles As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleNameID, PTcbr.placeholders)
-        Dim allPeopleRoles As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleNameID, PTcbr.realRoles)
+                CType(ws.Cells(zeile, 1), Excel.Range).Value = "Sonst. Kosten"
+                CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
 
-        Dim earnedValues() As Double
-        Dim underUtilizationValues() As Double
-        Dim overUtilizationValues() As Double
-        Dim invoiceValues() As Double
-        Dim totalKapaValues() As Double
+                CType(ws.Cells(zeile, 2), Excel.Range).Value = costName & " in [€]"
+                editRange.Value = costValues
+                zeile = zeile + 1
+            Next
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "writeEarnedValuesToExcel, writing costs", ex.Message)
+        End Try
 
-        ReDim earnedValues(bis - von)
-        ReDim underUtilizationValues(bis - von)
-        ReDim overUtilizationValues(bis - von)
-        ReDim invoiceValues(bis - von)
-        ReDim totalKapaValues(bis - von)
-
-        ' now summarize all needs which are given to summary Roles 
-        For i As Integer = 1 To allSummaryRoles.Count
-            Dim myRoleUID As Integer = allSummaryRoles.ElementAt(i - 1).Key
-            Dim myRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(myRoleUID, -1)
-            Dim myTagessatz As Double = RoleDefinitions.getRoleDefByID(myRoleUID).tagessatzIntern
-
-            Dim tmpEarnedValues() As Double = ShowProjekte.getRoleValuesInMonth(myRoleNameID)
+        Try
+            ' now get the invoices 
+            ' now get the invoice Values 
+            Dim invoiceValues() As Double = ShowProjekte.getInvoices
 
             For mx As Integer = 0 To bis - von
-                earnedValues(mx) = earnedValues(mx) + tmpEarnedValues(mx) * myTagessatz
+                ' invoices are in T€ - so convert it to €
+                invoiceValues(mx) = invoiceValues(mx) * 1000
             Next
 
+            Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+            CType(ws.Cells(zeile, 1), Excel.Range).Value = "Geld-Zufluss"
+            CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
+            CType(ws.Cells(zeile, 2), Excel.Range).Value = "Rechnungen in [€]"
+            editRange.Value = invoiceValues
+            zeile = zeile + 1
+
+        Catch ex As Exception
+
+        End Try
+
+
+        ' jetzt noch die betrachteten Projekte speichern 
+        zeile = zeile + 4
+
+        CType(ws.Cells(zeile, 1), Excel.Range).Value = "betrachtete Projekte:"
+        zeile = zeile + 2
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            CType(ws.Cells(zeile, 1), Excel.Range).Value = kvp.Value.getShapeText
+            CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 2
+            zeile = zeile + 1
         Next
-
-        For pr As Integer = 1 To allPeopleRoles.Count
-            Dim myRoleUID As Integer = allPeopleRoles.ElementAt(pr - 1).Key
-            Dim myRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(myRoleUID, -1)
-            Dim myTagessatz As Double = RoleDefinitions.getRoleDefByID(myRoleUID).tagessatzIntern
-
-            ' get Auslastung
-            Dim tmpRoleValues() As Double = ShowProjekte.getRoleValuesInMonth(myRoleNameID)
-            ' get Überauslastung
-            Dim myCollection As New Collection
-            myCollection.Add(myRoleNameID)
-            Dim tmpKapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection)
-
-            Dim tmpUnderValues() As Double
-            Dim tmpOverValues() As Double
-            ReDim tmpUnderValues(bis - von)
-            ReDim tmpOverValues(bis - von)
-
-            For mx As Integer = 0 To bis - von
-
-                totalKapaValues(mx) = totalKapaValues(mx) + tmpKapaValues(mx) * myTagessatz
-
-                If tmpKapaValues(mx) >= tmpRoleValues(mx) Then
-                    ' underutilization 
-                    earnedValues(mx) = earnedValues(mx) + tmpRoleValues(mx) * myTagessatz
-                    underUtilizationValues(mx) = underUtilizationValues(mx) + (tmpKapaValues(mx) - tmpRoleValues(mx)) * myTagessatz
-                Else
-                    earnedValues(mx) = earnedValues(mx) + tmpKapaValues(mx) * myTagessatz
-                    overUtilizationValues(mx) = overUtilizationValues(mx) + (tmpRoleValues(mx) - tmpKapaValues(mx)) * myTagessatz
-                End If
-            Next
-
-        Next
-
-        ' now get the invoice Values 
-        invoiceValues = ShowProjekte.getInvoices
-
-        ' now do thecheck:
-        ' this is necessary if so many summary roles do have resource needs which go beyond the total capa
-        ' then a according shift from earned values to overutilization is necessary
-        For mx As Integer = 0 To bis - von
-
-            ' invoices are in T€ - so convert it to €
-            invoiceValues(mx) = invoiceValues(mx) * 1000
-
-            If earnedValues(mx) > totalKapaValues(mx) Then
-                overUtilizationValues(mx) = overUtilizationValues(mx) + (earnedValues(mx) - totalKapaValues(mx))
-                earnedValues(mx) = totalKapaValues(mx)
-            End If
-        Next
-        ' if earnedValues > 
-
-        For p As Integer = 1 To 5
-
-            If p = 1 Then
-
-                Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-
-                CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
-                CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
-
-                CType(ws.Cells(zeile, 2), Excel.Range).Value = "Umsatz bei Voll-Auslastung [€]"
-                editRange.Value = totalKapaValues
-                zeile = zeile + 1
-
-            ElseIf p = 2 Then
-
-                Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-
-                CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
-                CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
-
-                CType(ws.Cells(zeile, 2), Excel.Range).Value = "in € bewertete Arbeit in Projekten [€]"
-                editRange.Value = earnedValues
-                zeile = zeile + 1
-
-            ElseIf p = 3 Then
-
-                Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-
-                CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
-                CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
-                CType(ws.Cells(zeile, 2), Excel.Range).Value = "Entgangene Umsätze wg. Unterauslastung [€]"
-                editRange.Value = underUtilizationValues
-                zeile = zeile + 1
-
-            ElseIf p = 4 Then
-
-                Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-
-                CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
-                CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
-                CType(ws.Cells(zeile, 2), Excel.Range).Value = "Entgangene Umsätze wg. Überauslastung [€]"
-                editRange.Value = overUtilizationValues
-                zeile = zeile + 1
-
-            ElseIf p = 5 Then
-
-                Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-
-                CType(ws.Cells(zeile, 1), Excel.Range).Value = myCurrentRole.name
-                CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = 1
-                CType(ws.Cells(zeile, 2), Excel.Range).Value = "Invoices [€]"
-                editRange.Value = invoiceValues
-                zeile = zeile + 1
-
-            End If
-        Next
-
 
         Try
             ' jetzt die Autofilter aktivieren ... 

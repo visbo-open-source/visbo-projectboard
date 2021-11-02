@@ -9634,10 +9634,14 @@ Imports System.Web
 
             Next
 
+            If myCollectionC.Count = 0 Then
+                myCollectionC = ShowProjekte.getCostNames
+            End If
+
 
             Try
                 Dim myRoleNameID As String = CStr(myCollectionR.Item(1))
-                Call writeEarnedValuesToExcel(showRangeLeft, showRangeRight, myRoleNameID)
+                Call writeEarnedValuesToExcel(showRangeLeft, showRangeRight, myCollectionR, myCollectionC)
                 'Call writeEarnedValuesToExcel(showRangeLeft, showRangeRight, myCollectionR, myCollectionC)
             Catch ex As Exception
                 Call MsgBox(ex.Message)

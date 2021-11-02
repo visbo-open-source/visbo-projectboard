@@ -2048,37 +2048,58 @@ Public Class clsProjekte
     ''' 
     ''' </summary>
     ''' <param name="roleIDs"></param>
+    ''' <param name="skillIDs"></param>
     ''' <param name="overloadCriterion">returns true, if any month is overloaded more than overloadCriterion and onlyStrictly=false </param>
     ''' <param name="onlyStrictly">false: single months overloads should be taken into account even when overall timeframe is not overloaded at all </param>
     ''' <param name="totalOverloadCriterion">returns true if total sum of roles is larger than totalOverloadCriterion * kapa </param>
     ''' <returns></returns>
     Public Function overLoadFound(ByVal roleIDs As List(Of String),
+                                  ByVal skillIDs As List(Of String),
                                   ByVal onlyStrictly As Boolean,
                                   ByVal overloadCriterion As Double,
                                   ByVal totalOverloadCriterion As Double) As Boolean
 
         Dim overloaded As Boolean = False
         Dim monthlyCriterion As Double = 3 * overloadCriterion
+        Dim curIDs As List(Of String) = Nothing
 
-        For Each roleIDstr As String In roleIDs
+        For i As Integer = 1 To 2
 
-            Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
-            Dim myCollection As New Collection From {
-                roleIDstr
-            }
-            Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
-
-            If Not onlyStrictly Then
-                For i As Integer = 0 To roleValues.Length - 1
-                    If roleValues(i) >= overloadCriterion * kapaValues(i) Then
-                        overloaded = True
-                        Exit For
-                    End If
-                Next
+            If i = 1 Then
+                curIDs = roleIDs
+            Else
+                curIDs = skillIDs
             End If
 
-            If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
-                overloaded = True
+            If Not IsNothing(curIDs) Then
+
+                For Each roleIDstr As String In curIDs
+
+                    Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
+                    Dim myCollection As New Collection From {
+                        roleIDstr
+                     }
+                    Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
+
+                    If Not onlyStrictly Then
+                        For ix As Integer = 0 To roleValues.Length - 1
+                            If roleValues(ix) >= overloadCriterion * kapaValues(ix) Then
+                                overloaded = True
+                                Exit For
+                            End If
+                        Next
+                    End If
+
+                    If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
+                        overloaded = True
+                    End If
+
+                    If overloaded Then
+                        Exit For
+                    End If
+
+                Next
+
             End If
 
             If overloaded Then
