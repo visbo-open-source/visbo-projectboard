@@ -5505,7 +5505,11 @@ Public Module agm2
                         ' aufbauen der RcLists - evt. nicht nötig
                         ' mapProj.updateRcLists()
                         If IsNothing(mapProj) Then
-                            Call MsgBox("Kein Mapping erfolgt")
+                            If modus <> "RPA" Then
+                                Call MsgBox("Kein Mapping erfolgt")
+                            Else
+                                Call logger(ptErrLevel.logWarning, "awinImportMSProject: ", "Kein Mapping erfolgt!")
+                            End If
                         End If
 
                     End If
@@ -20688,6 +20692,10 @@ Public Module agm2
             exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\Modulare Szenarien"
             exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\MassEdit"
             exportOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Export\Scenario Definitions"
+
+
+            '' FileNamen zusammenbauen
+            logfileNamePath = createLogfileName("")
 
             If special = "ProjectBoard" Then
 

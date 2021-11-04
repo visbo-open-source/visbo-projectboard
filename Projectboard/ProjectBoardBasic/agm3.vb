@@ -1321,6 +1321,7 @@ Public Module agm3
 
                 Catch ex As Exception
                     actDataWB = Nothing
+                    Call logger(ptErrLevel.logError, "1. " & ex.Message, "readActualDataWithConfig", anzFehler)
                     Call MsgBox("1. " & ex.Message)
                 End Try
 
@@ -1331,9 +1332,9 @@ Public Module agm3
 
             End If
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, "2. " & ex.Message, "readActualDataWithConfig", anzFehler)
             Call MsgBox("2. " & ex.Message)
         End Try
-
 
         readActualDataWithConfig = result
     End Function
@@ -4434,8 +4435,12 @@ Public Module agm3
                                 End If
                                 duration = calcDauerIndays(ephaseStart, ephaseEnd)
                             Else
-                                If (item.Value.StartDate >= item.Value.Erstellt) Then
+                                If (item.Value.StartDate < item.Value.Erstellt) Then
                                     ephaseStart = item.Value.StartDate
+                                    ' Phase kann nicht vor dem Projekt beginnen
+                                    If ephaseStart < hproj.startDate Then
+                                        ephaseStart = hproj.startDate
+                                    End If
                                     ephaseEnd = item.Value.fällig
                                 Else
                                     ephaseStart = item.Value.Erstellt
@@ -4466,7 +4471,6 @@ Public Module agm3
                             End If
 
                             If duration > 0 Then
-
                                 Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, ephaseStart.Date)
                                 ephase.offset = offset
                                 ephase.changeStartandDauer(offset, duration)

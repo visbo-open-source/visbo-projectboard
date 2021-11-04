@@ -69,8 +69,9 @@ Public Module Module1
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public menuMessages As clsReportMessages
 
-    
+
     'Definitionen zum Schreiben eines Logfiles
+    Public logfileNamePath As String = ""
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
     Public anzFehler As Long = 0
@@ -7681,13 +7682,44 @@ Public Module Module1
 
 
     ''' <summary>
+    ''' composition of the FileName of the different Logfiles for the RPA Import as well
+    ''' </summary>
+    ''' <param name="rpaFolder"></param>
+    ''' <param name="rpaImportfile"></param>
+    ''' <returns></returns>
+    Public Function createLogfileName(Optional ByVal rpaFolder As String = "", Optional ByVal rpaImportfile As String = "") As String
+        ' FileNamen zusammenbauen
+        Dim logfileOrdner As String = "logfiles"
+
+
+        If IsNothing(awinPath) Then
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+        End If
+        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+
+        ' write logfiles in rpaFolder, if RPA was started
+        If Not IsNothing(rpaFolder) And rpaFolder <> "" Then
+            logfilePath = My.Computer.FileSystem.CombinePath(rpaFolder, logfileOrdner)
+        End If
+
+        Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+        ' Fragen, ob bereits existiert - eventuell nicht nötig
+        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            My.Computer.FileSystem.CreateDirectory(logfilePath)
+        End If
+        createLogfileName = logfileNamePath
+    End Function
+
+    ''' <summary>
     '''  schreibt in das logfile mit Errorlevel
     ''' </summary>
     ''' <param name="errLevel"></param>
     ''' <param name="text"></param>
     ''' <param name="addOn"></param>
     ''' <param name="anzFehler"></param>
-    Public Sub logger(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+    Public Sub logger(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByVal anzFehler As Long)
 
         Try
             Dim strMeld As String
@@ -7700,20 +7732,29 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
+            '' FileNamen zusammenbauen
+            'Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
 
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+
+            '' write logfiles in rpaFolder, if RPA was started
+            'If Not IsNothing(rpaFolder) Then
+            '    logfilePath = rpaFolder
+            'End If
+
+            'Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
+
+
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
@@ -7730,27 +7771,6 @@ Public Module Module1
 
         End Try
 
-
-        'Dim obj As Object
-
-        'Try
-        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
-        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-
-        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-        '        CType(.Cells(1, 2), Excel.Range).Value = errorLevel(errLevel)
-        '        CType(.Cells(1, 3), Excel.Range).Value = addOn
-        '        CType(.Cells(1, 4), Excel.Range).Value = text
-
-        '    End With
-        '    anzFehler = anzFehler + 1
-        '    xlsLogfile.Save()
-
-        'Catch ex As Exception
-
-        'End Try
 
     End Sub
 
@@ -7775,19 +7795,23 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            'logfileNamePath = createLogfileName(rpaFolder, rpaImportfile)
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
 
@@ -7824,19 +7848,20 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
@@ -7873,19 +7898,20 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
@@ -7904,32 +7930,6 @@ Public Module Module1
         Catch ex As Exception
 
         End Try
-        'Dim obj As Object
-        'Try
-        '    Dim anzSpaltenText As Integer = text.Length
-        '    Dim anzSpaltenValues As Integer = values.Length
-        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
-        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-        '        CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
-
-        '        For ix As Integer = 3 To anzSpaltenText + 2
-        '            CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-        '            CType(.Cells(1, ix), Excel.Range).Value = text(ix - 3)
-        '        Next
-
-        '        For ix As Integer = 3 To anzSpaltenValues + 2
-        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 3)
-        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
-        '        Next
-        '    End With
-        '    xlsLogfile.Save()
-
-        'Catch ex As Exception
-
-        'End Try
 
     End Sub
 
@@ -7948,19 +7948,23 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            ' Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog

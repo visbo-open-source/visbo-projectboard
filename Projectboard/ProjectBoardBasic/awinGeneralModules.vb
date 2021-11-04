@@ -3805,6 +3805,8 @@ Public Module awinGeneralModules
             activeSummaryConstellation = New clsConstellation(skey:=ptSortCriteria.customTF)
             Dim zaehler As Integer = 1
 
+
+
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
                 '' '???ur:8..4.2019: Portfolio-Projekte lesen'' es werden erst mal alle Projekte zu der Constellation kvp geholt
@@ -3828,6 +3830,10 @@ Public Module awinGeneralModules
                         variantName = ""
                     End If
 
+                    ' Test ur: 20211103 TODO?????
+                    Dim projList As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Value.constellationName, kvp.Value.vpID, kvp.Value.variantName, err, storedAtOrBefore)
+                    AlleProjekte.liste = projList
+
                     curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                     If Not IsNothing(curSummaryProjVorgabe) Then
                         vorgabeBudget = curSummaryProjVorgabe.Erloes
@@ -3842,7 +3848,8 @@ Public Module awinGeneralModules
                         End If
                         curSummaryProjToUse = curSummaryProjVorgabe
                     Else
-                        curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
+                        ' Test ur: 20211103 TODO?????
+                        '' curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
                     End If
 
 

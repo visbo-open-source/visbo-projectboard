@@ -10,15 +10,16 @@ Imports System.Security.Principal
 
 Module rpaModule1
 
+    Public myActivePortfolio As String = ""
+    Public inputvalues As clsRPASetting = Nothing
 
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
         ' in most cases new project and portfolio versions will be written 
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
-        Dim msgTxt As String = ""
 
-        Dim anzFiles As Integer = 0
+        Dim nonStop As Boolean = True
 
         Dim rpaPath As String = My.Settings.rpaPath
         Dim swPath As String = My.Settings.swPath
@@ -26,23 +27,54 @@ Module rpaModule1
         Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
         Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
         Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
+        Dim collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
         Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
         Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
         Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
         Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
 
+        'Dim myActivePortfolio As String = ""
+        'Dim inputvalues As clsRPASetting = Nothing
 
-        Dim myActivePortfolio As String = ""
+        ' Read the Setting-file of RPA
+        If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+            Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+            inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+            ' is there a activePortfolio
+            myActivePortfolio = inputvalues.activePortfolio
+        Else
+            ' Exit ! 
+            ' read all files, categorize and verify them  
+            Dim msgTxt As String = "Exit - there is no File " & settingJsonFile
+            Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
+            Console.WriteLine(msgTxt)
 
-        Dim listToProcess As New SortedList(Of String, Integer)
+            ' break the RPA - Service
+            nonStop = False
+        End If
 
-        Try
-            If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-                Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-                Dim inputvalues As clsRPASetting = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+        ' never ending loop for importing the different files - RPA
 
-                ' is there a activePortfolio
-                myActivePortfolio = inputvalues.activePortfolio
+        Do While nonStop
+
+            Dim msgTxt As String = ""
+
+            Try
+                Dim anzFiles As Integer = 0
+
+                '' FileNamen für logging zusammenbauen
+                logfileNamePath = createLogfileName(rpaFolder, "")
+
+                Dim listToProcess As New SortedList(Of String, Integer)
+                Dim listToProcess2 As New SortedList(Of String, Integer)
+                Dim listActualDataFiles As New SortedList(Of String, Integer)
+
+                '    If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+                '        Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+                '        Dim inputvalues As clsRPASetting = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+
+                '        ' is there a activePortfolio
+                '        myActivePortfolio = inputvalues.activePortfolio
 
                 ' now check whether or not the folder are existings , if not create them 
                 If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
@@ -51,6 +83,10 @@ Module rpaModule1
 
                 If Not My.Computer.FileSystem.DirectoryExists(failureFolder) Then
                     My.Computer.FileSystem.CreateDirectory(failureFolder)
+                End If
+
+                If Not My.Computer.FileSystem.DirectoryExists(collectFolder) Then
+                    My.Computer.FileSystem.CreateDirectory(collectFolder)
                 End If
 
                 If Not My.Computer.FileSystem.DirectoryExists(logfileFolder) Then
@@ -67,8 +103,13 @@ Module rpaModule1
 
 
                 ' 
-                ' startUpRPA setzt awinSettings, liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
+                ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
                 If startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath) Then
+
+                    ' Completion-File delivered?
+                    Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
+                    Dim completedOK As Boolean = (completionFiles.Count > 0)
+
 
                     ' read all Excel based files 
                     Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
@@ -77,6 +118,9 @@ Module rpaModule1
                     For Each fullFileName As String In listOfImportfiles
 
                         Dim myName As String = My.Computer.FileSystem.GetName(fullFileName)
+
+
+
                         Dim rpaCategory As PTRpa = bestimmeRPACategory(fullFileName)
 
                         If rpaCategory = PTRpa.visboUnknown Then
@@ -90,8 +134,6 @@ Module rpaModule1
                                 listToProcess.Add(fullFileName, CInt(rpaCategory))
                             End If
                         End If
-
-
 
                     Next
 
@@ -108,27 +150,83 @@ Module rpaModule1
 
                     Next
 
+                    listOfImportfiles = Nothing
 
                     ImportProjekte.Clear()
                     Dim importOrganisations As New clsOrganisations
                     Dim importCustomization As New clsCustomization
                     Dim importAppearances As New clsAppearances
                     Dim importDate As Date = Date.Now()
+                    Dim allOk As Boolean = False
 
+
+                    If completedOK Then
+
+                        logfileNamePath = createLogfileName(rpaFolder, myActivePortfolio)
+
+                        ' that means, all timesheets are in the RPA folder
+                        For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
+
+                            'collect the Timesheets for actualData in one separate list and dir 'collect'
+                            If kvp.Value = PTRpa.visboActualData2 Then
+                                Dim myName As String = My.Computer.FileSystem.GetName(kvp.Key)
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
+                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                Call logger(ptErrLevel.logInfo, "collect: ", myName)
+                                listActualDataFiles.Add(newDestination, kvp.Value)
+                            Else
+                                ' all other files to import
+                                listToProcess2.Add(kvp.Key, kvp.Value)
+                            End If
+                        Next
+
+                        listToProcess = listToProcess2
+
+                        ' import actualData like Timesheets from collectFolder
+                        allOk = processVisboActualData2("Timesheets", myActivePortfolio, collectFolder, importDate)
+
+                        For Each kvp As KeyValuePair(Of String, Integer) In listActualDataFiles
+                            Dim myName As String = My.Computer.FileSystem.GetName(kvp.Key)
+                            If allOk Then
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                Call logger(ptErrLevel.logInfo, "success: ", myName)
+                                Console.WriteLine(myName & ": successful ...")
+                            Else
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                Call logger(ptErrLevel.logError, "failed: ", myName)
+                                Console.WriteLine(myName & ": with errors ...")
+                            End If
+
+                        Next
+
+                        ' logfile in entsprechenden folder verschieben
+                        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                        If Not allOk Then
+                            Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                            My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                        End If
+
+                    End If
 
                     For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
 
                         Dim myName As String = My.Computer.FileSystem.GetName(kvp.Key)
                         Dim currentWB As xlns.Workbook = Nothing
-                        Dim allOk As Boolean = False
+
 
                         Try
 
-                            If Not kvp.Value = PTRpa.visboMPP Then
+                            If Not kvp.Value = PTRpa.visboMPP _
+                                And Not kvp.Value = PTRpa.visboActualData1 _
+                                And Not kvp.Value = PTRpa.visboActualData2 Then
+
+                                appInstance.DisplayAlerts = False
                                 currentWB = appInstance.Workbooks.Open(kvp.Key)
                             End If
 
-
+                            logfileNamePath = createLogfileName(rpaFolder, myName)
                             Select Case kvp.Value
                                 Case CInt(PTRpa.visboProjectList)
 
@@ -165,33 +263,63 @@ Module rpaModule1
 
                                     allOk = processVisboActualData1(kvp.Key, importDate)
 
+                                Case CInt(PTRpa.visboActualData2)
+
+                                    'Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
+                                    ' in collectFolder verschieben
+                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
+                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                    Call logger(ptErrLevel.logInfo, "collect: ", myName)
+                                    ' nachsehen ob collect vollständig
+                                    If completionFiles.Count > 0 Then
+                                        allOk = processVisboActualData2(kvp.Key, myActivePortfolio, collectFolder, importDate)
+                                    End If
+
+
                                 Case Else
 
                             End Select
 
+
                             If Not (kvp.Value = PTRpa.visboMPP Or
-                                kvp.Value = PTRpa.visboJira Or kvp.Value = PTRpa.visboActualData1) Then
+                                        kvp.Value = PTRpa.visboJira Or
+                                        kvp.Value = PTRpa.visboActualData1 Or
+                                        kvp.Value = PTRpa.visboActualData2) Then
 
                                 If allOk Then
                                     CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
                                 Else
                                     CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
                                 End If
-
                                 currentWB.Close(SaveChanges:=True)
+                            End If
+
+                            'If Not IsNothing(currentWB) Then
+                            '    currentWB.Close(SaveChanges:=True)
+                            'End If
+
+                            If Not kvp.Value = PTRpa.visboActualData2 Then
+
+                                If allOk Then
+                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                    Call logger(ptErrLevel.logInfo, "success: ", myName)
+                                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+                                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                                    Console.WriteLine(myName & ": successful ...")
+                                Else
+                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
+                                    Call logger(ptErrLevel.logError, "failed: ", myName)
+                                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                                End If
 
                             End If
 
-                            If allOk Then
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
 
-                                Call logger(ptErrLevel.logInfo, "success: ", myName)
-                            Else
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logError, "failed: ", myName)
-                            End If
 
                         Catch ex As Exception
                             Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
@@ -200,23 +328,18 @@ Module rpaModule1
                             If Not kvp.Value = PTRpa.visboMPP Then
                                 currentWB.Close(SaveChanges:=True)
                             End If
-                        End Try
-
-                        If allOk Then
-                            Console.WriteLine(myName & ": successful ...")
-                        Else
                             Console.WriteLine(myName & ": failed ...")
-                        End If
+                        End Try
 
                     Next
 
-                    Console.WriteLine("end of jobs!")
-                    msgTxt = "End of RPA ..."
+                    Console.WriteLine("looking for next jobs!")
+                    msgTxt = "looking for next jobs!"
                     Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
 
                 Else
                     msgTxt = "wrong settings - exited without performing jobs ...."
-                    Call MsgBox(msgTxt)
+                    'Call MsgBox(msgTxt)
                     Console.WriteLine(msgTxt)
                     Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
                 End If
@@ -227,34 +350,26 @@ Module rpaModule1
                 ' speichern 
                 My.Settings.Save()
 
-            Else
-                ' Exit ! 
-                ' read all files, categorize and verify them  
-                msgTxt = "Exit - there is no File " & settingJsonFile
+                '' now release all writeProtections ...
+                'Dim errMsgCode As New clsErrorCodeMsg
+                'If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, errMsgCode) Then
+                '    If awinSettings.visboDebug Then
+                '        Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                '    End If
+                'Else
+                '    msgTxt = "Write Protections could not be released ! Please do so in Web-UI ..."
+                '    Call logger(ptErrLevel.logError, "VISBO Robotic Process automation End", msgTxt)
+                '    Console.WriteLine(msgTxt)
+                'End If
+
+
+            Catch ex As Exception
+                msgTxt = "Exit - Failure in rpa Main: " & ex.Message
                 Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
                 Console.WriteLine(msgTxt)
-            End If
+            End Try
 
-            ' now release all writeProtections ...
-            Dim errMsgCode As New clsErrorCodeMsg
-            If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, errMsgCode) Then
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
-                End If
-            Else
-                msgTxt = "Write Protections could not be released ! Please do so in Web-UI ..."
-                Call logger(ptErrLevel.logError, "VISBO Robotic Process automation End", msgTxt)
-                Console.WriteLine(msgTxt)
-            End If
-
-        Catch ex As Exception
-            msgTxt = "Exit - Failure in rpa Main: " & ex.Message
-            Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-            Console.WriteLine(msgTxt)
-        End Try
-
-
-
+        Loop
 
     End Sub
 
@@ -878,7 +993,10 @@ Module rpaModule1
             If My.Computer.FileSystem.FileExists(fileName) Then
 
                 Try
-                    Dim currentWB As xlns.Workbook = appInstance.Workbooks.Open(fileName)
+                    appInstance.DisplayAlerts = False
+                    Dim currentWB As xlns.Workbook = appInstance.Workbooks.Open(fileName, UpdateLinks:=0)
+                    currentWB.Final = False
+                    appInstance.DisplayAlerts = True
 
                     Try
                         ' Check auf Project Batch-List
@@ -927,9 +1045,14 @@ Module rpaModule1
                         End If
 
                         ' Check auf Telair TimeSheets
+                        If result = PTRpa.visboUnknown Then
+                            'result = checkActualData2(currentWB)
+                        End If
 
                         ' Check auf Tagetik new Project List 
-
+                        If result = PTRpa.visboUnknown Then
+                            result = checkTagetikProjectList(currentWB)
+                        End If
                         ' Check auf Tagetik update projects 
 
                         ' Check auf Instart Calculation Template 
@@ -937,14 +1060,12 @@ Module rpaModule1
                         ' Check auf VISBO Calculation Template 
 
                         currentWB.Close(SaveChanges:=False)
+
                     Catch ex As Exception
 
                         currentWB.Close(SaveChanges:=False)
 
                     End Try
-
-
-
 
 
                 Catch ex As Exception
@@ -1334,6 +1455,50 @@ Module rpaModule1
     End Function
 
     ''' <summary>
+    ''' checks whether or not a file is a Timesheet of Telair
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkTagetikProjectList(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Instructions"
+
+        Try
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(2), xlns.Range)
+                Try
+
+                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("TIMESHEET")
+
+                    ' hier muss noch geprüft werden, ob alle timesheets vorhanden, sonst in separates Dir schieben und erst wenn Timesheet-completed - file vorhanden, dann alle einlesen
+
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboActualData2
+
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkTagetikProjectList = result
+    End Function
+
+    ''' <summary>
     ''' returns the sequence of the project-names 
     ''' there is only one project-variant per ranking allowed
     ''' </summary>
@@ -1421,8 +1586,8 @@ Module rpaModule1
             ' read the file and import into hproj
             Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
 
-            allOk = Not IsNothing(hproj)
-            If allOk Then
+            allOK = Not IsNothing(hproj)
+            If allOK Then
                 Try
                     Dim keyStr As String = calcProjektKey(hproj)
                     ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
@@ -1430,7 +1595,7 @@ Module rpaModule1
 
                     Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
                 Catch ex2 As Exception
-                    allOk = False
+                    allOK = False
                     Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, ex2.Message)
                 End Try
             Else
@@ -1438,8 +1603,8 @@ Module rpaModule1
             End If
 
             ' store Project 
-            If allOk Then
-                allOk = storeImportProjekte()
+            If allOK Then
+                allOK = storeImportProjekte()
             End If
 
             ' empty session 
@@ -1448,7 +1613,7 @@ Module rpaModule1
             Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProject.ToString, myName)
 
         Catch ex1 As Exception
-            allOk = False
+            allOK = False
             Call logger(ptErrLevel.logError, "RPA Error Importing Excel Brief ", ex1.Message)
         End Try
 
@@ -1687,7 +1852,7 @@ Module rpaModule1
             Call logger(ptErrLevel.logError, "errors occurred when processing: " & PTRpa.visboProjectList.ToString, myName & ": " & ex.Message)
         End Try
 
-        processProjectList = allok
+        processProjectList = allOk
 
     End Function
 
@@ -1704,6 +1869,7 @@ Module rpaModule1
             ' Definition für ein eventuelles Mapping
             Dim mapProj As clsProjekt = Nothing
             Call awinImportMSProject("RPA", fileName, hproj, mapProj, importDate)
+
 
             ' now protocol whether or not there are unknown cost and roles used in the MS projct file 
             If Not IsNothing(hproj) Then
@@ -1833,12 +1999,12 @@ Module rpaModule1
                                                         err)
 
                 If result = True Then
-                    allOk = True
+                    allOK = True
                     msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
                     Console.WriteLine(msgTxt)
                     Call logger(ptErrLevel.logInfo, PTRpa.visboInitialOrga.ToString, msgTxt)
                 Else
-                    allOk = False
+                    allOK = False
                     msgTxt = "Storing organisaiton failed "
                     Call logger(ptErrLevel.logError, PTRpa.visboInitialOrga.ToString, msgTxt)
                 End If
@@ -1846,7 +2012,7 @@ Module rpaModule1
 
             Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboInitialOrga.ToString, myName)
         Catch ex As Exception
-            allOk = False
+            allOK = False
         End Try
 
         processInitialOrga = allOK
@@ -1924,6 +2090,12 @@ Module rpaModule1
 
     End Function
 
+    ''' <summary>
+    ''' standard import of actual data like Instart
+    ''' </summary>
+    ''' <param name="myName"></param>
+    ''' <param name="importDate"></param>
+    ''' <returns></returns>
     Private Function processVisboActualData1(ByVal myName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
@@ -1975,7 +2147,7 @@ Module rpaModule1
             End If
         Next
 
-        Call logger(ptErrLevel.logInfo, msgTxt, "PTImportIstdaten", anzFehler)
+        Call logger(ptErrLevel.logInfo, msgTxt, "processVisboActualData1", anzFehler)
 
         weitermachen = True
 
@@ -2005,5 +2177,923 @@ Module rpaModule1
         processVisboActualData1 = allOk
 
     End Function
+
+
+    Private Function processVisboActualData2(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+
+        Dim allOk As Boolean = True
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData2.ToString, myName)
+
+        Dim weitermachen As Boolean = False
+        Dim outPutCollection As New Collection
+        Dim outPutline As String = ""
+        Dim result As Boolean = False
+        Dim listOfArchivFilesAllg As New List(Of String)
+        Dim dateiname As String = myName
+
+        Dim selectedWB As String = ""
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
+        Dim lastrow As Integer
+        Dim listOfErrorImportFilesAllg As New List(Of String)
+        Dim anzFiles As Integer = 0
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        ' erstmal protokollieren, zu welchen Abteilungen Istdaten gelesen und substituiert werden 
+        ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
+
+
+        ' IstDaten - relevante Orga-Units aufsammeln für Import Istdaten
+
+        Dim istDatenReferatsliste() As Integer
+
+        If awinSettings.ActualdataOrgaUnits = "" Then
+            Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+            ReDim istDatenReferatsliste(anzTopNodes - 1)
+            Dim i As Integer = 0
+            For i = 0 To anzTopNodes - 1
+                istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+            Next
+        Else
+            istDatenReferatsliste = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+        End If
+
+        ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+        Dim referatsCollection As New Collection
+        Dim msgTxt As String = "Actual Data Departments: "
+        Dim first As Boolean = True
+        For Each itemID As Integer In istDatenReferatsliste
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+            If Not IsNothing(tmpRole) Then
+                If Not referatsCollection.Contains(tmpRole.name) Then
+                    referatsCollection.Add(tmpRole.name, tmpRole.name)
+                End If
+                If first Then
+                    msgTxt = msgTxt & tmpRole.name
+                    first = False
+                Else
+                    msgTxt = msgTxt & ", " & tmpRole.name
+                End If
+            End If
+        Next
+
+
+        ' Konfigurations-Dateien lesen 
+        ' ===========================================================
+        ' Konfigurationsdatei lesen und Validierung durchführen
+        Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+
+        ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
+        Dim checkConfigOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
+
+        ' read files with actualData 
+        ' ==========================
+
+        If checkConfigOK Then
+
+            Dim listOfImportfilesAllg As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, actualDataFile)
+            anzFiles = listOfImportfilesAllg.Count
+
+            If listOfImportfilesAllg.Count >= 1 Then
+                ' Vorbereitungen für die Aufnahme der verschiedenen Excel-File Daten in die unterschiedlichen Projekte
+                Dim editActualDataMonth As New frmInfoActualDataMonth
+                Dim lastValidMonth As Integer = 0  ' angegeben in dem Dialog
+                Dim IstdatenDate As Date
+                Dim curMonth As Integer = 0
+                Dim hrole As New clsRollenDefinition
+                Dim cacheProjekte As New clsProjekteAlle
+
+
+                ' Istdaten immer vom Vormonat einlesen
+                IstdatenDate = CDate(importDate).AddMonths(-1)
+
+                Dim referenzPortfolioName As String = myActivePortfolio
+
+                Dim curTimeStamp As Date = Date.MinValue
+                Dim err As New clsErrorCodeMsg
+                Dim referenzPortfolio As clsConstellation = Nothing
+
+                If referenzPortfolioName = "" Then
+
+                    Dim txtMsg As String = "kein Portfolio gewählt - Abbruch!"
+                    If awinSettings.englishLanguage Then
+                        txtMsg = "no Portfolio selected - Cancelled ..."
+                    End If
+                    Call logger(ptErrLevel.logError, "processVisboActualData2", txtMsg)
+                    Console.WriteLine(txtMsg)
+
+                    processVisboActualData2 = False
+
+                    Exit Function
+
+                End If
+
+                ' gibt es das Referenz-Portfolio?  
+                referenzPortfolio = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName,
+                                                                                                      "",
+                                                                                                      curTimeStamp,
+                                                                                                      err,
+                                                                                                      variantName:="",
+                                                                                                      storedAtOrBefore:=Date.Now)
+
+                If IsNothing(referenzPortfolio) Then
+                    Dim txtMsg As String = referenzPortfolioName & ": Portfolio existiert nicht ... "
+                    If awinSettings.englishLanguage Then
+                        txtMsg = referenzPortfolioName & ": Portfolio does not exist - Cancelled ..."
+                    End If
+                    Call logger(ptErrLevel.logError, "processVisboActualData2", txtMsg)
+                    Console.WriteLine(txtMsg)
+
+                    processVisboActualData2 = False
+
+                    Exit Function
+
+                End If
+
+
+                ' jetzt kann weitergemacht werden ... 
+
+                ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
+                Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
+
+
+                ' nimmt dann später pro Projekt die vorkommenden Rollen auf - setzt voraus, dass die Datei nach Projekt-Namen, dann nach Jahr, dann nach Monat sortiert ist ...  
+                Dim projectRoleNames(,) As String = Nothing
+
+                ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
+                Dim projectRoleValues(,,) As Double = Nothing
+
+                Dim updatedProjects As Integer = 0
+
+                Dim logF_Fehler As Integer = 0
+                ' nimmt die Texte für die LogFile Zeile auf
+                ' Array kann beliebig lang werden 
+                Dim logArray() As String
+                Dim logDblArray() As Double
+
+
+
+                For Each tmpDatei As String In listOfImportfilesAllg
+                    If awinSettings.englishLanguage Then
+                        outPutline = "Reading actual-data " & tmpDatei
+                    Else
+                        outPutline = "Einlesen der ActualData " & tmpDatei
+                    End If
+
+                    ' tk 2.8.2020 das soll nur noch im Logfile erscheinen , aber nicht mehr im Interaktiven Fenster ...
+                    'outPutCollection.Add(outPutline)
+
+                    Call logger(ptErrLevel.logInfo, outPutline, "processVisboActualData2", anzFehler)
+
+                    result = readActualDataWithConfig(actualDataConfig, tmpDatei,
+                                              IstdatenDate,
+                                              cacheProjekte,
+                                              validProjectNames, projectRoleNames,
+                                              projectRoleValues,
+                                              updatedProjects,
+                                              outPutCollection)
+
+                    ' hier weitermachen
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten ActualData Files
+                        listOfArchivFilesAllg.Add(tmpDatei)
+                        ' Projekt in Importprojekte eintragen
+                    Else
+                        listOfErrorImportFilesAllg.Add(tmpDatei)
+                    End If
+
+                    allOk = allOk And result
+                Next
+
+                If listOfImportfilesAllg.Count = listOfArchivFilesAllg.Count Then           ' dann sind alle korrekt durchgelaufen
+
+                    ' jetzt kommt die zweite Bearbeitungs-Welle
+
+
+                    ' jetzt wird hier überprüft 
+                    ' gibt es Projekte im Referenz-Portfolio, die keine Ist-Daten erhalten haben - dann sollte jetzt ggf. hier ein Nuller Eintrag im array für diese Projekte erfolgen 
+                    ' 
+                    ' 
+
+                    ' was hier noch überprüft werden sollte: 
+                    ' welche internen Rollen, die im besagten Zeitraum relevant,  haben keine Ist-Daten ? 
+                    Dim startFiscalYearTelair As Date
+                    Dim endFiscalYearTelair As Date
+
+                    If IstdatenDate.Month - 10 >= 0 Then
+                        startFiscalYearTelair = DateSerial(IstdatenDate.Year, 10, 1)
+                        endFiscalYearTelair = DateSerial(IstdatenDate.Year + 1, 9, 30)
+                    Else
+                        startFiscalYearTelair = DateSerial(IstdatenDate.Year - 1, 10, 1)
+                        endFiscalYearTelair = DateSerial(IstdatenDate.Year, 9, 30)
+                    End If
+
+                    Dim activeinternRoles() As Integer = RoleDefinitions.getActiveInterns(startFiscalYearTelair, endFiscalYearTelair)
+                    Dim missingTimeSheets As New List(Of String)
+
+
+                    For Each tmpUID As Integer In activeinternRoles
+
+                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpUID, -1)
+
+                        Dim found As Boolean = False
+                        Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(tmpUID)
+
+                        For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+                            Try
+                                found = kvp.Value.ContainsKey(roleNameID)
+                                If found Then
+                                    Exit For
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                        Next
+
+                        If Not found Then
+
+                            If tmprole.entryDate < IstdatenDate And tmprole.exitDate > startFiscalYearTelair Then
+                                missingTimeSheets.Add(tmprole.name)
+                            End If
+
+                        End If
+
+                    Next
+
+                    If missingTimeSheets.Count > 0 Then
+
+                        ' es fehlen timeSheets von manchen Mitarbeitern
+                        allOk = allOk And False
+                        For Each roleName As String In missingTimeSheets
+                            ReDim logArray(5)
+                            ' ins Protokoll eintragen 
+                            logArray(0) = " Mitarbeiter ohne TimeSheet: "
+                            If awinSettings.englishLanguage Then
+                                logArray(0) = "Employee wothout TimeSheet: "
+                            End If
+                            logArray(1) = ""
+                            logArray(2) = roleName
+                            logArray(4) = ""
+
+                            Call logger(ptErrLevel.logWarning, "processVisboActualData2", logArray)
+
+                        Next
+                    End If
+
+                    ' Ende check : haben alle internen Mitarbeiter ein TimeSheet abgeliefert ... 
+
+                    ' wenn auch externe Rollen Istdaten haben
+                    ' welche externen Rollen haben keine Istdaten .. ? 
+
+                    ' Projekte, die keine Istdaten erhalten, aber im referenzPortfolio sind, erhalten Istdaten = 0
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In referenzPortfolio.Liste
+                        Dim tmpPName As String = getPnameFromKey(kvp.Key)
+                        If Not validProjectNames.ContainsKey(tmpPName) Then
+                            ' jetzt muss dieses Projekt Null-Istdaten bekommen - wenn es von früher bereits ActualData hat, dann behält es die
+                            ' es werden nur die Monate actualDatuntil+1 .. IstDateDate genullt 
+                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(tmpPName, "", cacheProjekte, Date.Now)
+                            ReDim logArray(5)
+
+                            If hproj.setNewActualValuesToNull(IstdatenDate, True) Then
+                                Dim jjjj As Integer = Year(IstdatenDate)
+                                Dim mm As Integer = Month(IstdatenDate)
+                                Dim tt As Integer = Day(DateSerial(jjjj, mm + 1, 0)) 'tt ist letzte Tag des Monats mm 
+
+                                hproj.actualDataUntil = DateSerial(jjjj, mm, tt)
+
+                                ' jetzt in die Import-Projekte eintragen 
+                                updatedProjects = updatedProjects + 1
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                                ' ins Protokoll eintragen 
+                                logArray(0) = " Projekt ohne Zeiterfassung: Ist-Daten auf Null gesetzt ! "
+                                If awinSettings.englishLanguage Then
+                                    logArray(0) = " Project without time sheet records: actual data set to Zero ! "
+                                End If
+                                logArray(1) = ""
+                                logArray(2) = hproj.name
+                                logArray(3) = ""
+                                logArray(4) = ""
+
+                                Call logger(ptErrLevel.logWarning, "processVisboActualData2", logArray)
+
+                            Else
+                                ' Fehler ins Protokoll eintragen 
+                                logArray(0) = " ohne Zeiterfassung: Plan-Werte konnten nicht auf Null gesetzt werden. "
+                                If awinSettings.englishLanguage Then
+                                    logArray(0) = " Project without time sheet records: Error : could not set data to Zero ! "
+                                End If
+                                logArray(1) = "Error !"
+                                logArray(2) = hproj.name
+                                logArray(3) = ""
+                                logArray(4) = ""
+
+                                Call logger(ptErrLevel.logError, "processVisboActualData2", logArray)
+
+                                allOk = allOk And False
+                            End If
+
+                            '' im Output anzeigen ... 
+                            'logmessage = logArray(0) & hproj.name
+                            'outPutCollection.Add(logmessage)
+
+                        End If
+                    Next
+
+                    ' jetzt überprüfen, welche Projekte zwar Istdaten bekommen haben, aber nicht im Referenz-Portfolio aufgeführt sind ... 
+                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                        ReDim logArray(5)
+                        If Not referenzPortfolio.containsProject(vPKvP.Key) Then
+                            ' ins Protokoll eintragen 
+                            logArray(0) = " Projekt hat Ist-Daten, ist aber nicht im Referenz-Portfolio enthalten ... ! "
+                            If awinSettings.englishLanguage Then
+                                logArray(0) = " Project has time sheet records, but is not referenced in active portfolio ... !"
+                            End If
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = ""
+                            logArray(4) = ""
+
+                            Call logger(ptErrLevel.logWarning, "processVisboActualData2", logArray)
+
+                            '' im Output anzeigen ... 
+                            'logmessage = logArray(0) & vPKvP.Key
+                            'outPutCollection.Add(logmessage)
+
+                        End If
+                    Next
+
+                    ' hier sollte noch ergänzt werdne
+                    ' PRotokollieren welche Orga-Units denn ersetzt werden 
+                    For Each substituteUnit As String In referatsCollection
+                        ReDim logArray(5)
+                        ' ins Protokoll eintragen 
+                        logArray(0) = " Planwerte für Organisations-Unit werden ersetzt durch Istdaten: "
+                        If awinSettings.englishLanguage Then
+                            logArray(0) = " Plan values for organizational unit are being replaced by Actual Data: "
+                        End If
+                        logArray(1) = ""
+                        logArray(2) = substituteUnit
+                        logArray(3) = ""
+                        logArray(4) = ""
+
+                        Call logger(ptErrLevel.logInfo, "PTImportIstDaten", logArray)
+
+                        '' im Output anzeigen ... 
+                        'logmessage = logArray(0) & substituteUnit
+                        'outPutCollection.Add(logmessage)
+
+                    Next
+
+
+                    'Protokoll schreiben...
+                    ' 
+                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                        Dim protocolLine As String = ""
+                        For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
+
+                            ' jetzt schreiben 
+                            Dim teamID As Integer = -1
+                            Dim hilfsrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
+                            Dim curTagessatz As Double = hrole.tagessatzIntern
+
+                            ReDim logArray(3)
+                            logArray(0) = "Importiert wurde: "
+                            If awinSettings.englishLanguage Then
+                                logArray(0) = "Imported: "
+                            End If
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = rVKvP.Key & ": " & hilfsrole.name
+
+
+                            ReDim logDblArray(rVKvP.Value.Length - 1)
+                            For j As Integer = 0 To rVKvP.Value.Length - 1
+                                ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                                logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
+                            Next
+
+                            Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
+                        Next
+
+                    Next
+                    ' Protokoll schreiben Ende ... 
+
+
+                    Dim gesamtIstValue As Double = 0.0
+
+                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                        Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
+                        Dim oldPlanValue As Double = 0.0
+                        Dim newIstValue As Double = 0.0
+
+                        lastValidMonth = getColumnOfDate(IstdatenDate)
+
+                        If Not IsNothing(hproj) Then
+                            ' es wird pro Projekt eine Variante erzeugt 
+
+                            ' wenn es noch nicht beauftragt ist ... dann beauftragen 
+                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                Try
+                                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+                            Dim istDatenVName As String = ptVariantFixNames.acd.ToString
+                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+
+                            ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                            ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                            ' True: die Werte werden auf Null gesetzt 
+                            Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+
+                            'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, True)
+                            'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+
+                            newIstValue = calcIstValueOf(vPKvP.Value)
+
+                            gesamtIstValue = gesamtIstValue + newIstValue
+
+                            ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+
+
+                            Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                            Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                            ' Test tk 
+                            'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, False)
+
+                            Dim abweichungGesamt As Double = 0.0
+                            If gesamtNachher <> checkNachher Then
+                                abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
+                            End If
+
+                            Dim abweichungIst As Double = 0.0
+                            If checkIstValue <> newIstValue Then
+                                abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
+                            End If
+
+                            ' für Test 
+                            'awinSettings.visboDebug = True
+                            If awinSettings.visboDebug Then
+                                If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                                    ReDim logArray(3)
+                                    logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                                    If awinSettings.englishLanguage Then
+                                        logArray(0) = "Import Actual Data old/new/diff/check1/check2"
+                                    End If
+                                    logArray(1) = ""
+                                    logArray(2) = vPKvP.Key
+                                    logArray(3) = ""
+
+                                    ReDim logDblArray(4)
+                                    logDblArray(0) = oldPlanValue
+                                    logDblArray(1) = newIstValue
+                                    logDblArray(2) = oldPlanValue - newIstValue
+                                    logDblArray(3) = checkIstValue
+                                    logDblArray(4) = gesamtNachher - checkNachher
+
+                                    Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
+
+                                End If
+                            End If
+
+
+
+                            Dim jjjj As Integer = Year(IstdatenDate)
+                            Dim mm As Integer = Month(IstdatenDate)
+                            Dim tt As Integer = Day(DateSerial(jjjj, mm + 1, 0)) 'tt ist letzte Tag des Monats mm 
+
+                            With newProj
+                                newProj.actualDataUntil = DateSerial(jjjj, mm, tt)
+                                .variantName = ""   ' eliminieren von VariantenName acd
+                                .variantDescription = ""
+                            End With
+
+                            ' jetzt in die Import-Projekte eintragen 
+                            updatedProjects = updatedProjects + 1
+                            ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                        Else
+                            ReDim logArray(5)
+                            logArray(0) = "Projekt existiert nicht !!?? ... darf nicht sein ..."
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = ""
+                            logArray(4) = ""
+
+                            Call logger(ptErrLevel.logError, "PTImportIstDaten", logArray)
+                        End If
+
+                    Next
+
+                    ' tk Test 
+                    If awinSettings.visboDebug Then
+                        ReDim logArray(3)
+                        logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
+                        If awinSettings.englishLanguage Then
+                            logArray(0) = "Import of total " & updatedProjects & " Projects (Sum in Euro): "
+                        End If
+                        logArray(1) = ""
+                        logArray(2) = ""
+                        logArray(3) = ""
+
+                        ReDim logDblArray(0)
+                        logDblArray(0) = gesamtIstValue
+                        Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
+                    End If
+
+
+                    logmessage = vbLf & "Projekte aktualisiert: " & updatedProjects
+                    If awinSettings.englishLanguage Then
+                        logmessage = vbLf & "Projects updated: " & updatedProjects
+                    End If
+
+                    Call logger(ptErrLevel.logWarning, "Import ActualData2", logmessage)
+
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=False, fileFrom3rdParty:=False,
+                                             getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True)
+
+
+                        ' ImportDatei ins archive-Directory schieben
+
+                        If listOfArchivFilesAllg.Count > 0 Then
+                            'Call moveFilesInArchiv(listOfArchivFilesAllg, importOrdnerNames(PTImpExp.actualData))
+                            Call moveFilesInArchiv(listOfArchivFilesAllg, dirName)
+                        End If
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Else
+                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        End If
+
+                    End Try
+
+                    allOk = allOk And result
+
+                    Try
+                        ' store Projects
+                        If allOk Then
+                            allOk = storeImportProjekte()
+                        End If
+
+                        ' empty session 
+                        Call emptyRPASession()
+
+                        Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboActualData2.ToString, myName)
+
+                    Catch ex1 As Exception
+                        allOk = False
+                        Call logger(ptErrLevel.logError, "RPA Error Importing Actual Data (modus 2)", ex1.Message)
+                    End Try
+
+                Else
+                    For Each errImp As String In listOfErrorImportFilesAllg
+
+                    Next
+                    ' Fehler erfolgt
+                    ' Dateien müssen in failure-Directory verschoben werden
+                    Call MsgBox("TODO")
+
+                End If
+
+
+            Else
+                If awinSettings.englishLanguage Then
+                    outPutline = "No file to import actual data"
+                Else
+                    outPutline = "Es gibt keine Datei zum Importieren von Istdaten"
+                End If
+
+                Call logger(ptErrLevel.logWarning, outPutline, "PTImportIstdaten", anzFehler)
+
+            End If
+
+        Else
+            ' Fehlermeldung für Konfigurationsfile nicht vorhanden
+            If awinSettings.englishLanguage Then
+                outPutline = "Error: either no configuration file found or worng definitions !"
+            Else
+                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
+            End If
+            Call logger(ptErrLevel.logError, outPutline, "PTImportIstdaten", anzFehler)
+
+            allOk = allOk And False
+
+        End If    ' checkConfigOK
+
+        processVisboActualData2 = allOk
+
+    End Function
+
+
+    ''''' <summary>
+    ''''' composition of the FileName of the different Logfiles for the RPA Import as well
+    ''''' </summary>
+    ''''' <param name="rpaFolder"></param>
+    ''''' <param name="rpaImportfile"></param>
+    ''''' <returns></returns>
+    ''Public Function createLogfileName(Optional ByVal rpaFolder As String = "", Optional ByVal rpaImportfile As String = "") As String
+    ''    ' FileNamen zusammenbauen
+    ''    Dim logfileOrdner As String = "logfiles"
+
+
+    ''    If IsNothing(awinPath) Then
+    ''        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+    ''        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+    ''    End If
+    ''    Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+
+    ''    ' write logfiles in rpaFolder, if RPA was started
+    ''    If Not IsNothing(rpaFolder) And rpaFolder <> "" Then
+    ''        logfilePath = My.Computer.FileSystem.CombinePath(rpaFolder, logfileOrdner)
+    ''    End If
+
+    ''    Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+    ''    Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+    ''    ' Fragen, ob bereits existiert - eventuell nicht nötig
+    ''    If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    ''        My.Computer.FileSystem.CreateDirectory(logfilePath)
+    ''    End If
+    ''    createLogfileName = logfileNamePath
+    ''End Function
+
+    ''''' <summary>
+    '''''  schreibt in das logfile mit Errorlevel
+    ''''' </summary>
+    ''''' <param name="errLevel"></param>
+    ''''' <param name="text"></param>
+    ''''' <param name="addOn"></param>
+    ''''' <param name="anzFehler"></param>
+    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByVal anzFehler As Long)
+
+    ''    Try
+    ''        Dim strMeld As String
+    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+    ''        ' once this is needed in the code, then uncomment it accordingly 
+    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+    ''        Const ForAppending = 8
+    ''        Const logTrennz As String = " , "
+    ''        ' logfile-stream erzeugen
+    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
+
+    ''        '' FileNamen zusammenbauen
+    ''        'Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
+
+    ''        'Dim logfileOrdner As String = "logfiles"
+    ''        'If IsNothing(awinPath) Then
+    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+    ''        'End If
+    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+
+    ''        '' write logfiles in rpaFolder, if RPA was started
+    ''        'If Not IsNothing(rpaFolder) Then
+    ''        '    logfilePath = rpaFolder
+    ''        'End If
+
+    ''        'Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
+    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+    ''        'End If
+
+
+    ''        ' logfile öffnen
+    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
+    ''        logf.writeline(strMeld)
+    ''        logf.close()
+
+
+    ''    Catch ex As Exception
+    ''        If awinSettings.englishLanguage Then
+    ''            Call MsgBox("ERROR while Writing to logfile" & ex.Message)
+    ''        Else
+    ''            Call MsgBox("Fehler beim Schreiben ins logfile" & ex.Message)
+    ''        End If
+
+    ''    End Try
+
+
+    ''End Sub
+
+
+
+    ''''' <summary>
+    ''''' schreibt die Inhalte der Collection als String in das Logfile
+    ''''' </summary>
+    ''''' <param name="meldungen"></param>
+    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal meldungen As Collection)
+
+    ''    Try
+    ''        Dim anzZeilen As Integer = meldungen.Count
+
+    ''        Dim strMeld As String
+
+    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+    ''        ' once this is needed in the code, then uncomment it accordingly 
+    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+    ''        Const ForAppending = 8
+    ''        Const logTrennz As String = " , "
+    ''        ' logfile-stream erzeugen
+    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
+
+
+    ''        '' FileNamen zusammenbauen
+    ''        'logfileNamePath = createLogfileName(rpaFolder, rpaImportfile)
+
+    ''        '' FileNamen zusammenbauen
+    ''        'Dim logfileOrdner As String = "logfiles"
+    ''        'If IsNothing(awinPath) Then
+    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+    ''        'End If
+    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
+    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+    ''        'End If
+    ''        ' logfile öffnen
+    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+
+    ''        For i As Integer = 1 To anzZeilen
+
+    ''            Dim text As String = CStr(meldungen.Item(i))
+    ''            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
+    ''            logf.writeline(strMeld)
+
+    ''        Next
+    ''        logf.close()
+    ''    Catch ex As Exception
+
+    ''    End Try
+    ''End Sub
+
+    ''''' <summary>
+    ''''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
+    ''''' </summary>
+    ''''' <param name="text"></param>
+    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String)
+
+    ''    Try
+    ''        Dim anzSpalten As Integer = text.Length
+
+    ''        Dim strMeld As String
+
+    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+    ''        ' once this is needed in the code, then uncomment it accordingly 
+    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+    ''        Const ForAppending = 8
+    ''        Const logTrennz As String = " , "
+    ''        ' logfile-stream erzeugen
+    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
+
+
+    ''        '' FileNamen zusammenbauen
+    ''        'Dim logfileOrdner As String = "logfiles"
+    ''        'If IsNothing(awinPath) Then
+    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+    ''        'End If
+    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
+    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+    ''        'End If
+
+    ''        ' Meldungstext zusammensetzen aus dem text-array
+    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
+    ''        For i As Integer = 0 To anzSpalten - 1
+    ''            strMeld = strMeld & logTrennz & CStr(text(i))
+    ''        Next
+
+    ''        ' logfile öffnen
+    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+    ''        logf.writeline(strMeld)
+    ''        logf.close()
+
+    ''    Catch ex As Exception
+
+    ''    End Try
+
+    ''End Sub
+
+    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String, ByVal values() As Double)
+
+
+    ''    Try
+    ''        Dim anzSpalten As Integer = text.Length
+    ''        Dim anzSpaltenValues As Integer = values.Length
+
+    ''        Dim strMeld As String
+
+    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+    ''        ' once this is needed in the code, then uncomment it accordingly 
+    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+    ''        Const ForAppending = 8
+    ''        Const logTrennz As String = " , "
+    ''        ' logfile-stream erzeugen
+    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
+
+
+    ''        '' FileNamen zusammenbauen
+    ''        'Dim logfileOrdner As String = "logfiles"
+    ''        'If IsNothing(awinPath) Then
+    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+    ''        'End If
+    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
+    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+    ''        'End If
+
+    ''        ' Meldungstext zusammensetzen aus dem text-array
+    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
+    ''        For i As Integer = 0 To anzSpalten - 1
+    ''            strMeld = strMeld & logTrennz & CStr(text(i))
+    ''        Next
+    ''        For k As Integer = 0 To anzSpaltenValues - 1
+    ''            strMeld = strMeld & logTrennz & Format(values(k), "#,##0.##")
+    ''        Next
+
+    ''        ' logfile öffnen
+    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+    ''        logf.writeline(strMeld)
+    ''        logf.close()
+
+    ''    Catch ex As Exception
+
+    ''    End Try
+
+    ''End Sub
+
+
+    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal strLog As String)
+    ''    Try
+
+    ''        Dim strMeld As String
+
+    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+    ''        ' once this is needed in the code, then uncomment it accordingly 
+    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+    ''        Const ForAppending = 8
+    ''        Const logTrennz As String = " , "
+    ''        ' logfile-stream erzeugen
+    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
+
+
+    ''        '' FileNamen zusammenbauen
+    ''        ' Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
+
+    ''        '' FileNamen zusammenbauen
+    ''        'Dim logfileOrdner As String = "logfiles"
+    ''        'If IsNothing(awinPath) Then
+    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+    ''        'End If
+    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
+    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+    ''        'End If
+    ''        ' logfile öffnen
+    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
+    ''        logf.writeline(strMeld)
+    ''        logf.close()
+
+    ''    Catch ex As Exception
+
+    ''    End Try
+    ''End Sub
 
 End Module
