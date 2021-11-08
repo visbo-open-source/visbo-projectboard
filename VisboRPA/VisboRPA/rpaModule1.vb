@@ -1392,6 +1392,9 @@ Module rpaModule1
                                                                      portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
                 Else
                     ' check whether and how projects are fitting to the already existing Portfolio 
+                    allOk = processProjectListWithActivePortfolio(aggregationList,
+                                                                     skillList,
+                                                                     myActivePortfolio, portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
                 End If
 
             Else
