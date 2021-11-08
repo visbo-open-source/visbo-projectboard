@@ -621,7 +621,9 @@ Imports System.Web
                         'Call MsgBox("PTLadenKonstellation 1st Part took: " & sw.EndTimer & "milliseconds")
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And AlleProjekte.Count = 0 Then
-                            loadConstellationFrm.loadAsSummary.Visible = True
+                            ' ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to much time
+                            'loadConstellationFrm.loadAsSummary.Visible = True
+                            loadConstellationFrm.loadAsSummary.Visible = False
                         Else
                             loadConstellationFrm.loadAsSummary.Visible = False
                         End If

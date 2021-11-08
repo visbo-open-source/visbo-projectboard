@@ -3842,14 +3842,15 @@ Public Module awinGeneralModules
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
                         ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
 
-                        If IsNothing(curSummaryProjVorgabe) Then
-                            ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
-                            curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
-                        End If
-                        curSummaryProjToUse = curSummaryProjVorgabe
+                        '  ur: 20211108: accelerate the load of an portfolio without summaryProject
+                        'If IsNothing(curSummaryProjVorgabe) Then
+                        '    ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
+                        '    curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
+                        'End If
+                        'curSummaryProjToUse = curSummaryProjVorgabe
                     Else
-                        ' Test ur: 20211103 TODO?????
-                        '' curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
+                        '  ur: 20211108: accelerate the load of an portfolio without summaryProject
+                        '  curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
                     End If
 
 
@@ -4056,19 +4057,21 @@ Public Module awinGeneralModules
 
                 If calculateAndStoreSummaryProjekt Then
 
-                    If Not IsNothing(oldSummaryP) Then
-                        'budget = oldSummaryP.budgetWerte.Sum
-                        budget = oldSummaryP.Erloes
-                        If budget = 0 Then
-                            budget = currentConstellation.getBudgetOfShownProjects
-                            oldSummaryP.Erloes = budget
-                        End If
-                        sproj = oldSummaryP
-                    Else
-                        budget = currentConstellation.getBudgetOfShownProjects
-                        sproj = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
-                        sproj.variantName = tmpVariantName
-                    End If
+                    ' ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to much time
+
+                    'If Not IsNothing(oldSummaryP) Then
+                    '    'budget = oldSummaryP.budgetWerte.Sum
+                    '    budget = oldSummaryP.Erloes
+                    '    If budget = 0 Then
+                    '        budget = currentConstellation.getBudgetOfShownProjects
+                    '        oldSummaryP.Erloes = budget
+                    '    End If
+                    '    sproj = oldSummaryP
+                    'Else
+                    '    budget = currentConstellation.getBudgetOfShownProjects
+                    '    sproj = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
+                    '    sproj.variantName = tmpVariantName
+                    'End If
 
 
 
