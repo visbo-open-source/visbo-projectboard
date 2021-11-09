@@ -3830,7 +3830,7 @@ Public Module awinGeneralModules
                         variantName = ""
                     End If
 
-                    ' Test ur: 20211103 TODO?????
+                    ' This function (ReSt-Call) delivers all projects of this constellation
                     Dim projList As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Value.constellationName, kvp.Value.vpID, kvp.Value.variantName, err, storedAtOrBefore)
                     AlleProjekte.liste = projList
 
