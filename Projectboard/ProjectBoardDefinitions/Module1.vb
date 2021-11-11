@@ -5839,7 +5839,7 @@ Public Module Module1
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  toDoPhases, toDoMilestones)
+                                  toDoMilestones, toDoPhases)
 
         ' jetzt werden die einzelnen Zeilen geschrieben 
 

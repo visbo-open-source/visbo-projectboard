@@ -1009,7 +1009,7 @@ Module creationModule
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
-                                    Call zeichneTableMilestoneAPVCV(pptShape, hproj, bproj, lproj, sMilestones, q1, q2)
+                                    Call zeichneTableMilestoneAPVCV(pptShape, hproj, bproj, lproj, Nothing, sMilestones, q1, q2)
                                     'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
 
                                     .AlternativeText = ""

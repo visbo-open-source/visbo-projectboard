@@ -1354,15 +1354,7 @@ Module rpaModule1
                 End If
             Next
 
-            Dim skillIDs As Collection = ShowProjekte.getRoleSkillIDs()
 
-            If skillIDs.Count > 0 Then
-                For Each tmpStrID As String In skillIDs
-                    If Not skillList.Contains(tmpStrID) Then
-                        skillList.Add(tmpStrID)
-                    End If
-                Next
-            End If
 
             allOk = awinImportProjektInventur(readProjects, createdProjects)
             If allOk Then
@@ -1374,7 +1366,10 @@ Module rpaModule1
 
             If allOk Then
 
+                Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
+
                 Dim doTheInitialJob As Boolean = True
+                Dim dbPortfolioNames As New SortedList(Of String, String)
 
                 ' if Portfolio with active Projects is given and exists:  
                 ' then we probably do have a brownfield
@@ -1382,7 +1377,7 @@ Module rpaModule1
                     ' load portfolio projects 
                     ' now store the Portfolio , with name portfolioName
                     Dim errMsg As New clsErrorCodeMsg
-                    Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
                     doTheInitialJob = Not dbPortfolioNames.ContainsKey(myActivePortfolio)
                 End If
 
@@ -1394,7 +1389,7 @@ Module rpaModule1
                     ' check whether and how projects are fitting to the already existing Portfolio 
                     allOk = processProjectListWithActivePortfolio(aggregationList,
                                                                      skillList,
-                                                                     myActivePortfolio, portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
+                                                                     myActivePortfolio, dbPortfolioNames(myActivePortfolio), portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
                 End If
 
             Else
@@ -1425,6 +1420,7 @@ Module rpaModule1
     Private Function processProjectListWithActivePortfolio(ByVal aggregationList As List(Of String),
                                                            ByVal skillList As List(Of String),
                                                            ByVal myActivePortfolio As String,
+                                                           ByVal myPortfolioVPID As String,
                                                            ByVal listName As String,
                                                            ByVal overloadAllowedInMonths As Double,
                                                            ByVal overloadAllowedTotal As Double) As Boolean
@@ -1442,9 +1438,9 @@ Module rpaModule1
 
             ' now load the the portfolio and all projects of portfolio 
             ' hole Portfolio (pName,vName) aus der db
-            Dim cTime As Date = Nothing
+            Dim cTime As Date = heute
             Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myActivePortfolio,
-                                                                                               "", cTime, Err, storedAtOrBefore:=heute)
+                                                                                               "", cTime, Err, variantName:="", storedAtOrBefore:=heute)
 
             If Not IsNothing(myConstellation) Then
                 Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & myActivePortfolio, " start of Operation ... ")
