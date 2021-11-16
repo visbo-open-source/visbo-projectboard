@@ -2877,4 +2877,46 @@ Public Class Request
         End Try
         clearCache = result
     End Function
+
+    Public Function sendEmailToUser(ByVal message As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Try
+
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).sendEmailToUser(message, err)
+
+                    If Not result Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).sendEmailToUser(message, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+            Else
+                ' nothing to do for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+            logger(ptErrLevel.logError, "sendEmailToUser", "error sending an email to  the user:" & uname & "(" & err.errorCode & ") " & err.errorMsg)
+        End Try
+
+        sendEmailToUser = result
+    End Function
 End Class

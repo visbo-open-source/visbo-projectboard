@@ -1402,7 +1402,11 @@ Public Module agm3
                     ImportProjekte.Clear(False)
                 End If
             Else
-                Call showOutPut(oCollection, "Errors occurred .. no import", "")
+                If Not visboClient.Contains("RPA") Then
+                    Call showOutPut(oCollection, "Errors occurred .. no import", "")
+                End If
+
+                Call logger(ptErrLevel.logError, "readActualData", oCollection)
             End If
 
 
@@ -4247,7 +4251,7 @@ Public Module agm3
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim JiraProjLength As Integer = 2
+        Dim BacklogLength As Integer = 2
         Dim listOfArchivFiles As New List(Of String)
         Dim projtaskList As New SortedList(Of String, SortedList(Of Date, clsJIRA_Task))
         Dim projListSortedName As New SortedList(Of String, SortedList(Of String, clsJIRA_Task))
@@ -4256,6 +4260,7 @@ Public Module agm3
         Dim tasksRemaining As New SortedList(Of String, clsJIRA_Task)
         Dim tasksBacklog As New SortedList(Of String, clsJIRA_Task)
         Dim tasksFertigOSprint As New SortedList(Of String, clsJIRA_Task)
+        Dim tasksNichtFertig As New SortedList(Of String, clsJIRA_Task)
 
         Dim projsprintList As New SortedList(Of String, SortedList(Of String, clsJIRA_sprint))
         Dim anzFehler As Integer = 0
@@ -4302,6 +4307,7 @@ Public Module agm3
                         tasksRemaining = New SortedList(Of String, clsJIRA_Task)
                         tasksBacklog = New SortedList(Of String, clsJIRA_Task)
                         tasksFertigOSprint = New SortedList(Of String, clsJIRA_Task)
+                        tasksNichtFertig = New SortedList(Of String, clsJIRA_Task)
 
                         ' Bestimme SprintEndDate vom letzen Sprint 
                         Dim lastSprintEnd As Date = StartofCalendar
@@ -4357,7 +4363,7 @@ Public Module agm3
 
                         ' find the project-End
                         'Dim projEnde As Date = EndOfCalendar
-                        Dim projEnde As Date = projStart.AddYears(JiraProjLength)
+                        Dim projEnde As Date = projStart.AddYears(BacklogLength)
 
                         For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
                             If item.Value.SprintEndDate > projEnde Then
@@ -4582,20 +4588,20 @@ Public Module agm3
                                     If Not IsNothing(itemVg.Value.SprintName) Then          ' Task wurde einem Sprint zugeordnet
                                         taskStart = itemVg.Value.SprintStartDate
                                         taskEnd = itemVg.Value.SprintEndDate
-                                        If itemVg.Value.SprintCompleteDate > Date.MinValue And itemVg.value.sprintCompleteDate < Date.MaxValue Then
+                                        If itemVg.Value.SprintCompleteDate > Date.MinValue And itemVg.Value.SprintCompleteDate < Date.MaxValue Then
                                             taskEnd = itemVg.Value.SprintCompleteDate
                                         End If
                                         durationVg = calcDauerIndays(taskStart, taskEnd)
                                     Else
                                         taskStart = ephaseStart
-                                        If Not IsNothing(itemVg.Value.StartDate) And itemVg.Value.StartDate > Date.MinValue Then
-                                            taskStart = itemVg.Value.StartDate
-                                        End If
                                         If Not IsNothing(itemVg.Value.Erstellt) And itemVg.Value.Erstellt > Date.MinValue Then
                                             taskStart = itemVg.Value.Erstellt
                                         End If
-                                        If Not IsNothing(itemVg.Value.aktualisiert) And itemVg.Value.aktualisiert > Date.MinValue Then
-                                            taskStart = itemVg.Value.aktualisiert
+                                        'If Not IsNothing(itemVg.Value.aktualisiert) And itemVg.Value.aktualisiert > Date.MinValue Then
+                                        '    taskStart = itemVg.Value.aktualisiert
+                                        'End If
+                                        If Not IsNothing(itemVg.Value.StartDate) And itemVg.Value.StartDate > Date.MinValue Then
+                                            taskStart = itemVg.Value.StartDate
                                         End If
 
                                         If Not IsNothing(itemVg.Value.fällig) And itemVg.Value.fällig > Date.MinValue Then
@@ -4793,9 +4799,14 @@ Public Module agm3
                             If Not tasksInserted.ContainsKey(task.Key) Then
                                 tasksRemaining.Add(task.Key, task.Value)
                                 If (task.Value.SprintName = "" Or IsNothing(task.Value.SprintName)) And task.Value.TaskStatus <> "Fertig" Then
+                                    ' diese Tasks sind keinem Sprint zugeordnet und nicht fertig, müssen also noch erledigt werden, sind also im Backlog
                                     tasksBacklog.Add(task.Key, task.Value)
                                 ElseIf task.Value.TaskStatus = "Fertig" Then
+                                    ' diese Tasks sind keinem Epic zugeordnet, sind aber bereits fertig
                                     tasksFertigOSprint.Add(task.Key, task.Value)
+                                Else
+                                    ' diese Tasks sind einem Sprint zugeordnet und nicht fertig
+                                    tasksNichtFertig.Add(task.Key, task.Value)
                                 End If
                             End If
                         Next  ' Ende bestimmen der restl. Tasks
@@ -4810,7 +4821,8 @@ Public Module agm3
                             Dim bphase As clsPhase
                             'Dim testDate As Date = sprintList.ElementAt(sprintList.Count - 1).Value.SprintEndDate
                             Dim backStart As Date = lastSprintEnd
-                            Dim backEnd As Date = hproj.endeDate
+                            Dim backend As Date = backStart.AddYears(BacklogLength)
+                            'Dim backEnd As Date = hproj.endeDate
 
                             bphase = New clsPhase(hproj)
                             Dim backphaseNameNew As String = "Backlog without epics"

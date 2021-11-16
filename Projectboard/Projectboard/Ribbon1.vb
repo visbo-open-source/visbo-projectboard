@@ -7033,8 +7033,8 @@ Imports System.Web
                         End If
 
                     Else
-                        Call MsgBox("Error when writing Organisation")
-                        Call logger(ptErrLevel.logError, "Error when writing Organisation ...", selectedWB, -1)
+                        Call MsgBox("Error when writing Organisation: " & vbCrLf & err.errorMsg)
+                        Call logger(ptErrLevel.logError, "Error when writing Organisation ..." & vbCrLf & err.errorMsg, selectedWB, -1)
                     End If
                 End If
             Catch ex As Exception
@@ -7985,7 +7985,7 @@ Imports System.Web
                         Call logger(ptErrLevel.logInfo, "Custom User Roles stored ...", selectedWB, -1)
                     Else
                         Call MsgBox("Error when writing Custom User Roles")
-                        Call logger(ptErrLevel.logError, "Error when writing Custom User Roles ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing Custom User Roles ..." & vbCrLf & err.errorMsg, selectedWB, -1)
                     End If
 
                     listOfArchivFiles.Add(dateiname)
@@ -8103,8 +8103,8 @@ Imports System.Web
                                 Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
 
                             Else
-                                Call MsgBox("Error when writing Organisation to Database")
-                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database...", "", -1)
+                                Call MsgBox("Error when writing Organisation to Database:" & vbCrLf & err.errorMsg)
+                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database..." & vbCrLf & err.errorMsg, "", -1)
                             End If
 
                         Else
@@ -8261,11 +8261,11 @@ Imports System.Web
                                                                                     ts,
                                                                                     err)
 
-
+                    Dim err1 As New clsErrorCodeMsg
                     If Not IsNothing(customFieldDefs) Then
                         ' jetzt werden die Einstellungen als Setting weggespeichert ... 
                         ' alles ok 
-                        Dim err1 As New clsErrorCodeMsg
+
 
 
                         result1 = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefs,
@@ -8280,7 +8280,7 @@ Imports System.Web
                         Call logger(ptErrLevel.logInfo, "Customizations and CustomFieldDefinitions stored ...", selectedWB, -1)
                     Else
                         Call MsgBox("Error when writing Customizations or CustomfieldDefinitions")
-                        Call logger(ptErrLevel.logError, "Error when writing Customizations or Customfielddefinitions ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing Customizations or Customfielddefinitions ..." & vbCrLf & err.errorMsg & vbCrLf & err1.errorMsg, selectedWB, -1)
                     End If
 
 
@@ -8395,7 +8395,7 @@ Imports System.Web
                         Call logger(ptErrLevel.logInfo, "appearances stored ...", selectedWB, -1)
                     Else
                         Call MsgBox("Error when writing appearances")
-                        Call logger(ptErrLevel.logError, "Error when writing appearances ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing appearances ..." & vbCrLf & err.errorMsg, selectedWB, -1)
                     End If
                 Else
                     Call MsgBox("no appearances found ...")

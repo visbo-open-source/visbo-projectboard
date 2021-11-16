@@ -4458,7 +4458,7 @@ Public Module agm2
 
         Dim mapStruktur As String = awinSettings.mappingVorlage
 
-        Dim prj As MSProject.Application
+        Dim prj As New MSProject.Application
         Dim msproj As MSProject.Project
         Dim i As Integer = 1
         Dim lastphase As clsPhase
@@ -5582,6 +5582,11 @@ Public Module agm2
                 Call MsgBox(ex.Message)
             Else
                 Call logger(ptErrLevel.logError, "MS Project Import ", ex.Message)
+                If modus = "RPA" Then
+                    hproj = Nothing
+                    prj.FileExit(MSProject.PjSaveType.pjDoNotSave)
+                End If
+
             End If
 
         End Try
