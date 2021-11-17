@@ -1592,7 +1592,7 @@ Public Module agm3
                                 For iZ = 5 To lastZeile
 
 
-                                    rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                    rolename = CType(CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
                                     If rolename <> "" Then
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
@@ -1979,7 +1979,7 @@ Public Module agm3
                                         input_ok = False
                                     End If
 
-                                    absenceType = CStr(currentWS.Cells(ix, absenceCol).value)
+                                    absenceType = CStr(currentWS.Cells(ix, absenceCol).value).Trim
                                     If IsNothing(absenceType) Then
                                         input_ok = False
                                     Else
@@ -2167,7 +2167,7 @@ Public Module agm3
                                 'Dim Inhalt As String = kapaConfig("month").content
 
                                 ' Auslesen der Jahreszahl, falls vorhanden
-                                Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                                Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value).Trim
                                 If IsNothing(hjahr) Then
                                     Jahr = 0
                                 Else
@@ -2185,7 +2185,7 @@ Public Module agm3
 
 
                                 ' Auslesen des relevanten Monats
-                                Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
+                                Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value).Trim
                                 If IsNothing(hmonth) Then
                                     monthName = ""
                                 Else
@@ -2288,7 +2288,7 @@ Public Module agm3
                                             i = i - 1
                                             If kapaConfig("LastLine").regex = "RegEx" Then
                                                 regexpression = New Regex(kapaConfig("LastLine").content)
-                                                Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                                Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value).Trim
                                                 If Not IsNothing(lastLineContent) Then
                                                     Dim match As Match = regexpression.Match(lastLineContent)
                                                     If match.Success Then
@@ -2363,7 +2363,7 @@ Public Module agm3
                                         For iZ = firstUrlzeile To lastZeile
 
 
-                                            rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                            rolename = CType(CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
 
                                             ' tk 31.1.2020 Test - der CheckWert steht auf Spalte "AS"
                                             ' dazu muss manuell der Check-Wert bestimmt und in der Excel Datei eingetragen werden ..  
@@ -2427,7 +2427,7 @@ Public Module agm3
                                                                                 Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                                             End If
                                                                         Else
-                                                                            Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+                                                                            Dim workHours As String = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
                                                                             If workHours = "" Then
                                                                                 ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
                                                                                 anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
@@ -2919,7 +2919,7 @@ Public Module agm3
                                             'Dim Inhalt As String = kapaConfig("month").content
 
                                             ' Auslesen der Jahreszahl, falls vorhanden
-                                            Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                                            Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value).Trim
                                             If IsNothing(hjahr) Then
                                                 Jahr = 0
                                             Else
@@ -2993,7 +2993,7 @@ Public Module agm3
                                                 i = i - 1
                                                 If kapaConfig("LastLine").regex = "RegEx" Then
                                                     regexpression = New Regex(kapaConfig("LastLine").content)
-                                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value).Trim
                                                     If Not IsNothing(lastLineContent) Then
                                                         Dim match As Match = regexpression.Match(lastLineContent)
                                                         If match.Success Then
@@ -3027,7 +3027,7 @@ Public Module agm3
 
                                             For iZ = firstUrlzeile To lastZeile
 
-                                                rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                                rolename = CType(CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
 
                                                 ' tk 31.1.2020 Test - der CheckWert steht auf Spalte "AS"
                                                 ' dazu muss manuell der Check-Wert bestimmt und in der Excel Datei eingetragen werden ..  
@@ -3104,7 +3104,7 @@ Public Module agm3
                                                                                 Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                                                             End If
                                                                         Else
-                                                                            Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+                                                                            Dim workHours As String = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
                                                                             If workHours = "" Then
                                                                                 ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
                                                                                 anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
