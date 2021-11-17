@@ -364,7 +364,7 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_BeforeRightClick(Target As Microsoft.Office.Interop.Excel.Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
 
-
+        Dim msgTxt As String = ""
         Dim former_EE As Boolean = appInstance.EnableEvents
 
         appInstance.EnableEvents = True
@@ -390,6 +390,7 @@ Public Class Tabelle2
         If criteriaFulfilled Then
 
             Try
+
                 Dim frmMERoleCost As New frmMEhryRoleCost
                 Dim auslastungChanged As Boolean = False
                 Dim summenChanged As Boolean = False
@@ -445,8 +446,6 @@ Public Class Tabelle2
                         skillName = ""
                     End If
 
-
-
                     frmMERoleCost.pName = pName
                     frmMERoleCost.vName = vName
                     frmMERoleCost.phaseName = phaseName
@@ -463,80 +462,104 @@ Public Class Tabelle2
 
                     frmMERoleCost.hproj = hproj
 
-                    returnValue = frmMERoleCost.ShowDialog()
+                    ' check, if the active ressource/role has some skills
 
-                    If returnValue = DialogResult.OK Then
+                    Dim curRole As clsRollenDefinition = Nothing
+                    Dim noSkills As Boolean = False
+
+                    ' wenn rcname belegt ist, read roledefinition 
+                    If rcName <> "" Then
+                        curRole = RoleDefinitions.getRoledef(rcName)
+                    End If
+                    If Not IsNothing(curRole) Then
+                        ' check if the curRole does have skills
+                        noSkills = (curRole.getSkillCount <= 0)
+                    End If
+
+                    If noSkills And frmMERoleCost.showSkillsOnly Then
+
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Ressource " & rcName & " do not have any special skill"
+                        Else
+                            msgTxt = "Ressource " & rcName & " hat keine speziellen skills"
+                        End If
+                        Call MsgBox(msgTxt)
+                    Else
+
+                        returnValue = frmMERoleCost.ShowDialog()
+
+                        If returnValue = DialogResult.OK Then
 
 
-                        For Each roleSkillItem As String In frmMERoleCost.rolesToAdd
-                            Dim loopRcName As String = ""
-                            If frmMERoleCost.showSkillsOnly Then
-                                If rcName = "" Then
+                            For Each roleSkillItem As String In frmMERoleCost.rolesToAdd
+                                Dim loopRcName As String = ""
+                                If frmMERoleCost.showSkillsOnly Then
+                                    If rcName = "" Then
 
-                                    Try
-                                        Dim tmpID As Integer = -1
-                                        loopRcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
+                                        Try
+                                            Dim tmpID As Integer = -1
+                                            loopRcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
 
-                                        Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
-                                        If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
-                                            Call meRCZeileEinfuegen(zeile, loopRcName, roleSkillItem, True)
-                                            zeile = visboZustaende.oldRow
-                                        End If
+                                            Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
+                                            If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                                Call meRCZeileEinfuegen(zeile, loopRcName, roleSkillItem, True)
+                                                zeile = visboZustaende.oldRow
+                                            End If
 
-                                    Catch ex As Exception
+                                        Catch ex As Exception
 
-                                    End Try
+                                        End Try
 
 
 
+
+                                    Else
+                                        Try
+                                            Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
+                                            If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                                Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
+                                                zeile = visboZustaende.oldRow
+                                            End If
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End If
 
                                 Else
                                     Try
-                                        Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
+                                        Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(roleSkillItem, skillName)
                                         If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
-                                            Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
+                                            Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)
                                             zeile = visboZustaende.oldRow
                                         End If
                                     Catch ex As Exception
 
                                     End Try
 
+
                                 End If
 
-                            Else
+
+
+                            Next
+
+                            For Each costNameIDitem As String In frmMERoleCost.costsToAdd
                                 Try
-                                    Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(roleSkillItem, skillName)
-                                    If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
-                                        Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)
+                                    Dim tmpCostID As Integer = CostDefinitions.getCostdef(costNameIDitem).UID
+                                    If Not hproj.getPhaseByID(phaseNameID).containsCostID(tmpCostID) Then
+                                        Call meRCZeileEinfuegen(zeile, costNameIDitem, "", False)
                                         zeile = visboZustaende.oldRow
                                     End If
                                 Catch ex As Exception
 
                                 End Try
-
-
-                            End If
-
-
-
-                        Next
-
-                        For Each costNameIDitem As String In frmMERoleCost.costsToAdd
-                            Try
-                                Dim tmpCostID As Integer = CostDefinitions.getCostdef(costNameIDitem).UID
-                                If Not hproj.getPhaseByID(phaseNameID).containsCostID(tmpCostID) Then
-                                    Call meRCZeileEinfuegen(zeile, costNameIDitem, "", False)
-                                    zeile = visboZustaende.oldRow
-                                End If
-                            Catch ex As Exception
-
-                            End Try
-                        Next
+                            Next
 
 
 
-                        With meWS
-                            .Protect(Password:="x", UserInterfaceOnly:=True,
+                            With meWS
+                                .Protect(Password:="x", UserInterfaceOnly:=True,
                                         AllowFormattingCells:=True,
                                         AllowFormattingColumns:=True,
                                         AllowInsertingColumns:=False,
@@ -545,12 +568,14 @@ Public Class Tabelle2
                                         AllowDeletingRows:=True,
                                         AllowSorting:=True,
                                         AllowFiltering:=True)
-                            .EnableSelection = XlEnableSelection.xlNoRestrictions
-                            .EnableAutoFilter = True
-                        End With
-                        Cancel = True
-                    End If
+                                .EnableSelection = XlEnableSelection.xlNoRestrictions
+                                .EnableAutoFilter = True
+                            End With
+                            Cancel = True
+                        End If
 
+
+                    End If
 
 
                 Else
