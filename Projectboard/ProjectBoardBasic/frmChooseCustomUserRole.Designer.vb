@@ -40,8 +40,9 @@ Partial Class frmChooseCustomUserRole
         Me.Panel1.Controls.Add(Me.dgv_customUserRoles)
         Me.Panel1.Controls.Add(Me.btnOK)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(488, 299)
+        Me.Panel1.Size = New System.Drawing.Size(366, 243)
         Me.Panel1.TabIndex = 0
         '
         'dgv_customUserRoles
@@ -58,13 +59,12 @@ Partial Class frmChooseCustomUserRole
         Me.dgv_customUserRoles.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.userRole, Me.specifics})
         Me.dgv_customUserRoles.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically
         Me.dgv_customUserRoles.Location = New System.Drawing.Point(2, 0)
-        Me.dgv_customUserRoles.Margin = New System.Windows.Forms.Padding(4)
         Me.dgv_customUserRoles.MultiSelect = False
         Me.dgv_customUserRoles.Name = "dgv_customUserRoles"
         Me.dgv_customUserRoles.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.[False]
         Me.dgv_customUserRoles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.dgv_customUserRoles.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
-        Me.dgv_customUserRoles.Size = New System.Drawing.Size(483, 243)
+        Me.dgv_customUserRoles.Size = New System.Drawing.Size(362, 197)
         Me.dgv_customUserRoles.TabIndex = 3
         '
         'userRole
@@ -83,23 +83,22 @@ Partial Class frmChooseCustomUserRole
         '
         Me.btnOK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
         Me.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.btnOK.Location = New System.Drawing.Point(147, 251)
-        Me.btnOK.Margin = New System.Windows.Forms.Padding(4)
+        Me.btnOK.Location = New System.Drawing.Point(110, 204)
         Me.btnOK.Name = "btnOK"
-        Me.btnOK.Size = New System.Drawing.Size(192, 42)
+        Me.btnOK.Size = New System.Drawing.Size(144, 34)
         Me.btnOK.TabIndex = 2
         Me.btnOK.Text = "Auswählen"
         Me.btnOK.UseVisualStyleBackColor = True
         '
         'frmChooseCustomUserRole
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(486, 300)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.ClientSize = New System.Drawing.Size(364, 244)
+        Me.ControlBox = False
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
-        Me.MaximizeBox = False
         Me.Name = "frmChooseCustomUserRole"
         Me.Text = "Wählen Sie Ihre Rolle"
         Me.TopMost = True
