@@ -14,6 +14,9 @@ Public Class frmChooseCustomUserRole
 
     Private Sub frmChooseCustomUserRole_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Me.Top = appInstance.Top + (appInstance.Height - Me.Height) / 2
+        Me.Left = appInstance.Left + (appInstance.Width - Me.Width) / 2
+
         Call listeAufbauen()
 
     End Sub
