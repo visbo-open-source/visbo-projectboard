@@ -22927,6 +22927,8 @@ Public Module agm2
         Dim przSatz As Double = 1.0
         Dim defaultTagessatz As Double = 800.0
         Dim errMsg As String = ""
+        Dim fuellz As String = " "
+        Dim anzFuellz As Integer = 2
 
         ' nimmt die People auf, also die in Orga sind, nicht in Gruppen Definition und keine Kinder haben ... 
         Dim listOFPeople = New Collection
@@ -23002,14 +23004,22 @@ Public Module agm2
                         ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
                         ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
                         If i = 2 Then
-                            If CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel = 0 Then
+                            If bestimmeIndent(c, fuellz, anzFuellz) = 0 Then
                                 hasHierarchy = True
                             End If
                         Else
-                            Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
+                            Dim tmpIndent As Integer = bestimmeIndent(c, fuellz, anzFuellz)
                             If tmpIndent > 0 Then
                                 atleastOneWithIndent = True
                                 maxIndent = System.Math.Max(maxIndent, tmpIndent)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "role's hierarchy is not defined: " & c.Value.Trim
+                                Else
+                                    errMsg = "Rolle hat keine klar definierte Zuordnung in der Hierarchie: " & c.Value.Trim
+                                End If
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                             End If
                         End If
 
@@ -23294,37 +23304,6 @@ Public Module agm2
                                             meldungen.Add(errMsg)
                                         End Try
 
-                                        '' ur:08.07.2021 Aufnahme isAggregationRole
-                                        'If Not IsNothing(c.Offset(0, 9).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isAggregationRole = True
-                                        '    End If
-                                        'End If
-                                        '' ur:08.07.2021 Aufnahme isSummaryRole
-                                        'If Not IsNothing(c.Offset(0, 10).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isSummaryRole = True
-                                        '    End If
-                                        'End If
-                                        '' ur:08.07.2021 Aufnahme isActDataRelvant
-                                        'If Not IsNothing(c.Offset(0, 11).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isActDataRelevant = True
-                                        '    End If
-                                        'End If
-
                                         ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                         Try
                                             If Not IsNothing(c.Offset(0, 5).Value) Then
@@ -23536,7 +23515,7 @@ Public Module agm2
                         Do While ix <= anzZeilen - 1
 
                             Try
-                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
                                 curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
 
@@ -23572,7 +23551,7 @@ Public Module agm2
 
                                     ' hat sich der Indentlevel immer noch nicht geändert ? 
                                     If ix <= anzZeilen - 1 Then
-                                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
                                         curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                         If readingGroups Then
                                             przSatz = 0.0
@@ -23874,12 +23853,11 @@ Public Module agm2
                         ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
                         ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
                         If i = 1 Then
-                            If bestimmeIndent(c.Value, fuellz, anzFuellz) = 0 Then
+                            If bestimmeIndent(c, fuellz, anzFuellz) = 0 Then
                                 hasHierarchy = True
                             End If
                         Else
-                            Dim tmpIndent As Integer = bestimmeIndent(c.Value, fuellz, anzFuellz)
-                            'Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
+                            Dim tmpIndent As Integer = bestimmeIndent(c, fuellz, anzFuellz)
                             If tmpIndent > 0 Then
                                 atleastOneWithIndent = True
                                 maxIndent = System.Math.Max(maxIndent, tmpIndent)
@@ -24090,7 +24068,7 @@ Public Module agm2
                             End If
 
                             tmpStr = CType(c.Value, String)
-                            Dim level As Integer = bestimmeIndent(tmpStr, fuellz, anzFuellz)
+                            Dim level As Integer = bestimmeIndent(c, fuellz, anzFuellz)
                             If fuellz <> " " Then
                                 tmpStr = tmpStr.Trim.Remove(0, level)
                             Else
@@ -24376,7 +24354,7 @@ Public Module agm2
 
                             Try
                                 'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
+                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
                                 If fuellz <> " " Then
                                     curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim.Remove(0, curLevel * anzFuellz)
                                 Else
@@ -24432,9 +24410,8 @@ Public Module agm2
 
                                     ' hat sich der Indentlevel immer noch nicht geändert ? 
                                     If ix <= anzZeilen Then
-                                        'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
-                                        'curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
+
                                         If fuellz <> " " Then
                                             curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim.Remove(0, curLevel * anzFuellz)
                                         Else

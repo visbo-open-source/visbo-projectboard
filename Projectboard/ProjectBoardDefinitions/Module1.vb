@@ -3546,45 +3546,61 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)
-    ''' </summary>
-    ''' <param name="text"></param>
+    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)''' </summary>
+    ''' <param name="c"></param>
     ''' <param name="fuellz"></param>
     ''' <param name="anzFuellz"></param>
     ''' <returns></returns>
-    Public Function bestimmeIndent(ByVal text As String, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
+    Public Function bestimmeIndent(ByVal c As Excel.Range, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
         Dim tmpstr As String = ""
-        Dim indentLevel As Double = 0
+        Dim indentLevel1 As Double = 0
+        Dim indentLevel2 As Double = 0
+        Dim rest As Integer = 0
 
-        If Not IsNothing(text) Then
-            If fuellz = " " Then
-                Dim origTextLge As Integer = text.Length
-                Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
-                If anzFuellz <> 0 Then
-                    indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzFuellz)
-                Else
-                    indentLevel = -1
-                End If
-            Else
-                Dim tmparray() As String = Split(text, fuellz)
-                Dim i As Integer = 0
-
-                While tmparray(i) = ""
-                    i += 1
-                End While
-                If anzFuellz <> 0 Then
-                    indentLevel = i / anzFuellz
-                Else
-                    indentLevel = -1
-                End If
-
-            End If
-
-        Else
-
+        If c.IndentLevel > 0 Then
+            indentLevel1 = CInt(c.IndentLevel)
         End If
-        If IsNumeric(indentLevel) Then
-            bestimmeIndent = CInt(indentLevel)
+
+        Dim Text As String = CStr(c.Value)
+
+        If Not IsNothing(Text) Then
+            Dim origTextLge As Integer = Text.Length
+            Dim textLgeOhneLeadingSpace As Integer = LTrim(Text).Length
+
+            If (origTextLge - textLgeOhneLeadingSpace > 0) Then
+
+                If fuellz = " " Then
+                    If anzFuellz <> 0 Then
+                        indentLevel2 = Math.DivRem(origTextLge - textLgeOhneLeadingSpace, anzFuellz, rest)
+                        'If rest <> 0 Then
+                        '    indentLevel2 = -1
+                        'End If
+                    Else
+                        indentLevel2 = -1
+                    End If
+                Else
+                    Dim tmparray() As String = Split(Text, fuellz)
+                    Dim i As Integer = 0
+
+                    While tmparray(i) = ""
+                        i += 1
+                    End While
+                    If anzFuellz <> 0 Then
+                        indentLevel2 = i / anzFuellz
+                    Else
+                        indentLevel2 = -1
+                    End If
+
+                End If
+
+            Else
+                ' kein rolename enthalten
+            End If
+        End If
+
+
+        If IsNumeric(indentLevel1 + indentLevel2) Then
+            bestimmeIndent = CInt(indentLevel1 + indentLevel2)
         Else
             bestimmeIndent = -1
         End If
