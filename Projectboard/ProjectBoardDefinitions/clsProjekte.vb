@@ -25,7 +25,9 @@ Public Class clsProjekte
                 _allProjects.Add(pname, project)
 
                 If shpUID <> "" Then
-                    _allShapes.Add(shpUID, pname)
+                    If Not _allShapes.ContainsKey(shpUID) Then
+                        _allShapes.Add(shpUID, pname)
+                    End If
                 End If
 
                 If updateCurrentConstellation Then
@@ -46,6 +48,21 @@ Public Class clsProjekte
         End Try
 
 
+    End Sub
+
+    Public Sub AddAnyway(ByVal project As clsProjekt, Optional ByVal updateCurrentConstellation As Boolean = True)
+        Try
+            If Not IsNothing(project) Then
+                Dim pname As String = project.name
+                If _allProjects.ContainsKey(pname) Then
+                    _allProjects.Remove(pname)
+                End If
+
+                Add(project, updateCurrentConstellation)
+            End If
+        Catch ex As Exception
+
+        End Try
     End Sub
 
     ''' <summary>

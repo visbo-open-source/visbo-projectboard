@@ -990,6 +990,9 @@ Public Module Module1
         ' represents the unknown 
         visboUnknown = 19
 
+        ' visbo Find Project Starts
+        visboFindProjectStart = 20
+
         ' represents the Automatic Team Allocation
         'visboSuggestResourceAllocation = 
 

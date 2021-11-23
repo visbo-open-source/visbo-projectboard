@@ -13964,7 +13964,9 @@ Public Module Projekte
             Dim budgetVorgabe As Double = erloes
             ' get Summe Kosten kann dann herangezogen werden, wenn 
             gesamtKostenVorlage = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-            referenceBudget = Projektvorlagen.getProject(vorlagenName).Erloes
+            ' tk 18.11.2021 das referenz-Budget in der Vorlage nicht berücksichtigen ! 
+            'referenceBudget = Projektvorlagen.getProject(vorlagenName).Erloes
+            referenceBudget = gesamtKostenVorlage
             If referenceBudget > 0 And gesamtKostenVorlage > 0 And budgetVorgabe > 0 Then
                 ' nur wenn alle drei Bedingungen erfüllt sind, amcht es sinn , einen Plan zu erzeugen inkl Ressourcen Verteilung gemäß Vorlage und Budget
                 zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUSerAskedFor) / 100)) / referenceBudget
@@ -17512,14 +17514,11 @@ Public Module Projekte
                     hproj = AlleProjekte.getProject(CStr(moreThanOne.Item(i)), indexvalue(i - 1))
                     'currentSzenario.Add(hproj)
 
-                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, 0)
+                    ShowProjekte.AddAnyway(hproj)
+                    'Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, 0)
 
                 Next
 
-                'For Each pName As String In justOne
-                '    hproj = AlleProjekte.getProject(calcProjektKey(pName, ""))
-                '    currentSzenario.Add(hproj)
-                'Next
 
                 ' jetzt muss der Wert für current bestimmt werden 
                 currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
@@ -18074,6 +18073,10 @@ Public Module Projekte
             kennzahl2 = currentProjektListe.getMilestoneSchwellWerteInMonth(myCollection).Sum
             avgValue = System.Math.Max(kennzahl1, kennzahl2)
             value = currentProjektListe.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
+
+        ElseIf DiagrammTyp = DiagrammTypen(9) Then
+            'CashFlow 
+            value = currentProjektListe.getCashFlow().Sum
         Else
             Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
         End If

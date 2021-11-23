@@ -398,18 +398,6 @@ Public Class clsProjekteAlle
 
     End Sub
 
-    ''' <summary>
-    ''' so war Add bis zum 21.3.17
-    ''' </summary>
-    ''' <param name="key"></param>
-    ''' <param name="project"></param>
-    ''' <remarks></remarks>
-    Public Sub Add_old(ByVal key As String, ByVal project As clsProjekt)
-
-        Dim keyReal As String = calcProjektKey(project.name, project.variantName)
-        _allProjects.Add(keyReal, project)
-
-    End Sub
 
     ''' <summary>
     ''' macht einen Update, wenn das Element mit Schlüssel key bereits existiert 
