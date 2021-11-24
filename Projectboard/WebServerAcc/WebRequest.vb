@@ -3764,7 +3764,7 @@ Public Class Request
                             End If
 
                         End If
-                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRrequest now was successful: (anzError=" & anzError.ToString & ")")
+                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRequest now was successful: (anzError=" & anzError.ToString & ")")
 
                         hresp = Nothing
                         toDo = False

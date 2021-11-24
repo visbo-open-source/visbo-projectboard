@@ -8526,7 +8526,7 @@ Imports System.Web
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ''Call logfileOpen()
 

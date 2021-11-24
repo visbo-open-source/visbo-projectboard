@@ -3662,6 +3662,7 @@ Public Module agm3
                                                 ' Beauftragen , weil aus Controlling Sheet kommt und Nummer hat 
                                                 If hproj.kundenNummer <> "" Then
                                                     hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                                    hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                                 End If
 
 
