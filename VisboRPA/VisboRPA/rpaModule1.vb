@@ -136,7 +136,7 @@ Module rpaModule1
 
                                 Case CInt(PTRpa.visboFindProjectStart)
 
-                                    allOk = processFindProjectStarts(myName, myActivePortfolio, )
+                                    allOk = processFindProjectStart(myName, myActivePortfolio)
 
                                 Case CInt(PTRpa.visboMPP)
 
@@ -876,6 +876,11 @@ Module rpaModule1
                         ' Check auf Project Batch-List
                         If result = PTRpa.visboUnknown Then
                             result = checkProjectBatchList(currentWB)
+                        End If
+
+                        ' Check auf Project Find Best Start
+                        If result = PTRpa.visboUnknown Then
+                            result = checkFindBestStarts(currentWB)
                         End If
 
                         ' Check auf VISBO Project Brief
@@ -1843,6 +1848,9 @@ Module rpaModule1
                                     showRangeLeft = getColumnOfDate(hproj.startDate)
                                     showRangeRight = getColumnOfDate(hproj.endeDate)
 
+                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                    Console.WriteLine(infomsg)
+
                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
 
                                     If overutilizationFound Then
@@ -1857,33 +1865,40 @@ Module rpaModule1
                                 newStartDate = newStartDate.AddDays(deltaInDays)
                             Loop
 
-                            rememberStartDate = rememberStartDate.AddDays(deltaInDays)
-                            rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+                            If overutilizationFound Then
 
-                            tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+                                rememberStartDate = rememberStartDate.AddDays(deltaInDays)
+                                rememberEndDate = rememberEndDate.AddDays(deltaInDays)
 
-                            If Not IsNothing(tmpProj) Then
+                                tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
 
-                                hproj = tmpProj
+                                If Not IsNothing(tmpProj) Then
 
-                                ' now replace in AlleProjekte, ShowProjekte 
-                                AlleProjekte.Add(tmpProj)
-                                ShowProjekte.AddAnyway(tmpProj)
+                                    hproj = tmpProj
 
-                                ' now define showrangeLeft and showrangeRight from hproj 
-                                showRangeLeft = getColumnOfDate(hproj.startDate)
-                                showRangeRight = getColumnOfDate(hproj.endeDate)
+                                    ' now replace in AlleProjekte, ShowProjekte 
+                                    AlleProjekte.Add(tmpProj)
+                                    ShowProjekte.AddAnyway(tmpProj)
 
-                                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                                    ' now define showrangeLeft and showrangeRight from hproj 
+                                    showRangeLeft = getColumnOfDate(hproj.startDate)
+                                    showRangeRight = getColumnOfDate(hproj.endeDate)
 
-                                If overutilizationFound Then
-                                    endIterations = endIterations + 1
+                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                    Console.WriteLine(infomsg)
+
+                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+
+                                    If overutilizationFound Then
+                                        endIterations = endIterations + 1
+                                    End If
+
+                                Else
+                                    ' Error occurred 
+                                    Throw New ArgumentException("tmpProj is Nothing")
                                 End If
-
-                            Else
-                                ' Error occurred 
-                                Throw New ArgumentException("tmpProj is Nothing")
                             End If
+
 
                         Loop
 
