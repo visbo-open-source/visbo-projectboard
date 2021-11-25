@@ -25,7 +25,9 @@ Public Class clsProjekte
                 _allProjects.Add(pname, project)
 
                 If shpUID <> "" Then
-                    _allShapes.Add(shpUID, pname)
+                    If Not _allShapes.ContainsKey(shpUID) Then
+                        _allShapes.Add(shpUID, pname)
+                    End If
                 End If
 
                 If updateCurrentConstellation Then
@@ -46,6 +48,21 @@ Public Class clsProjekte
         End Try
 
 
+    End Sub
+
+    Public Sub AddAnyway(ByVal project As clsProjekt, Optional ByVal updateCurrentConstellation As Boolean = True)
+        Try
+            If Not IsNothing(project) Then
+                Dim pname As String = project.name
+                If _allProjects.ContainsKey(pname) Then
+                    _allProjects.Remove(pname)
+                End If
+
+                Add(project, updateCurrentConstellation)
+            End If
+        Catch ex As Exception
+
+        End Try
     End Sub
 
     ''' <summary>
@@ -2048,37 +2065,58 @@ Public Class clsProjekte
     ''' 
     ''' </summary>
     ''' <param name="roleIDs"></param>
+    ''' <param name="skillIDs"></param>
     ''' <param name="overloadCriterion">returns true, if any month is overloaded more than overloadCriterion and onlyStrictly=false </param>
     ''' <param name="onlyStrictly">false: single months overloads should be taken into account even when overall timeframe is not overloaded at all </param>
     ''' <param name="totalOverloadCriterion">returns true if total sum of roles is larger than totalOverloadCriterion * kapa </param>
     ''' <returns></returns>
     Public Function overLoadFound(ByVal roleIDs As List(Of String),
+                                  ByVal skillIDs As List(Of String),
                                   ByVal onlyStrictly As Boolean,
                                   ByVal overloadCriterion As Double,
                                   ByVal totalOverloadCriterion As Double) As Boolean
 
         Dim overloaded As Boolean = False
         Dim monthlyCriterion As Double = 3 * overloadCriterion
+        Dim curIDs As List(Of String) = Nothing
 
-        For Each roleIDstr As String In roleIDs
+        For i As Integer = 1 To 2
 
-            Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
-            Dim myCollection As New Collection From {
-                roleIDstr
-            }
-            Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
-
-            If Not onlyStrictly Then
-                For i As Integer = 0 To roleValues.Length - 1
-                    If roleValues(i) >= overloadCriterion * kapaValues(i) Then
-                        overloaded = True
-                        Exit For
-                    End If
-                Next
+            If i = 1 Then
+                curIDs = roleIDs
+            Else
+                curIDs = skillIDs
             End If
 
-            If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
-                overloaded = True
+            If Not IsNothing(curIDs) Then
+
+                For Each roleIDstr As String In curIDs
+
+                    Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
+                    Dim myCollection As New Collection From {
+                        roleIDstr
+                     }
+                    Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
+
+                    If Not onlyStrictly Then
+                        For ix As Integer = 0 To roleValues.Length - 1
+                            If roleValues(ix) >= overloadCriterion * kapaValues(ix) Then
+                                overloaded = True
+                                Exit For
+                            End If
+                        Next
+                    End If
+
+                    If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
+                        overloaded = True
+                    End If
+
+                    If overloaded Then
+                        Exit For
+                    End If
+
+                Next
+
             End If
 
             If overloaded Then
@@ -4726,7 +4764,9 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks>im Falle Kurzarbeit wird wird das für jeden Monat betrachtet, es gibt keinen ausgleich ! also Mrz ist unterausgelastet, Apr ist überausgelastet</remarks>
-    Public ReadOnly Property getCostoValuesInMonth(Optional ByVal topNodeID As Integer = -1, Optional ByVal provideKUGData As Boolean = False) As Double()
+    Public ReadOnly Property getCostoValuesInMonth(Optional ByVal topNodeID As Integer = -1,
+                                                   Optional ByVal provideKUGData As Boolean = False,
+                                                   Optional ByVal strictly As Boolean = False) As Double()
 
         Get
             Dim costValues() As Double
@@ -4800,8 +4840,18 @@ Public Class clsProjekte
                                     ' wenn rolevalue > kapavalues, dann enstehen negativeZahlen - die müssen dann nachher verrechnet werden ...
 
                                     ' d.h wenn Achim Überstunden macht, dann werden die Überstunden mit der Unterauslastung von Annabell verrechnet - sofern beide topNodeID als Parent haben 
-                                    costValues(ix) = costValues(ix) +
+                                    If strictly Then
+                                        ' Überstunden in einem Monat verringern nicht (!) die Unterauslastungen in einem anderen Monat
+                                        If kapaValues(ix) - roleValues(ix) > 0 Then
+                                            costValues(ix) = costValues(ix) +
                                                  (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                                        End If
+                                    Else
+                                        costValues(ix) = costValues(ix) +
+                                                 (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                                    End If
+
+
 
 
                                 End If

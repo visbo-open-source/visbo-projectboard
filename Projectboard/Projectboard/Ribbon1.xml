@@ -165,6 +165,7 @@
                   <button id="PT4G2M3B2" getLabel ="bestimmeLabel" onAction="exportExcelDetails" supertip ="pro Projekt werden alle ausgewählten Rollen/Kosten exportiert, sofern sie zu der angegebenen Organisations-Einheit gehören"/>
                   <button id="PT4G2M3B3" getLabel ="bestimmeLabel" onAction="exportExcelKuGDetails" supertip ="pro Interner Person werden die Auslastungswerte ausgegeben, um auf der Basis die Kurzarbeit zu beantragen"/>
                   <button id="PT4G2M3B4" getLabel ="bestimmeLabel" onAction="exportExcelPlanning" supertip ="Projekte mit monatlichen Ressourcen-/Kostenbedarfen ausleiten"/>
+                  <button id="PT4G2M3B5" getLabel ="bestimmeLabel" onAction="exportExcelEarnedValues" supertip ="Zur aktuellen Session werden die Earned Values und Opportunitätskosten bestimmt"/>
                   <!--<button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
                 </menu>
               </menu>              
@@ -387,10 +388,10 @@
           <!--<separator id="PT0G1s7"/>
           <button id="PT7G1B1" label="Copy chart style" supertip ="muss noch programmiert werden"/>
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
-          <!--<separator id="PT0G1s9" getVisible="chckVisibility" />-->
+          <separator id="PT0G1s9" getVisible="chckVisibility" />
           <!--label="Optimieren"-->
-          <!--<button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>-->
-          <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
+          <button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>
+          <button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
           <!--<separator id="PT0G1s8"/>
           --><!--- Cockpit--><!--
           <splitButton id="PT0G1split" size="large">

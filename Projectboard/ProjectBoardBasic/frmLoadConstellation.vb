@@ -293,31 +293,24 @@ Public Class frmLoadConstellation
                                 Dim vName As String = variantName
                                 portfolioNode.Tag = "X"
                                 For iv As Integer = 1 To variantNames.Count
-                                    vName = CStr(variantNames.Item(iv))
-                                    Dim vNameStripped As String = ""
-                                    Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
-                                    If tmpStr.Length = 1 Then
-                                        vNameStripped = tmpStr(0)
-                                    ElseIf tmpStr.Length >= 3 Then
-                                        vNameStripped = tmpStr(1).Trim
+
+                                    If Not IsNothing(variantNames.Item(1)) Then
+                                        vName = CStr(variantNames.Item(iv))
                                     End If
+
+                                    'Dim vNameStripped As String = ""
+                                    'Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
+                                    'If tmpStr.Length = 1 Then
+                                    '    vNameStripped = tmpStr(0)
+                                    'ElseIf tmpStr.Length >= 3 Then
+                                    '    vNameStripped = tmpStr(1).Trim
+                                    'End If
                                     ' pfv-Variante wird nicht in den Tree mit aufgenommen
                                     If vName <> ptVariantFixNames.pfv.ToString Then
                                         Dim variantNode As TreeNode = portfolioNode.Nodes.Add(vName)
                                         variantNode.Text = "(" & vName & ")"
                                         variantNode.Tag = "X"
                                     End If
-
-                                    'If aKtionskennung = PTTvActions.delFromDB Then
-                                    '    variantNode.Tag = "P"
-                                    '    Dim tmpNodeLevel2 As TreeNode = variantNode.Nodes.Add("Platzhalter-Datum")
-                                    'Else
-                                    '    variantNode.Tag = "X"
-                                    'End If
-
-                                    'Call bestimmeNodeCheckStatus(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant,
-                                    '                             pname, vNameStripped)
-                                    'Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped)
 
                                 Next
 

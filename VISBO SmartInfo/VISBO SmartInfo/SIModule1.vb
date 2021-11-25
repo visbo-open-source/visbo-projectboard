@@ -3091,7 +3091,7 @@ Module SIModule1
                                         Dim nids As String = pptShape.Tags.Item("NIDS")
 
                                         Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
-                                                                     toDoCollection, q1, q2)
+                                                                     Nothing, toDoCollection, q1, q2)
 
                                     Catch ex As Exception
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
@@ -3176,7 +3176,7 @@ Module SIModule1
                                         Dim nids As String = pptShape.Tags.Item("NIDS")
 
                                         Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
-                                                                     toDoCollection, q1, q2)
+                                                                     Nothing, toDoCollection, q1, q2)
 
                                     Catch ex As Exception
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")

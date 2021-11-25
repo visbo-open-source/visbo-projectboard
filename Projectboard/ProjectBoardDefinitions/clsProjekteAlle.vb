@@ -70,6 +70,31 @@ Public Class clsProjekteAlle
             containsPNr = tmpResult
         End Get
     End Property
+    ''' <summary>
+    ''' gets the RoleNameIDs of existing skills  
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleSkillIDs() As Collection
+        Get
+
+            Dim roleSkillIDs As New Collection
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getSkillNameIds
+
+                For Each tmpName As String In tmpCollection
+                    If Not roleSkillIDs.Contains(tmpName) Then
+                        roleSkillIDs.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getRoleSkillIDs = roleSkillIDs
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt true zurück wenn irgendein Summary Projekt in der Liste enthalten ist 
@@ -373,18 +398,6 @@ Public Class clsProjekteAlle
 
     End Sub
 
-    ''' <summary>
-    ''' so war Add bis zum 21.3.17
-    ''' </summary>
-    ''' <param name="key"></param>
-    ''' <param name="project"></param>
-    ''' <remarks></remarks>
-    Public Sub Add_old(ByVal key As String, ByVal project As clsProjekt)
-
-        Dim keyReal As String = calcProjektKey(project.name, project.variantName)
-        _allProjects.Add(keyReal, project)
-
-    End Sub
 
     ''' <summary>
     ''' macht einen Update, wenn das Element mit Schlüssel key bereits existiert 

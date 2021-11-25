@@ -248,7 +248,6 @@ Public Class Request
                     Throw New ArgumentException(ex.Message)
                 End Try
 
-
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
             End If

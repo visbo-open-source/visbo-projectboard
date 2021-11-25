@@ -3707,7 +3707,7 @@ Public Module awinGeneralModules
 
 
                         unionProj.variantName = unionVariantName
-                        unionProj = unionProj.unionizeWith(hproj)
+                        'unionProj = unionProj.unionizeWith(hproj)
 
                     End If
 

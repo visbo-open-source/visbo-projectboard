@@ -10007,7 +10007,7 @@ Public Module testModule
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  todoCollectionPh, todoCollection)
+                                  todoCollection, todoCollectionPh)
 
         Try
             tabelle = pptShape.Table
