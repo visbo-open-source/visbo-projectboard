@@ -3511,42 +3511,44 @@ Public Class frmProjPortfolioAdmin
                         End If
                     Else
 
+                        ' ur: 20211108: SummaryProjekt nicht mehr erzeugen und speichern
+
                         ' jetzt das Union Projekt errechnen ... 
                         ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
-                        Try
+                        'Try
 
-                            If budget = 0 Then
-                                budget = -1
-                            End If
+                        '    If budget = 0 Then
+                        '        budget = -1
+                        '    End If
 
-                            Dim tmpVariantName As String = ""
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                                tmpVariantName = ptVariantFixNames.pfv.ToString
-                            End If
+                        '    Dim tmpVariantName As String = ""
+                        '    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        '        tmpVariantName = ptVariantFixNames.pfv.ToString
+                        '    End If
 
-                            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
+                        '    Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
-                            If Not IsNothing(oldSummaryP) Then
-                                'budget = oldSummaryP.budgetWerte.Sum
-                                budget = oldSummaryP.Erloes
-                            Else
-                                budget = toStoreConstellation.getBudgetOfShownProjects
-                            End If
+                        '    If Not IsNothing(oldSummaryP) Then
+                        '        'budget = oldSummaryP.budgetWerte.Sum
+                        '        budget = oldSummaryP.Erloes
+                        '    Else
+                        '        budget = toStoreConstellation.getBudgetOfShownProjects
+                        '    End If
 
-                            Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
+                        '    Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
 
-                            Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
-                            If AlleProjektSummaries.Containskey(skey) Then
-                                AlleProjektSummaries.Remove(skey, updateCurrentConstellation:=False)
-                            End If
+                        '    Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+                        '    If AlleProjektSummaries.Containskey(skey) Then
+                        '        AlleProjektSummaries.Remove(skey, updateCurrentConstellation:=False)
+                        '    End If
 
-                            If Not AlleProjektSummaries.Containskey(skey) Then
-                                AlleProjektSummaries.Add(sproj, updateCurrentConstellation:=False)
-                            End If
+                        '    If Not AlleProjektSummaries.Containskey(skey) Then
+                        '        AlleProjektSummaries.Add(sproj, updateCurrentConstellation:=False)
+                        '    End If
 
-                        Catch ex As Exception
+                        'Catch ex As Exception
 
-                        End Try
+                        'End Try
 
 
                         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then

@@ -115,8 +115,7 @@
     ' 
     ' tk Allianz 21.11.18 Teams abbilden 
     ' gibt die Liste der Teams an, in dem die PErson ist 
-    ' der Double Wert sagt, wieviel Prozent der Kapa der Person in das Team einfliesst ; Summe sollte 100% nicht überschreiten;
-    ' keine harte Grenze, verursacht nur Warnung 
+    ' der Double Wert hat keine Wirkung mehr !  
     Private _skillIDs As SortedList(Of Integer, Double)
 
     ' gibt an, ob es sich um eine interne oder externe Rolle handelt, nur von Bedeutung wenn es sich um ein Blatt handelt ... 
@@ -268,7 +267,13 @@
     End Property
 
     Public Property name As String
-    Public Property farbe As Object
+
+    Public ReadOnly Property farbe As Integer
+        Get
+            farbe = visboFarbeBlau
+        End Get
+    End Property
+
 
     Public Property tagessatzIntern As Double
 

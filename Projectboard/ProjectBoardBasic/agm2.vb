@@ -4458,7 +4458,7 @@ Public Module agm2
 
         Dim mapStruktur As String = awinSettings.mappingVorlage
 
-        Dim prj As MSProject.Application
+        Dim prj As New MSProject.Application
         Dim msproj As MSProject.Project
         Dim i As Integer = 1
         Dim lastphase As clsPhase
@@ -4500,7 +4500,12 @@ Public Module agm2
                 prj = CType(CreateObject("msproject.application"), MSProject.Application)
 
                 If IsNothing(prj) Then
-                    Call MsgBox("MSproject ist nicht installiert")
+                    If modus <> "RPA" Then
+                        Call MsgBox("MSproject ist nicht installiert")
+                    Else
+                        Call logger(ptErrLevel.logError, "Import MS Project", "not installed ... Exit")
+                    End If
+
                     Exit Sub
                 End If
             End Try
@@ -4511,7 +4516,7 @@ Public Module agm2
                 ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
 
                 prj.FileOpen(Name:=filename,
-                            ReadOnly:=True, FormatID:="MSProject.MPP")
+                            ReadOnly:=True, FormatID:="MSProject.MPP", NoAuto:=True)
 
 
             End If
@@ -4996,7 +5001,8 @@ Public Module agm2
 
                                                         Dim newRoleDef As New clsRollenDefinition
                                                         newRoleDef.name = ass.ResourceName
-                                                        newRoleDef.farbe = RGB(120, 120, 120)
+                                                        ' tk 20.07.21 keine individuelen Farben mehr für Rollen 
+                                                        'newRoleDef.farbe = RGB(120, 120, 120)
                                                         newRoleDef.defaultKapa = 18
 
                                                         ' OvertimeRate in Tagessatz umrechnen
@@ -5370,7 +5376,12 @@ Public Module agm2
 
                 ' Ausgabe der Checks-Fehler
                 If outputCollection.Count > 0 Then
-                    Call showOutPut(outputCollection, "Import " & hproj.name & " Standard", "folgende Ungereimtheiten in den Daten wurden festgestellt")
+                    If modus <> "RPA" Then
+                        Call showOutPut(outputCollection, "Import " & hproj.name & " Standard", "folgende Ungereimtheiten in den Daten wurden festgestellt")
+                    Else
+                        Call logger(ptErrLevel.logWarning, "MS Project Import Warnings: ", outputCollection)
+                    End If
+
                 End If
 
 
@@ -5391,7 +5402,12 @@ Public Module agm2
 
                                 Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
                                 If hrchynode.childCount > 0 Then
-                                    Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                    If modus <> "RPA" Then
+                                        Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                    Else
+                                        Call logger(ptErrLevel.logWarning, "MS Project Import Warnings ", "Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                    End If
+
                                 Else
                                     hproj.removeMeilenstein(elemID)
                                 End If
@@ -5443,6 +5459,7 @@ Public Module agm2
                     End If
 
                     AlleProjekte.Add(hproj)
+                    ShowProjekte.Clear()
 
                 Else
                     If ImportProjekte.Containskey(key) Then
@@ -5451,25 +5468,27 @@ Public Module agm2
 
                     ' immer mit updateCurrentConstellation = false aufrufen, nur bei AlleProjekte bzw. bei ShowProjekte ggf mit optionaler Setzung aufrufen ..
                     ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-
                 End If
 
-                If modus = "BHTC" Then
-                    ' Alle Projekte in ShowProjekte löschen
-                    ShowProjekte.Clear()
+
+                If modus <> "RPA" Then
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    Else
+                        ShowProjekte.Remove(hproj.name)
+                        ShowProjekte.Add(hproj)
+                    End If
                 End If
 
-                If Not ShowProjekte.contains(hproj.name) Then
-                    ShowProjekte.Add(hproj)
-                Else
-                    ShowProjekte.Remove(hproj.name)
-                    ShowProjekte.Add(hproj)
-                    'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
-                End If
 
                 ' Fehlermeldung: Falsche Währung vordefiniert.
                 If msproj.CurrencyCode <> "EUR" Then
-                    Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                    If modus <> "RPA" Then
+                        Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                    Else
+                        Call logger(ptErrLevel.logWarning, "MS Project Import: ", "Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                    End If
+
                 End If
 
 
@@ -5486,7 +5505,11 @@ Public Module agm2
                         ' aufbauen der RcLists - evt. nicht nötig
                         ' mapProj.updateRcLists()
                         If IsNothing(mapProj) Then
-                            Call MsgBox("Kein Mapping erfolgt")
+                            If modus <> "RPA" Then
+                                Call MsgBox("Kein Mapping erfolgt")
+                            Else
+                                Call logger(ptErrLevel.logWarning, "awinImportMSProject: ", "Kein Mapping erfolgt!")
+                            End If
                         End If
 
                     End If
@@ -5535,12 +5558,6 @@ Public Module agm2
 
                         End If
 
-                        ' Fehlermeldung: Falsche Währung vordefiniert.
-                        If msproj.CurrencyCode <> "EUR" Then
-                            Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
-                        End If
-
-
                     End If
 
                 End If
@@ -5552,11 +5569,26 @@ Public Module agm2
 
             Else
 
-                Call MsgBox("Bitte zunächst ein Projekt öffnen !")
+                If modus <> "RPA" Then
+                    Call MsgBox("Bitte zunächst ein Projekt öffnen !")
+                Else
+                    Call logger(ptErrLevel.logError, "MS Project Import ", "no project ... ")
+                End If
+
 
             End If
         Catch ex As Exception
-            Call MsgBox(ex)
+            If modus <> "RPA" Then
+                Call MsgBox(ex.Message)
+            Else
+                Call logger(ptErrLevel.logError, "MS Project Import ", ex.Message)
+                If modus = "RPA" Then
+                    hproj = Nothing
+                    prj.FileExit(MSProject.PjSaveType.pjDoNotSave)
+                End If
+
+            End If
+
         End Try
 
 
@@ -7204,7 +7236,7 @@ Public Module agm2
     ''' das wird sichergestellt über Eintrag der tfzeile in hproj ... 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub awinImportProjektInventur()
+    Public Function awinImportProjektInventur(ByRef readProjects As Integer, ByRef createdProjs As Integer) As Boolean
         Dim zeile As Integer, spalte As Integer
 
         Dim tfZeile As Integer = 2
@@ -7223,13 +7255,15 @@ Public Module agm2
         Dim capacityNeeded As String = ""
         Dim externCostInput As String = ""
 
+        Dim atLeastOneError As Boolean = False
+
         Dim description As String = ""
         Dim businessUnit As String = ""
         Dim createdProjects As Integer = 0
         Dim responsiblePerson As String = ""
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
-        Dim nrOfStdColumns As Integer = 15
+        Dim nrOfStdColumns As Integer = 14
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
@@ -7278,7 +7312,7 @@ Public Module agm2
 
 
         Try
-            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Liste"),
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Batch List"),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
@@ -7314,10 +7348,16 @@ Public Module agm2
                     ' hier muss jetzt alles zurückgesetzt werden 
                     ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    If Not IsNothing(pName) Then
+                        pName = pName.Trim
+                    Else
+                        pName = ""
+                    End If
+
                     If IsNothing(pName) Then
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
-                    ElseIf pName.Trim.Length < 2 Then
+                    ElseIf pName.Length < 2 Then
 
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
@@ -7334,24 +7374,26 @@ Public Module agm2
 
                         End Try
                     Else
-                        variantName = ""
+                        ' Read Variant Name
+                        variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(variantName) Then
+                            variantName = ""
+                        Else
+                            variantName = variantName.Trim
+                        End If
                         custFields.Clear()
                         capacityNeeded = ""
 
-                        ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
-                        Try
-                            Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
-                            If tmpStr.Length > 1 Then
-                                pName = makeValidProjectName(tmpStr(0))
-                                variantName = tmpStr(1).Trim
-                            End If
-                        Catch ex As Exception
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            variantName = ""
-                        End Try
 
-                        vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        lastSpaltenValue = spalte + 1
+                        ' Read Template 
+                        vorlageName = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(vorlageName) Then
+                            vorlageName = ""
+                        Else
+                            vorlageName = vorlageName.Trim
+                        End If
+
+                        lastSpaltenValue = spalte + 2
 
                         If IsNothing(vorlageName) Then
                             CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
@@ -7367,42 +7409,50 @@ Public Module agm2
 
                                 Try
 
-                                    lastSpaltenValue = spalte + 2
-                                    responsiblePerson = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
                                     lastSpaltenValue = spalte + 3
-                                    start = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    responsiblePerson = CStr(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    If IsNothing(responsiblePerson) Then
+                                        responsiblePerson = ""
+                                    Else
+                                        responsiblePerson = responsiblePerson.Trim
+                                    End If
+
+                                    lastSpaltenValue = spalte + 4
+                                    start = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     ' eines der beiden Daten Start bzw Ende darf ohne Angabe bleiben ...
                                     'If start < StartofCalendar Then
                                     '    Throw New ArgumentException("Datum vor Kalender-Start")
                                     'End If
 
-                                    lastSpaltenValue = spalte + 4
-                                    ende = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 5
+                                    ende = CDate(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
 
                                     If start < StartofCalendar And ende < StartofCalendar Then
                                         Throw New ArgumentException("sowohl Start wie Ende-Datum liegen vor dem Kalender-Start")
                                     End If
 
-                                    lastSpaltenValue = spalte + 5
-                                    startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    ' tk 16.7.21 nicht mehr nötig 
+                                    'lastSpaltenValue = spalte + 5
+                                    'startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    'lastSpaltenValue = spalte + 6
+                                    'endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     lastSpaltenValue = spalte + 6
-                                    endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
-                                    lastSpaltenValue = spalte + 7
-                                    dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     ' Konsistenzprüfung 
                                     If start > StartofCalendar And ende > StartofCalendar And dauer > 0 Then
                                         Throw New ArgumentException("Überbestimmt: es kann nicht Start, Ende und Dauer angegeben werden .. ")
                                     End If
 
-                                    lastSpaltenValue = spalte + 8
-                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 7
+                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
                                     If budgetInput <> "calcNeeded" And IsNumeric(budgetInput) Then
-                                        budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                         If budget < 0 Then
                                             Throw New ArgumentException("negative Werte nicht zugelassen!")
                                         End If
@@ -7416,14 +7466,14 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 9
-                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 8
+                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(capacityNeeded, True) Then
                                         Throw New ArgumentException("ungültige Kapa-Angabe")
                                     End If
 
-                                    lastSpaltenValue = spalte + 10
-                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 9
+                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(externCostInput, False) Then
                                         Throw New ArgumentException("ungültige Kosten-Angabe")
                                     End If
@@ -7434,21 +7484,21 @@ Public Module agm2
                                         Throw New ArgumentException("unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden")
                                     End If
 
-                                    lastSpaltenValue = spalte + 11
-                                    risk = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 10
+                                    risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If risk < 0 Or risk > 10.0 Then
-                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
+                                        Throw New ArgumentException("Kennzahl Risiko muss zwischen [0 und 10] liegen")
                                     End If
+
+                                    lastSpaltenValue = spalte + 11
+                                    sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If sfit < 0 Or sfit > 10.0 Then
+                                        Throw New ArgumentException("Kennzahl Strategie muss zwischen [0 und 10] liegen")
+                                    End If
+
 
                                     lastSpaltenValue = spalte + 12
-                                    sfit = CDbl(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                    If sfit < 0 Or risk > 10.0 Then
-                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
-                                    End If
-
-
-                                    lastSpaltenValue = spalte + 13
-                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not IsNothing(businessUnit) Then
                                         Dim bi As Integer = 0
                                         Dim found As Boolean = False
@@ -7466,8 +7516,8 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 14
-                                    description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 13
+                                    description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
 
                                     If lastColumn > nrOfStdColumns Then
@@ -7679,8 +7729,11 @@ Public Module agm2
 
                                     End If
 
+                                Else
+                                    atLeastOneError = True
                                 End If
-
+                            Else
+                                atLeastOneError = True
                             End If
                         End If
 
@@ -7701,12 +7754,12 @@ Public Module agm2
 
         End Try
 
+        readProjects = geleseneProjekte
+        createdProjs = createdProjects
+        awinImportProjektInventur = Not atLeastOneError
 
-        Call MsgBox("gelesen: " & geleseneProjekte & vbLf &
-                    "erzeugt: " & createdProjects & vbLf &
-                    "importiert: " & ImportProjekte.Count)
 
-    End Sub
+    End Function
 
 
     ''' <summary>
@@ -8834,16 +8887,6 @@ Public Module agm2
             End If
         End If
 
-        '' OldOrga kopieren
-        'Dim orgaCopy As New clsOrganisation
-        'If Not IsNothing(oldOrga) Then
-        '    orgaCopy = oldOrga.copy(outputCollection)
-        'Else
-        '    orgaCopy = Nothing
-        'End If
-
-        'newRoleDefinitions = orgaCopy.allRoles
-
 
 
         ' Import ohne Configuration
@@ -9524,6 +9567,9 @@ Public Module agm2
                                         ' die bisherige Constellation wegschreiben ...
 
 
+                                        '  ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to m
+
+
                                         If Not IsNothing(current1program) Then
                                             ' ggf hier wieder rausnehmen ...
 
@@ -9535,94 +9581,93 @@ Public Module agm2
                                                 createdPrograms = createdPrograms + 1
                                                 projectConstellations.Add(current1program)
 
-                                                ' 
-                                                ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
-                                                ' jetzt das union-Projekt erstellen ; 
-                                                Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                                                '        ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
+                                                '        ' jetzt das union-Projekt erstellen ; 
+                                                '        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                                                Try
-                                                    ' Test, ob das Budget auch ausreicht
-                                                    ' wenn nein, einfach Warning ausgeben 
-                                                    Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
-                                                    If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                                '        Try
+                                                '            ' Test, ob das Budget auch ausreicht
+                                                '            ' wenn nein, einfach Warning ausgeben 
+                                                '            Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                                                '            If unionProj.Erloes - tmpGesamtCost < 0 Then
 
-                                                        Dim goOn As Boolean = True
-                                                        If unionProj.Erloes > 0 Then
-                                                            goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
-                                                        End If
+                                                '                Dim goOn As Boolean = True
+                                                '                If unionProj.Erloes > 0 Then
+                                                '                    goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
+                                                '                End If
 
-                                                        If goOn Then
-                                                            outPutLine = "Warnung: Budget-Überschreitung bei BOB: " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                                            outputCollection.Add(outPutLine)
+                                                '                If goOn Then
+                                                '                    outPutLine = "Warnung: Budget-Überschreitung bei BOB: " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                                '                    outputCollection.Add(outPutLine)
 
-                                                            Dim logtxt(2) As String
-                                                            logtxt(0) = "Budget-Überschreitung"
-                                                            logtxt(1) = "Programmlinie"
-                                                            logtxt(2) = unionProj.name
-                                                            Dim values(2) As Double
-                                                            values(0) = unionProj.Erloes
-                                                            values(1) = tmpGesamtCost
-                                                            If values(0) > 0 Then
-                                                                values(2) = tmpGesamtCost / unionProj.Erloes
-                                                            Else
-                                                                values(2) = 9999999999
-                                                            End If
-                                                            Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
-                                                        End If
+                                                '                    Dim logtxt(2) As String
+                                                '                    logtxt(0) = "Budget-Überschreitung"
+                                                '                    logtxt(1) = "Programmlinie"
+                                                '                    logtxt(2) = unionProj.name
+                                                '                    Dim values(2) As Double
+                                                '                    values(0) = unionProj.Erloes
+                                                '                    values(1) = tmpGesamtCost
+                                                '                    If values(0) > 0 Then
+                                                '                        values(2) = tmpGesamtCost / unionProj.Erloes
+                                                '                    Else
+                                                '                        values(2) = 9999999999
+                                                '                    End If
+                                                '                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
+                                                '                End If
 
-                                                    End If
+                                                '            End If
 
-                                                Catch ex As Exception
+                                                '        Catch ex As Exception
 
-                                                End Try
+                                                '        End Try
 
-                                                Dim bobProj As clsProjekt = Nothing
-                                                Dim bPKey As String = calcProjektKey(unionProj)
+                                                '        Dim bobProj As clsProjekt = Nothing
+                                                '        Dim bPKey As String = calcProjektKey(unionProj)
 
-                                                If ImportProjekte.Containskey(bPKey) Then
-                                                    bobProj = ImportProjekte.getProject(bPKey)
-                                                    Dim updatedProj As clsProjekt = bobProj.updateProjectWithRessourcesFrom(unionProj)
+                                                '        If ImportProjekte.Containskey(bPKey) Then
+                                                '            bobProj = ImportProjekte.getProject(bPKey)
+                                                '            Dim updatedProj As clsProjekt = bobProj.updateProjectWithRessourcesFrom(unionProj)
 
-                                                    ' nur ersetzen , wenn es auch was zum Updaten gab
-                                                    If Not IsNothing(updatedProj) Then
+                                                '            ' nur ersetzen , wenn es auch was zum Updaten gab
+                                                '            If Not IsNothing(updatedProj) Then
 
-                                                        ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
-                                                        ImportProjekte.Add(updatedProj, updateCurrentConstellation:=False)
-                                                        '' test
-                                                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                                        If Not everythingOK Then
+                                                '                ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
+                                                '                ImportProjekte.Add(updatedProj, updateCurrentConstellation:=False)
+                                                '                '' test
+                                                '                Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                                '                If Not everythingOK Then
 
-                                                            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                                                            outputCollection.Add(outPutLine)
+                                                '                    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                                                '                    outputCollection.Add(outPutLine)
 
-                                                            ReDim logmsg(2)
-                                                            logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                                            logmsg(1) = ""
-                                                            logmsg(2) = current1program.constellationName
-                                                            Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
+                                                '                    ReDim logmsg(2)
+                                                '                    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                                '                    logmsg(1) = ""
+                                                '                    logmsg(2) = current1program.constellationName
+                                                '                    Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
 
-                                                            ' wieder zurücksetzen ... 
-                                                            ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
-                                                            ImportProjekte.Add(bobProj, updateCurrentConstellation:=False)
-                                                        End If
-                                                        ' ende test
-                                                    Else
-                                                        ' nur dann was ausgeben, wenn unionproj auch Ressourcen hat ... 
-                                                        If unionProj.getAllPersonalKosten.Sum > 0 Then
-                                                            outPutLine = "updatedProjekt mit Ressourcen fehlgeschlagen: " & bobProj.name
-                                                            outputCollection.Add(outPutLine)
+                                                '                    ' wieder zurücksetzen ... 
+                                                '                    ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
+                                                '                    ImportProjekte.Add(bobProj, updateCurrentConstellation:=False)
+                                                '                End If
+                                                '                ' ende test
+                                                '            Else
+                                                '                ' nur dann was ausgeben, wenn unionproj auch Ressourcen hat ... 
+                                                '                If unionProj.getAllPersonalKosten.Sum > 0 Then
+                                                '                    outPutLine = "updatedProjekt mit Ressourcen fehlgeschlagen: " & bobProj.name
+                                                '                    outputCollection.Add(outPutLine)
 
-                                                            ReDim logmsg(2)
-                                                            logmsg(0) = "updatedProjekt mit Ressourcen fehlgeschlagen: "
-                                                            logmsg(1) = ""
-                                                            logmsg(2) = bobProj.name
-                                                            Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
-                                                        End If
+                                                '                    ReDim logmsg(2)
+                                                '                    logmsg(0) = "updatedProjekt mit Ressourcen fehlgeschlagen: "
+                                                '                    logmsg(1) = ""
+                                                '                    logmsg(2) = bobProj.name
+                                                '                    Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
+                                                '                End If
 
 
-                                                    End If
+                                                '            End If
 
-                                                End If
+                                                '        End If
                                             Else
                                                 emptyPrograms = emptyPrograms + 1
                                             End If
@@ -10146,90 +10191,94 @@ Public Module agm2
                         createdPrograms = createdPrograms + 1
                         projectConstellations.Add(current1program)
 
+                        ' ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to m
+
                         ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
                         ' jetzt das union-Projekt erstellen 
-                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                        Try
-                            ' Test, ob das Budget auch ausreicht
-                            ' wenn nein, einfach Warning ausgeben 
-                            Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
-                            If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                Dim goOn As Boolean = True
-                                If unionProj.Erloes > 0 Then
-                                    goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
-                                End If
 
-                                If goOn Then
-                                    outPutLine = "Warnung: Budget-Überschreitung bei BOB: " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                    outputCollection.Add(outPutLine)
+                        ' Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                                    Dim logtxt(2) As String
-                                    logtxt(0) = "Budget-Überschreitung"
-                                    logtxt(1) = "Programmlinie"
-                                    logtxt(2) = unionProj.name
-                                    Dim values(2) As Double
-                                    values(0) = unionProj.Erloes
-                                    values(1) = tmpGesamtCost
-                                    If values(0) > 0 Then
-                                        values(2) = tmpGesamtCost / unionProj.Erloes
-                                    Else
-                                        values(2) = 9999999999
-                                    End If
-                                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
-                                End If
+                        'Try
+                        '    ' Test, ob das Budget auch ausreicht
+                        '    ' wenn nein, einfach Warning ausgeben 
+                        '    Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                        '    If unionProj.Erloes - tmpGesamtCost < 0 Then
+                        '        Dim goOn As Boolean = True
+                        '        If unionProj.Erloes > 0 Then
+                        '            goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
+                        '        End If
 
-                            End If
+                        '        If goOn Then
+                        '            outPutLine = "Warnung: Budget-Überschreitung bei BOB: " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                        '            outputCollection.Add(outPutLine)
 
-                        Catch ex As Exception
+                        '            Dim logtxt(2) As String
+                        '            logtxt(0) = "Budget-Überschreitung"
+                        '            logtxt(1) = "Programmlinie"
+                        '            logtxt(2) = unionProj.name
+                        '            Dim values(2) As Double
+                        '            values(0) = unionProj.Erloes
+                        '            values(1) = tmpGesamtCost
+                        '            If values(0) > 0 Then
+                        '                values(2) = tmpGesamtCost / unionProj.Erloes
+                        '            Else
+                        '                values(2) = 9999999999
+                        '            End If
+                        '            Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
+                        '        End If
 
-                        End Try
+                        '    End If
 
-                        Dim bobProj As clsProjekt = Nothing
-                        Dim bPKey As String = calcProjektKey(unionProj)
+                        'Catch ex As Exception
 
-                        If ImportProjekte.Containskey(bPKey) Then
-                            bobProj = ImportProjekte.getProject(bPKey)
-                            Dim updatedProj As clsProjekt = bobProj.updateProjectWithRessourcesFrom(unionProj)
+                        'End Try
 
-                            ' nur ersetzen , wenn es auch was zum Updaten gab
-                            If Not IsNothing(updatedProj) Then
+                        'Dim bobProj As clsProjekt = Nothing
+                        'Dim bPKey As String = calcProjektKey(unionProj)
 
-                                ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
-                                ImportProjekte.Add(updatedProj, updateCurrentConstellation:=False)
-                                '' test
-                                Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                If Not everythingOK Then
+                        'If ImportProjekte.Containskey(bPKey) Then
+                        '    bobProj = ImportProjekte.getProject(bPKey)
+                        '    Dim updatedProj As clsProjekt = bobProj.updateProjectWithRessourcesFrom(unionProj)
 
-                                    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                                    outputCollection.Add(outPutLine)
+                        '    ' nur ersetzen , wenn es auch was zum Updaten gab
+                        '    If Not IsNothing(updatedProj) Then
 
-                                    ReDim logmsg(2)
-                                    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                    logmsg(1) = ""
-                                    logmsg(2) = current1program.constellationName
-                                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg)
+                        '        ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
+                        '        ImportProjekte.Add(updatedProj, updateCurrentConstellation:=False)
+                        '        '' test
+                        '        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        '        If Not everythingOK Then
 
-                                    ' wieder zurücksetzen ... 
-                                    ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
-                                    ImportProjekte.Add(bobProj, updateCurrentConstellation:=False)
-                                End If
-                                ' ende test
-                            Else
-                                If unionProj.getAllPersonalKosten.Sum > 0 Then
-                                    outPutLine = "updatedProjekt mit Ressourcen fehlgeschlagen: " & bobProj.name
-                                    outputCollection.Add(outPutLine)
+                        '            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                        '            outputCollection.Add(outPutLine)
 
-                                    ReDim logmsg(2)
-                                    logmsg(0) = "updatedProjekt mit Ressourcen fehlgeschlagen: "
-                                    logmsg(1) = ""
-                                    logmsg(2) = bobProj.name
-                                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg)
-                                End If
+                        '            ReDim logmsg(2)
+                        '            logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                        '            logmsg(1) = ""
+                        '            logmsg(2) = current1program.constellationName
+                        '            Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg)
 
-                            End If
+                        '            ' wieder zurücksetzen ... 
+                        '            ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
+                        '            ImportProjekte.Add(bobProj, updateCurrentConstellation:=False)
+                        '        End If
+                        '        ' ende test
+                        '    Else
+                        '        If unionProj.getAllPersonalKosten.Sum > 0 Then
+                        '            outPutLine = "updatedProjekt mit Ressourcen fehlgeschlagen: " & bobProj.name
+                        '            outputCollection.Add(outPutLine)
 
-                        End If
+                        '            ReDim logmsg(2)
+                        '            logmsg(0) = "updatedProjekt mit Ressourcen fehlgeschlagen: "
+                        '            logmsg(1) = ""
+                        '            logmsg(2) = bobProj.name
+                        '            Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg)
+                        '        End If
+
+                        '    End If
+
+                        'End If
 
 
 
@@ -10676,8 +10725,12 @@ Public Module agm2
 
                                             ' 
                                             ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
-                                            ' jetzt das union-Projekt erstellen ; 
-                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                                            ' jetzt das union-Projekt erstellen ;
+
+
+                                            '  ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to m
+
+                                            'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                                             'Try
                                             '    ' Test, ob das Budget auch ausreicht
@@ -11170,7 +11223,11 @@ Public Module agm2
 
                         ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
                         ' jetzt das union-Projekt erstellen 
-                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+
+
+                        '        '  ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to m
+
+                        ' Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                         'Try
                         '    ' Test, ob das Budget auch ausreicht
@@ -13350,7 +13407,7 @@ Public Module agm2
     ''' <summary>
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
-    ''' <param name="readAll"></param>
+    ''' <param name="readAll">hat aktuell keine Relevanz mehr, war für Allianz-Istdaten und Prognose Daten</param>
     ''' <param name="outputCollection"></param>
     Public Sub ImportIstdatenStdFormat(ByVal readAll As Boolean, ByRef outputCollection As Collection)
 
@@ -13360,9 +13417,17 @@ Public Module agm2
         ' für die Meldungen
         Dim outPutLine As String = ""
 
+        If IsNothing(istDatenReferatsliste) Then
+            Dim actDataString As String = RoleDefinitions.getActualdataOrgaUnits
+            If actDataString <> "" Then
+                istDatenReferatsliste = RoleDefinitions.getIDArray(actDataString)
+            End If
+        End If
+
         If IsNothing(istDatenReferatsliste) And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
             istDatenReferatsliste = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
         End If
+
 
         If IsNothing(istDatenReferatsliste) Then
             outPutLine = "no Information what plan-data needs to be substituted ... "
@@ -13376,7 +13441,8 @@ Public Module agm2
             Exit Sub
         End If
 
-
+        ' Remember setting whether or not externRoles are carrying actualData
+        Dim externsWithActualData As Boolean = awinSettings.ExternRessourcesWithActualData
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -13562,6 +13628,7 @@ Public Module agm2
                         ' Abfrage #1 : ist es ein Team, dann dem Team zuordnen, nicht der dort angegebenen Person 
                         ' dann, wenn kein Team bekannt: ist es eine bekannte Person, wenn nein: wer ist das Referat ... 
                         If teamName.Length > 0 Then
+                            ' tk 26.08.21 : in diesen Zweig kommt das Programm heute nie - wenn doch, muss dieser Teil überarbeitet werden !! 
                             ' dann ist bereits sichergestellt, dass es sich um ein Team handelt ... 
 
                             ' jetzt muss geprüft werden, ob die Rolle bekannt ist
@@ -13632,6 +13699,12 @@ Public Module agm2
 
                             parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
 
+                            ' if there is a extern role , then make sure that awinsettings.externRessourcesWithActualData is set to true 
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                            If tmpRole.isExternRole Then
+                                awinSettings.ExternRessourcesWithActualData = True
+                            End If
+
                             If parentReferat.Length > 0 Then
                                 ' Beste Alternative 
                                 weitermachen = True
@@ -13692,7 +13765,8 @@ Public Module agm2
 
 
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
-                            Dim pName As String = makeValidProjectName(tmpPName)
+
+                            Dim pName As String = ""
                             If Not isValidPVName(tmpPName) Then
                                 pName = makeValidProjectName(tmpPName)
                             Else
@@ -13907,7 +13981,9 @@ Public Module agm2
                         Dim oldPlanValue As Double = 0.0
                         Dim newIstValue As Double = 0.0
 
+                        Dim firstValidMonth As Integer = MinMaxInformations.Item(hproj.name)(0)
                         Dim lastValidMonth As Integer = MinMaxInformations.Item(hproj.name)(1)
+
 
                         If Not IsNothing(hproj) Then
                             ' es wird pro Projekt eine Variante erzeugt 
@@ -13932,7 +14008,7 @@ Public Module agm2
                             gesamtIstValue = gesamtIstValue + newIstValue
 
                             ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
-                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value, firstValidMonth)
 
                             Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
@@ -13972,7 +14048,8 @@ Public Module agm2
 
                             Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
                             With newProj
-                                .actualDataUntil = newProj.startDate.AddMonths(relMonthCol - 1).AddDays(15)
+                                Dim anzDays As Integer = newProj.startDate.Day
+                                .actualDataUntil = newProj.startDate.AddMonths(relMonthCol - 1).AddDays(-1 * (anzDays) + 16)
                                 .variantName = ""   ' eliminieren von VariantenName acd
                                 .variantDescription = ""
                             End With
@@ -14051,6 +14128,9 @@ Public Module agm2
             Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
+
+        ' set it back to where it was initially 
+        awinSettings.ExternRessourcesWithActualData = externsWithActualData
 
 
         'logmessage = vbLf & "Zeilen gelesen: " & lastRow - 1 & vbLf &
@@ -20599,6 +20679,13 @@ Public Module agm2
 
             End Try
 
+            ' tk 17.8.21 logfileORdnerName ist "" , deshalb ausgeblendet .. jetzt wird ja der logger verwendet ...
+            'Try
+            '    My.Computer.FileSystem.CreateDirectory(logfileOrdnerName)
+            'Catch ex As Exception
+
+            'End Try
+
             importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
             importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
             importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
@@ -20606,6 +20693,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\Modulare Szenarien"
             importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\AddOn Regeln"
             importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+            importOrdnerNames(PTImpExp.JiraProjects) = awinPath & "Import\JIRA Project"
             importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\MassEdit"
             importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
             importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
@@ -20614,6 +20702,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
             importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
             importOrdnerNames(PTImpExp.projectWithConfig) = awinPath & "Import\Projects With Config"
+            importOrdnerNames(PTImpExp.rpa) = awinPath & "Import\RPA"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -20622,6 +20711,10 @@ Public Module agm2
             exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\Modulare Szenarien"
             exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\MassEdit"
             exportOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Export\Scenario Definitions"
+
+
+            '' FileNamen zusammenbauen
+            logfileNamePath = createLogfileName("")
 
             If special = "ProjectBoard" Then
 
@@ -21180,33 +21273,39 @@ Public Module agm2
                         CostDefinitions = currentOrga.allCosts
                         RoleDefinitions = currentOrga.allRoles
 
-                        awinSettings.ActualdataOrgaUnits = currentOrga.allRoles.getActualdataOrgaUnits
+                        Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                        If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                            ' do nothing, leave it as is 
+                        Else
+                            awinSettings.ActualdataOrgaUnits = tmpActDataString
+                        End If
+
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
-                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                                customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
-                            If IsNothing(customFieldDefinitions) Then
-                                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                                Try
-                                    Call readCustomFieldDefinitions(wsName4)
-                                Catch ex As Exception
+                                If IsNothing(customFieldDefinitions) Then
+                                    ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                                    Try
+                                        Call readCustomFieldDefinitions(wsName4)
+                                    Catch ex As Exception
 
-                                End Try
-                            ElseIf customFieldDefinitions.count = 0 Then
-                                Try
-                                    Call readCustomFieldDefinitions(wsName4)
-                                Catch ex As Exception
+                                    End Try
+                                ElseIf customFieldDefinitions.count = 0 Then
+                                    Try
+                                        Call readCustomFieldDefinitions(wsName4)
+                                    Catch ex As Exception
 
-                                End Try
-                            End If
-                        Catch ex As Exception
+                                    End Try
+                                End If
+                            Catch ex As Exception
 
-                        End Try
+                            End Try
 
 
-                    Else
-                        awinSettings.readCostRolesFromDB = False
+                        Else
+                            awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
                         Else
@@ -21579,13 +21678,13 @@ Public Module agm2
 
         Dim err As New clsErrorCodeMsg
 
-        Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+        customUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
 
-        If Not IsNothing(allCustomUserRoles) Then
+        If Not IsNothing(customUserRoles) Then
 
-            Call allCustomUserRoles.setSpecifics()
+            Call customUserRoles.setSpecifics()
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-            Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
+            Dim allMyCustomUserRoles As Collection = customUserRoles.getCustomUserRoles(dbUsername)
 
             If encryptedUserRole.Length > 0 Then
                 ' bestimme die UserRole., wenn es aus SmartInfo heraus aufgerufen wird;
@@ -21653,7 +21752,7 @@ Public Module agm2
                     With myCustomUserRole
                         .customUserRole = ptCustomUserRoles.ProjektleitungRestricted
                         .userName = dbUsername
-                        .specifics = allCustomUserRoles.getPMOSpecifics
+                        .specifics = customUserRoles.getPMOSpecifics
                     End With
 
                 End If
@@ -22828,6 +22927,8 @@ Public Module agm2
         Dim przSatz As Double = 1.0
         Dim defaultTagessatz As Double = 800.0
         Dim errMsg As String = ""
+        Dim fuellz As String = " "
+        Dim anzFuellz As Integer = 2
 
         ' nimmt die People auf, also die in Orga sind, nicht in Gruppen Definition und keine Kinder haben ... 
         Dim listOFPeople = New Collection
@@ -22903,14 +23004,22 @@ Public Module agm2
                         ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
                         ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
                         If i = 2 Then
-                            If CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel = 0 Then
+                            If bestimmeIndent(c, fuellz, anzFuellz) = 0 Then
                                 hasHierarchy = True
                             End If
                         Else
-                            Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
+                            Dim tmpIndent As Integer = bestimmeIndent(c, fuellz, anzFuellz)
                             If tmpIndent > 0 Then
                                 atleastOneWithIndent = True
                                 maxIndent = System.Math.Max(maxIndent, tmpIndent)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "role's hierarchy is not defined: " & c.Value.Trim
+                                Else
+                                    errMsg = "Rolle hat keine klar definierte Zuordnung in der Hierarchie: " & c.Value.Trim
+                                End If
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                             End If
                         End If
 
@@ -23195,37 +23304,6 @@ Public Module agm2
                                             meldungen.Add(errMsg)
                                         End Try
 
-                                        '' ur:08.07.2021 Aufnahme isAggregationRole
-                                        'If Not IsNothing(c.Offset(0, 9).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 9).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isAggregationRole = True
-                                        '    End If
-                                        'End If
-                                        '' ur:08.07.2021 Aufnahme isSummaryRole
-                                        'If Not IsNothing(c.Offset(0, 10).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 10).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isSummaryRole = True
-                                        '    End If
-                                        'End If
-                                        '' ur:08.07.2021 Aufnahme isActDataRelvant
-                                        'If Not IsNothing(c.Offset(0, 11).Value) Then
-                                        '    Dim tmpValue As String = CStr(c.Offset(0, 11).Value)
-                                        '    tmpValue = tmpValue.Trim
-                                        '    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
-
-                                        '    If positiveCriterias.Contains(tmpValue) Then
-                                        '        .isActDataRelevant = True
-                                        '    End If
-                                        'End If
-
                                         ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
                                         Try
                                             If Not IsNothing(c.Offset(0, 5).Value) Then
@@ -23337,7 +23415,8 @@ Public Module agm2
                                         End If
 
                                     Next
-                                    .farbe = c.Interior.Color
+                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
+                                    '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
 
@@ -23436,7 +23515,7 @@ Public Module agm2
                         Do While ix <= anzZeilen - 1
 
                             Try
-                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
                                 curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
 
@@ -23472,7 +23551,7 @@ Public Module agm2
 
                                     ' hat sich der Indentlevel immer noch nicht geändert ? 
                                     If ix <= anzZeilen - 1 Then
-                                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
                                         curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                         If readingGroups Then
                                             przSatz = 0.0
@@ -23774,12 +23853,11 @@ Public Module agm2
                         ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
                         ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
                         If i = 1 Then
-                            If bestimmeIndent(c.Value, fuellz, anzFuellz) = 0 Then
+                            If bestimmeIndent(c, fuellz, anzFuellz) = 0 Then
                                 hasHierarchy = True
                             End If
                         Else
-                            Dim tmpIndent As Integer = bestimmeIndent(c.Value, fuellz, anzFuellz)
-                            'Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
+                            Dim tmpIndent As Integer = bestimmeIndent(c, fuellz, anzFuellz)
                             If tmpIndent > 0 Then
                                 atleastOneWithIndent = True
                                 maxIndent = System.Math.Max(maxIndent, tmpIndent)
@@ -23990,7 +24068,7 @@ Public Module agm2
                             End If
 
                             tmpStr = CType(c.Value, String)
-                            Dim level As Integer = bestimmeIndent(tmpStr, fuellz, anzFuellz)
+                            Dim level As Integer = bestimmeIndent(c, fuellz, anzFuellz)
                             If fuellz <> " " Then
                                 tmpStr = tmpStr.Trim.Remove(0, level)
                             Else
@@ -24209,7 +24287,8 @@ Public Module agm2
                                         End If
 
                                     Next
-                                    .farbe = c.Interior.Color
+                                    ' tk 21.7.21 keine individuelle Farbe mehr für Rollen 
+                                    '.farbe = c.Interior.Color
                                     .UID = roleUID
                                 End With
 
@@ -24275,7 +24354,7 @@ Public Module agm2
 
                             Try
                                 'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
+                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
                                 If fuellz <> " " Then
                                     curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim.Remove(0, curLevel * anzFuellz)
                                 Else
@@ -24331,9 +24410,8 @@ Public Module agm2
 
                                     ' hat sich der Indentlevel immer noch nicht geändert ? 
                                     If ix <= anzZeilen Then
-                                        'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
-                                        'curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range), fuellz, anzFuellz)
+
                                         If fuellz <> " " Then
                                             curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim.Remove(0, curLevel * anzFuellz)
                                         Else

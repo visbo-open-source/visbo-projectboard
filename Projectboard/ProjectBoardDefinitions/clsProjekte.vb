@@ -659,6 +659,27 @@ Public Class clsProjekte
         End Get
     End Property
 
+    Public ReadOnly Property getRoleSkillIDs() As Collection
+        Get
+
+            Dim roleSkillIDs As New Collection
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getSkillNameIds
+
+                For Each tmpName As String In tmpCollection
+                    If Not roleSkillIDs.Contains(tmpName) Then
+                        roleSkillIDs.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getRoleSkillIDs = roleSkillIDs
+        End Get
+    End Property
 
     ''' <summary>
     ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
@@ -2022,7 +2043,52 @@ Public Class clsProjekte
         End Get
 
     End Property
+    ''' <summary>
+    ''' returns true if in any month there is a overutilization of more than three time overloadCriterion
+    ''' 
+    ''' </summary>
+    ''' <param name="roleIDs"></param>
+    ''' <param name="overloadCriterion">returns true, if any month is overloaded more than overloadCriterion and onlyStrictly=false </param>
+    ''' <param name="onlyStrictly">false: single months overloads should be taken into account even when overall timeframe is not overloaded at all </param>
+    ''' <param name="totalOverloadCriterion">returns true if total sum of roles is larger than totalOverloadCriterion * kapa </param>
+    ''' <returns></returns>
+    Public Function overLoadFound(ByVal roleIDs As List(Of String),
+                                  ByVal onlyStrictly As Boolean,
+                                  ByVal overloadCriterion As Double,
+                                  ByVal totalOverloadCriterion As Double) As Boolean
 
+        Dim overloaded As Boolean = False
+        Dim monthlyCriterion As Double = 3 * overloadCriterion
+
+        For Each roleIDstr As String In roleIDs
+
+            Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
+            Dim myCollection As New Collection From {
+                roleIDstr
+            }
+            Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
+
+            If Not onlyStrictly Then
+                For i As Integer = 0 To roleValues.Length - 1
+                    If roleValues(i) >= overloadCriterion * kapaValues(i) Then
+                        overloaded = True
+                        Exit For
+                    End If
+                Next
+            End If
+
+            If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
+                overloaded = True
+            End If
+
+            If overloaded Then
+                Exit For
+            End If
+
+        Next
+
+        overLoadFound = overloaded
+    End Function
 
     ''' <summary>
     ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
@@ -2682,12 +2748,43 @@ Public Class clsProjekte
         End Get
     End Property
 
-    Public ReadOnly Property getCashFlow() As Double()
+    ''' <summary>
+    ''' calculates cashFlow values in months starting in column von and ending in column bis
+    ''' if von > bis then change values accordingly 
+    ''' if values are negativ: consider showRangeLeft and showrangeRight 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCashFlow(Optional ByVal von As Integer = -1, Optional ByVal bis As Integer = -1) As Double()
         Get
-            ' darf nicht mehr automatisch gesetzt werden 
-            'awinSettings.kurzarbeitActivated = True
+            ' check validity
+
+            If ((von < 0) Or (bis < 0)) Then
+                If ((showRangeRight > 0) And (showRangeRight - showRangeLeft > 0)) Then
+                    von = showRangeLeft
+                    bis = showRangeRight
+                Else
+                    ' define next month a timeframe of 6 months 
+                    von = getColumnOfDate(Date.Now) + 1
+                    bis = von + 5
+                End If
+            Else
+                ' take values of von and bis
+            End If
+
+            If bis < von Then
+                Dim sav As Integer = von
+                von = bis
+                bis = sav
+            End If
 
             Dim saveShowrangeLeft As Integer = showRangeLeft
+            Dim saveShowrangeRight As Integer = showRangeRight
+
+            ' now consider von and bis 
+            showRangeLeft = von
+            showRangeRight = bis
 
             Dim zeitraum As Integer = showRangeRight - showRangeLeft
             Dim kugCome As Double()
@@ -2804,24 +2901,6 @@ Public Class clsProjekte
                     prAnfang = .Start + .StartOffset
                     prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                     projektMarge = .ProjectMarge
-
-                    'If projektMarge < 0 Then
-                    '    ' jetzt wird das Gewicht als Quotient Risiko / strategic Fit betrachtet 
-                    '    If .StrategicFit > 1 Then
-                    '        SRweight = .Risiko / .StrategicFit
-                    '    Else
-                    '        SRweight = .Risiko
-                    '    End If
-                    '    If SRweight = 0 Then
-                    '        SRweight = 1
-                    '    End If
-                    'Else
-                    '    If .Risiko > 1 Then
-                    '        SRweight = .StrategicFit / .Risiko
-                    '    Else
-                    '        SRweight = .StrategicFit
-                    '    End If
-                    'End If
 
                 End With
 
@@ -3488,20 +3567,269 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
-    ''' wird für MassenEdit benötigt
+    ''' does an automatic allocation of people for all summary Roles / Skills  
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="errMsg"></param>
+    Public Sub autoAllocate(ByVal pName As String, ByVal variantName As String,
+                            ByVal allowOvertime As Boolean, ByRef errMsg As String)
+
+        Dim hproj As clsProjekt = Nothing
+        Dim placeHolderNeeds As New SortedList(Of String, Double())
+
+        Dim projectScopeCandidates As SortedList(Of Double, Integer) = Nothing
+
+        ' 1. create a variant, if variantName is provided 
+        If variantName <> "" Then
+            Dim baseProject As clsProjekt = getProject(pName)
+            hproj = baseProject.createVariant(variantName, "created for auto-allocation")
+        Else
+            hproj = getProject(pName)
+        End If
+
+
+        ' get a list of summary roles used in hproj 
+        Dim placeholderIDs As SortedList(Of String, Double) = hproj.getPlaceholderRoles
+
+
+
+        ' now define freeAmount of capacity over the whole project scope ...
+        Dim projectPhase As clsPhase = hproj.getPhase(1)
+
+
+        ' now checkout the resource needs and available capacities
+        For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
+
+            Dim myCollection As New Collection From {
+                kvp.Key
+            }
+            Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
+
+            If Not placeHolderNeeds.ContainsKey(kvp.Key) Then
+                placeHolderNeeds.Add(kvp.Key, bedarf)
+            Else
+                ' kann eigentlich nicht sein ,,
+                Call MsgBox("unexpected Error 3522 cP")
+            End If
+
+        Next
+
+        ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
+        ' for this just go over each phase 
+        For p = 1 To hproj.CountPhases
+
+            Dim cPhase As clsPhase = hproj.getPhase(p)
+            Dim phasePlaceHolderNeeds As SortedList(Of String, Double) = cPhase.getRoleNameIDsAndValues(onlySummaryRoles:=True)
+
+            ' who is already on the team ? 
+            Dim peopleIDs As SortedList(Of String, Double) = hproj.getPeople()
+
+            For Each phasePlaceHolder As KeyValuePair(Of String, Double) In phasePlaceHolderNeeds
+
+                Dim myCurrentSkillID As Integer = -1
+                Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
+
+                Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5, phasePlaceHolder.Value)
+                projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2, phasePlaceHolder.Value)
+
+                Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
+                                                                                          myCurrentSkillID,
+                                                                                            candidates,
+                                                                                            projectScopeCandidates,
+                                                                                            phasePlaceHolder.Value)
+
+                ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
+                For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
+                    Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
+                    Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, allowOvertime, substitution.Key)
+                    If Not ok Then
+                        Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
+                        Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
+                    End If
+                Next
+
+            Next
+
+        Next
+
+        ' ok, Done ! 
+
+    End Sub
+
+
+
+    ''' <summary>
+    ''' returns an array which takes avaibale capacity into account
+    ''' it redistibutes values such that availabe capacity does cover it
+    ''' if there is an overutilization then the part of overutilization is distributed equally over the complete timeframe , if allowOvertime = true
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="teamID"></param>
+    ''' <param name="xValues">the desired distribution of values, need to be fitted to available capacity</param>
+    ''' <param name="xStartDate"></param>
+    ''' <param name="allowOvertime">distribute all, even it leads to overtime</param>
+    ''' <param name="oldRoleValues">current values of the respective role </param>
+    ''' <returns></returns>
+    Public ReadOnly Property adjustToCapacity(ByVal uid As Integer, ByVal teamID As Integer, ByVal allowOvertime As Boolean, ByVal xValues As Double(), ByVal xStartDate As Date,
+                                              ByVal oldRoleValues As Double()) As Double()
+        Get
+
+            Dim length As Integer = xValues.Length
+            Dim result As Double()
+            ReDim result(length - 1)
+
+            Dim checkLength As Integer = oldRoleValues.Length
+
+            Dim stillToDistribute As Double = 0
+
+            Dim freeCapacity As Double()
+            ReDim freeCapacity(length - 1)
+
+            Dim stillFreeCapacity As Double()
+            ReDim stillFreeCapacity(length - 1)
+
+            Dim addOvertime As Double()
+            ReDim addOvertime(length - 1)
+
+            Dim von As Integer = getColumnOfDate(xStartDate)
+            Dim bis As Integer = von + length - 1
+
+            ' now remember global variables showRangeLeft and showRangeRight 
+            Dim srlSav As Integer = showRangeLeft
+            Dim srrSav As Integer = showRangeRight
+
+            showRangeLeft = von
+            showRangeRight = bis
+
+
+            Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(uid)
+
+            Dim myTeam As clsRollenDefinition = Nothing
+            If teamID > 0 Then
+                myTeam = RoleDefinitions.getRoleDefByID(teamID)
+            End If
+
+            freeCapacity = getFreeCapacityOfRole(uid, teamID, von, bis)
+            ' now put the oldRoleValues on top of freeCapacity; if role had already some values this need to be added to the freeCapacity 
+            ' because the oldValues will be substituted 
+            If oldRoleValues.Sum > 0 Then
+                For ix As Integer = 0 To length - 1
+                    freeCapacity(ix) = freeCapacity(ix) + oldRoleValues(ix)
+                Next
+            End If
+
+
+
+            For ix As Integer = 0 To length - 1
+                If freeCapacity(ix) > xValues(ix) Then
+                    'all ok, can be done 
+
+                    If stillToDistribute > 0 Then
+                        Dim freeAmount As Double = freeCapacity(ix) - xValues(ix)
+                        If freeAmount >= stillToDistribute Then
+                            result(ix) = xValues(ix) + stillToDistribute
+                            stillToDistribute = 0
+                        ElseIf freeAmount > 0 Then
+                            result(ix) = xValues(ix) + freeAmount
+                            stillToDistribute = stillToDistribute - freeAmount
+                        End If
+                    Else
+                        result(ix) = xValues(ix)
+                    End If
+
+                    ' remember when there is still capacity left when it comes to distribute the amount of stillTodistribute
+                    If freeCapacity(ix) > result(ix) Then
+                        stillFreeCapacity(ix) = freeCapacity(ix) - result(ix)
+                    End If
+
+
+                ElseIf freeCapacity(ix) < xValues(ix) Then
+
+                    If freeCapacity(ix) >= 0 Then
+                        result(ix) = freeCapacity(ix)
+                        stillToDistribute = stillToDistribute + xValues(ix) - freeCapacity(ix)
+                    Else
+                        stillToDistribute = stillToDistribute + xValues(ix)
+                    End If
+
+
+                Else
+                    ' it is exact the same 
+                    result(ix) = xValues(ix)
+                End If
+            Next
+
+            If stillToDistribute > 0 Then
+
+                ' first of all : use all stillFreeCapacity
+                If stillFreeCapacity.Sum > 0 Then
+                    For cf As Integer = 0 To length - 1
+                        If stillFreeCapacity(cf) > 0 Then
+                            If stillToDistribute > stillFreeCapacity(cf) Then
+                                result(cf) = result(cf) + stillFreeCapacity(cf)
+                                stillToDistribute = stillToDistribute - stillFreeCapacity(cf)
+                            Else
+                                result(cf) = result(cf) + stillToDistribute
+                                stillToDistribute = 0
+                            End If
+                        End If
+                        If stillToDistribute <= 0 Then
+                            Exit For
+                        End If
+                    Next
+                End If
+
+                If allowOvertime Or myRole.isExternRole Then
+                    Dim i As Integer = 0
+                    Do While stillToDistribute >= 1
+                        result(i) = result(i) + 1
+                        stillToDistribute = stillToDistribute - 1
+                        i = i + 1
+                        If i > length - 1 Then
+                            i = 0
+                        End If
+                    Loop
+
+                    If stillToDistribute > 0 Then
+                        result(i) = result(i) + stillToDistribute
+                    End If
+                End If
+
+
+            End If
+
+            ' now restore values from srlSav ..
+            showRangeLeft = srlSav
+            showRangeRight = srrSav
+
+
+            adjustToCapacity = result
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' returns the free capacity of roleID in given 
+    ''' Attention: some of the values maybe negative!
     ''' </summary>
     ''' <param name="roleID"></param>
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
-    ''' <param name="percentValues"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsArrayOfRole(ByVal roleID As Integer, ByVal von As Integer, ByVal bis As Integer,
-                                                       ByVal percentValues As Boolean) As Double()
+    Public ReadOnly Property getFreeCapacityOfRole(ByVal roleID As Integer, ByVal skillID As Integer, ByVal von As Integer, ByVal bis As Integer) As Double()
         Get
             Dim tmpArray() As Double
-            ReDim tmpArray(bis - von + 1)
+            ReDim tmpArray(bis - von)
+
+            ' save showrangeLeft and showrangeRight 
+            Dim srlSav As Integer = showRangeLeft
+            Dim srrSav As Integer = showRangeRight
+
+            showRangeLeft = von
+            showRangeRight = bis
 
             Try
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
@@ -3509,8 +3837,11 @@ Public Class clsProjekte
                 Dim roleUID As Integer = tmpRole.UID
                 Dim roleName As String = tmpRole.name
 
+                Dim roleNameID = RoleDefinitions.bestimmeRoleNameID(roleID, skillID)
+
 
                 Dim roleValues() As Double
+                Dim allOtherValues() As Double
                 Dim kapaValues() As Double
                 Dim myCollection As New Collection
                 Dim ix As Integer
@@ -3521,49 +3852,52 @@ Public Class clsProjekte
                 ReDim roleValues(zeitraum)
                 ReDim kapaValues(zeitraum)
 
-                myCollection.Add(roleName, roleName)
+                'myCollection.Add(roleName, roleName)
+                myCollection.Add(roleNameID, roleNameID)
                 kapaValues = Me.getRoleKapasInMonth(myCollection)
                 myCollection.Clear()
 
                 If istSammelRolle Then
                     ' alle Bedarfe berücksichtigen
-                    roleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUID.ToString, considerAllSubRoles:=True,
+                    If skillID > 0 Then
+                        ' only skill needs required, not all other activities 
+                        roleValues = Me.getRoleValuesInMonth(roleIDStr:=roleNameID, considerAllSubRoles:=True, considerAllNeedsOfRolesHavingTheseSkills:=False,
                                                          type:=PTcbr.all)
+                        allOtherValues = Me.getRoleValuesInMonth(roleIDStr:=roleNameID, considerAllSubRoles:=True, considerAllNeedsOfRolesHavingTheseSkills:=True,
+                                                         type:=PTcbr.all)
+
+                        If allOtherValues.Sum > 0 Then
+                            For i As Integer = 0 To roleValues.Length - 1
+                                roleValues(i) = roleValues(i) + allOtherValues(i)
+                            Next
+                        End If
+                    Else
+                        roleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUID.ToString, considerAllSubRoles:=True,
+                                                         type:=PTcbr.all)
+                    End If
+
+
                 Else
                     roleValues = Me.getRoleValuesInMonth(roleUID.ToString)
                 End If
 
                 ' jetzt wird der Array aufgebaut
+                For ix = 0 To bis - von
+                    tmpArray(ix) = kapaValues(ix) - roleValues(ix)
+                Next
 
-                If Not percentValues Then
 
-                    tmpArray(0) = kapaValues.Sum - roleValues.Sum
-                    For ix = 1 To bis - von + 1
-                        tmpArray(ix) = kapaValues(ix - 1) - roleValues(ix - 1)
-                    Next
-
-                Else
-                    If kapaValues.Sum > 0 Then
-                        tmpArray(0) = roleValues.Sum / kapaValues.Sum
-                    Else
-                        tmpArray(0) = 999 ' Kennzeichen für unendlich 
-                    End If
-
-                    For ix = 1 To bis - von + 1
-                        If kapaValues(ix - 1) > 0 Then
-                            tmpArray(ix) = roleValues(ix - 1) / kapaValues(ix - 1)
-                        Else
-                            tmpArray(ix) = 999 ' Kennzeichen für unendlich ...
-                        End If
-
-                    Next
-                End If
 
             Catch ex As Exception
-                ReDim tmpArray(bis - von + 1)
+                ReDim tmpArray(bis - von)
             End Try
 
-            getAuslastungsArrayOfRole = tmpArray
+
+            ' Restore showRangeLeft and showRangeRight 
+            showRangeLeft = srlSav
+            showRangeRight = srrSav
+
+            getFreeCapacityOfRole = tmpArray
 
         End Get
     End Property

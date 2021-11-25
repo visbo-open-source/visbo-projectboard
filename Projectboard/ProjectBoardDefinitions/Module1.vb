@@ -69,8 +69,9 @@ Public Module Module1
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public menuMessages As clsReportMessages
 
-    
+
     'Definitionen zum Schreiben eines Logfiles
+    Public logfileNamePath As String = ""
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
     Public anzFehler As Long = 0
@@ -297,6 +298,7 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
     Public divClients() As String = {"VISBO Projectboard / ", "VISBO Smartinfo / ", "VISBO MSProjectAddIn / "}
+
     Public Enum client
         Projectboard = 0
         VisboSmartInfo = 1
@@ -917,6 +919,85 @@ Public Module Module1
         loadMultiPVInPPT = 13
     End Enum
 
+    ' tk 16.7.21 - wird benötigt für RPA - robotic process automation
+    Public Enum ptConfigFiles
+        vcOrganisation = 0
+        tagetikCreateProjects = 2
+        tagetikUpdateProjects = 3
+        zeussCapa = 4
+        telairActualData = 5 ' TimeSheets in Excel 
+        eGeckoCapa = 6
+        instartCalcTemplate = 7
+    End Enum
+
+    Public Enum PTRpa
+        ' represents the standard VISBO Projectbrief with Stammdaten, Ressources, Termine, Attribute 
+        visboProject = 0
+
+        ' represents the standard VISBO Excel project with just only name and Schedules, Appearances, and the like 
+        visboExcelSchedules = 1
+
+        ' represents the standard MS Project *.mpp File 
+        visboMPP = 2
+
+        ' represents the Jira File, as customized in JiraConfig customized  
+        visboJira = 3
+
+        ' represents the Instart AngebotsKalkulation Template 
+        visboInstartProposal = 4
+
+        ' represents the VISBO AngebotsKalkulation Template 
+        visboProposal = 5
+
+        ' represents the Telair Tagetik New Projects List
+        visboNewTagetik = 6
+
+        ' represents the Telair Update Project File
+        visboUpdateTagetik = 7
+
+        ' represents the standard VISBO Project Creation by BatchList 
+        visboProjectList = 8
+
+        ' represents the AllianzType Istdaten Import 
+        visboActualData1 = 9
+
+        ' represents the InstartType Istdaten Import 
+        visboActualData2 = 10
+
+        ' represents the Telair Istdaten Import 
+        visboActualData3 = 11
+
+        ' represents the initial VISBO Excel Organisation
+        visboInitialOrga = 12
+
+        ' represents the roundtrip VISBO Excel Organisation
+        visboRoundtripOrga = 13
+
+        ' represents the default Urlaubskalender from VISBO 
+        visboDefaultCapacity = 14
+
+        ' represents the Zeuss Urlaubskalender from VISBO 
+        visboZeussCapacity = 15
+
+        ' represents the Instart Type of Urlaubs-Information 
+        visboEGeckoCapacity = 16
+
+        ' represents the Allianz-Type Daten of Externe Rahmenverträge 
+        visboExternalContracts = 17
+
+        ' represents the classic modifier strcture 
+        visboModifierCapacities = 18
+
+        ' represents the unknown 
+        visboUnknown = 19
+
+        ' represents the Automatic Team Allocation
+        'visboSuggestResourceAllocation = 
+
+
+
+    End Enum
+
     ''' <summary>
     ''' alle Bezeichner, die sowohl lesend wie schreibend sind , stehen am Anfang; 
     ''' dann kommen die, die nur lesend sind ... 
@@ -940,6 +1021,8 @@ Public Module Module1
         customization = 14
         appearances = 15
         projectWithConfig = 16
+        JiraProjects = 17
+        rpa = 18
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung
@@ -964,10 +1047,21 @@ Public Module Module1
     End Enum
 
 
+    Public Enum PTVPStati
+        initialized = 0
+        proposed = 1
+        ordered = 2
+        paused = 3
+        finished = 4
+        stopped = 5
+    End Enum
+
+
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
     Public StartofCalendar As Date = New Date(2015, 1, 1)
+    Public EndOfCalendar As Date = StartofCalendar.AddYears(20)
     Public weightStrategicFit As Double
 
     '
@@ -985,13 +1079,13 @@ Public Module Module1
     ' Vorgabe, geplant
     ' Vorgabe beauftragt
     Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen", "geplanteVorgabe", "beauftragteVorgabe"}
+    Public VProjectStatus() As String = {"initialized", "proposed", "ordered", "paused", "finished", "stopped"}
 
 
     '
     ' aktuell angewendetes ReportProfil
     '
     Public currentReportProfil As New clsReportAll
-
 
     '
     'ReportSprache kann sein:
@@ -1063,6 +1157,8 @@ Public Module Module1
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
     Public reportOrdnerName As String
+    ' ergänzt 4.8.21 
+    Public logfileOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"
@@ -3450,45 +3546,61 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)
-    ''' </summary>
-    ''' <param name="text"></param>
+    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)''' </summary>
+    ''' <param name="c"></param>
     ''' <param name="fuellz"></param>
     ''' <param name="anzFuellz"></param>
     ''' <returns></returns>
-    Public Function bestimmeIndent(ByVal text As String, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
+    Public Function bestimmeIndent(ByVal c As Excel.Range, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
         Dim tmpstr As String = ""
-        Dim indentLevel As Double = 0
+        Dim indentLevel1 As Double = 0
+        Dim indentLevel2 As Double = 0
+        Dim rest As Integer = 0
 
-        If Not IsNothing(text) Then
-            If fuellz = " " Then
-                Dim origTextLge As Integer = text.Length
-                Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
-                If anzFuellz <> 0 Then
-                    indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzFuellz)
-                Else
-                    indentLevel = -1
-                End If
-            Else
-                Dim tmparray() As String = Split(text, fuellz)
-                Dim i As Integer = 0
-
-                While tmparray(i) = ""
-                    i += 1
-                End While
-                If anzFuellz <> 0 Then
-                    indentLevel = i / anzFuellz
-                Else
-                    indentLevel = -1
-                End If
-
-            End If
-
-        Else
-
+        If c.IndentLevel > 0 Then
+            indentLevel1 = CInt(c.IndentLevel)
         End If
-        If IsNumeric(indentLevel) Then
-            bestimmeIndent = CInt(indentLevel)
+
+        Dim Text As String = CStr(c.Value)
+
+        If Not IsNothing(Text) Then
+            Dim origTextLge As Integer = Text.Length
+            Dim textLgeOhneLeadingSpace As Integer = LTrim(Text).Length
+
+            If (origTextLge - textLgeOhneLeadingSpace > 0) Then
+
+                If fuellz = " " Then
+                    If anzFuellz <> 0 Then
+                        indentLevel2 = Math.DivRem(origTextLge - textLgeOhneLeadingSpace, anzFuellz, rest)
+                        'If rest <> 0 Then
+                        '    indentLevel2 = -1
+                        'End If
+                    Else
+                        indentLevel2 = -1
+                    End If
+                Else
+                    Dim tmparray() As String = Split(Text, fuellz)
+                    Dim i As Integer = 0
+
+                    While tmparray(i) = ""
+                        i += 1
+                    End While
+                    If anzFuellz <> 0 Then
+                        indentLevel2 = i / anzFuellz
+                    Else
+                        indentLevel2 = -1
+                    End If
+
+                End If
+
+            Else
+                ' kein rolename enthalten
+            End If
+        End If
+
+
+        If IsNumeric(indentLevel1 + indentLevel2) Then
+            bestimmeIndent = CInt(indentLevel1 + indentLevel2)
         Else
             bestimmeIndent = -1
         End If
@@ -5572,7 +5684,8 @@ Public Module Module1
                                         ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, ByVal vpid As String,
                                         ByVal q1 As String, ByVal q2 As String,
                                         ByVal bigtype As Integer, ByVal detailID As Integer,
-                                        ByVal nameIDS As Collection)
+                                        ByVal nameIDS As Collection,
+                                        ByVal nameIDSPh As Collection)
 
         If nameIDS.Count = 0 And bigtype = ptReportBigTypes.charts Then
             Exit Sub
@@ -5580,6 +5693,9 @@ Public Module Module1
 
         Dim nameIDString As String = ""
         nameIDString = convertCollToNids(nameIDS)
+
+        Dim nameIDStringPh As String = ""
+        nameIDStringPh = convertCollToNids(nameIDSPh)
 
         Try
 
@@ -5651,6 +5767,14 @@ Public Module Module1
                         .Tags.Add("NIDS", nameIDString)
                     End If
 
+                    ' tk ergänzt am 28.9.21
+                    If .Tags.Item("NIDSP").Length > 0 Then
+                        .Tags.Delete("NIDSP")
+                    End If
+                    If Not IsNothing(nameIDStringPh) Then
+                        .Tags.Add("NIDSP", nameIDStringPh)
+                    End If
+
                     ' tk ergänzt am 20.10.20 
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft And showRangeRight < 240 Then
                         If .Tags.Item("SRLD").Length > 0 Then
@@ -5685,11 +5809,11 @@ Public Module Module1
     ''' <param name="hproj"></param>
     ''' <param name="bproj"></param>
     ''' <param name="lproj"></param>
-    ''' <param name="toDoCollection">enthält die NAmen, ggf incl P:, V: oder C: Qualifier und ggf inkl Breadcrumb Anteilen </param>
+    ''' <param name="toDoMilestones">enthält die NAmen, ggf incl P:, V: oder C: Qualifier und ggf inkl Breadcrumb Anteilen </param>
     ''' <param name="q1">0, später die Anzahl Phasen </param>
     ''' <param name="q2">Anzahl Milestones; aktuell redundant, da identisch mit Anzahl in der Collection</param>
     Public Sub zeichneTableMilestoneAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
-                                     ByVal toDoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+                                     ByVal toDoPhases As Collection, ByVal toDoMilestones As Collection, ByVal q1 As String, ByVal q2 As String)
 
         Dim repmsg() As String
         ' Performance Ratio 1 ist das Verhältnis zwischen der Anzahl aktuell erreichter Meilensteine im betrachteten Monat versus der Anzahl erreichter Meilensteine im betrachteten Monat im stand zur Beauftragung 
@@ -5739,14 +5863,12 @@ Public Module Module1
 
         End Try
 
-        Dim showOverviewOnly As Boolean = (toDoCollection.Count = 0)
-
         ' jetzt wird SmartTableInfo gesetzt 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  toDoCollection)
+                                  toDoPhases, toDoMilestones)
 
         ' jetzt werden die einzelnen Zeilen geschrieben 
 
@@ -5796,37 +5918,106 @@ Public Module Module1
                 Dim tabellenzeile As Integer = 2
                 Try
 
-                    If Not showOverviewOnly Then
+                    einrueckung = 1
 
-                        einrueckung = 1
+                    ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                    Dim firstMilestone As Boolean = True
 
-                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
-                        Dim firstMilestone As Boolean = True
+                    Dim curValue As Date = Date.MinValue ' not defined
+                    Dim faprValue As Date = Date.MinValue  ' first approved version 
+                    Dim laprValue As Date = Date.MinValue  ' last approved version
 
-                        Dim curValue As Date = Date.MinValue ' not defined
-                        Dim faprValue As Date = Date.MinValue  ' first approved version 
-                        Dim laprValue As Date = Date.MinValue  ' last approved version
+                    If anzPhases > 0 Then
+                        ' 
+                        'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                        tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = "Phases"
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
+                    End If
 
-                        If anzPhases > 0 Then
-                            ' 
-                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = "Phases"
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        End If
+                    ' nimmt die eindeutigen IDs auf 
+                    Dim listOfIDs As New Collection
 
-                        ' nimmt die eindeutigen IDs auf 
-                        Dim listOfIDs As New Collection
 
-                        For m As Integer = 1 To toDoCollection.Count
+                    If CInt(q1) > 0 And Not IsNothing(toDoPhases) Then
+
+                        For p As Integer = 1 To toDoPhases.Count
 
                             Dim tmpCollection As New Collection From {
-                                CStr(toDoCollection.Item(m))
+                                CStr(toDoPhases.Item(p))
                             }
 
-                            'Dim hprojBreadcrumbs() As String = hproj.getBreadCrumbArray(Nothing, hproj.getElemIdsOf(tmpCollection, True))
-                            'Dim bprojBreadCrumbs() As String = Nothing
-                            'Dim lprojBreadCrumbs() As String = Nothing
+
+                            Dim hprojLIDs As Collection = hproj.getElemIdsOf(tmpCollection, True)
+                            Dim bProjLIDs As Collection = Nothing
+                            Dim lprojLIDs As Collection = Nothing
+
+                            If considerFapr Then
+                                bProjLIDs = bproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            If considerLapr Then
+                                lprojLIDs = lproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            ' hproj steuert jetzt die Schleife 
+                            For hix As Integer = 1 To hprojLIDs.Count
+
+                                Dim hprojPhID As String = CStr(hprojLIDs.Item(hix))
+                                Dim curItem As String = elemNameOfElemID(hprojPhID)
+
+                                curValue = Date.MinValue
+                                faprValue = Date.MinValue
+                                laprValue = Date.MinValue
+
+                                Dim hPhase As clsPhase = hproj.getPhaseByID(hprojPhID)
+
+                                If Not IsNothing(hPhase) Then
+                                    curValue = hPhase.getEndDate
+                                End If
+
+                                Dim bPhase As clsPhase = Nothing
+                                If considerFapr Then
+                                    If hix <= bProjLIDs.Count Then
+                                        bPhase = bproj.getPhaseByID(CStr(bProjLIDs.Item(hix)))
+                                        If Not IsNothing(bPhase) Then
+                                            faprValue = bPhase.getEndDate
+                                        End If
+                                    End If
+                                End If
+
+                                Dim lPhase As clsPhase = Nothing
+                                If considerLapr Then
+                                    If hix <= lprojLIDs.Count Then
+                                        lPhase = lproj.getPhaseByID(CStr(lprojLIDs.Item(hix)))
+                                        If Not IsNothing(lPhase) Then
+                                            laprValue = lPhase.getEndDate
+                                        End If
+                                    End If
+                                End If
+
+                                Call schreibeMilestoneAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+
+                                tabelle.Rows.Add()
+                                tabellenzeile = tabellenzeile + 1
+
+
+                            Next
+
+                        Next
+
+                    End If
+
+
+                    If CInt(q2) > 0 And Not IsNothing(toDoMilestones) Then
+
+                        For m As Integer = 1 To toDoMilestones.Count
+
+                            Dim tmpCollection As New Collection From {
+                                CStr(toDoMilestones.Item(m))
+                            }
+
 
                             Dim hprojLIDs As Collection = hproj.getElemIdsOf(tmpCollection, True)
                             Dim bProjLIDs As Collection = Nothing
@@ -5887,12 +6078,8 @@ Public Module Module1
 
                         Next
 
-
-                    Else
-
-                        Call MsgBox("noch nicht implementiert ...")
-
                     End If
+
 
                     ' jetzt letzte Zeile löschen  ...
                     tabelle.Rows(tabellenzeile).Delete()
@@ -6125,9 +6312,7 @@ Public Module Module1
             'End If
 
 
-
-
-            Dim testCashFlow As Double() = ShowProjekte.getCashFlow
+            Dim testCashFlow As Double() = ShowProjekte.getCashFlow()
 
             For ix = 1 To 5
                 testCashFlow(ix) = testCashFlow(ix - 1) + testCashFlow(ix)
@@ -6379,7 +6564,7 @@ Public Module Module1
         Call addSmartPPTTableInfo(pptShape,
                                   hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
-                                  emptyCollection)
+                                  emptyCollection, emptyCollection)
 
         ' jetzt werden die einzelnen Zeilen geschrieben 
 
@@ -7284,18 +7469,22 @@ Public Module Module1
     ''' <returns></returns>
     Public Function convertCollToNids(ByVal nameCollection As Collection) As String
         Dim nids As String = ""
-        For Each tmpName As String In nameCollection
 
-            If tmpName.Contains("#") Then
-                tmpName = tmpName.Replace("#", "^")
-            End If
+        If Not IsNothing(nameCollection) Then
+            For Each tmpName As String In nameCollection
 
-            If nids = "" Then
-                nids = tmpName.Trim
-            Else
-                nids = nids & "#" & tmpName.Trim
-            End If
-        Next
+                If tmpName.Contains("#") Then
+                    tmpName = tmpName.Replace("#", "^")
+                End If
+
+                If nids = "" Then
+                    nids = tmpName.Trim
+                Else
+                    nids = nids & "#" & tmpName.Trim
+                End If
+            Next
+        End If
+
         convertCollToNids = nids
     End Function
 
@@ -7509,34 +7698,79 @@ Public Module Module1
 
 
     ''' <summary>
+    ''' composition of the FileName of the different Logfiles for the RPA Import as well
+    ''' </summary>
+    ''' <param name="rpaFolder"></param>
+    ''' <param name="rpaImportfile"></param>
+    ''' <returns></returns>
+    Public Function createLogfileName(Optional ByVal rpaFolder As String = "", Optional ByVal rpaImportfile As String = "") As String
+        ' FileNamen zusammenbauen
+        Dim logfileOrdner As String = "logfiles"
+
+
+        If IsNothing(awinPath) Then
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+        End If
+        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+
+        ' write logfiles in rpaFolder, if RPA was started
+        If Not IsNothing(rpaFolder) And rpaFolder <> "" Then
+            logfilePath = My.Computer.FileSystem.CombinePath(rpaFolder, logfileOrdner)
+        End If
+
+        Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+        ' Fragen, ob bereits existiert - eventuell nicht nötig
+        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            My.Computer.FileSystem.CreateDirectory(logfilePath)
+        End If
+        createLogfileName = logfileNamePath
+    End Function
+
+    ''' <summary>
     '''  schreibt in das logfile mit Errorlevel
     ''' </summary>
     ''' <param name="errLevel"></param>
     ''' <param name="text"></param>
     ''' <param name="addOn"></param>
     ''' <param name="anzFehler"></param>
-    Public Sub logger(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+    Public Sub logger(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByVal anzFehler As Long)
 
         Try
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+            '' FileNamen zusammenbauen
+            'Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
+
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+
+            '' write logfiles in rpaFolder, if RPA was started
+            'If Not IsNothing(rpaFolder) Then
+            '    logfilePath = rpaFolder
+            'End If
+
+            'Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
+
+
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
@@ -7554,27 +7788,6 @@ Public Module Module1
         End Try
 
 
-        'Dim obj As Object
-
-        'Try
-        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
-        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-
-        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-        '        CType(.Cells(1, 2), Excel.Range).Value = errorLevel(errLevel)
-        '        CType(.Cells(1, 3), Excel.Range).Value = addOn
-        '        CType(.Cells(1, 4), Excel.Range).Value = text
-
-        '    End With
-        '    anzFehler = anzFehler + 1
-        '    xlsLogfile.Save()
-
-        'Catch ex As Exception
-
-        'End Try
-
     End Sub
 
 
@@ -7589,24 +7802,32 @@ Public Module Module1
             Dim anzZeilen As Integer = meldungen.Count
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            'logfileNamePath = createLogfileName(rpaFolder, rpaImportfile)
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
 
@@ -7633,24 +7854,30 @@ Public Module Module1
             Dim anzSpalten As Integer = text.Length
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
@@ -7677,24 +7904,30 @@ Public Module Module1
             Dim anzSpaltenValues As Integer = values.Length
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
@@ -7713,32 +7946,6 @@ Public Module Module1
         Catch ex As Exception
 
         End Try
-        'Dim obj As Object
-        'Try
-        '    Dim anzSpaltenText As Integer = text.Length
-        '    Dim anzSpaltenValues As Integer = values.Length
-        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
-        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-        '        CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
-
-        '        For ix As Integer = 3 To anzSpaltenText + 2
-        '            CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-        '            CType(.Cells(1, ix), Excel.Range).Value = text(ix - 3)
-        '        Next
-
-        '        For ix As Integer = 3 To anzSpaltenValues + 2
-        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 3)
-        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
-        '        Next
-        '    End With
-        '    xlsLogfile.Save()
-
-        'Catch ex As Exception
-
-        'End Try
 
     End Sub
 
@@ -7747,24 +7954,33 @@ Public Module Module1
         Try
 
             Dim strMeld As String
-            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForAppending = 8
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            ' FileNamen zusammenbauen
-            Dim logfileOrdner As String = "logfiles"
-            If IsNothing(awinPath) Then
-                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            End If
-            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            ' Fragen, ob bereits existiert - eventuell nicht nötig
-            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-                My.Computer.FileSystem.CreateDirectory(logfilePath)
-            End If
+
+            '' FileNamen zusammenbauen
+            ' Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
+
+            '' FileNamen zusammenbauen
+            'Dim logfileOrdner As String = "logfiles"
+            'If IsNothing(awinPath) Then
+            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            'End If
+            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            '' Fragen, ob bereits existiert - eventuell nicht nötig
+            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
+            'End If
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
@@ -9498,46 +9714,5 @@ Public Module Module1
 
     End Function
 
-    'Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
-
-    '' Returns an array with the local IP addresses (as strings).
-    '' Author: Christian d'Heureuse, www.source-code.biz
-    'Public Function GetIpAddrTable() As String()
-    '    Dim Buf(0 To 511) As Byte
-    '    Dim BufSize As Long : BufSize = UBound(Buf) + 1
-    '    Dim rc As Long
-    '    rc = GetIpAddrTable_API(Buf(0), BufSize, 1)
-    '    If rc <> 0 Then
-    '        Err.Raise(vbObjectError, , "GetIpAddrTable failed with return value " & rc)
-    '    End If
-    '    Dim NrOfEntries As Integer : NrOfEntries = Buf(1) * 256 + Buf(0)
-    '    Dim IpAddrs() As String
-    '    ReDim IpAddrs(0 To NrOfEntries - 1)
-    '    If NrOfEntries = 0 Then
-    '        GetIpAddrTable = IpAddrs
-    '        Exit Function
-    '    End If
-
-    '    Dim i As Integer
-    '    For i = 0 To NrOfEntries - 1
-    '        Dim j As Integer, s As String : s = ""
-    '        For j = 0 To 3 : s = s & IIf(j > 0, ".", "") & Buf(4 + i * 24 + j) : Next
-    '        IpAddrs(i) = s
-    '    Next
-    '    GetIpAddrTable = IpAddrs
-    'End Function
-
-
-
-    '' Test program for GetIpAddrTable.
-    'Public Sub Test()
-    '    Dim IpAddrs() As String
-    '    IpAddrs = GetIpAddrTable()
-    '    Debug.Print("Nr of IP addresses: " & (UBound(IpAddrs) - LBound(IpAddrs) + 1).ToString)
-    '    Dim i As Integer
-    '    For i = LBound(IpAddrs) To UBound(IpAddrs)
-    '        Debug.Print(IpAddrs(i))
-    '    Next
-    'End Sub
 
 End Module

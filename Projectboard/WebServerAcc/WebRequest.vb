@@ -2609,7 +2609,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg) As Boolean
 
-        Dim result As Boolean = False
+        Dim result As Boolean = True
         Dim vplist As New SortedList(Of String, clsVP)
 
         Try
@@ -3075,9 +3075,11 @@ Public Class Request
                     Case 403
                     Case 409
                         ' PUTOneVCSetting erforderlich
-                        Call MsgBox(err.errorMsg)
+                        Call logger(ptErrLevel.logError, settingTypes(ptSettingTypes.organisation).ToString & ":" & err.errorMsg, "storeVCsettingsToDB", anzFehler)
+                        'Call MsgBox(err.errorMsg)
                     Case Else
-                        Call MsgBox(err.errorMsg)
+                        Call logger(ptErrLevel.logError, settingTypes(ptSettingTypes.organisation).ToString & ":" & err.errorMsg, "storeVCsettingsToDB", anzFehler)
+                        'Call MsgBox(err.errorMsg)
                 End Select
 
             End If
@@ -3229,7 +3231,8 @@ Public Class Request
 
 
         Catch ex As Exception
-            Call MsgBox(err.errorMsg)
+            Call logger(ptErrLevel.logError, "retrieveCustomUserRoles", ex.Message)
+            'Call MsgBox(err.errorMsg)
         End Try
         retrieveCustomUserRoles = result
     End Function
@@ -3253,17 +3256,27 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
-        Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+        'Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
-        Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+
+        If awinSettings.visboDebug Then
+            Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+        End If
+
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
-            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "before reading the vcSetting Organisation")
+            If awinSettings.visboDebug Then
+                logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "before reading the vcSetting Organisation")
+            End If
 
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
-            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
+
+            If awinSettings.visboDebug Then
+                logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
+            End If
+
             If err.errorCode = 200 Then
                 If Not IsNothing(setting) Then
 
@@ -3275,7 +3288,7 @@ Public Class Request
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
 
-                            Call logger(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & "| validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logger(ptErrLevel.logInfo, "Number of received Organisations: " & anzSetting & "| validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
 
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
@@ -3292,7 +3305,7 @@ Public Class Request
 
                             webOrganisation = latestOrga.value
 
-                            Call logger(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logger(ptErrLevel.logInfo, "Number of received Organisations: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
 
                         End If
 
@@ -3333,7 +3346,10 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
-        Call logger(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
+        If awinSettings.visboDebug Then
+            Call logger(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
+        End If
+
         retrieveOrganisationFromDB = result
     End Function
 
@@ -3370,6 +3386,7 @@ Public Class Request
                 Else
                     If err.errorCode = 403 Then
                         Call MsgBox(err.errorMsg)
+                        Call logger(ptErrLevel.logError, "retrieveCustomFieldsFromDB - 403", err.errorMsg)
                     End If
                     settingID = ""
                 End If
@@ -3378,7 +3395,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Call logger(ptErrLevel.logError, "retrieveCustomFieldsFromDB", ex.Message)
         End Try
         retrieveCustomFieldsFromDB = result
     End Function
@@ -3747,7 +3764,7 @@ Public Class Request
                             End If
 
                         End If
-                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRrequest now was successful: (anzError=" & anzError.ToString & ")")
+                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRequest now was successful: (anzError=" & anzError.ToString & ")")
 
                         hresp = Nothing
                         toDo = False
@@ -4040,13 +4057,16 @@ Public Class Request
 
             If IsNothing(httpresp) Then
 
-                logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing")
+                Call logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing")
 
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
                 cookies = httpresp.Cookies
-                logger(ptErrLevel.logInfo, "ReadResponseContent", "HttpWebResponse: Status: (" & httpresp.StatusCode & ")" & "Content: (" & httpresp.ContentLength & ")")
+                If awinSettings.visboDebug Then
+                    Call logger(ptErrLevel.logInfo, "ReadResponseContent", "HttpWebResponse: Status: (" & httpresp.StatusCode & ")" & "Content: (" & httpresp.ContentLength & ")")
+                End If
+
                 Try
                     Using sr As New StreamReader(httpresp.GetResponseStream)
 
@@ -4055,7 +4075,7 @@ Public Class Request
                     End Using
 
                 Catch ex As Exception
-                    logger(ptErrLevel.logError, "ReadResponseContent", "Error with exception of the StreamReader( httpresp.GetResponseStream )")
+                    Call logger(ptErrLevel.logError, "ReadResponseContent", "Error with exception of the StreamReader( httpresp.GetResponseStream )")
                 End Try
 
             End If
@@ -6024,8 +6044,10 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim serverUri As New Uri(serverUriString)
+            If awinSettings.visboDebug Then
+                Call logger(ptErrLevel.logInfo, "GETOneVCsetting", "before reading the vcSetting " & type & " : (" & err.errorCode & ")")
+            End If
 
-            logger(ptErrLevel.logInfo, "GETOneVCsetting", "before reading the vcSetting " & type & " : (" & err.errorCode & ")")
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
@@ -6052,7 +6074,11 @@ Public Class Request
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
-                    Call logger(ptErrLevel.logInfo, "Result of: " & result.count, "GETOneVCSetting: " & type, anzFehler)
+
+                    If awinSettings.visboDebug Then
+                        Call logger(ptErrLevel.logInfo, "Result of: " & result.count, "GETOneVCSetting: " & type, anzFehler)
+                    End If
+
                 Else
                     webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
                 End If
@@ -7075,6 +7101,64 @@ Public Class Request
 
     End Function
 
+
+
+    ''' <summary>
+    ''' sendet eine Email an den definierten User
+    ''' </summary>
+    ''' <param name="mail"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function POSTanEmail(ByVal vcid As String, ByVal mail As clsEmail,
+                               ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String = ""
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid & "/message"
+            End If
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim data As Byte() = serverInputDataJson(mail, typeRequest)
+
+            Dim Antwort As String
+            Dim webMailAntwort As clsWebEmail = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webMailAntwort = JsonConvert.DeserializeObject(Of clsWebEmail)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+
+                result = (webMailAntwort.state = "success")
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTanEmail", errcode, errmsg & " : " & webMailAntwort.message)
+
+            End If
+
+            err.errorCode = errcode
+            err.errorMsg = "POSTanEmail" & " : " & errmsg & " : " & webMailAntwort.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        POSTanEmail = result
+
+    End Function
+
     Private Function POSTpwforgotten(ByVal ServerURL As String, ByVal databaseName As String,
                                      ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
 
@@ -7428,6 +7512,24 @@ Public Class Request
 
         clearVRSCache = result
 
+    End Function
+
+
+    Public Function sendEmailToUser(ByVal message As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim mail As New clsEmail
+
+        Try
+
+            mail.email = aktUser.email
+            mail.message = message
+            result = POSTanEmail(aktVCid, mail, err)
+
+        Catch ex As Exception
+
+        End Try
+        sendEmailToUser = result
     End Function
 
     ''' <summary>

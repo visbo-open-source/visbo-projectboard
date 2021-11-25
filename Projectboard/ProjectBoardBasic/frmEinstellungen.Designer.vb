@@ -36,6 +36,7 @@ Partial Class frmEinstellungen
         Me.chkbxInvoices = New System.Windows.Forms.CheckBox()
         Me.chkbx_KUG_active = New System.Windows.Forms.CheckBox()
         Me.chkbx_TakeCapaFromOldOrga = New System.Windows.Forms.CheckBox()
+        Me.chkbx_autoSetActualDataDate = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -63,7 +64,7 @@ Partial Class frmEinstellungen
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!)
-        Me.Label1.Location = New System.Drawing.Point(13, 255)
+        Me.Label1.Location = New System.Drawing.Point(13, 268)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(116, 15)
         Me.Label1.TabIndex = 4
@@ -73,7 +74,7 @@ Partial Class frmEinstellungen
         '
         Me.SprachAusw.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.SprachAusw.FormattingEnabled = True
-        Me.SprachAusw.Location = New System.Drawing.Point(146, 252)
+        Me.SprachAusw.Location = New System.Drawing.Point(146, 265)
         Me.SprachAusw.MaxDropDownItems = 4
         Me.SprachAusw.Name = "SprachAusw"
         Me.SprachAusw.Size = New System.Drawing.Size(158, 21)
@@ -83,7 +84,7 @@ Partial Class frmEinstellungen
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(13, 284)
+        Me.statusLabel.Location = New System.Drawing.Point(13, 297)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(45, 15)
         Me.statusLabel.TabIndex = 45
@@ -174,11 +175,22 @@ Partial Class frmEinstellungen
         Me.chkbx_TakeCapaFromOldOrga.Text = "Kapazitäten aus bisheriger Organisation übernehmen "
         Me.chkbx_TakeCapaFromOldOrga.UseVisualStyleBackColor = True
         '
+        'chkbx_autoSetActualDataDate
+        '
+        Me.chkbx_autoSetActualDataDate.AutoSize = True
+        Me.chkbx_autoSetActualDataDate.Location = New System.Drawing.Point(16, 229)
+        Me.chkbx_autoSetActualDataDate.Name = "chkbx_autoSetActualDataDate"
+        Me.chkbx_autoSetActualDataDate.Size = New System.Drawing.Size(295, 17)
+        Me.chkbx_autoSetActualDataDate.TabIndex = 54
+        Me.chkbx_autoSetActualDataDate.Text = "Daten aus Vergangenheit explizit als Ist-Daten bestätigen"
+        Me.chkbx_autoSetActualDataDate.UseVisualStyleBackColor = True
+        '
         'frmEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(352, 327)
+        Me.Controls.Add(Me.chkbx_autoSetActualDataDate)
         Me.Controls.Add(Me.chkbx_TakeCapaFromOldOrga)
         Me.Controls.Add(Me.chkbx_KUG_active)
         Me.Controls.Add(Me.chkbxInvoices)
@@ -212,4 +224,5 @@ Partial Class frmEinstellungen
     Friend WithEvents chkbxInvoices As Windows.Forms.CheckBox
     Friend WithEvents chkbx_KUG_active As Windows.Forms.CheckBox
     Friend WithEvents chkbx_TakeCapaFromOldOrga As Windows.Forms.CheckBox
+    Friend WithEvents chkbx_autoSetActualDataDate As Windows.Forms.CheckBox
 End Class

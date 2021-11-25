@@ -1709,7 +1709,7 @@ Public Class clsPhase
             ElseIf missingPhaseDefinitions.Contains(tmpName) Then
                 abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
             Else
-                abbrev = ""
+                abbrev = _shortName
             End If
 
             shortName = abbrev
@@ -2229,6 +2229,37 @@ Public Class clsPhase
 
     End Property
 
+    Public ReadOnly Property getRoleNameIDsAndValues(ByVal Optional onlySummaryRoles As Boolean = False) As SortedList(Of String, Double)
+        Get
+            Dim zwResult As New SortedList(Of String, Double)
+
+            For i As Integer = 1 To _allRoles.Count
+
+                Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+
+                Dim weiterMachen As Boolean = True
+
+                If onlySummaryRoles Then
+                    weiterMachen = RoleDefinitions.getRoleDefByID(tmpRole.uid).isCombinedRole
+                End If
+
+                If weiterMachen Then
+                    If tmpRole.summe > 0 Then
+                        Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
+
+                        If Not zwResult.ContainsKey(tmpNameID) Then
+                            zwResult.Add(tmpNameID, tmpRole.summe)
+                        Else
+                            zwResult.Item(tmpNameID) = zwResult.Item(tmpNameID) + tmpRole.summe
+                        End If
+                    End If
+
+                End If
+            Next
+
+            getRoleNameIDsAndValues = zwResult
+        End Get
+    End Property
 
     ''' <summary>
     ''' liefert die Namen und Bedarfs-Summen aller Rollen, die in der Phase referenziert werden ...
@@ -2236,17 +2267,29 @@ Public Class clsPhase
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleNamesAndValues() As SortedList(Of String, Double)
+    Public ReadOnly Property getRoleNamesAndValues(ByVal Optional onlySummaryRoles As Boolean = False) As SortedList(Of String, Double)
         Get
             Dim zwResult As New SortedList(Of String, Double)
 
             For i As Integer = 1 To _allRoles.Count
+
                 Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
 
-                If Not zwResult.ContainsKey(tmpRole.name) Then
-                    zwResult.Add(tmpRole.name, tmpRole.summe)
-                Else
-                    zwResult.Item(tmpRole.name) = zwResult.Item(tmpRole.name) + tmpRole.summe
+                Dim weiterMachen As Boolean = True
+
+                If onlySummaryRoles Then
+                    weiterMachen = RoleDefinitions.getRoleDefByID(tmpRole.uid).isCombinedRole
+                End If
+
+                If weiterMachen Then
+                    If tmpRole.summe > 0 Then
+                        If Not zwResult.ContainsKey(tmpRole.name) Then
+                            zwResult.Add(tmpRole.name, tmpRole.summe)
+                        Else
+                            zwResult.Item(tmpRole.name) = zwResult.Item(tmpRole.name) + tmpRole.summe
+                        End If
+                    End If
+
                 End If
             Next
 
@@ -2382,8 +2425,7 @@ Public Class clsPhase
     ''' <summary>
     ''' adds roleName with arValues to Phase
     ''' if length of arValues differs from length Phase, then a new distribution of arValues.sum ist calculated
-    ''' if eaddToExisting = true: addieser bei gleichen Role-IDs
-    ''' replace values else 
+    ''' if addToExisting = true: add values to existing role: false: replace values 
     ''' </summary>
     ''' <param name="roleNameID"></param>
     ''' <param name="arValues"></param>
@@ -2503,6 +2545,332 @@ Public Class clsPhase
 
 
     End Sub
+
+    ''' <summary>
+    ''' returns all Names of people 
+    ''' </summary>
+    ''' 
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleNames(ByVal Optional includingSummaryRoles As Boolean = False) As Collection
+
+        Get
+            Dim result As New Collection
+
+            Dim roleName As String
+            Dim hrole As clsRolle
+
+
+            For r As Integer = 1 To countRoles
+
+                hrole = getRole(r)
+
+                Dim myRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(hrole.uid)
+
+                If Not IsNothing(myRoleDef) Then
+                    If (Not myRoleDef.isCombinedRole) Or (myRoleDef.isCombinedRole And includingSummaryRoles) Then
+                        If hrole.summe > 0 Then
+                            roleName = hrole.name
+
+                            If Not result.Contains(roleName) Then
+                                result.Add(roleName, roleName)
+                            End If
+                        End If
+                    End If
+                End If
+
+            Next r
+
+            getRoleNames = result
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' returns a sortedList of (freeCapacity, RoleID), highest values are at the end  of the sortedList
+    ''' returns only such roles having a freeCapacity amount of at least requiredFreeAmountInAvg
+    ''' Externs are only shown as candidates if there are no other possibilities or the candidates are not bringing 
+    ''' enough to the table : if the total sum of free amount of candidates is less than the requiredTotalSum 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="requiredFreeAmountInAvg">amount which each role has to have in avg per month so that it appears in CandidatesList </param>
+    ''' <returns></returns>
+    Public Function getCandidates(ByVal roleNameID As String,
+                                  ByVal requiredFreeAmountInAvg As Double,
+                                  ByVal requiredTotalSum As Double) As SortedList(Of Double, Integer)
+        Dim result As New SortedList(Of Double, Integer)
+
+        ' if there are not enough People to fulfill the requiredTotalSum, biut still externes without enough contracts, then show them as well 
+        Dim externsToExtend As New SortedList(Of Double, Integer)
+
+        Dim candidates As New List(Of Integer)
+        Dim skillID As Integer = -1
+        Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, skillID)
+        Dim mySkill As clsRollenDefinition = Nothing
+
+        Dim freeAmountTotal As Double = 0
+
+        If skillID > 0 Then
+
+            mySkill = RoleDefinitions.getRoleDefByID(skillID)
+            If Not myRole.isCombinedRole Then
+                ' then consider all people who could replace the person with that required skill 
+                Dim tmpCandidates As SortedList(Of Integer, Double) = mySkill.getSubRoleIDs
+                If tmpCandidates.ContainsKey(myRole.UID) Then
+                    tmpCandidates.Remove(myRole.UID)
+                End If
+
+                candidates = tmpCandidates.Keys.ToList
+
+            Else
+                candidates = RoleDefinitions.getCommonChildsOfParents(mySkill.UID, myRole.UID)
+            End If
+
+
+        Else
+            If Not myRole.isCombinedRole Then
+                ' now get all sister roles, having myAggregation Role as common parent
+                candidates = RoleDefinitions.getSiblingRoleIDsOf(myRole.UID)
+            Else
+                candidates = RoleDefinitions.getSubRoleIDsOf(myRole.name, type:=PTcbr.realRoles).Keys.ToList
+            End If
+
+        End If
+
+        ' now create a sortedList of freeCapacity for all the candidates
+
+        For Each roleID As Integer In candidates
+            ' now only people are considered - therefore skill dows not play a role any more ...
+            Dim tmpSkill As Integer = -1
+            Dim von As Integer = getColumnOfDate(getStartDate)
+            Dim foreCastDataOffset As Integer = 0
+
+            If hasActualData Then
+                foreCastDataOffset = getColumnOfDate(parentProject.actualDataUntil) - von + 1
+                von = von + foreCastDataOffset
+            End If
+
+            Dim bis As Integer = getColumnOfDate(getEndDate)
+
+            ' is Role Intern and active 
+            Dim candidateRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
+
+            If candidateRole.isActiveRole(von, bis) Or candidateRole.isExternRole Then
+
+                Dim freeCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(roleID, tmpSkill, von, bis)
+                Dim freeAmount As Double = freeCapacity.Sum
+
+                ' bigger than avg per month capacity needed
+                If freeAmount >= requiredFreeAmountInAvg * (bis - von + 1) Then
+
+                    ' now consider ... 
+                    freeAmountTotal = freeAmountTotal + freeAmount
+
+                    If Not result.ContainsKey(freeAmount) Then
+                        result.Add(freeAmount, roleID)
+                    Else
+                        ' make sure it can be sorted into the sortedList ... 
+                        Do While result.ContainsKey(freeAmount)
+                            freeAmount = freeAmount + 0.000001
+                        Loop
+                        result.Add(freeAmount, roleID)
+                    End If
+                Else
+                    If candidateRole.isExternRole Then
+                        If Not externsToExtend.ContainsKey(freeAmount) Then
+                            externsToExtend.Add(freeAmount, roleID)
+                        Else
+                            ' make sure it can be sorted into the sortedList ... 
+                            Do While externsToExtend.ContainsKey(freeAmount)
+                                freeAmount = freeAmount + 0.000001
+                            Loop
+                            externsToExtend.Add(freeAmount, roleID)
+                        End If
+                    End If
+                End If
+
+            End If
+        Next
+
+        ' if requiredTotalSum is bigger than sum of freeAmounts of candidates 
+        ' offer externs as well: here a contract need to be closed afterwards
+        If requiredTotalSum > freeAmountTotal Then
+            ' add further extern candidates even if the don't have capacity at the moment 
+            For Each furthercandidate As KeyValuePair(Of Double, Integer) In externsToExtend
+                Dim freeAmount As Double = furthercandidate.Key
+                If Not result.ContainsKey(freeAmount) Then
+                    result.Add(freeAmount, furthercandidate.Value)
+                Else
+                    ' make sure it can be sorted into the sortedList ... 
+                    Do While result.ContainsKey(freeAmount)
+                        freeAmount = freeAmount + 0.000001
+                    Loop
+                    result.Add(freeAmount, furthercandidate.Value)
+                End If
+            Next
+
+        End If
+
+        getCandidates = result
+    End Function
+
+    ''' <summary>
+    ''' substitues a given role, i.e summary role by a provided (grand)child- or sister role
+    ''' if newNameID does not have amn according relation, i.e is (grand)child or having the given skill then returns false
+    ''' </summary>
+    ''' <param name="oldNameID"></param>
+    ''' <param name="newNameID"></param>
+    ''' <param name="newValue"></param>
+    ''' <returns></returns>
+    Public Function substituteRole(ByVal oldNameID As String, ByVal newNameID As String,
+                                   ByVal allowOvertime As Boolean, ByVal newValue As Double) As Boolean
+        Dim wasOK As Boolean = True
+        Dim errTxt As String = ""
+
+        Dim myPhaseLength As Integer = relEnde - relStart + 1
+
+        ' first of all - is there a oldNameID role in the phase 
+        Dim myOldRole As clsRolle = getRoleByRoleNameID(oldNameID)
+        Dim myNewRole As clsRolle = getRoleByRoleNameID(newNameID)
+
+        If IsNothing(myOldRole) Then
+            ' Exit 
+            wasOK = False
+            errTxt = "there is no such role ... -> Exit"
+        End If
+
+        If wasOK Then
+
+            ' now it is guaranteed that there is a oldRole
+            Dim oldValue As Double = myOldRole.summe
+
+            ' further Validation checks
+            ' If skill Is provided: old and new skill need to be the same
+            ' if no skill is provided: if person: then other person is allowed; if summaryRole - no other summary role is allowed
+
+            Dim oldSkillID As Integer = -1
+            Dim oldRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(oldNameID, oldSkillID)
+            Dim oldRoleID As Integer = oldRole.UID
+
+            Dim newSkillID As Integer = -1
+            Dim newRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(newNameID, newSkillID)
+            Dim newRoleID As Integer = newRole.UID
+
+            If oldSkillID = newSkillID Then
+                ' so far ok 
+                If oldSkillID = -1 And oldRole.isCombinedRole Then
+                    ' no skill provided , oldRole is SummaryRole 
+                    wasOK = RoleDefinitions.hasAnyChildParentRelationsship(newRoleID, oldRoleID)
+                    If Not wasOK Then
+                        errTxt = "not having any parent/child relationsships"
+                    End If
+                End If
+            Else
+                wasOK = False
+                errTxt = "only allowed when skills are identical ..."
+            End If
+
+            If wasOK Then
+
+                Dim foreCastDataOffset As Integer = 0
+
+                If hasActualData Then
+                    foreCastDataOffset = getColumnOfDate(parentProject.actualDataUntil) - getColumnOfDate(getStartDate) + 1
+                End If
+
+                Dim leftDate As Date = getStartDate
+                If foreCastDataOffset > 0 Then
+                    leftDate = leftDate.AddMonths(foreCastDataOffset).AddDays(-1 * leftDate.Day + 1)
+                End If
+
+                Dim rightDate As Date = getEndDate
+                Dim inputValues As Double()
+                ReDim inputValues(0)
+                inputValues(0) = newValue
+
+                Dim myValues As Double()
+                ReDim myValues(getColumnOfDate(rightDate) - getColumnOfDate(leftDate))
+
+                If Not IsNothing(myNewRole) Then
+                    For ix As Integer = foreCastDataOffset To myPhaseLength - 1
+                        myValues(ix - foreCastDataOffset) = myNewRole.Xwerte(ix)
+                    Next
+
+                    ' in this case the already existing amount need to considered as well 
+                    ' Example: Entwickler: 100, Erich: 50 . now Erich should also do the rest of placeholder role Entwickler
+                    ' Erich = 50 + 100 
+                    inputValues(0) = inputValues(0) + myValues.Sum
+                End If
+
+                inputValues = calcVerteilungAufMonate(leftDate, rightDate, inputValues, 1.0)
+                Dim newValues As Double() = ShowProjekte.adjustToCapacity(newRoleID, newSkillID, allowOvertime, inputValues, leftDate, myValues)
+
+
+                ' now the substitution needs to take place 
+                ' adjust the summary Role 
+                Dim stillToDistribute As Double = 0.0
+                For ix As Integer = foreCastDataOffset To myPhaseLength - 1
+                    If myOldRole.Xwerte(ix) >= newValues(ix - foreCastDataOffset) Then
+                        myOldRole.Xwerte(ix) = myOldRole.Xwerte(ix) - newValues(ix - foreCastDataOffset)
+                    Else
+                        stillToDistribute = stillToDistribute + newValues(ix - foreCastDataOffset) - myOldRole.Xwerte(ix)
+                        myOldRole.Xwerte(ix) = 0
+                    End If
+                Next
+
+                Dim ik As Integer = foreCastDataOffset
+                Dim partSum As Double = calcPartSum2End(myOldRole.Xwerte, foreCastDataOffset)
+
+                Do While stillToDistribute > 0 And partSum > 0
+                    If myOldRole.Xwerte(ik) >= 1 Then
+                        myOldRole.Xwerte(ik) = myOldRole.Xwerte(ik) - 1
+                        stillToDistribute = stillToDistribute - 1
+                    ElseIf myOldRole.Xwerte(ik) > 0 Then
+                        stillToDistribute = stillToDistribute - myOldRole.Xwerte(ik)
+                        myOldRole.Xwerte(ik) = 0
+                    End If
+                    ik = ik + 1
+                    If ik > myPhaseLength - 1 Then
+                        ik = foreCastDataOffset
+                    End If
+
+                    partSum = calcPartSum2End(myOldRole.Xwerte, foreCastDataOffset)
+                Loop
+
+                ' now make sure newValues is having the right length 
+                If foreCastDataOffset > 0 Then
+                    Dim korrNewValues As Double()
+                    ReDim korrNewValues(myPhaseLength - 1)
+                    For iz As Integer = foreCastDataOffset To myPhaseLength - 1
+                        korrNewValues(iz) = newValues(iz - foreCastDataOffset)
+                    Next
+
+                    newValues = korrNewValues
+                End If
+
+                ' adjust the new Role 
+                If Not IsNothing(myNewRole) Then
+                    ' just replace the values for Xwerte ...
+                    myNewRole.Xwerte = newValues
+                Else
+                    ' Add Role 
+                    myNewRole = New clsRolle
+                    With myNewRole
+                        .uid = newRoleID
+                        .teamID = newSkillID
+                        .Xwerte = newValues
+                    End With
+
+                    Me.addRole(myNewRole, False)
+                End If
+
+
+            End If
+
+        End If
+
+        substituteRole = wasOK
+    End Function
 
     ''' <summary>
     ''' fügt der Phase die Rollen und Kosten hinzu, wie angegeben
@@ -4218,7 +4586,7 @@ Public Class clsPhase
     ''' <param name="oldXwerte"></param>
     ''' <param name="corrFakt"></param>
     ''' <remarks></remarks>
-    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double,
                                ByVal corrFakt As Double) As Double()
 
         ' wenn sich der bewährt: übernehmen ..
@@ -4408,5 +4776,93 @@ Public Class clsPhase
         berechneBedarfeNew = newXwerte
 
     End Function
+
+
+    ''' <summary>
+    ''' gibt eine Phase zurück,die die Vereinigung beider Phasen beinhaltet. 
+    ''' Es werden die Ressourcenbedarfe vereinigt. Wenn die Projekte zu unterschiedlichen Zeiten beginnen und unterschiedlich lang sind, so wird das 
+    ''' ebenfalls berücksichtigt - im Vergleich zu addProject. Das neue Projekt hat keinerlei Phasen-Struktur
+    ''' </summary>
+    ''' <param name="otherPhase"></param>
+    Public sub unionizeWith(ByVal otherPhase As clsPhase)
+
+        Dim newStart As Date
+        Dim newEnde As Date
+
+        If Me.getStartDate <= otherPhase.getStartDate Then
+            newStart = Me.getStartDate
+        Else
+            newStart = otherPhase.getStartDate
+        End If
+
+        If Me.getEndDate >= otherPhase.getEndDate Then
+            newEnde = Me.getEndDate
+        Else
+            newEnde = otherPhase.getEndDate
+        End If
+
+        Dim newPhase As clsPhase = Me
+        ' jetzt werden die Attribute neu gesetzt ...
+        Dim duration As Long
+        Dim offset As Long
+        With newPhase
+            duration = DateDiff(DateInterval.Day, newStart, newEnde) + 1
+            offset = DateDiff(DateInterval.Day, Me.parentProject.startDate, newStart)
+            newPhase.offset = CInt(offset)
+            newPhase.changeStartandDauer(offset, duration)
+        End With
+
+        ' ------------------------------------------------------------------------------------------------------
+        ' newPhase wurde nun angelegt
+        ' ------------------------------------------------------------------------------------------------------
+
+        Dim myLength As Integer = Me.relEnde - Me.relStart + 1
+        Dim otherLength As Integer = otherPhase.relEnde - otherPhase.relStart + 1
+        Dim newLength As Integer = newPhase.relEnde - newPhase.relStart + 1
+
+        Dim myStartColumn As Integer = Me.relStart
+        Dim otherStartColumn As Integer = otherPhase.relStart
+        Dim myIndexStart As Integer, otherIndexStart As Integer
+        If myStartColumn <= otherStartColumn Then
+            myIndexStart = 0
+            otherIndexStart = otherStartColumn - myStartColumn
+        Else
+            otherIndexStart = 0
+            myIndexStart = myStartColumn - otherStartColumn
+        End If
+
+        ' jetzt werden die Role-Values von other in new übertragen 
+        Dim tmpRoles As List(Of clsRolle) = otherPhase.rollenListe
+        Dim newValues() As Double
+
+        ' Rollen von otherPhase in newPhase
+        For i = 0 To tmpRoles.Count - 1
+            Dim otherRole As clsRolle = tmpRoles(i)
+            ' zurücksetzen 
+            ReDim newValues(newLength - 1)
+            For ix As Integer = 0 To otherRole.Xwerte.Length - 1
+                newValues(ix + otherIndexStart) = newValues(ix + otherIndexStart) + otherRole.Xwerte(ix)
+            Next
+            otherRole.Xwerte = newValues
+            newPhase.addRole(otherRole)
+        Next
+
+        ' jetzt werden die Role-Values von other in new übertragen 
+        Dim tmpCosts As List(Of clsKostenart) = otherPhase.kostenListe
+        Dim newCostValues() As Double
+
+        ' Rollen von otherPhase in newPhase
+        For i = 0 To tmpCosts.Count - 1
+            Dim otherCost As clsKostenart = tmpCosts(i)
+            ' zurücksetzen 
+            ReDim newCostValues(newLength - 1)
+            For ix As Integer = 0 To otherCost.Xwerte.Length - 1
+                newCostValues(ix + otherIndexStart) = newCostValues(ix + otherIndexStart) + otherCost.Xwerte(ix)
+            Next
+            otherCost.Xwerte = newCostValues
+            newPhase.AddCost(otherCost)
+        Next
+
+    End sub
 
 End Class

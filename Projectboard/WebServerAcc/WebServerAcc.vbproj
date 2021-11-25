@@ -82,6 +82,7 @@
     <Compile Include="clsCustomizationWeb.vb" />
     <Compile Include="clsCustomUserRolesWeb.vb" />
     <Compile Include="clsCustomUserRoleWeb.vb" />
+    <Compile Include="clsEmail.vb" />
     <Compile Include="clsHierarchyWeb.vb" />
     <Compile Include="clsHryNodeWeb.vb" />
     <Compile Include="clsKostenartDefinitionWeb.vb" />
@@ -104,6 +105,7 @@
     <Compile Include="clsVCSettingTypeClasses.vb" />
     <Compile Include="clsVP_bac_rac.vb" />
     <Compile Include="clsWebCostVPv.vb" />
+    <Compile Include="clsWebEmail.vb" />
     <Compile Include="clsWebVCSettingAppearance.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
     <Compile Include="clsWebVCSettingCustomization.vb" />

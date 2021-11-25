@@ -90,7 +90,8 @@
             .isExternRole = Me.isExternRole
             .isSkill = Me.isTeam
 
-            .farbe = Me.farbe
+            ' tk 20.7.21 keine individuele Farb-Zuordnung für Rollen mehr ...
+            ' .farbe = Me.farbe
             .defaultKapa = Me.defaultKapa
 
 
@@ -249,7 +250,8 @@
 
             Me.uid = .UID
             Me.name = .name
-            Me.farbe = CLng(.farbe)
+            ' tk 20.7.21 keine individuelle Farbe mehr 
+            ' Me.farbe = CLng(.farbe)
             Me.defaultKapa = .defaultKapa
 
             ' 23.11.18 

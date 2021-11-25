@@ -372,7 +372,7 @@ Public Class ThisWorkbook
                                     If awinSettings.englishLanguage Then
                                         Call MsgBox("Error when writing Customizations to DB ")
                                     Else
-                                        Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
+                                        Call MsgBox("Fehler bei Speichern der Customizations in die DB: " & vbCrLf & err.errorMsg)
                                     End If
                                 End If
                             End If
@@ -383,7 +383,7 @@ Public Class ThisWorkbook
                         If awinSettings.englishLanguage Then
                             Call MsgBox("Error when writing Customizations to DB ")
                         Else
-                            Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
+                            Call MsgBox("Fehler bei Speichern der Customizations in die DB: " & vbCrLf & err.errorMsg)
                         End If
 
                     End Try

@@ -9781,7 +9781,110 @@ Public Module Projekte
         getSortedListOfCapaUtilization = sortierteListe
     End Function
 
+    ''' <summary>
+    ''' returns true if uid has a value which is in the upper segment of ranking list
+    ''' </summary>
+    ''' <param name="rankingList"></param>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Private Function isAmongTopGroup(ByVal rankingList As SortedList(Of Double, Integer), ByVal uid As Integer) As Boolean
+        Dim result As Boolean = False
 
+        Try
+
+            Dim bestValue As Double = rankingList.Last.Key
+            Dim worstValue As Double = rankingList.First.Key
+            Dim borderLine As Double = worstValue + 0.51 * (bestValue - worstValue)
+
+            Dim myIndex As Integer = rankingList.IndexOfValue(uid)
+            Dim myValue As Double = rankingList.ElementAt(myIndex).Key
+
+            result = (myValue > borderLine)
+        Catch ex As Exception
+
+        End Try
+
+
+        isAmongTopGroup = result
+    End Function
+    Public Function calcBestCandidates(ByVal priorityPeople As SortedList(Of String, Double),
+                                       ByVal myCurrentskillID As Integer,
+                                       ByVal candidates As SortedList(Of Double, Integer),
+                                       ByVal projectScopeCandidates As SortedList(Of Double, Integer),
+                                       ByVal valueToSubstitute As Double) As SortedList(Of Double, Integer)
+
+        Dim result As New SortedList(Of Double, Integer)
+
+        Dim prioPeopleIDs As New List(Of Integer)
+
+        ' are priority candidates in the candidates list? 
+        For Each prioPerson As KeyValuePair(Of String, Double) In priorityPeople
+
+            Dim prioPersonSkillID As Integer = -1
+            Dim prioPersonID As Integer = RoleDefinitions.parseRoleNameID(prioPerson.Key, prioPersonSkillID)
+
+            If Not prioPeopleIDs.Contains(prioPersonID) Then
+                prioPeopleIDs.Add(prioPersonID)
+            End If
+
+            Dim found As Boolean = False
+            Dim i As Integer = candidates.Count - 1
+
+            Do While Not found And i >= 0
+                found = (candidates.ElementAt(i).Value = prioPersonID)
+                If Not found Then
+                    i = i - 1
+                End If
+            Loop
+
+
+            If found And valueToSubstitute > 0 Then
+
+                Dim myValue As Double = System.Math.Min(candidates.ElementAt(i).Key, valueToSubstitute)
+
+                If myValue < 0 Then
+                    myValue = 0
+                End If
+
+                valueToSubstitute = valueToSubstitute - myValue
+
+                If myValue > 0 Then
+                    result.Add(myValue, prioPersonID)
+                End If
+
+            End If
+
+        Next
+
+        ' now do the rest ..
+        If valueToSubstitute > 0 Then
+            Dim ix As Integer = candidates.Count - 1
+            ' greatest value is at the end
+            Do While ix >= 0 And valueToSubstitute > 0
+
+                Dim candidate As KeyValuePair(Of Double, Integer) = candidates.ElementAt(ix)
+                If Not prioPeopleIDs.Contains(candidate.Value) Then
+                    If candidate.Key >= valueToSubstitute Then
+                        If ((result.Count > 0) Or (isAmongTopGroup(projectScopeCandidates, candidate.Value))) Then
+                            result.Add(valueToSubstitute, candidate.Value)
+                            valueToSubstitute = 0
+                        Else
+                            Dim myValue As Double = System.Math.Truncate(0.6 * valueToSubstitute)
+                            result.Add(myValue, candidate.Value)
+                            valueToSubstitute = valueToSubstitute - myValue
+                        End If
+                    Else
+                        result.Add(candidate.Key, candidate.Value)
+                        valueToSubstitute = valueToSubstitute - candidate.Key
+                    End If
+                End If
+                ix = ix - 1
+            Loop
+
+        End If
+
+        calcBestCandidates = result
+    End Function
     ''' <summary>
     ''' 
     ''' </summary>
@@ -21038,6 +21141,7 @@ Public Module Projekte
         Dim schriftFarbe As Long
         Dim schriftGroesse As Integer
         Dim status As String = ""
+        Dim vpStatus As String = ""
         Dim pMarge As Double
         Dim pname As String
         Dim markTheShape As Boolean
@@ -21080,6 +21184,7 @@ Public Module Projekte
                 schriftFarbe = CLng(.Schriftfarbe)
                 schriftGroesse = .Schrift
                 status = .Status
+                vpStatus = .vpStatus
                 pMarge = .ProjectMarge
                 pname = .name
                 ampel = .ampelStatus
@@ -21131,6 +21236,16 @@ Public Module Projekte
                             .DashStyle = core.MsoLineDashStyle.msoLineSolid
                         End If
 
+                        ' ur: 20210915 neue Property für Status bestimmt die Darstellung eines Projektes
+                        If Not IsNothing(vpStatus) Then
+                            If vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                    vpStatus = VProjectStatus(PTVPStati.proposed) Then
+                                .DashStyle = core.MsoLineDashStyle.msoLineDash
+                            Else
+                                .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                            End If
+                        End If
+
                     End With
                 Catch ex As Exception
 
@@ -21140,7 +21255,9 @@ Public Module Projekte
                 Try
 
                     With .Line
-                        If status = ProjektStatus(PTProjektStati.geplant) Then
+                        If status = ProjektStatus(PTProjektStati.geplant) Or
+                            vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                            vpStatus = VProjectStatus(PTVPStati.proposed) Then
 
                             If myproject.movable Then
                                 .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
@@ -21151,7 +21268,10 @@ Public Module Projekte
                             End If
 
 
-                        ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Then
+                        ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Or
+                            vpStatus = VProjectStatus(PTVPStati.ordered) Or
+                            vpStatus = VProjectStatus(PTVPStati.paused) Or
+                            vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
                             If myproject.movable Then
                                 .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
@@ -21171,12 +21291,14 @@ Public Module Projekte
                                 .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
                             End If
 
-                        ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Then
+                        ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Or
+                            vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
                             .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
                             .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
 
-                        ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Then
+                        ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Or
+                            vpStatus = VProjectStatus(PTVPStati.finished) Then
 
                             .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
                             .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
@@ -21883,743 +22005,743 @@ Public Module Projekte
     'End Sub
 
 
-    ''' <summary>
-    ''' Exportiert die Daten eines Projektes in einen Projekt-Steckbrief, ohne Berücksichtigung der Hierarchie
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <remarks></remarks>
-    Public Sub awinExportProject(hproj As clsProjekt)
+    '''' <summary>
+    '''' Exportiert die Daten eines Projektes in einen Projekt-Steckbrief, ohne Berücksichtigung der Hierarchie
+    '''' </summary>
+    '''' <param name="hproj"></param>
+    '''' <remarks></remarks>
+    'Public Sub awinExportProject(hproj As clsProjekt)
 
-        Dim fileName As String
-        Dim rng As Excel.Range, destinationRange As Excel.Range
-        Dim zeile As Integer, spalte As Integer
-        Dim rowOffset As Integer, columnOffset As Integer
-        Dim delimiter As String = "."
+    '    Dim fileName As String
+    '    Dim rng As Excel.Range, destinationRange As Excel.Range
+    '    Dim zeile As Integer, spalte As Integer
+    '    Dim rowOffset As Integer, columnOffset As Integer
+    '    Dim delimiter As String = "."
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
+    '    Dim formerEE As Boolean = appInstance.EnableEvents
+    '    appInstance.EnableEvents = False
 
 
-        zeile = 1
-        spalte = 1
+    '    zeile = 1
+    '    spalte = 1
 
-        ' Dateiname des Projectfiles '
-        ' ur: 14.01.2015: Dateiname gleich dem Shape-Namen einschließlich VariantenNamen
+    '    ' Dateiname des Projectfiles '
+    '    ' ur: 14.01.2015: Dateiname gleich dem Shape-Namen einschließlich VariantenNamen
 
-        fileName = hproj.getShapeText & ".xlsx"
+    '    fileName = hproj.getShapeText & ".xlsx"
 
-        'ur: 13.01.2015:  aus "fileName" werden die illegale Sonderzeichen eliminiert
-        fileName = cleanFileName(fileName)
+    '    'ur: 13.01.2015:  aus "fileName" werden die illegale Sonderzeichen eliminiert
+    '    fileName = cleanFileName(fileName)
 
-        ' fileName wird nun ergänzt mit dem passenden Pfad
-        'fileName = awinPath & projektFilesOrdner & "\" & fileName
-        fileName = exportOrdnerNames(PTImpExp.visbo) & "\" & fileName
+    '    ' fileName wird nun ergänzt mit dem passenden Pfad
+    '    'fileName = awinPath & projektFilesOrdner & "\" & fileName
+    '    fileName = exportOrdnerNames(PTImpExp.visbo) & "\" & fileName
 
 
-        ' -------------------------------------------------
-        ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
-        ' -------------------------------------------------
-        Try
-            With appInstance.ActiveWorkbook.Worksheets("Stammdaten")
+    '    ' -------------------------------------------------
+    '    ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
+    '    ' -------------------------------------------------
+    '    Try
+    '        With appInstance.ActiveWorkbook.Worksheets("Stammdaten")
 
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
+    '            .Unprotect(Password:="x")       ' Blattschutz aufheben
 
-                ' Projekt-Name
+    '            ' Projekt-Name
 
-                .range("Projekt_Name").value = hproj.name
-                .range("Projekt_Name").interior.color = hproj.farbe
-                .range("Projekt_Name").font.size = hproj.Schrift
-                .range("Projekt_Name").font.color = hproj.Schriftfarbe
+    '            .range("Projekt_Name").value = hproj.name
+    '            .range("Projekt_Name").interior.color = hproj.farbe
+    '            .range("Projekt_Name").font.size = hproj.Schrift
+    '            .range("Projekt_Name").font.color = hproj.Schriftfarbe
 
 
-                ' Start
+    '            ' Start
 
-                .range("StartDatum").value = hproj.startDate
+    '            .range("StartDatum").value = hproj.startDate
 
-                ' Ende
+    '            ' Ende
 
-                .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays - 1)
+    '            .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays - 1)
 
 
-                'Projektleiter
+    '            'Projektleiter
 
-                .range("Projektleiter").value = hproj.leadPerson
+    '            .range("Projektleiter").value = hproj.leadPerson
 
-                ' Budget
-                rng = CType(.range("Budget"), Excel.Range)
-                .range("Budget").value = hproj.Erloes.ToString("#####.#")
-                Try
+    '            ' Budget
+    '            rng = CType(.range("Budget"), Excel.Range)
+    '            .range("Budget").value = hproj.Erloes.ToString("#####.#")
+    '            Try
 
-                Catch ex As Exception
+    '            Catch ex As Exception
 
-                End Try
+    '            End Try
 
-                'Kurzbeschreibung'
+    '            'Kurzbeschreibung'
 
-                .range("ProjektBeschreibung").value = hproj.description
+    '            .range("ProjektBeschreibung").value = hproj.description
 
-                ' Ampel-Farbe
+    '            ' Ampel-Farbe
 
-                .range("Bewertung").interior.color = awinSettings.AmpelNichtBewertet
-                .range("Bewertung").value = hproj.ampelStatus
+    '            .range("Bewertung").interior.color = awinSettings.AmpelNichtBewertet
+    '            .range("Bewertung").value = hproj.ampelStatus
 
 
-                ' Ampel-Bewertung 
+    '            ' Ampel-Bewertung 
 
-                .range("BewertgErläuterung").value = hproj.ampelErlaeuterung
+    '            .range("BewertgErläuterung").value = hproj.ampelErlaeuterung
 
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+    '            '' Blattschutz setzen
+    '            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
-            End With
-        Catch ex As Exception
-            '' Blattschutz setzen
-            'appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+    '        End With
+    '    Catch ex As Exception
+    '        '' Blattschutz setzen
+    '        'appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
-            appInstance.EnableEvents = formerEE
-            Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
-        End Try
+    '        appInstance.EnableEvents = formerEE
+    '        Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
+    '    End Try
 
-        ' --------------------------------------------------
-        ' jetzt werden die Ressourcen Bedarfe weggeschrieben 
+    '    ' --------------------------------------------------
+    '    ' jetzt werden die Ressourcen Bedarfe weggeschrieben 
 
-        ' --------------------------------------------------
-
-        Try
-            With CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), Excel.Worksheet)
-
-                Dim tbl As Excel.Range
-
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-                zeile = 1
-                spalte = 1
-
-                ' die Monate eintragen 
-
-                If awinSettings.zeitEinheit = "PM" Then
-
-                    ' Dim htxt As String = hproj.startDate.ToShortDateString
-
-                    ' Zeilen und Spalten-Offset für die Zeitleiste herausfinden
-                    tbl = .Range("Zeitleiste")
-                    rowOffset = tbl.Row         ' Reihen-Offset für die Zeitleiste
-                    columnOffset = tbl.Column   ' Spalten-Offset für die Zeitleiste
-
-                    ' Monat und Jahreszahl in die ersten beiden Felder der Zeitleiste eintragen'
-                    .Range("Zeitleiste").Cells(columnOffset).value = "= StartDatum"
-
-                    .Range("Zeitleiste").Cells(columnOffset + 1).value = "= EDATUM(D" & rowOffset & ",1"
-                    .Range("Zeitleiste").Cells(columnOffset + 2).value = "= EDATUM(E" & rowOffset & ",1"
-
-                    ' die ersten beiden Felder der Zeitleiste formatieren
-                    rng = .Range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 2))
-                    rng.NumberFormat = "mmm-yy"
-                    ' Die restliche Zeitleiste  formatieren
-                    'rng = .range(.cells(startZeile, spalte), .cells(endZeile, spalte))
-                    destinationRange = .Range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 200))
-                    With destinationRange
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "mmm-yy"
-                        .WrapText = False
-                        .Orientation = 90
-                        .AddIndent = False
-                        .IndentLevel = 0
-                        .ShrinkToFit = False
-                        .ReadingOrder = Excel.Constants.xlContext
-                        .MergeCells = False
-                        .ColumnWidth = 4
-                    End With
-
-                    ' die Zeitleiste mit den Monatsangaben automatisch befüllen
-                    rng.AutoFill(Destination:=destinationRange, Type:=xlNS.XlAutoFillType.xlFillDefault)
-
-
-                ElseIf awinSettings.zeitEinheit = "PW" Then
-                ElseIf awinSettings.zeitEinheit = "PT" Then
-
-                End If
-
-                ' hier über alle Phasen ... 
-                Dim cphase As clsPhase
-                Dim p As Integer
-                Dim phasenFarbe As Object
-                Dim values() As Double
-                Dim ErgebnisListe As New Collection
-                Dim anzahlItems As Integer
-                Dim r As Integer
-                Dim d As Integer
-                Dim itemNameID As String
-                Dim dimension As Integer
-
-                ' evtl hier vorher prüfen, ob es eine Phase mit Name hproj.name oder hproj.vorlagenName gibt; wenn nein , 
-                ' muss hier der Projektname mit farbiger Gesamtdauer stehen 
-
-                rowOffset = 1
-                columnOffset = 1
-
-                If hproj.CountPhases = 0 Then
-                    ' Projekt-Name eintragen, Dauer einfärben, 28.2. genaues Start- und Endedatum in Kommentar eintragen
-
-                    .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = hproj.name
-                    .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
-                    rng = CType(.Range("Zeitmatrix")(.Cells(rowOffset, columnOffset), .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1)), Excel.Range)
-                    rng.Interior.Color = hproj.farbe
-                    .Cells(rowOffset, columnOffset).AddComment()
-                    With .Cells(rowOffset, columnOffset).Comment
-                        .Visible = False
-                        .Text(Text:="Start:" & Chr(10) & hproj.startDate)
-                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                    End With
-                    .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
-                    With .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
-                        .Visible = False
-                        .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
-                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                    End With
-                    rowOffset = rowOffset + 1
-                End If
-
-                For p = 1 To hproj.CountPhases
-                    cphase = hproj.getPhase(p)
-
-                    ' Phasen-Name eintragen, Dauer einfärben
-                    itemNameID = cphase.nameID
-
-                    Try
-                        phasenFarbe = cphase.farbe
-                    Catch ex As Exception
-                        phasenFarbe = hproj.farbe
-                    End Try
-
-                    If itemNameID = rootPhaseName Then
-                        ' Projekt-Name eintragen, Dauer einfärben
-                        .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = elemNameOfElemID(rootPhaseName)
-                        .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
-                        For d = 1 To hproj.anzahlRasterElemente
-                            .Range("Zeitmatrix").Cells(rowOffset, columnOffset + d - 1).Interior.Color = hproj.farbe
-                        Next d
-                        ' Startdatum in Kommentar eintragen
-                        .Range("Zeitmatrix").Cells(rowOffset, columnOffset).AddComment()
-                        With .Range("Zeitmatrix").Cells(rowOffset, columnOffset).Comment
-                            .Visible = False
-                            .Text(Text:="Start:" & Chr(10) & hproj.startDate)
-                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End With
-                        .Range("Zeitmatrix").Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
-                        With .Range("Zeitmatrix").Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
-                            .Visible = False
-                            .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
-                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End With
-
-
-                        d = CInt(appInstance.WorksheetFunction.CountA(.Range("Phasen_des_Projekts")))
-
-                    Else
-                        .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = elemNameOfElemID(itemNameID)
-                        For d = 1 To cphase.relEnde - cphase.relStart + 1
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
-                        Next d
-
-                        ' Kommentar mit Start- und Endedatum eintragen
-                        If cphase.relStart = cphase.relEnde Then
-                            ' cphase ist nur ein Kästchen breit, d.h. Start-und EndeDatum müssen in einem Kommentar stehen
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).AddComment()
-                            With .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).Comment
-                                .Visible = False
-                                .Text(Text:="Start:" & Chr(10) & cphase.getStartDate & Chr(10) & "Ende:" & Chr(10) & cphase.getEndDate)
-                            End With
-                        Else
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).AddComment()
-                            With .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).Comment
-                                .Visible = False
-                                .Text(Text:="Start:" & Chr(10) & cphase.getStartDate)
-                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                            End With
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relEnde).AddComment()
-                            With .Range("Zeitmatrix").Cells(rowOffset, cphase.relEnde).Comment
-                                .Visible = False
-                                .Text(Text:="Ende:" & Chr(10) & cphase.getEndDate)
-                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                            End With
-                        End If
-                        ' ende Kommentar eintragen in Ressourcen
-                    End If
-
-                    rowOffset = rowOffset + 1
-
-
-
-                    anzahlItems = cphase.countRoles
-
-                    Dim itemName As String
-                    ' jetzt werden Rollen geschrieben 
-                    For r = 1 To anzahlItems
-                        itemName = cphase.getRole(r).name
-                        dimension = cphase.getRole(r).getDimension
-                        'ReDim values(cphase.relEnde - cphase.relStart)
-                        ReDim values(dimension)
-                        values = cphase.getRole(r).Xwerte
-                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
-
-                        For d = 1 To dimension + 1
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
-                        Next d
-                        rowOffset = rowOffset + 1
-                    Next r
-
-
-                    ' jetzt werden Kosten geschrieben 
-
-                    anzahlItems = cphase.countCosts
-
-                    For k = 1 To anzahlItems
-                        itemName = cphase.getCost(k).name
-                        dimension = cphase.getCost(k).getDimension
-                        ReDim values(dimension)
-                        values = cphase.getCost(k).Xwerte
-                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
-                        For d = 1 To dimension + 1
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
-                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
-                        Next d
-                        rowOffset = rowOffset + 1
-                    Next
-                    rowOffset = rowOffset + 1
-                Next p
-
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-
-            End With
-        Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-
-            appInstance.EnableEvents = formerEE
-            Throw New ArgumentException("Fehler in awinExportProject, Schreiben Ressourcen")
-        End Try
-
-        ' --------------------------------------------------
-        ' jetzt werden die Settings in das unsichtbare Worksheet ("Settings") geschrieben 
-        '
-        Try
-
-            With appInstance.ActiveWorkbook.Worksheets("Settings")
-
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-                zeile = 3
-                Dim startZeile As Integer, endZeile As Integer
-                Dim startRollen As Integer, startKosten As Integer
-                spalte = 1
-                Dim anzZeilen As Integer = 0
-                rng = CType(.Range(.Cells(zeile, spalte), .Cells(zeile + 2000, spalte + 120)), Excel.Range)
-                rng.Clear()
-
-                ' ----------------------------------------- 
-                ' Schreiben der Projektvorlagen
-                '
-                .cells(zeile, spalte).value = "Projekt-Vorlagen"
-                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
-
-                zeile = zeile + 1
-                startZeile = zeile
-
-                For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
-                    .cells(zeile, spalte).value = kvp.Key
-                    zeile = zeile + 1
-                Next
-                endZeile = zeile - 1
-
-                If endZeile >= startZeile Then
-
-                    If endZeile = startZeile Then
-                        rng = CType(.cells(startZeile, spalte), Excel.Range)
-                    Else
-                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
-                    End If
-
-                    appInstance.ActiveWorkbook.Names.Add(Name:="ProjektVorlagen", RefersTo:=rng)
-
-                End If
-
-                ' Schreiben des Delimiters
-                .cells(zeile, spalte).value = delimiter
-                zeile = zeile + 1
-
-                ' ----------------------------------------- 
-                ' Schreiben der Phasen
-                '
-                .cells(zeile, spalte).value = "Phasen"
-                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
-
-                zeile = zeile + 1
-                startZeile = zeile
-
-                For i = 1 To PhaseDefinitions.Count
-                    .cells(zeile, spalte).value = PhaseDefinitions.getPhaseDef(i).name
-                    .cells(zeile, spalte + 1).interior.color = PhaseDefinitions.getPhaseDef(i).farbe
-                    zeile = zeile + 1
-                Next
-
-                endZeile = zeile - 1
-
-                If endZeile >= startZeile Then
-
-                    If endZeile = startZeile Then
-                        rng = CType(.cells(startZeile, spalte), Excel.Range)
-                    Else
-                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
-                    End If
-                    appInstance.ActiveWorkbook.Names.Add(Name:="Phasen", RefersTo:=rng)
-
-                End If
-
-                ' Schreiben des Delimiters
-                .cells(zeile, spalte).value = delimiter
-                zeile = zeile + 1
-
-
-                ' ----------------------------------------- 
-                ' Schreiben der Rollen und Kostenarten
-                '
-
-                .cells(zeile, spalte).value = "Rollen/Kostenarten"
-                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
-
-                zeile = zeile + 1
-                startZeile = zeile
-                startRollen = zeile
-
-                For i = 1 To RoleDefinitions.Count
-                    .cells(zeile, spalte).value = RoleDefinitions.getRoledef(i).name
-                    zeile = zeile + 1
-                Next
-
-                endZeile = zeile - 1
-
-                If endZeile >= startZeile Then
-
-                    If endZeile = startZeile Then
-                        rng = CType(.cells(startZeile, spalte), Excel.Range)
-                    Else
-                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
-                    End If
-                    appInstance.ActiveWorkbook.Names.Add(Name:="Rollen", RefersTo:=rng)
-
-                End If
-
-
-                startKosten = zeile
-
-                For i = 1 To CostDefinitions.Count - 1
-                    ' die Personalkosten sind die letzte Kostenart, wird nicht mit aufgenommen, da sie 
-                    ' automatisch berücksichtigt wird 
-                    .cells(zeile, spalte).value = CostDefinitions.getCostdef(i).name
-                    zeile = zeile + 1
-                Next
-
-                endZeile = zeile - 1
-                If endZeile >= startKosten Then
-                    rng = CType(.range(.cells(startKosten, spalte), .cells(endZeile, spalte)), Excel.Range)
-                    appInstance.ActiveWorkbook.Names.Add(Name:="Kosten", RefersTo:=rng)
-
-                End If
-
-                If endZeile >= startZeile Then
-                    rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
-                    appInstance.ActiveWorkbook.Names.Add(Name:="Rollen_Kostenarten", RefersTo:=rng)
-
-                End If
-
-                ' Schreiben des Delimiters
-                .cells(zeile, spalte).value = delimiter
-                zeile = zeile + 1
-
-
-                ' -------------------------------------------
-                ' Schreiben der Ampel-Farben 
-                '
-
-
-                .cells(zeile, spalte).value = "Ampel-Farben"
-                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
-
-                zeile = zeile + 1
-                startZeile = zeile
-                For i = 0 To 3
-                    Select Case i
-                        Case 0
-                            .cells(zeile, spalte).value = "Ampel nicht bewertet"
-                            .cells(zeile, spalte).interior.color = awinSettings.AmpelNichtBewertet
-                        Case 1
-                            .cells(zeile, spalte).value = "Ampel Grün"
-                            .cells(zeile, spalte).interior.color = awinSettings.AmpelGruen
-                        Case 2
-                            .cells(zeile, spalte).value = "Ampel Gelb"
-                            .cells(zeile, spalte).interior.color = awinSettings.AmpelGelb
-                        Case 3
-                            .cells(zeile, spalte).value = "Ampel Rot"
-                            .cells(zeile, spalte).interior.color = awinSettings.AmpelRot
-                    End Select
-                    zeile = zeile + 1
-                Next
-
-                endZeile = zeile - 1
-
-                If endZeile >= startZeile Then
-                    rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
-                    appInstance.ActiveWorkbook.Names.Add(Name:="AmpelFarben", RefersTo:=rng)
-
-                End If
-
-                ' Schreiben des Delimiters
-                .cells(zeile, spalte).value = delimiter
-                zeile = zeile + 1
-
-
-                ' ----------------------------------------- 
-                ' Unsichtbarmachen des Tabellenblattes
-                '
-
-                .Visible = Excel.XlSheetVisibility.xlSheetHidden
-
-            End With
-
-        Catch ex As Exception
-            appInstance.EnableEvents = formerEE
-            Throw New ArgumentException("Fehler in awinExportProject, Schreiben Settings")
-        End Try
-
-        ' ----------------------------------------------
-        ' jetzt werden die Termine weggeschrieben ....
-
-        Try
-            With appInstance.ActiveWorkbook.Worksheets("Termine")
-
-
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-                zeile = 1
-                spalte = 1
-
-            End With
-        Catch ex As Exception
-            With appInstance.ActiveWorkbook.Worksheets.Add
-                .name = "Termine"
-                ' Tabelle ErgebnTabelle muss hier eigentlich erzeugt werden
-                appInstance.EnableEvents = formerEE
-                Throw New ArgumentException("Fehler in awinExportProject, Schreiben Termine, Worksheet Termine existiert nicht")
-            End With
-        End Try
-
-        ' --------------------------------------
-        ' Worksheet Termine existriert jetzt ...
-
-        With CType(appInstance.ActiveWorkbook.Worksheets("Termine"), Excel.Worksheet)
-
-            .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-            Dim cphase As New clsPhase(hproj)
-            Dim phaseName As String
-            Dim r As Integer
-            Dim cResult As New clsMeilenstein(parent:=cphase)
-            Dim cBewertung As clsBewertung
-            Dim phaseStart As Date
-            Dim phaseEnde As Date
-            Dim tbl As Excel.Range
-            Dim tablename As String
-
-            tablename = .ListObjects("ErgebnTabelle").Name
-            tbl = .ListObjects("ErgebnTabelle").Range
-            rowOffset = tbl.Row
-            columnOffset = tbl.Column
-
-
-            For p = 1 To hproj.CountPhases
-                cphase = hproj.getPhase(p)
-
-                If awinSettings.zeitEinheit = "PM" Then
-                    phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
-                    phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
-                ElseIf awinSettings.zeitEinheit = "PW" Then
-                    phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
-                    phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
-                ElseIf awinSettings.zeitEinheit = "PT" Then
-                    phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
-                    phaseEnde = hproj.startDate.AddDays(cphase.relEnde - 1)
-                End If
-
-
-                phaseName = cphase.name
-
-                ' hier muss die Phase geschrieben werden
-                .Cells(rowOffset + zeile, columnOffset).value = zeile
-                .Cells(rowOffset + zeile, columnOffset + 1).value = phaseName
-                .Cells(rowOffset + zeile, columnOffset + 2).value = ""
-                .Cells(rowOffset + zeile, columnOffset + 3).value = phaseStart
-                .Cells(rowOffset + zeile, columnOffset + 4).value = phaseEnde
-                '.Cells(rowOffset + zeile, columnOffset + 5).value = " "
-                .Cells(rowOffset + zeile, columnOffset + 5).value = "0"
-                .Cells(rowOffset + zeile, columnOffset + 5).interior.color = awinSettings.AmpelNichtBewertet
-                .Cells(rowOffset + zeile, columnOffset + 6).value = " "
-
-                zeile = zeile + 1
-
-                For r = 1 To cphase.countMilestones
-                    cResult = cphase.getMilestone(r)
-
-                    cBewertung = cResult.getBewertung(1)
-                    'Try
-                    '    cBewertung = cResult.getBewertung(1)
-                    'Catch ex As Exception
-                    '    cBewertung = New clsBewertung
-                    'End Try
-                    ' --------------------------------------------------------------------------------
-                    ' Termine müssen in Tabelle eingetragen werden
-                    '----------------------------------------------------------------------------------
-
-                    .Cells(rowOffset + zeile, columnOffset).value = zeile
-                    .Cells(rowOffset + zeile, columnOffset + 1).value = cResult.name
-                    With CType(.Cells(rowOffset + zeile, columnOffset + 1), Excel.Range)
-                        .IndentLevel = 2
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                    End With
-                    .Cells(rowOffset + zeile, columnOffset + 2).value = phaseName
-                    .Cells(rowOffset + zeile, columnOffset + 3).value = ""
-                    .Cells(rowOffset + zeile, columnOffset + 4).value = cResult.getDate
-                    ' .Cells(rowOffset + zeile, columnOffset + 4).value = cResult.verantwortlich
-                    .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.colorIndex
-                    .Cells(rowOffset + zeile, columnOffset + 5).interior.color = cBewertung.color
-                    ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
-                    .Cells(rowOffset + zeile, columnOffset + 6).value = cBewertung.description
-                    .Cells(rowOffset + zeile, columnOffset + 6).Rows.Autofit()
-                    .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
-
-                    zeile = zeile + 1
-                Next
-
-            Next
-
-            '' Blattschutz setzen
-            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-
-        End With
-
-
-        ' ----------------------------------------------
-        ' jetzt werden die Attribute weggeschrieben ....
-
-        Try
-            With CType(appInstance.ActiveWorkbook.Worksheets("Attribute"), Excel.Worksheet)
-
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-
-                ' Projekt-Typ
-
-                .Range("Projekt_Typ").Value = hproj.VorlagenName
-                rng = .Range("Projekt_Typ")
-                With rng
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                    .IndentLevel = 1
-                    .WrapText = False
-                End With
-
-                ' Status
-
-                .Range("Status").Value = hproj.Status
-                rng = .Range("Status")
-                With rng
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    .IndentLevel = 1
-                    .WrapText = False
-                End With
-
-                ' Business_Unit
-
-                .Range("Business_Unit").Value = hproj.businessUnit
-                rng = .Range("Business_Unit")
-                With rng
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                    .IndentLevel = 1
-                    .WrapText = False
-                End With
-
-                ' Strategischer Fit
-
-                .Range("Strategischer_Fit").Value = hproj.StrategicFit
-                rng = .Range("Strategischer_Fit")
-                With rng
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    .IndentLevel = 1
-                    .WrapText = False
-                End With
-
-                ' Risiko
-
-                .Range("Risiko").Value = hproj.Risiko
-                rng = .Range("Risiko")
-                With rng
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    .IndentLevel = 1
-                    .WrapText = False
-                End With
-
-                ' ur: 13.01.2015: Varianten_Name wird hier in das Tabellenblatt Attribute des Projekt-Steckbriefes eingetragen
-
-                If Not IsNothing(hproj.variantName) And hproj.variantName <> "" Then
-
-                    .Range("Variant_Name").Value = hproj.variantName
-                    rng = .Range("Variant_Name")
-                    With rng
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                        .IndentLevel = 1
-                        .WrapText = False
-                    End With
-
-                End If
-
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-
-            End With
-        Catch ex As Exception
-            '' Blattschutz setzen
-            'appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-            appInstance.EnableEvents = formerEE
-            Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
-        End Try
-
-
-        Try
-
-            My.Computer.FileSystem.DeleteFile(fileName)
-        Catch ex As Exception
-
-        End Try
-
-        Try
-
-            appInstance.ActiveWorkbook.SaveAs(fileName,
-                                          ConflictResolution:=xlNS.XlSaveConflictResolution.xlLocalSessionChanges
-                                          )
-
-        Catch ex As Exception
-            appInstance.EnableEvents = formerEE
-            Throw New ArgumentException("Fehler beim Datei-Schreiben")
-        End Try
-
-
-        appInstance.EnableEvents = formerEE
-
-
-    End Sub
+    '    ' --------------------------------------------------
+
+    '    Try
+    '        With CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), Excel.Worksheet)
+
+    '            Dim tbl As Excel.Range
+
+    '            .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+    '            zeile = 1
+    '            spalte = 1
+
+    '            ' die Monate eintragen 
+
+    '            If awinSettings.zeitEinheit = "PM" Then
+
+    '                ' Dim htxt As String = hproj.startDate.ToShortDateString
+
+    '                ' Zeilen und Spalten-Offset für die Zeitleiste herausfinden
+    '                tbl = .Range("Zeitleiste")
+    '                rowOffset = tbl.Row         ' Reihen-Offset für die Zeitleiste
+    '                columnOffset = tbl.Column   ' Spalten-Offset für die Zeitleiste
+
+    '                ' Monat und Jahreszahl in die ersten beiden Felder der Zeitleiste eintragen'
+    '                .Range("Zeitleiste").Cells(columnOffset).value = "= StartDatum"
+
+    '                .Range("Zeitleiste").Cells(columnOffset + 1).value = "= EDATUM(D" & rowOffset & ",1"
+    '                .Range("Zeitleiste").Cells(columnOffset + 2).value = "= EDATUM(E" & rowOffset & ",1"
+
+    '                ' die ersten beiden Felder der Zeitleiste formatieren
+    '                rng = .Range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 2))
+    '                rng.NumberFormat = "mmm-yy"
+    '                ' Die restliche Zeitleiste  formatieren
+    '                'rng = .range(.cells(startZeile, spalte), .cells(endZeile, spalte))
+    '                destinationRange = .Range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 200))
+    '                With destinationRange
+    '                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+    '                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+    '                    .NumberFormat = "mmm-yy"
+    '                    .WrapText = False
+    '                    .Orientation = 90
+    '                    .AddIndent = False
+    '                    .IndentLevel = 0
+    '                    .ShrinkToFit = False
+    '                    .ReadingOrder = Excel.Constants.xlContext
+    '                    .MergeCells = False
+    '                    .ColumnWidth = 4
+    '                End With
+
+    '                ' die Zeitleiste mit den Monatsangaben automatisch befüllen
+    '                rng.AutoFill(Destination:=destinationRange, Type:=xlNS.XlAutoFillType.xlFillDefault)
+
+
+    '            ElseIf awinSettings.zeitEinheit = "PW" Then
+    '            ElseIf awinSettings.zeitEinheit = "PT" Then
+
+    '            End If
+
+    '            ' hier über alle Phasen ... 
+    '            Dim cphase As clsPhase
+    '            Dim p As Integer
+    '            Dim phasenFarbe As Object
+    '            Dim values() As Double
+    '            Dim ErgebnisListe As New Collection
+    '            Dim anzahlItems As Integer
+    '            Dim r As Integer
+    '            Dim d As Integer
+    '            Dim itemNameID As String
+    '            Dim dimension As Integer
+
+    '            ' evtl hier vorher prüfen, ob es eine Phase mit Name hproj.name oder hproj.vorlagenName gibt; wenn nein , 
+    '            ' muss hier der Projektname mit farbiger Gesamtdauer stehen 
+
+    '            rowOffset = 1
+    '            columnOffset = 1
+
+    '            If hproj.CountPhases = 0 Then
+    '                ' Projekt-Name eintragen, Dauer einfärben, 28.2. genaues Start- und Endedatum in Kommentar eintragen
+
+    '                .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = hproj.name
+    '                .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
+    '                rng = CType(.Range("Zeitmatrix")(.Cells(rowOffset, columnOffset), .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1)), Excel.Range)
+    '                rng.Interior.Color = hproj.farbe
+    '                .Cells(rowOffset, columnOffset).AddComment()
+    '                With .Cells(rowOffset, columnOffset).Comment
+    '                    .Visible = False
+    '                    .Text(Text:="Start:" & Chr(10) & hproj.startDate)
+    '                    .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+    '                End With
+    '                .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
+    '                With .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
+    '                    .Visible = False
+    '                    .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
+    '                    .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+    '                End With
+    '                rowOffset = rowOffset + 1
+    '            End If
+
+    '            For p = 1 To hproj.CountPhases
+    '                cphase = hproj.getPhase(p)
+
+    '                ' Phasen-Name eintragen, Dauer einfärben
+    '                itemNameID = cphase.nameID
+
+    '                Try
+    '                    phasenFarbe = cphase.farbe
+    '                Catch ex As Exception
+    '                    phasenFarbe = hproj.farbe
+    '                End Try
+
+    '                If itemNameID = rootPhaseName Then
+    '                    ' Projekt-Name eintragen, Dauer einfärben
+    '                    .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = elemNameOfElemID(rootPhaseName)
+    '                    .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
+    '                    For d = 1 To hproj.anzahlRasterElemente
+    '                        .Range("Zeitmatrix").Cells(rowOffset, columnOffset + d - 1).Interior.Color = hproj.farbe
+    '                    Next d
+    '                    ' Startdatum in Kommentar eintragen
+    '                    .Range("Zeitmatrix").Cells(rowOffset, columnOffset).AddComment()
+    '                    With .Range("Zeitmatrix").Cells(rowOffset, columnOffset).Comment
+    '                        .Visible = False
+    '                        .Text(Text:="Start:" & Chr(10) & hproj.startDate)
+    '                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+    '                    End With
+    '                    .Range("Zeitmatrix").Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
+    '                    With .Range("Zeitmatrix").Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
+    '                        .Visible = False
+    '                        .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
+    '                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+    '                    End With
+
+
+    '                    d = CInt(appInstance.WorksheetFunction.CountA(.Range("Phasen_des_Projekts")))
+
+    '                Else
+    '                    .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = elemNameOfElemID(itemNameID)
+    '                    For d = 1 To cphase.relEnde - cphase.relStart + 1
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
+    '                    Next d
+
+    '                    ' Kommentar mit Start- und Endedatum eintragen
+    '                    If cphase.relStart = cphase.relEnde Then
+    '                        ' cphase ist nur ein Kästchen breit, d.h. Start-und EndeDatum müssen in einem Kommentar stehen
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).AddComment()
+    '                        With .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).Comment
+    '                            .Visible = False
+    '                            .Text(Text:="Start:" & Chr(10) & cphase.getStartDate & Chr(10) & "Ende:" & Chr(10) & cphase.getEndDate)
+    '                        End With
+    '                    Else
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).AddComment()
+    '                        With .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).Comment
+    '                            .Visible = False
+    '                            .Text(Text:="Start:" & Chr(10) & cphase.getStartDate)
+    '                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+    '                        End With
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relEnde).AddComment()
+    '                        With .Range("Zeitmatrix").Cells(rowOffset, cphase.relEnde).Comment
+    '                            .Visible = False
+    '                            .Text(Text:="Ende:" & Chr(10) & cphase.getEndDate)
+    '                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+    '                        End With
+    '                    End If
+    '                    ' ende Kommentar eintragen in Ressourcen
+    '                End If
+
+    '                rowOffset = rowOffset + 1
+
+
+
+    '                anzahlItems = cphase.countRoles
+
+    '                Dim itemName As String
+    '                ' jetzt werden Rollen geschrieben 
+    '                For r = 1 To anzahlItems
+    '                    itemName = cphase.getRole(r).name
+    '                    dimension = cphase.getRole(r).getDimension
+    '                    'ReDim values(cphase.relEnde - cphase.relStart)
+    '                    ReDim values(dimension)
+    '                    values = cphase.getRole(r).Xwerte
+    '                    .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
+
+    '                    For d = 1 To dimension + 1
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
+    '                    Next d
+    '                    rowOffset = rowOffset + 1
+    '                Next r
+
+
+    '                ' jetzt werden Kosten geschrieben 
+
+    '                anzahlItems = cphase.countCosts
+
+    '                For k = 1 To anzahlItems
+    '                    itemName = cphase.getCost(k).name
+    '                    dimension = cphase.getCost(k).getDimension
+    '                    ReDim values(dimension)
+    '                    values = cphase.getCost(k).Xwerte
+    '                    .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
+    '                    For d = 1 To dimension + 1
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
+    '                        .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
+    '                    Next d
+    '                    rowOffset = rowOffset + 1
+    '                Next
+    '                rowOffset = rowOffset + 1
+    '            Next p
+
+    '            '' Blattschutz setzen
+    '            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+    '        End With
+    '    Catch ex As Exception
+    '        ' Blattschutz setzen
+    '        appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+    '        appInstance.EnableEvents = formerEE
+    '        Throw New ArgumentException("Fehler in awinExportProject, Schreiben Ressourcen")
+    '    End Try
+
+    '    ' --------------------------------------------------
+    '    ' jetzt werden die Settings in das unsichtbare Worksheet ("Settings") geschrieben 
+    '    '
+    '    Try
+
+    '        With appInstance.ActiveWorkbook.Worksheets("Settings")
+
+    '            .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+    '            zeile = 3
+    '            Dim startZeile As Integer, endZeile As Integer
+    '            Dim startRollen As Integer, startKosten As Integer
+    '            spalte = 1
+    '            Dim anzZeilen As Integer = 0
+    '            rng = CType(.Range(.Cells(zeile, spalte), .Cells(zeile + 2000, spalte + 120)), Excel.Range)
+    '            rng.Clear()
+
+    '            ' ----------------------------------------- 
+    '            ' Schreiben der Projektvorlagen
+    '            '
+    '            .cells(zeile, spalte).value = "Projekt-Vorlagen"
+    '            .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+    '            zeile = zeile + 1
+    '            startZeile = zeile
+
+    '            For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
+    '                .cells(zeile, spalte).value = kvp.Key
+    '                zeile = zeile + 1
+    '            Next
+    '            endZeile = zeile - 1
+
+    '            If endZeile >= startZeile Then
+
+    '                If endZeile = startZeile Then
+    '                    rng = CType(.cells(startZeile, spalte), Excel.Range)
+    '                Else
+    '                    rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+    '                End If
+
+    '                appInstance.ActiveWorkbook.Names.Add(Name:="ProjektVorlagen", RefersTo:=rng)
+
+    '            End If
+
+    '            ' Schreiben des Delimiters
+    '            .cells(zeile, spalte).value = delimiter
+    '            zeile = zeile + 1
+
+    '            ' ----------------------------------------- 
+    '            ' Schreiben der Phasen
+    '            '
+    '            .cells(zeile, spalte).value = "Phasen"
+    '            .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+    '            zeile = zeile + 1
+    '            startZeile = zeile
+
+    '            For i = 1 To PhaseDefinitions.Count
+    '                .cells(zeile, spalte).value = PhaseDefinitions.getPhaseDef(i).name
+    '                .cells(zeile, spalte + 1).interior.color = PhaseDefinitions.getPhaseDef(i).farbe
+    '                zeile = zeile + 1
+    '            Next
+
+    '            endZeile = zeile - 1
+
+    '            If endZeile >= startZeile Then
+
+    '                If endZeile = startZeile Then
+    '                    rng = CType(.cells(startZeile, spalte), Excel.Range)
+    '                Else
+    '                    rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+    '                End If
+    '                appInstance.ActiveWorkbook.Names.Add(Name:="Phasen", RefersTo:=rng)
+
+    '            End If
+
+    '            ' Schreiben des Delimiters
+    '            .cells(zeile, spalte).value = delimiter
+    '            zeile = zeile + 1
+
+
+    '            ' ----------------------------------------- 
+    '            ' Schreiben der Rollen und Kostenarten
+    '            '
+
+    '            .cells(zeile, spalte).value = "Rollen/Kostenarten"
+    '            .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+    '            zeile = zeile + 1
+    '            startZeile = zeile
+    '            startRollen = zeile
+
+    '            For i = 1 To RoleDefinitions.Count
+    '                .cells(zeile, spalte).value = RoleDefinitions.getRoledef(i).name
+    '                zeile = zeile + 1
+    '            Next
+
+    '            endZeile = zeile - 1
+
+    '            If endZeile >= startZeile Then
+
+    '                If endZeile = startZeile Then
+    '                    rng = CType(.cells(startZeile, spalte), Excel.Range)
+    '                Else
+    '                    rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+    '                End If
+    '                appInstance.ActiveWorkbook.Names.Add(Name:="Rollen", RefersTo:=rng)
+
+    '            End If
+
+
+    '            startKosten = zeile
+
+    '            For i = 1 To CostDefinitions.Count - 1
+    '                ' die Personalkosten sind die letzte Kostenart, wird nicht mit aufgenommen, da sie 
+    '                ' automatisch berücksichtigt wird 
+    '                .cells(zeile, spalte).value = CostDefinitions.getCostdef(i).name
+    '                zeile = zeile + 1
+    '            Next
+
+    '            endZeile = zeile - 1
+    '            If endZeile >= startKosten Then
+    '                rng = CType(.range(.cells(startKosten, spalte), .cells(endZeile, spalte)), Excel.Range)
+    '                appInstance.ActiveWorkbook.Names.Add(Name:="Kosten", RefersTo:=rng)
+
+    '            End If
+
+    '            If endZeile >= startZeile Then
+    '                rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+    '                appInstance.ActiveWorkbook.Names.Add(Name:="Rollen_Kostenarten", RefersTo:=rng)
+
+    '            End If
+
+    '            ' Schreiben des Delimiters
+    '            .cells(zeile, spalte).value = delimiter
+    '            zeile = zeile + 1
+
+
+    '            ' -------------------------------------------
+    '            ' Schreiben der Ampel-Farben 
+    '            '
+
+
+    '            .cells(zeile, spalte).value = "Ampel-Farben"
+    '            .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+    '            zeile = zeile + 1
+    '            startZeile = zeile
+    '            For i = 0 To 3
+    '                Select Case i
+    '                    Case 0
+    '                        .cells(zeile, spalte).value = "Ampel nicht bewertet"
+    '                        .cells(zeile, spalte).interior.color = awinSettings.AmpelNichtBewertet
+    '                    Case 1
+    '                        .cells(zeile, spalte).value = "Ampel Grün"
+    '                        .cells(zeile, spalte).interior.color = awinSettings.AmpelGruen
+    '                    Case 2
+    '                        .cells(zeile, spalte).value = "Ampel Gelb"
+    '                        .cells(zeile, spalte).interior.color = awinSettings.AmpelGelb
+    '                    Case 3
+    '                        .cells(zeile, spalte).value = "Ampel Rot"
+    '                        .cells(zeile, spalte).interior.color = awinSettings.AmpelRot
+    '                End Select
+    '                zeile = zeile + 1
+    '            Next
+
+    '            endZeile = zeile - 1
+
+    '            If endZeile >= startZeile Then
+    '                rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+    '                appInstance.ActiveWorkbook.Names.Add(Name:="AmpelFarben", RefersTo:=rng)
+
+    '            End If
+
+    '            ' Schreiben des Delimiters
+    '            .cells(zeile, spalte).value = delimiter
+    '            zeile = zeile + 1
+
+
+    '            ' ----------------------------------------- 
+    '            ' Unsichtbarmachen des Tabellenblattes
+    '            '
+
+    '            .Visible = Excel.XlSheetVisibility.xlSheetHidden
+
+    '        End With
+
+    '    Catch ex As Exception
+    '        appInstance.EnableEvents = formerEE
+    '        Throw New ArgumentException("Fehler in awinExportProject, Schreiben Settings")
+    '    End Try
+
+    '    ' ----------------------------------------------
+    '    ' jetzt werden die Termine weggeschrieben ....
+
+    '    Try
+    '        With appInstance.ActiveWorkbook.Worksheets("Termine")
+
+
+    '            .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+    '            zeile = 1
+    '            spalte = 1
+
+    '        End With
+    '    Catch ex As Exception
+    '        With appInstance.ActiveWorkbook.Worksheets.Add
+    '            .name = "Termine"
+    '            ' Tabelle ErgebnTabelle muss hier eigentlich erzeugt werden
+    '            appInstance.EnableEvents = formerEE
+    '            Throw New ArgumentException("Fehler in awinExportProject, Schreiben Termine, Worksheet Termine existiert nicht")
+    '        End With
+    '    End Try
+
+    '    ' --------------------------------------
+    '    ' Worksheet Termine existriert jetzt ...
+
+    '    With CType(appInstance.ActiveWorkbook.Worksheets("Termine"), Excel.Worksheet)
+
+    '        .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+    '        Dim cphase As New clsPhase(hproj)
+    '        Dim phaseName As String
+    '        Dim r As Integer
+    '        Dim cResult As New clsMeilenstein(parent:=cphase)
+    '        Dim cBewertung As clsBewertung
+    '        Dim phaseStart As Date
+    '        Dim phaseEnde As Date
+    '        Dim tbl As Excel.Range
+    '        Dim tablename As String
+
+    '        tablename = .ListObjects("ErgebnTabelle").Name
+    '        tbl = .ListObjects("ErgebnTabelle").Range
+    '        rowOffset = tbl.Row
+    '        columnOffset = tbl.Column
+
+
+    '        For p = 1 To hproj.CountPhases
+    '            cphase = hproj.getPhase(p)
+
+    '            If awinSettings.zeitEinheit = "PM" Then
+    '                phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
+    '                phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
+    '            ElseIf awinSettings.zeitEinheit = "PW" Then
+    '                phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
+    '                phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
+    '            ElseIf awinSettings.zeitEinheit = "PT" Then
+    '                phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
+    '                phaseEnde = hproj.startDate.AddDays(cphase.relEnde - 1)
+    '            End If
+
+
+    '            phaseName = cphase.name
+
+    '            ' hier muss die Phase geschrieben werden
+    '            .Cells(rowOffset + zeile, columnOffset).value = zeile
+    '            .Cells(rowOffset + zeile, columnOffset + 1).value = phaseName
+    '            .Cells(rowOffset + zeile, columnOffset + 2).value = ""
+    '            .Cells(rowOffset + zeile, columnOffset + 3).value = phaseStart
+    '            .Cells(rowOffset + zeile, columnOffset + 4).value = phaseEnde
+    '            '.Cells(rowOffset + zeile, columnOffset + 5).value = " "
+    '            .Cells(rowOffset + zeile, columnOffset + 5).value = "0"
+    '            .Cells(rowOffset + zeile, columnOffset + 5).interior.color = awinSettings.AmpelNichtBewertet
+    '            .Cells(rowOffset + zeile, columnOffset + 6).value = " "
+
+    '            zeile = zeile + 1
+
+    '            For r = 1 To cphase.countMilestones
+    '                cResult = cphase.getMilestone(r)
+
+    '                cBewertung = cResult.getBewertung(1)
+    '                'Try
+    '                '    cBewertung = cResult.getBewertung(1)
+    '                'Catch ex As Exception
+    '                '    cBewertung = New clsBewertung
+    '                'End Try
+    '                ' --------------------------------------------------------------------------------
+    '                ' Termine müssen in Tabelle eingetragen werden
+    '                '----------------------------------------------------------------------------------
+
+    '                .Cells(rowOffset + zeile, columnOffset).value = zeile
+    '                .Cells(rowOffset + zeile, columnOffset + 1).value = cResult.name
+    '                With CType(.Cells(rowOffset + zeile, columnOffset + 1), Excel.Range)
+    '                    .IndentLevel = 2
+    '                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+    '                End With
+    '                .Cells(rowOffset + zeile, columnOffset + 2).value = phaseName
+    '                .Cells(rowOffset + zeile, columnOffset + 3).value = ""
+    '                .Cells(rowOffset + zeile, columnOffset + 4).value = cResult.getDate
+    '                ' .Cells(rowOffset + zeile, columnOffset + 4).value = cResult.verantwortlich
+    '                .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.colorIndex
+    '                .Cells(rowOffset + zeile, columnOffset + 5).interior.color = cBewertung.color
+    '                ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
+    '                .Cells(rowOffset + zeile, columnOffset + 6).value = cBewertung.description
+    '                .Cells(rowOffset + zeile, columnOffset + 6).Rows.Autofit()
+    '                .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+
+    '                zeile = zeile + 1
+    '            Next
+
+    '        Next
+
+    '        '' Blattschutz setzen
+    '        '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+    '    End With
+
+
+    '    ' ----------------------------------------------
+    '    ' jetzt werden die Attribute weggeschrieben ....
+
+    '    Try
+    '        With CType(appInstance.ActiveWorkbook.Worksheets("Attribute"), Excel.Worksheet)
+
+    '            .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+
+    '            ' Projekt-Typ
+
+    '            .Range("Projekt_Typ").Value = hproj.VorlagenName
+    '            rng = .Range("Projekt_Typ")
+    '            With rng
+    '                .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+    '                .IndentLevel = 1
+    '                .WrapText = False
+    '            End With
+
+    '            ' Status
+
+    '            .Range("Status").Value = hproj.vpStatus
+    '            rng = .Range("Status")
+    '            With rng
+    '                .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+    '                .IndentLevel = 1
+    '                .WrapText = False
+    '            End With
+
+    '            ' Business_Unit
+
+    '            .Range("Business_Unit").Value = hproj.businessUnit
+    '            rng = .Range("Business_Unit")
+    '            With rng
+    '                .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+    '                .IndentLevel = 1
+    '                .WrapText = False
+    '            End With
+
+    '            ' Strategischer Fit
+
+    '            .Range("Strategischer_Fit").Value = hproj.StrategicFit
+    '            rng = .Range("Strategischer_Fit")
+    '            With rng
+    '                .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+    '                .IndentLevel = 1
+    '                .WrapText = False
+    '            End With
+
+    '            ' Risiko
+
+    '            .Range("Risiko").Value = hproj.Risiko
+    '            rng = .Range("Risiko")
+    '            With rng
+    '                .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+    '                .IndentLevel = 1
+    '                .WrapText = False
+    '            End With
+
+    '            ' ur: 13.01.2015: Varianten_Name wird hier in das Tabellenblatt Attribute des Projekt-Steckbriefes eingetragen
+
+    '            If Not IsNothing(hproj.variantName) And hproj.variantName <> "" Then
+
+    '                .Range("Variant_Name").Value = hproj.variantName
+    '                rng = .Range("Variant_Name")
+    '                With rng
+    '                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+    '                    .IndentLevel = 1
+    '                    .WrapText = False
+    '                End With
+
+    '            End If
+
+    '            '' Blattschutz setzen
+    '            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+    '        End With
+    '    Catch ex As Exception
+    '        '' Blattschutz setzen
+    '        'appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+    '        appInstance.EnableEvents = formerEE
+    '        Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
+    '    End Try
+
+
+    '    Try
+
+    '        My.Computer.FileSystem.DeleteFile(fileName)
+    '    Catch ex As Exception
+
+    '    End Try
+
+    '    Try
+
+    '        appInstance.ActiveWorkbook.SaveAs(fileName,
+    '                                      ConflictResolution:=xlNS.XlSaveConflictResolution.xlLocalSessionChanges
+    '                                      )
+
+    '    Catch ex As Exception
+    '        appInstance.EnableEvents = formerEE
+    '        Throw New ArgumentException("Fehler beim Datei-Schreiben")
+    '    End Try
+
+
+    '    appInstance.EnableEvents = formerEE
+
+
+    'End Sub
 
 
 
@@ -23589,28 +23711,27 @@ Public Module Projekte
 
                 End With
 
-
-
-
                 ' Status
 
-                .Range("Status").Value = hproj.Status
-                rng = .Range("Status")
-                With rng
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    .IndentLevel = 1
-                    .WrapText = False
+                If Not IsNothing(hproj.vpStatus) Then
+                    .Range("Status").Value = hproj.vpStatus
+                    rng = .Range("Status")
+                    With rng
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        .IndentLevel = 1
+                        .WrapText = False
 
-                    Try
-                        .Validation.Delete()
-                        .Validation.Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop,
+                        Try
+                            .Validation.Delete()
+                            .Validation.Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop,
                                            Formula1:="=ProjektStatus")
-                        .Validation.InputMessage = ""
-                    Catch ex As Exception
+                            .Validation.InputMessage = ""
+                        Catch ex As Exception
 
-                    End Try
+                        End Try
 
-                End With
+                    End With
+                End If
 
                 ' Business_Unit
 
@@ -27633,6 +27754,47 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' calculates sum of values starting at 0 until and including index  
+    ''' </summary>
+    ''' <param name="ar"></param>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public Function calcPartSum2ix(ByVal ar As Double(), ByVal index As Integer) As Double
+        Dim result As Double = 0
+
+        Dim arLength As Integer = ar.Length
+        If index >= arLength Or index < 0 Then
+            ' do nothing 
+        Else
+            For ix As Integer = 0 To index
+                result = result + ar(ix)
+            Next
+        End If
+
+        calcPartSum2ix = result
+    End Function
+
+    ''' <summary>
+    ''' calculates sum of values starting with and including index until end of array 
+    ''' </summary>
+    ''' <param name="ar"></param>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public Function calcPartSum2End(ByVal ar As Double(), ByVal index As Integer) As Double
+        Dim result As Double = 0
+        Dim arLength As Integer = ar.Length
+        If index >= arLength Or index < 0 Then
+            ' do nothing 
+        Else
+            For ix As Integer = index To arLength - 1
+                result = result + ar(ix)
+            Next
+        End If
+
+        calcPartSum2End = result
+    End Function
+
+    ''' <summary>
     ''' gibt den Schnittmengen-Array zurück, der Array tmpValues hat die Dimension pEnde-PStart
     ''' und stellt die Werte dar, die im Monat pStart .. PEnde gelten. 
     ''' Im Schnittmengen Array sind die Werte der Dimension bis-von
@@ -27909,6 +28071,51 @@ Public Module Projekte
 
 
     End Function
+
+    ''' <summary>
+    ''' moves project to new start- and end-Date
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="newStartDate"></param>
+    ''' <param name="newEndDate"></param>
+    ''' <returns></returns>
+    Public Function moveProject(ByVal hproj As clsProjekt,
+                                 ByVal newStartDate As Date,
+                                 ByVal newEndDate As Date) As clsProjekt
+
+        Dim resultingProject As clsProjekt = Nothing
+
+        Try
+            ' make sure things can be moved ...
+            hproj.movable = True
+
+            Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+            Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate.Date, newEndDate.Date) + 1
+
+            Dim cphase As clsPhase = hproj.getPhase(1)
+
+            Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+            hproj.startDate = newStartDate.Date.AddHours(8)
+
+            If diffDays <> 0 Then
+                ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
+                ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
+                ' 
+                Call hproj.syncXWertePhases()
+            End If
+
+            newOffsetInTagen = 0
+
+            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, True)
+
+            resultingProject = hproj
+        Catch ex As Exception
+
+        End Try
+
+        moveProject = resultingProject
+    End Function
+
 
 
 End Module

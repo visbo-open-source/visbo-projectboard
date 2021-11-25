@@ -304,12 +304,13 @@ Public Class frmMEhryRoleCost
                     ' erst prüfen, ob die Rolle überhaupt zu den aktiven Rollen zählt, also im Zeitraum aktiv ist 
 
                     If Not IsNothing(curRole) Then
-                        weitermachen = RoleDefinitions.getCommonChildsOfParents(curRole.UID, skill.UID).Count > 0
+                        weitermachen = RoleDefinitions.getCommonChildsOfParents(curRole.UID, skill.UID).Count >= 0
                     End If
 
 
                     topLevelNode = .Nodes.Add(skill.name)
                     topLevelNode.Text = skill.name
+                    topLevelNode.Name = skill.name
 
                     If weitermachen Then
                         Dim nrTag As New clsNodeRoleTag
@@ -848,39 +849,41 @@ Public Class frmMEhryRoleCost
                 End If
 
                 If hasStillForecastMonthsOrOtherwiseOK Then
+                    If Not IsNothing(node.Tag) Then
+                        ' jetzt koommt die Behandlung für Check-.Role bzw Check-Cost 
+                        If CType(node.Tag, clsNodeRoleTag).isRole Then
 
-                    ' jetzt koommt die Behandlung für Check-.Role bzw Check-Cost 
-                    If CType(node.Tag, clsNodeRoleTag).isRole Then
+                            If Not initialRolesOfPhase.ContainsKey(checkItem) Then
+                                ' in rolesToAdd reintun:   
+                                If Not rolesToAdd.Contains(checkItem) Then
+                                    rolesToAdd.Add(checkItem, checkItem)
+                                End If
+                            Else
+                                ' wurde unchecked, dann checked 
+                                If rolesToDelete.Contains(checkItem) Then
+                                    rolesToDelete.Remove(checkItem)
+                                End If
 
-                        If Not initialRolesOfPhase.ContainsKey(checkItem) Then
-                            ' in rolesToAdd reintun:   
-                            If Not rolesToAdd.Contains(checkItem) Then
-                                rolesToAdd.Add(checkItem, checkItem)
                             End If
                         Else
-                            ' wurde unchecked, dann checked 
-                            If rolesToDelete.Contains(checkItem) Then
-                                rolesToDelete.Remove(checkItem)
-                            End If
+                            If Not initialCostsOfPhase.ContainsKey(checkItem) Then
+                                ' is costsToAdd reintun: 
+                                If Not costsToAdd.Contains(checkItem) Then
+                                    costsToAdd.Add(checkItem, checkItem)
+                                End If
+                            Else
+                                ' wurde unchecked, jetzt wieder checked 
+                                If costsToDelete.Contains(checkItem) Then
+                                    costsToDelete.Remove(checkItem)
+                                End If
 
-                        End If
-                    Else
-                        If Not initialCostsOfPhase.ContainsKey(checkItem) Then
-                            ' is costsToAdd reintun: 
-                            If Not costsToAdd.Contains(checkItem) Then
-                                costsToAdd.Add(checkItem, checkItem)
                             End If
-                        Else
-                            ' wurde unchecked, jetzt wieder checked 
-                            If costsToDelete.Contains(checkItem) Then
-                                costsToDelete.Remove(checkItem)
-                            End If
-
                         End If
                     End If
+
                 Else
-                    ' es gibt einen Fall, wo das trotzdem gehen soll 
-                    If CType(node.Tag, clsNodeRoleTag).isRole And rolesToDelete.Contains(checkItem) Then
+                        ' es gibt einen Fall, wo das trotzdem gehen soll 
+                        If CType(node.Tag, clsNodeRoleTag).isRole And rolesToDelete.Contains(checkItem) Then
                         rolesToDelete.Remove(checkItem)
                     ElseIf Not CType(node.Tag, clsNodeRoleTag).isRole And costsToDelete.Contains(checkItem) Then
                         costsToDelete.Remove(checkItem)

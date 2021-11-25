@@ -207,6 +207,9 @@ Public Class frmAuthentication
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
 
+            Me.Top = appInstance.Top + (appInstance.Height - Me.Height) / 2
+            Me.Left = appInstance.Left + (appInstance.Width - Me.Width) / 2
+
             If awinSettings.visboServer Then
                 pwforgotten.Visible = True
                 pwforgotten.Enabled = True

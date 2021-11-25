@@ -112,6 +112,8 @@
                 <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
                 <!--label="Import RPLAN RXF"-->
                 <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+                <!--label="Import JIRA Projekte (Excel-Ausleitung)"-->
+                <button id="PT4G1B10" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportJIRAProjects" supertip ="es können eine oder mehrere Jira-Projekte (EXcel-Ausleitung) gemäß Konfiguration importiert werden;" />
               </menu>
               <!--<menuSeparator id="menuSeparator1"/>-->
               <!--label="Projekte (Batch)"-->
@@ -247,6 +249,8 @@
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
               <!--label="den Status eines Projektes ändern"-->
               <button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
+              <!--label="Auto-Allocate"-->
+              <button id="PT2G1M1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2AutoAllocate" supertip ="Automatisierte Ressourcen Allokation"/>
             </menu>
           <!--</splitButton>-->
         </group>        
@@ -460,7 +464,7 @@
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->
-      <!--<tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTTestG1" >
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
@@ -469,7 +473,7 @@
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
           <button id="PTTestAPIvsClient" label="compare API versus Client Berechnung"  onAction ="PTTestAPI_Client" />
         </group>
-      </tab>-->
+      </tab>
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
@@ -515,17 +519,14 @@
           <!--label="Änderungen verwerfen"-->
           <!--<checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>-->
           <!--label="prozentuale Auslastungs-Werte anzeigen"-->
-          <!--<checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>-->
-          <!--label="Platzhalter Rollen automatisch reduzieren"-->
-          <!--<checkBox id="PT6G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>-->
-          <!--label="nachfrage, ob in Folgemonaten oder Vorgängermonaten reduziert werden soll"-->
-          <!--<checkBox id="PT6G2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTdontAskWhenAutoReduce" onAction ="awinPTdontAskWhenAutoReduce" supertip ="wenn gesetzt, werden beim Zuordnen von  Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; ohne erneutes Nachfragen"/>-->
+          <!--<checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>-->          
           <!--<separator id="PT6G2s1"></separator>-->
           <!--label="Sortierung ermöglichen"-->
           <!--<checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>-->
           <!--label="Header anzeigen"-->
           <checkBox id="PT6G2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTshowHeader" onAction ="awinPTshowHeader" supertip ="wenn gesetzt, können die Spaltenbreiten verändert werden."/>
           <checkBox id="PT6G2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTmeLastPlanCompare" onAction ="awinMELastOrBasline" supertip ="wenn gesetzt, dann wird im Vergleichs-Chart gegen den Stand vom .. verglichen"/>
+        <checkBox id="PT6G2B9" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTmeAllowOvertime" onAction ="awinMEOvertime" supertip ="wenn gesetzt, dann können Personen interaktiv überbucht werden"/>
         </group>
       </tab>  
      </tabs>

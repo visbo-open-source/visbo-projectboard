@@ -6,6 +6,8 @@
     Public Property vpvCount As Integer
     Public Property vpType As Integer
     Public Property vpPublic As Boolean
+    ' ur: 20210915 property vpStatus ersetzt künftig status des vpv und wird immer in vpStatus in der vpv kopiert
+    Public Property vpStatus As String
 
     ' ur: 20210422 properties like businessUnit, strategikFit, risk now moved to vp
     ' ur: 20210616 property PMCommit new in VP
@@ -27,9 +29,6 @@
         _vpvCount = 0
         _vpType = 0
         _vpPublic = False
-        _customFieldString = New List(Of clsCustomFieldStr)
-        _customFieldDouble = New List(Of clsCustomFieldDbl)
-        '_users = New List(Of clsUser)
         _customFieldDouble = New List(Of clsCustomFieldDbl)
         _customFieldDate = New List(Of clsCustomFieldDate)
         _customFieldString = New List(Of clsCustomFieldStr)
