@@ -3,6 +3,9 @@
     Public textCollection As Collection
     Private Sub frmOutputWindow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
+        Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
+
         For i As Integer = 1 To textCollection.Count
 
             ' hier muss es jetzt zerhackt werden ... 

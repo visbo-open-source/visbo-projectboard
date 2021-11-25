@@ -3,6 +3,9 @@
     Public itemsCollection As New List(Of String)
     Private Sub frmSelectOneItem_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
+        Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
+
         Call languageSettings()
 
         For Each itemName As String In itemsCollection

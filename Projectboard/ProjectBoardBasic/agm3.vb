@@ -312,8 +312,6 @@ Public Module agm3
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim outputLine As String
 
-        Dim oldAnzMsg As Integer = outputCollection.Count
-
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
@@ -377,205 +375,6 @@ Public Module agm3
                                             configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
                                             ProjectsFile = configLine.ProjectsFile
 
-                                        Case Else
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.sheet = CInt(.Cells(i, TabNCol).value)
-                                            configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
-
-                                            ' check out, whether there really is a valid Range Definition 
-                                            Dim validRange As Boolean = True
-                                            If configLine.cellrange Then
-                                                Dim colrange As String = CStr(.Cells(i, SNCol).value)
-                                                Dim hstr() As String = Split(colrange, ":")
-                                                If hstr.Length = 2 Then
-                                                    configLine.column.von = CInt(hstr(0))
-                                                    configLine.column.bis = CInt(hstr(1))
-                                                ElseIf hstr.Length = 1 Then
-                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                                Else
-                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                                    validRange = False
-                                                    'outputCollection.Add(outputLine)
-                                                End If
-
-                                            Else
-                                                configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                                configLine.column.bis = CInt(.Cells(i, SNCol).value)
-                                            End If
-
-                                            ' now consider potential Row Range 
-                                            If configLine.cellrange Then
-                                                Dim colrange As String = CStr(.Cells(i, ZNCol).value)
-                                                Dim hstr() As String = Split(colrange, ":")
-                                                If hstr.Length = 2 Then
-                                                    configLine.row.von = CInt(hstr(0))
-                                                    configLine.row.bis = CInt(hstr(1))
-                                                ElseIf hstr.Length = 1 Then
-                                                    configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                                    configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                                Else
-                                                    If Not validRange Then
-                                                        ' if there was no valid column nor a valid row Range: add message , make sure it is considered invalid
-                                                        outputLine = configLine.Titel & " : Angabe ist kein Range"
-                                                        outputCollection.Add(outputLine)
-                                                    End If
-                                                End If
-                                            Else
-                                                configLine.row.von = CInt(.Cells(i, ZNCol).value)
-                                                configLine.row.bis = CInt(.Cells(i, ZNCol).value)
-                                            End If
-
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.objType = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-                                    End Select
-
-                                    If ProjectsConfigs.ContainsKey(configLine.Titel) Then
-                                        ProjectsConfigs.Remove(configLine.Titel)
-                                    End If
-
-                                    ProjectsConfigs.Add(configLine.Titel, configLine)
-
-                                Next
-
-                            End With
-                        Else
-                            If awinSettings.englishLanguage Then
-                                outputLine = "The structure of the configFile doesn't match!  -  " & configFile
-                            Else
-                                outputLine = "Der Aufbau der Konfigurationsdatei ist nicht passend  -  " & configFile
-                            End If
-                            outputCollection.Add(outputLine)
-                        End If
-
-                    End If
-
-                Catch ex As Exception
-                    If awinSettings.englishLanguage Then
-                        outputLine = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
-                    Else
-                        outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
-                                    vbCrLf & " es fand kein Import statt "
-                    End If
-                    outputCollection.Add(outputLine)
-                End Try
-
-                ' configCapaImport - Konfigurationsfile schließen
-                configWB.Close(SaveChanges:=False)
-
-            Catch ex As Exception
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("The configuration-file " & configFile & "  To import the projects couldn't be opened.")
-                    outputLine = "The configurationfile " & configFile & "  to import the projects couldn't be opened."
-                Else
-                    Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
-                                vbCrLf & " Die Projekte können somit nicht importiert werden")
-                    outputLine = "Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
-                                vbCrLf & " Die Projekte können somit nicht importiert werden"
-                End If
-                outputCollection.Add(outputLine)
-            End Try
-        Else
-            If awinSettings.englishLanguage Then
-                outputLine = "The configuration-file doen't exist!  -  " & configFile
-            Else
-                outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
-            End If
-            outputCollection.Add(outputLine)
-        End If
-
-
-        'checkProjectImportConfig = (ProjectsConfigs.Count > 0)
-        ' tk: return false, if no Config Entries or a new Error message was entered into outputCollection   
-        checkProjectImportConfig = (ProjectsConfigs.Count > 0) And (outputCollection.Count = oldAnzMsg)
-
-    End Function
-
-    Public Function checkProjectUpdateConfig(configFile As String,
-                                      ByRef ProjectsFile As String,
-                                      ByRef ProjectsConfigs As SortedList(Of String, clsConfigProjectsImport),
-                                      ByRef lastrow As Integer,
-                                      ByRef outputCollection As Collection) As Boolean
-
-
-
-        Dim configLine As New clsConfigProjectsImport
-        Dim currentDirectoryName As String = requirementsOrdner
-        Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
-        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
-        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
-        Dim outputLine As String
-
-        Dim anzOldMsginOutput As Integer = outputCollection.Count
-
-        ''
-        '' Config-file wird geöffnet
-        ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
-
-        ' öffnen des Files 
-        If My.Computer.FileSystem.FileExists(configFile) Then
-
-            Try
-                configWB = appInstance.Workbooks.Open(configFile)
-
-                Try
-
-                    If appInstance.Worksheets.Count > 0 Then
-
-                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                        Dim titleCol As Integer,
-                            IdentCol As Integer,
-                            InputFileCol As Integer,
-                            TypCol As Integer,
-                            DatenCol As Integer,
-                            TabUCol As Integer, TabNCol As Integer,
-                            SUCol As Integer, SNCol As Integer,
-                            ZUCol As Integer, ZNCol As Integer,
-                            ObjCol As Integer,
-                            InhaltCol As Integer
-
-                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschiedenen Configurationselemente
-
-                        titleCol = searcharea.Find("Titel").Column
-                        IdentCol = searcharea.Find("Identifier").Column
-                        InputFileCol = searcharea.Find("InputFile").Column
-                        TypCol = searcharea.Find("Typ").Column
-                        DatenCol = searcharea.Find("Datenbereich").Column
-                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
-                        TabUCol = searcharea.Find("Tabellen-Name").Column
-                        SNCol = searcharea.Find("Spalten-Nummer").Column
-                        SUCol = searcharea.Find("Spaltenüberschrift").Column
-                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
-                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
-
-                        ObjCol = searcharea.Find("Objekt-Typ").Column
-                        InhaltCol = searcharea.Find("Inhalt").Column
-
-                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
-
-                        If ok Then
-                            With currentWS
-                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
-
-                                For i = 6 To lastrow
-
-                                    configLine = New clsConfigProjectsImport
-
-                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
-
-                                    Select Case Titel
-                                        Case "DateiName"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
-                                            ProjectsFile = configLine.ProjectsFile
 
                                         Case Else
                                             configLine.Titel = CStr(.Cells(i, titleCol).value)
@@ -659,14 +458,13 @@ Public Module agm3
 
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
-                    outputLine = "The configuration-file " & configFile & "  to update the projects couldn't be opened."
-                    Call MsgBox(outputLine)
-
+                    Call MsgBox("The configuration-file " & configFile & "  To import the projects couldn't be opened.")
+                    outputLine = "The configurationfile " & configFile & "  to import the projects couldn't be opened."
                 Else
+                    Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
+                                vbCrLf & " Die Projekte können somit nicht importiert werden")
                     outputLine = "Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
                                 vbCrLf & " Die Projekte können somit nicht importiert werden"
-                    Call MsgBox(outputLine)
-
                 End If
                 outputCollection.Add(outputLine)
             End Try
@@ -679,7 +477,7 @@ Public Module agm3
             outputCollection.Add(outputLine)
         End If
 
-        checkProjectUpdateConfig = (ProjectsConfigs.Count > 0) And (outputCollection.Count = anzOldMsginOutput)
+        checkProjectImportConfig = (ProjectsConfigs.Count > 0)
 
     End Function
 
@@ -800,8 +598,8 @@ Public Module agm3
                                                     configLine.column.von = CInt(hstr1(0))
                                                     configLine.column.bis = CInt(hstr1(1))
                                                 ElseIf hstr1.Length = 1 Then
-                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
+                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
                                                     If awinSettings.englishLanguage Then
@@ -903,8 +701,6 @@ Public Module agm3
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim outputLine As String
 
-        Dim anzOldMsgInOutPut As Integer = outputCollection.Count
-
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
@@ -1001,8 +797,8 @@ Public Module agm3
                                                     configLine.column.von = CInt(hstr1(0))
                                                     configLine.column.bis = CInt(hstr1(1))
                                                 ElseIf hstr1.Length = 1 Then
-                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
-                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
+                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
                                                     If awinSettings.englishLanguage Then
@@ -1079,8 +875,7 @@ Public Module agm3
 
         End If
 
-        ' make sure no additional error message were added here 
-        checkOrgaImportConfig = (orgaImportConfigs.Count > 0) And (outputCollection.Count = anzOldMsgInOutPut)
+        checkOrgaImportConfig = (orgaImportConfigs.Count > 0)
 
     End Function
 
@@ -1241,14 +1036,14 @@ Public Module agm3
                                             result = False
                                         Else
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name in Sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name in Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
 
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
@@ -1256,14 +1051,14 @@ Public Module agm3
                                         If hrole.name <> personalName Then
                                             ' Warning: name and personal Number do not match ...
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name in Sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name in Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
                                     End If
                                     'Dim identical As Boolean = (personalName = hrole.name)
@@ -1397,9 +1192,9 @@ Public Module agm3
                                                 ElseIf pNames.Count > 1 Then
                                                     ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
                                                     If awinSettings.englishLanguage Then
-                                                        outputline = "no assignment possible: There exists more than one project to project No. '" & projektKDNr & "'"
+                                                        outputline = "There exists more than one project to project No. '" & projektKDNr & "'"
                                                     Else
-                                                        outputline = "keine Zuordnung möglich: Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
+                                                        outputline = "Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
                                                     End If
 
                                                     oPCollection.Add(outputline)
@@ -1526,6 +1321,7 @@ Public Module agm3
 
                 Catch ex As Exception
                     actDataWB = Nothing
+                    Call logger(ptErrLevel.logError, "1. " & ex.Message, "readActualDataWithConfig", anzFehler)
                     Call MsgBox("1. " & ex.Message)
                 End Try
 
@@ -1536,9 +1332,9 @@ Public Module agm3
 
             End If
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, "2. " & ex.Message, "readActualDataWithConfig", anzFehler)
             Call MsgBox("2. " & ex.Message)
         End Try
-
 
         readActualDataWithConfig = result
     End Function
@@ -1606,7 +1402,11 @@ Public Module agm3
                     ImportProjekte.Clear(False)
                 End If
             Else
-                Call showOutPut(oCollection, "Errors occurred .. no import", "")
+                If Not visboClient.Contains("RPA") Then
+                    Call showOutPut(oCollection, "Errors occurred .. no import", "")
+                End If
+
+                Call logger(ptErrLevel.logError, "readActualData", oCollection)
             End If
 
 
@@ -1792,7 +1592,7 @@ Public Module agm3
                                 For iZ = 5 To lastZeile
 
 
-                                    rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                    rolename = CType(CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
                                     If rolename <> "" Then
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
@@ -2179,7 +1979,7 @@ Public Module agm3
                                         input_ok = False
                                     End If
 
-                                    absenceType = CStr(currentWS.Cells(ix, absenceCol).value)
+                                    absenceType = CStr(currentWS.Cells(ix, absenceCol).value).Trim
                                     If IsNothing(absenceType) Then
                                         input_ok = False
                                     Else
@@ -2367,7 +2167,7 @@ Public Module agm3
                                 'Dim Inhalt As String = kapaConfig("month").content
 
                                 ' Auslesen der Jahreszahl, falls vorhanden
-                                Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                                Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value).Trim
                                 If IsNothing(hjahr) Then
                                     Jahr = 0
                                 Else
@@ -2385,7 +2185,7 @@ Public Module agm3
 
 
                                 ' Auslesen des relevanten Monats
-                                Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
+                                Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value).Trim
                                 If IsNothing(hmonth) Then
                                     monthName = ""
                                 Else
@@ -2488,7 +2288,7 @@ Public Module agm3
                                             i = i - 1
                                             If kapaConfig("LastLine").regex = "RegEx" Then
                                                 regexpression = New Regex(kapaConfig("LastLine").content)
-                                                Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                                Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value).Trim
                                                 If Not IsNothing(lastLineContent) Then
                                                     Dim match As Match = regexpression.Match(lastLineContent)
                                                     If match.Success Then
@@ -2563,7 +2363,7 @@ Public Module agm3
                                         For iZ = firstUrlzeile To lastZeile
 
 
-                                            rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                            rolename = CType(CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
 
                                             ' tk 31.1.2020 Test - der CheckWert steht auf Spalte "AS"
                                             ' dazu muss manuell der Check-Wert bestimmt und in der Excel Datei eingetragen werden ..  
@@ -2627,7 +2427,7 @@ Public Module agm3
                                                                                 Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                                             End If
                                                                         Else
-                                                                            Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+                                                                            Dim workHours As String = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
                                                                             If workHours = "" Then
                                                                                 ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
                                                                                 anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
@@ -3119,7 +2919,7 @@ Public Module agm3
                                             'Dim Inhalt As String = kapaConfig("month").content
 
                                             ' Auslesen der Jahreszahl, falls vorhanden
-                                            Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                                            Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value).Trim
                                             If IsNothing(hjahr) Then
                                                 Jahr = 0
                                             Else
@@ -3189,11 +2989,11 @@ Public Module agm3
                                             ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
                                             Dim found As Boolean = False
                                             Dim i As Integer = lastZeile + 1
-                                            While Not found And i > firstUrlzeile
+                                            While Not found
                                                 i = i - 1
                                                 If kapaConfig("LastLine").regex = "RegEx" Then
                                                     regexpression = New Regex(kapaConfig("LastLine").content)
-                                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value).Trim
                                                     If Not IsNothing(lastLineContent) Then
                                                         Dim match As Match = regexpression.Match(lastLineContent)
                                                         If match.Success Then
@@ -3204,11 +3004,7 @@ Public Module agm3
                                                 End If
 
                                             End While
-
-                                            If found Then
-                                                lastZeile = i - 1
-                                            End If
-
+                                            lastZeile = i - 1
 
 
                                             ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
@@ -3231,7 +3027,7 @@ Public Module agm3
 
                                             For iZ = firstUrlzeile To lastZeile
 
-                                                rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                                rolename = CType(CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
 
                                                 ' tk 31.1.2020 Test - der CheckWert steht auf Spalte "AS"
                                                 ' dazu muss manuell der Check-Wert bestimmt und in der Excel Datei eingetragen werden ..  
@@ -3308,7 +3104,7 @@ Public Module agm3
                                                                                 Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                                                             End If
                                                                         Else
-                                                                            Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+                                                                            Dim workHours As String = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
                                                                             If workHours = "" Then
                                                                                 ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
                                                                                 anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
@@ -3612,15 +3408,13 @@ Public Module agm3
     ''' <returns></returns>
     Public Function readProjectsAllg(ByVal listOfProjectFiles As Collection,
                                      ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
-                                     ByRef meldungen As Collection,
-                                     ByVal importType As ptImportTypen) As List(Of String)
+                                     ByRef meldungen As Collection) As List(Of String)
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim listOfArchivFiles As New List(Of String)
         Dim anzFehler As Integer = 0
         Dim result As Boolean = False
-        Dim msgTxt As String = ""
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -3637,73 +3431,34 @@ Public Module agm3
         If listOfProjectFiles.Count > 0 Then
             ' Öffnen des projectFile
             For Each tmpDatei As String In listOfProjectFiles
+                Call logger(ptErrLevel.logInfo, "Einlesen Projekte " & tmpDatei, "", anzFehler)
+                result = readProjectsWithConfig(projectConfig, tmpDatei, meldungen)
 
-                If importType = ptImportTypen.telairTagetikUpdate Then
-                    If awinSettings.englishLanguage Then
-                        msgTxt = "Updating Project from " & tmpDatei
-                    Else
-                        msgTxt = "Update Projekt mit " & tmpDatei
-                    End If
-                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
-                    result = updateProjectWithConfig(projectConfig, tmpDatei, meldungen)
-
-                    If result Then
-                        ' hier: merken der erfolgreich importierten Projects Dateien
-                        listOfArchivFiles.Add(tmpDatei)
-                    End If
-
-                ElseIf importType = ptImportTypen.telairTagetikImport Then
-                    If awinSettings.englishLanguage Then
-                        msgTxt = "Importing Projects from " & tmpDatei
-                    Else
-                        msgTxt = "Einlesen Projekte aus " & tmpDatei
-                    End If
-                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
-                    result = readProjectsWithConfig(projectConfig, tmpDatei, meldungen)
-
-                    If result Then
-                        ' hier: merken der erfolgreich importierten Projects Dateien
-                        listOfArchivFiles.Add(tmpDatei)
-                    End If
-
-                ElseIf importType = ptImportTypen.instartCalcTemplateImport Then
-
-                    If awinSettings.englishLanguage Then
-                        msgTxt = "Importing Projects from " & tmpDatei
-                    Else
-                        msgTxt = "Einlesen Projekte aus " & tmpDatei
-                    End If
-                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
-                    result = readCalcTemplatesWithConfig(projectConfig, tmpDatei, meldungen)
-
-                    If result Then
-                        ' hier: merken der erfolgreich importierten Projects Dateien
-                        listOfArchivFiles.Add(tmpDatei)
-                    End If
-
+                If result Then
+                    ' hier: merken der erfolgreich importierten Projects Dateien
+                    listOfArchivFiles.Add(tmpDatei)
                 End If
-
             Next
 
         Else
+            Dim errMsg As String = "Es gibt keine Datei zur Projekt-Anlage" & vbLf _
+                             & "Es wurden daher jetzt keine berücksichtigt"
 
-            If awinSettings.englishLanguage Then
-                msgTxt = "no files to read ... Action cancelled! "
-            Else
-                msgTxt = "keine Dateien zu lesen ... Abbruch! "
-            End If
+            ' das sollte nicht dazu führen, dass nichts gemacht wird 
+            'meldungen.Add(errMsg)
+            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+            'Call MsgBox(errMsg)
 
-            meldungen.Add(msgTxt)
-
-            Call logger(ptErrLevel.logError, msgTxt, "", anzFehler)
+            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
         End If
 
-
-        readProjectsAllg = listOfArchivFiles
+        If result Then
+            readProjectsAllg = listOfArchivFiles
+        Else
+            readProjectsAllg = New List(Of String)
+        End If
 
     End Function
-
-
     Function readProjectsWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
@@ -3907,6 +3662,7 @@ Public Module agm3
                                                 ' Beauftragen , weil aus Controlling Sheet kommt und Nummer hat 
                                                 If hproj.kundenNummer <> "" Then
                                                     hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                                    hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                                 End If
 
 
@@ -4490,891 +4246,834 @@ Public Module agm3
         readProjectsWithConfig = result
     End Function
 
-    ''' <summary>
-    ''' used for Import ActualData : BaselineVersions = Nothing 
-    ''' and Update with Tagetik projects : BaselineVersions need to have same number than PlanningVersions
-    ''' can be performed by both OA, PL and PMO
-    ''' </summary>
-    ''' <param name="PlanningVersions"></param>
-    ''' <param name="BaselineVersions"></param>
-    ''' <param name="meldungen"></param>
-    ''' <returns></returns>
-    Public Function upDatesEintragen(ByVal PlanningVersions As clsProjekteAlle,
-                                     ByVal BaselineVersions As clsProjekteAlle,
-                                     ByRef meldungen As Collection) As Boolean
-        Dim result As Boolean = True
-        Dim outputLine As String = ""
-        Dim planningVersion As clsProjekt = Nothing
-        Dim baselineVersion As clsProjekt = Nothing
-        Dim err As New clsErrorCodeMsg
+    Public Function readProjectsJIRA(ByVal listOfProjectFiles As Collection,
+                                     ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                     ByRef meldungen As Collection) As List(Of String)
 
-        Dim today As Date = Date.Now
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim BacklogLength As Integer = 2
+        Dim listOfArchivFiles As New List(Of String)
+        Dim projtaskList As New SortedList(Of String, SortedList(Of Date, clsJIRA_Task))
+        Dim projListSortedName As New SortedList(Of String, SortedList(Of String, clsJIRA_Task))
+        Dim taskListSortedID As New SortedList(Of String, clsJIRA_Task)
+        Dim tasksInserted As New SortedList(Of String, clsJIRA_Task)
+        Dim tasksRemaining As New SortedList(Of String, clsJIRA_Task)
+        Dim tasksBacklog As New SortedList(Of String, clsJIRA_Task)
+        Dim tasksFertigOSprint As New SortedList(Of String, clsJIRA_Task)
+        Dim tasksNichtFertig As New SortedList(Of String, clsJIRA_Task)
 
-        ' remember User Role 
-        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+        Dim projsprintList As New SortedList(Of String, SortedList(Of String, clsJIRA_sprint))
+        Dim anzFehler As Integer = 0
+        Dim result As Boolean = False
 
-        If IsNothing(BaselineVersions) Then
-            ' Actual Data Import 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
-                Try
-                    planningVersion = kvp.Value
-                    Dim mProj As clsProjekt = Nothing
-                    ' Store Planning Version 
-                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
-
-                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
-
-                        If awinSettings.englishLanguage Then
-                            outputLine = "saved: " & planningVersion.name & ", " & planningVersion.variantName
-                            meldungen.Add(outputLine)
-                        Else
-                            outputLine = "gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
-                            meldungen.Add(outputLine)
-                        End If
-                    Else
-                        If awinSettings.englishLanguage Then
-                            outputLine = "Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
-                            meldungen.Add(outputLine)
-                        Else
-                            outputLine = "Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
-                            meldungen.Add(outputLine)
-                        End If
-                    End If
-                Catch ex As Exception
-
-                End Try
-            Next
-        Else
-            ' Forecast / Baseline Import 
-            ' first Check
-            If PlanningVersions.Count = BaselineVersions.Count Then
-
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
-                    Try
-                        planningVersion = kvp.Value
-                        Dim pName As String = kvp.Value.name
-                        Dim baselineKey As String = calcProjektKey(pName, ptVariantFixNames.pfv.ToString)
-                        baselineVersion = BaselineVersions.getProject(baselineKey)
-
-                        If Not IsNothing(baselineVersion) Then
-                            ' Store Planning Version 
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
-                            Dim mProj As clsProjekt = Nothing
-                            planningVersion.timeStamp = today
-                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
-
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "saved: " & planningVersion.name & ", " & planningVersion.variantName
-                                    meldungen.Add(outputLine)
-                                Else
-                                    outputLine = "gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
-                                    meldungen.Add(outputLine)
-                                End If
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
-                                    meldungen.Add(outputLine)
-                                Else
-                                    outputLine = "Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
-                                    meldungen.Add(outputLine)
-                                End If
-                            End If
-
-                            ' Store Baseline Version 
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
-                            mProj = Nothing
-                            baselineVersion.timeStamp = today
-                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(baselineVersion, dbUsername, mProj, err, attrToStore:=False) Then
-
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "Baseline saved: " & baselineVersion.name & ", " & baselineVersion.variantName
-                                    meldungen.Add(outputLine)
-                                Else
-                                    outputLine = "Baseline gespeichert: " & baselineVersion.name & ", " & baselineVersion.variantName
-                                    meldungen.Add(outputLine)
-                                End If
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "Baseline Store Failed: " & baselineVersion.name & ", " & baselineVersion.variantName
-                                    meldungen.Add(outputLine)
-                                Else
-                                    outputLine = "Baseline Speichern Fehlgeschlagen! " & baselineVersion.name & ", " & baselineVersion.variantName
-                                    meldungen.Add(outputLine)
-                                End If
-                            End If
-
-                        Else
-                            outputLine = "there is no baseline version ... skipped ...  " & kvp.Value.name
-                            meldungen.Add(outputLine)
-                            Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
-                        End If
-                    Catch ex As Exception
-                        If awinSettings.englishLanguage Then
-                            outputLine = "unexpected failure - not stored: " & planningVersion.name
-                            meldungen.Add(outputLine)
-                        Else
-                            outputLine = "unerwarteter Fehler - nicht gespeichert: " & planningVersion.name
-                            meldungen.Add(outputLine)
-                        End If
-                    End Try
-
-                Next
-
-
-
-            Else
-                outputLine = "Nr of planning and baseline versions different: " & PlanningVersions.Count & ", " & BaselineVersions.Count
-                meldungen.Add(outputLine)
-                Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
-                result = False
-            End If
-
-
+        If formerEE Then
+            appInstance.EnableEvents = False
         End If
 
-        ' restore User Role 
-        myCustomUserRole.customUserRole = saveUserRole
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
 
-        upDatesEintragen = result
-    End Function
+        enableOnUpdate = False
 
-    ''' <summary>
-    ''' creates from a Instart Angebots-Kalkulation in Excel a VISBO Project 
-    ''' </summary>
-    ''' <param name="projectConfig"></param>
-    ''' <param name="tmpDatei"></param>
-    ''' <param name="meldungen"></param>
-    ''' <returns></returns>
-    Public Function readCalcTemplatesWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
-                                    ByVal tmpDatei As String,
-                                    ByRef meldungen As Collection) As Boolean
-        Dim outputline As String = ""
-        Dim ok As Boolean = False
-        Dim result As Boolean = False
-        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
-        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
-        Dim searchColNr As Integer = 1
-        Dim myRowNr As Integer = 1
 
-        Dim offsets As Integer() = Nothing
 
-        Dim pName As String = ""
-        Dim vName As String = ""
-        Dim startDate As Date = Nothing
-        Dim endDate As Date = Nothing
-        Dim kunde As String = ""
-        Dim budget As Double = 0.0
-        Dim businessUnit As String = ""
+        If listOfProjectFiles.Count > 0 Then
+            ' Öffnen des projectFile
+            For Each tmpDatei As String In listOfProjectFiles
+                Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekte " & tmpDatei, "readProjectsJIRA", anzFehler)
 
-        Dim arrayDimension As Integer = 0
+                result = readJIRATasks(projectConfig, tmpDatei, projtaskList, projListSortedName, projsprintList, meldungen)
 
-        Dim phaseRoleValues As New SortedList(Of String, SortedList(Of String, Double()))
-        Dim phaseCostValues As New SortedList(Of String, SortedList(Of String, Double()))
-        Dim invoiceMilestones As New SortedList(Of Date, KeyValuePair(Of String, Double))
-        Dim phaseDates As New SortedList(Of String, Date())
-
-        Try
-            If My.Computer.FileSystem.FileExists(tmpDatei) Then
-                Try
-                    projectWB = appInstance.Workbooks.Open(tmpDatei)
-                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
-                    '
-                    ' Start protokollieren 
-                    outputline = "Start Import CalcTemplate: " & tmpDatei
-                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
-                    '
-                    '
-                    Dim searchColumn As Excel.Range = Nothing
-                    Dim trennZeichen As String = projectConfig("Ende-Zeichen").content
-
-                    Dim pNameDefinition As clsConfigProjectsImport = projectConfig("Projekt-Name")
-                    Dim startDefinition As clsConfigProjectsImport = projectConfig("Start")
-                    Dim endeDefinition As clsConfigProjectsImport = projectConfig("Ende")
-                    Dim vNameDefinition As clsConfigProjectsImport = projectConfig("Varianten-Name")
-                    Dim kundeDefinition As clsConfigProjectsImport = projectConfig("Kunde")
-                    Dim buDefinition As clsConfigProjectsImport = projectConfig("Business-Unit")
-                    Dim budgetDefinition As clsConfigProjectsImport = projectConfig("Budget")
-                    Dim pkDefinition As clsConfigProjectsImport = projectConfig("Personalkosten")
-                    Dim skDefinition As clsConfigProjectsImport = projectConfig("SonstKosten")
-                    Dim zpDefinition As clsConfigProjectsImport = projectConfig("Zahlungsplan")
-
-                    Dim anzZeilen As Integer = 0
-                    Dim myValue As String = ""
-
-                    ' read PName 
-                    currentWS = projectWB.Worksheets(pNameDefinition.sheetDescript)
-                    searchColNr = pNameDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=pNameDefinition.Identifier).Row
-                    offsets = pNameDefinition.getRowColumnOffset
-                    pName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
-
-                    ' check PName
-                    If Not isValidProjectName(pName) Then
-                        outputline = "invalid Project-Name ... Exit ... : " & pName & " in File " & dateiName
-                        Throw New Exception(outputline)
-                    End If
-
-                    ' read Start: this and all following information has to be on the same Worksheet ! 
-                    searchColNr = startDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=startDefinition.Identifier).Row
-                    offsets = startDefinition.getRowColumnOffset
-                    startDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
-
-                    ' read Ende: 
-                    searchColNr = endeDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=endeDefinition.Identifier).Row
-                    offsets = endeDefinition.getRowColumnOffset
-                    endDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
-
-                    ' check Validity
-                    If getColumnOfDate(startDate) <= 0 Or getColumnOfDate(startDate) > getColumnOfDate(endDate) Then
-                        outputline = "invalid Start and/or End-Dates  ... Exit ... : " & startDate.ToShortDateString & " - " & endDate.ToShortDateString & " in File " & dateiName
-                        Throw New Exception(outputline)
-                    End If
-
-                    ' read VariantName 
-                    searchColNr = vNameDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=vNameDefinition.Identifier).Row
-                    offsets = vNameDefinition.getRowColumnOffset
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                        vName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                If Not result Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(meldungen, " Import Jira-Projects", "Errors that occured")
                     Else
-                        vName = ""
+                        Call showOutPut(meldungen, " Import Jira-Projekte", "folgende Fehler sind aufgetreten")
                     End If
+                Else
 
-                    ' check vName
-                    If vName <> "" Then
-                        If Not isValidProjectName(vName) Then
-                            outputline = "invalid Variant-Name ... Exit ... : " & vName & " in File " & dateiName
-                            Throw New Exception(outputline)
-                        End If
-                    End If
+                    Call logger(ptErrLevel.logInfo, "JIRA-Projekte eingelesen", "readProjectsJIRA", anzFehler)
 
-                    ' now check whether pName, vName already exists ... 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now)
-                    If Not IsNothing(hproj) Then
-                        ' not allowed .. 
-                        outputline = "Project with given Name and Variant-Name already exists ... Exit ... : " & pName & "[ " & vName & " ] in File " & dateiName
-                        Throw New Exception(outputline)
-                    End If
+                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsJIRA_Task)) In projListSortedName
 
-                    ' read Kunde
-                    searchColNr = kundeDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=kundeDefinition.Identifier).Row
-                    offsets = kundeDefinition.getRowColumnOffset
+                        Dim projectName As String = kvp.Key
+                        Dim taskList As SortedList(Of Date, clsJIRA_Task) = projtaskList(projectName)
+                        Dim sprintList As SortedList(Of String, clsJIRA_sprint) = projsprintList(projectName)
+                        Dim taskListSorted As SortedList(Of String, clsJIRA_Task) = kvp.Value
 
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                        kunde = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
-                    Else
-                        kunde = ""
-                    End If
+                        ' Neu Initialisierung bei jedem anderen Projekt
+                        tasksInserted = New SortedList(Of String, clsJIRA_Task)
+                        tasksRemaining = New SortedList(Of String, clsJIRA_Task)
+                        tasksBacklog = New SortedList(Of String, clsJIRA_Task)
+                        tasksFertigOSprint = New SortedList(Of String, clsJIRA_Task)
+                        tasksNichtFertig = New SortedList(Of String, clsJIRA_Task)
 
-
-                    ' read bu
-                    searchColNr = buDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=buDefinition.Identifier).Row
-                    offsets = buDefinition.getRowColumnOffset
-
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                        businessUnit = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
-                    Else
-                        businessUnit = ""
-                    End If
-
-                    If businessUnit <> "" Then
-                        ' check whether it is defined
-                        Dim found As Boolean = False
-                        For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                            found = kvp.Value.name = businessUnit
-                            If found Then
-                                Exit For
+                        ' Bestimme SprintEndDate vom letzen Sprint 
+                        Dim lastSprintEnd As Date = StartofCalendar
+                        Dim firstSprintStart As Date = EndOfCalendar
+                        For Each sprint As KeyValuePair(Of String, clsJIRA_sprint) In sprintList
+                            If sprint.Value.SprintStartDate < firstSprintStart Then
+                                firstSprintStart = sprint.Value.SprintStartDate
+                            End If
+                            If sprint.Value.SprintEndDate > lastSprintEnd Then
+                                lastSprintEnd = sprint.Value.SprintEndDate
                             End If
                         Next
 
-                        If Not found Then
-
-                            outputline = "business Unit not defined: " & businessUnit
-                            Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig 2", anzFehler)
-                            businessUnit = ""
-                        End If
-                    End If
 
 
-                    ' read budget / erloes
-                    searchColNr = budgetDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=budgetDefinition.Identifier).Row
-                    offsets = budgetDefinition.getRowColumnOffset
+                        Dim projStart As Date = StartofCalendar
 
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                        budget = CDbl(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
-                    Else
-                        budget = 0
-                    End If
+                        ' Projekt erzeugen mit Name, Start- und Ende-Datum
+                        Dim hproj As clsProjekt
+                        Dim anzTasks As Integer = taskList.Count
 
+                        ' taskList nach Vorgangstyp filtern
+                        Dim epicCollection As SortedList(Of Date, clsJIRA_Task) = filternNach("Vorgangstyp", "Epic", taskList)
 
-                    ' now define arrayLength 
-                    arrayDimension = getColumnOfDate(endDate) - getColumnOfDate(startDate)
-
-                    ' read pk : Personalkosten
-                    searchColNr = pkDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=pkDefinition.Identifier).Row
-                    offsets = pkDefinition.getRowColumnOffset
-
-
-                    pkDefinition.column.bis = pkDefinition.column.von + offsets(1) + arrayDimension
-                    pkDefinition.row.von = myRowNr + offsets(0)
-
-                    anzZeilen = 0
-                    myValue = ""
-
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
-                        myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
-                    Else
-                        myValue = trennZeichen
-                    End If
-
-                    Do While myValue <> trennZeichen
-                        anzZeilen = anzZeilen + 1
-                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
-                            myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
-                        Else
-                            myValue = trennZeichen
-                        End If
-                    Loop
-                    pkDefinition.row.bis = pkDefinition.row.von + anzZeilen - 1
-
-
-                    ' read sk : SonstKosten
-                    searchColNr = skDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=skDefinition.Identifier).Row
-                    offsets = skDefinition.getRowColumnOffset
-
-                    skDefinition.column.bis = skDefinition.column.von + offsets(1) + arrayDimension
-                    skDefinition.row.von = myRowNr + offsets(0)
-
-                    anzZeilen = 0
-                    myValue = ""
-
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
-                        myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
-                    Else
-                        myValue = trennZeichen
-                    End If
-
-                    Do While myValue <> trennZeichen
-                        anzZeilen = anzZeilen + 1
-                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
-                            myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
-                        Else
-                            myValue = trennZeichen
-                        End If
-                    Loop
-
-                    skDefinition.row.bis = skDefinition.row.von + anzZeilen - 1
-
-                    ' read zp : Zahlungsplan 
-                    searchColNr = zpDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=zpDefinition.Identifier).Row
-                    offsets = zpDefinition.getRowColumnOffset
-
-                    zpDefinition.column.bis = zpDefinition.column.von + offsets(1) + arrayDimension
-                    zpDefinition.row.von = myRowNr + offsets(0)
-
-                    anzZeilen = 0
-                    myValue = ""
-
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
-                        myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
-                    Else
-                        myValue = trennZeichen
-                    End If
-
-                    Do While myValue <> trennZeichen
-                        anzZeilen = anzZeilen + 1
-                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value) Then
-                            myValue = CStr(currentWS.Cells(myRowNr + offsets(0) + anzZeilen, searchColNr).value).Trim
-                        Else
-                            myValue = trennZeichen
-                        End If
-                    Loop
-
-                    zpDefinition.row.bis = zpDefinition.row.von + anzZeilen - 1
-
-                    ' now read the phaseNames
-                    Dim phaseNames As New SortedList(Of String, String)
-
-
-                    Dim phaseCol As Integer = pkDefinition.column.von - 2
-                    Dim orgaUnitCol As Integer = pkDefinition.column.von - 1
-                    Dim roleCol As Integer = pkDefinition.column.von
-
-                    Dim myPhaseName As String = rootPhaseName
-                    Dim myOrgaUnit As String = ""
-                    Dim myRole As String = ""
-                    Dim lfdNr As Integer = 0
-                    offsets = pkDefinition.getRowColumnOffset
-
-                    ' now read line for line 
-                    For zeile As Integer = pkDefinition.row.von To pkDefinition.row.bis
-
-                        ' read the phase-Name 
-                        If Not IsNothing(currentWS.Cells(zeile, phaseCol).value) Then
-                            myPhaseName = CStr(currentWS.Cells(zeile, phaseCol).value).Trim
-                            If myPhaseName = "" Then
-                                myPhaseName = "."
-                            End If
-                        Else
-                            myPhaseName = "."
-                        End If
-
-                        If myPhaseName <> "." Then
-                            If Not phaseNames.ContainsKey(myPhaseName) Then
-                                lfdNr = lfdNr + 1
-                                phaseNames.Add(myPhaseName, lfdNr.ToString("0#") & "_" & myPhaseName)
-                            End If
-                        End If
-
-                        ' now read the Orga-Unit, must not be empty 
-                        If Not IsNothing(currentWS.Cells(zeile, orgaUnitCol).value) Then
-                            myOrgaUnit = CStr(currentWS.Cells(zeile, orgaUnitCol).value).Trim
-                            If myOrgaUnit = "" Then
-                                Throw New Exception("Orga-Unit must not be empty: Zeile" & zeile.ToString)
+                        ' find the project-Start
+                        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
+                            If Not IsNothing(item.Value.SprintName) Then
+                                If (item.Value.SprintStartDate > Date.MinValue) And (item.Value.SprintStartDate < projStart) Then
+                                    projStart = item.Value.SprintStartDate
+                                End If
                             Else
-                                If Not RoleDefinitions.containsName(myOrgaUnit) Then
-                                    Throw New Exception("Orga-Unit does not exist: " & myOrgaUnit)
+                                If (item.Value.StartDate > Date.MinValue) And (item.Value.StartDate < projStart) Then
+                                    projStart = item.Value.StartDate
                                 End If
                             End If
-                        Else
-                            Throw New Exception("Orga-Unit must not be empty: Zeile" & zeile.ToString)
+
+                        Next
+                        If projStart <= StartofCalendar Or projStart >= EndOfCalendar Then
+
+                            ' StartDatum fürs Projekt ist dann das Erstellt-Datum der ersten Task, die nicht nothing ist,  in Tasklist
+                            ' Projektstart bestimmen
+                            Dim i As Integer = 0
+                            While taskList.ElementAt(i).Key <= Date.MinValue
+                                i = i + 1
+                            End While
+                            projStart = taskList.ElementAt(i).Key.Date  ' Uhrzweit wird nicht berücksichtigt
+                        End If
+
+                        If epicCollection.Count > 0 Then
+                            Dim oneEpic As clsJIRA_Task = epicCollection.ElementAt(0).Value
                         End If
 
 
-                        ' now read the role 
-                        If Not IsNothing(currentWS.Cells(zeile, roleCol).value) Then
-                            myRole = CStr(currentWS.Cells(zeile, roleCol).value).Trim
-                            If myRole = "" Then
-                                Throw New Exception("Role must not be empty: Zeile" & zeile.ToString)
-                            Else
-                                If Not RoleDefinitions.containsName(myRole) Then
-                                    ' maybe it is because there is only provided Senior or something like that instead of e.telligent - Senior 
-                                    Dim possibleAlternatives As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(myRole, myOrgaUnit)
-                                    If possibleAlternatives.Count <> 1 Then
-                                        Throw New Exception("no unique assignment: Orga-Unit, Role" & myOrgaUnit & " , " & myRole)
+                        ' find the project-End
+                        'Dim projEnde As Date = EndOfCalendar
+                        Dim projEnde As Date = projStart.AddYears(BacklogLength)
+
+                        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
+                            If item.Value.SprintEndDate > projEnde Then
+                                projEnde = item.Value.SprintEndDate
+                            End If
+                            If item.Value.fällig > projEnde Then
+                                projEnde = item.Value.fällig
+                            End If
+                            If item.Value.erledigt > projEnde Then
+                                projEnde = item.Value.erledigt
+                            End If
+                            If item.Value.aktualisiert > projEnde Then
+                                projEnde = item.Value.aktualisiert
+                            End If
+                        Next
+
+                        hproj = New clsProjekt(projectName, False, projStart.Date, projEnde.Date)
+
+
+                        ' jeden epic-Vorgang einzeln filtern und als Phase in das Projekt eintragen
+                        Dim epics() As SortedList(Of Date, clsJIRA_Task)
+                        ReDim epics(epicCollection.Count - 1)
+
+                        Dim ie As Integer = 0
+
+                        Try
+
+                            ' Phasen aus den Epics erzeugen
+                            Dim ephase As clsPhase
+
+                            For Each item As KeyValuePair(Of Date, clsJIRA_Task) In epicCollection
+
+                                ephase = New clsPhase(hproj)
+                                Dim ephasenameNew As String = item.Value.Jira_ID & " " & item.Value.Zusammenfassung
+                                ephase.nameID = calcHryElemKey(ephasenameNew, False)
+
+                                ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                                Dim origPhName As String = ephase.name
+                                ephasenameNew = phaseMappings.mapToStdName(".", ephasenameNew)
+
+                                ' nachsehen, ob newPhaseName in PhaseDefinitions definiert ist
+                                If Not PhaseDefinitions.Contains(ephasenameNew) Then
+                                    Dim newPhaseDef As New clsPhasenDefinition
+                                    newPhaseDef.name = ephasenameNew
+                                    ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                                    'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                    '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                                    'Else
+                                    newPhaseDef.shortName = item.Value.Jira_ID
+                                    'End If
+
+                                    ' Task Class, falls Customfield visbo_taskclass definiert ist
+                                    'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    '    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                                    'Else
+                                    newPhaseDef.darstellungsKlasse = ""
+                                    'End If
+                                    ephase.appearanceName = newPhaseDef.darstellungsKlasse
+
+                                    newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                    'PhaseDefinitions.Add(newPhaseDef)
+                                    missingPhaseDefinitions.Add(newPhaseDef)
+                                Else
+                                    'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
+                                    'Else
+                                    ephase.appearanceName = appearanceDefinitions.getPhaseAppearance(ephasenameNew, "").name
+                                    'End If
+                                End If
+
+                                Dim duration As Integer
+                                Dim ephaseStart As Date
+                                Dim ephaseEnd As Date
+
+                                ' Bestimme epic-Start und Epic-Ende
+
+                                If Not IsNothing(item.Value.StartDate) And item.Value.StartDate > Date.MinValue Then
+                                    If (item.Value.StartDate >= hproj.startDate) Then
+                                        ephaseStart = item.Value.StartDate
                                     Else
-                                        myRole = possibleAlternatives.First
+                                        ephaseStart = hproj.startDate
+                                    End If
+                                    ephaseEnd = projEnde
+                                    If Not IsNothing(item.Value.fällig) And item.Value.fällig > Date.MinValue Then
+                                        ephaseEnd = item.Value.fällig
+                                    End If
+
+                                    If Not IsNothing(item.Value.erledigt) And item.Value.erledigt > Date.MinValue Then
+                                        ephaseEnd = item.Value.erledigt
+                                    End If
+                                    duration = calcDauerIndays(ephaseStart, ephaseEnd)
+
+                                Else
+                                    If Not IsNothing(item.Value.SprintName) Then          ' Epic wurde einem Sprint zugeordnet
+                                        ephaseStart = item.Value.SprintStartDate
+                                        ephaseEnd = item.Value.SprintEndDate
+                                        If item.Value.SprintCompleteDate > Date.MinValue And item.Value.SprintCompleteDate < Date.MaxValue Then
+                                            ephaseEnd = item.Value.SprintCompleteDate
+                                        End If
+                                        duration = calcDauerIndays(ephaseStart, ephaseEnd)
+                                    Else
+                                        ephaseStart = hproj.startDate
+                                        If Not IsNothing(item.Value.Erstellt) And item.Value.Erstellt > Date.MinValue Then
+                                            ephaseStart = item.Value.Erstellt
+                                        End If
+                                        ' Phase kann nicht vor dem Projekt beginnen
+                                        If ephaseStart < hproj.startDate Then
+                                            ephaseStart = hproj.startDate
+                                        End If
+                                        'If Not IsNothing(item.Value.erledigt) Then
+                                        '    ephaseEnd = item.Value.erledigt
+                                        'End If
+                                        'ephaseEnd = item.Value.fällig
+
+                                        duration = calcDauerIndays(ephaseStart, ephaseEnd)
+
+                                        If duration < 0 Then
+                                            ephaseEnd = projEnde
+                                            If Not IsNothing(item.Value.fällig) And item.Value.fällig > Date.MinValue Then
+                                                ephaseEnd = item.Value.fällig
+                                            End If
+
+                                            If Not IsNothing(item.Value.erledigt) And item.Value.erledigt > Date.MinValue Then
+                                                ephaseEnd = item.Value.erledigt
+                                            End If
+                                            If item.Value.fällig <= ephaseStart Then
+                                                If ephaseStart <= item.Value.aktualisiert Then
+                                                    ephaseEnd = item.Value.aktualisiert
+                                                Else
+                                                    ephaseEnd = projEnde
+                                                End If
+                                            End If
+                                            If ephaseEnd <= Date.MinValue Then
+                                                ephaseEnd = projEnde
+                                            End If
+
+                                            'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
+                                            duration = calcDauerIndays(ephaseStart, ephaseEnd)
+                                        End If
+
                                     End If
                                 End If
-                            End If
-                        Else
-                            Throw New Exception("Orga-Unit must not be empty: Zeile" & zeile.ToString)
-                        End If
-
-                        Dim myRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(myOrgaUnit, myRole)
-                        If myRoleNameID = "" Then
-                            Throw New Exception("Invalid Combination" & myOrgaUnit & " , " & myRole)
-                        End If
-
-                        ' now read the monthly assignments 
-
-                        Dim myValues As Double()
-                        ReDim myValues(arrayDimension)
-
-                        Dim startIX As Integer = pkDefinition.column.von + offsets(1)
-                        For ix As Integer = 0 To arrayDimension
-                            If Not IsNothing(currentWS.Cells(zeile, startIX + ix).value) Then
-                                myValues(ix) = CDbl(currentWS.Cells(zeile, startIX + ix).value)
-                                If myValues(ix) < 0 Then
-                                    Throw New Exception("Negative resource needs are not allowed (row, column) " & zeile & " , " & ix)
-                                End If
-                            Else
-                                myValues(ix) = 0
-                            End If
-                        Next
-
-                        Dim roleValues As New SortedList(Of String, Double())
-
-                        ' now input that into phaseRoleValues
-                        ' now substitute by the enumerated phase-Name
-                        'If myPhaseName <> "." Then
-                        '    myPhaseName = phaseNames.Item(myPhaseName)
-                        'End If
-
-                        If Not phaseRoleValues.ContainsKey(myPhaseName) Then
-                            roleValues.Add(myRoleNameID, myValues)
-                            phaseRoleValues.Add(myPhaseName, roleValues)
-                        Else
-                            roleValues = phaseRoleValues.Item(myPhaseName)
-                            If Not roleValues.ContainsKey(myRoleNameID) Then
-                                roleValues.Add(myRoleNameID, myValues)
-                            Else
-                                ' add ...
-                                If roleValues.Item(myRoleNameID).Length <> myValues.Length Then
-                                    Throw New Exception("Invalid Combination" & myOrgaUnit & " , " & myRole)
-                                End If
-                                For ix As Integer = 0 To myValues.Length - 1
-                                    roleValues.Item(myRoleNameID)(ix) = roleValues.Item(myRoleNameID)(ix) + myValues(ix)
-                                Next
-                            End If
-                        End If
-
-                    Next
 
 
-                    ' now get the cost Values 
-                    Dim costCol As Integer = skDefinition.column.von
-
-                    myPhaseName = elemNameOfElemID(rootPhaseName)
-                    Dim myCost As String = ""
-                    offsets = skDefinition.getRowColumnOffset
-
-                    ' now read line for line 
-                    For zeile As Integer = skDefinition.row.von To skDefinition.row.bis
-
-                        ' now read the Cost 
-                        If Not IsNothing(currentWS.Cells(zeile, costCol).value) Then
-                            myCost = CStr(currentWS.Cells(zeile, costCol).value).Trim
-                            If myCost = "" Then
-                                Throw New Exception("Cost must not be empty: Zeile" & zeile.ToString)
-                            Else
-                                If Not CostDefinitions.containsName(myCost) Then
-                                    Throw New Exception("unknown Cost Name: " & myCost)
-                                End If
-                            End If
-                        Else
-                            Throw New Exception("Cost Name must not be empty: Zeile" & zeile.ToString)
-                        End If
-
-
-                        ' now read the monthly assignments
-                        Dim myValues As Double()
-                        ReDim myValues(arrayDimension)
-
-
-                        Dim startIX As Integer = skDefinition.column.von + offsets(1)
-                        For ix As Integer = 0 To arrayDimension
-                            If Not IsNothing(currentWS.Cells(zeile, startIX + ix).value) Then
-                                Dim tstStr As String = CStr(currentWS.Cells(zeile, startIX + ix).value)
-                                If IsNumeric(tstStr) Then
-                                    myValues(ix) = CDbl(tstStr)
-                                Else
-                                    myValues(ix) = 0
-                                End If
-
-                                If myValues(ix) < 0 Then
-                                    Throw New Exception("Negative resource needs are not allowed (row, column) " & zeile & " , " & ix)
-                                End If
-                            Else
-                                myValues(ix) = 0
-                            End If
-                        Next
-
-                        Dim costValues As New SortedList(Of String, Double())
-
-                        ' now input that into phaseCostValues
-                        If Not phaseCostValues.ContainsKey(myPhaseName) Then
-                            costValues.Add(myCost, myValues)
-                            phaseCostValues.Add(myPhaseName, costValues)
-                        Else
-                            costValues = phaseCostValues.Item(myPhaseName)
-                            If Not costValues.ContainsKey(myCost) Then
-                                costValues.Add(myCost, myValues)
-                            Else
-                                ' add ...
-                                If costValues.Item(myCost).Length <> myValues.Length Then
-                                    Throw New Exception("093 - Invalid array Lengths " & myCost)
-                                End If
-                                For ix As Integer = 0 To myValues.Length - 1
-                                    costValues.Item(myCost)(ix) = costValues.Item(myCost)(ix) + myValues(ix)
-                                Next
-                            End If
-                        End If
-
-                    Next
-
-
-                    ' now get the milestones                     '
-                    Dim msCol As Integer = zpDefinition.column.von
-
-                    myPhaseName = rootPhaseName
-                    Dim myMilestoneName As String = ""
-                    offsets = zpDefinition.getRowColumnOffset
-                    lfdNr = 0
-                    Dim milestoneNames As New List(Of String)
-
-                    ' now read line for line 
-                    For zeile As Integer = zpDefinition.row.von To zpDefinition.row.bis
-
-                        ' now read the Milestone 
-                        If Not IsNothing(currentWS.Cells(zeile, msCol).value) Then
-                            myMilestoneName = CStr(currentWS.Cells(zeile, msCol).value).Trim
-                            If myMilestoneName = "" Then
-                                Throw New Exception("Milestone Name must not be empty: Zeile" & zeile.ToString)
-                            Else
-                                If milestoneNames.Contains(myMilestoneName) Then
-                                    Throw New Exception("Duplicate Milestone-Name: " & myMilestoneName)
-                                Else
-                                    milestoneNames.Add(myMilestoneName)
-                                End If
-                            End If
-                        Else
-                            Throw New Exception("Milestone Name must not be empty: Zeile" & zeile.ToString)
-                        End If
-
-
-                        ' now get the amount and the Date 
-                        Dim ix As Integer = zpDefinition.column.von + offsets(1)
-
-                        Dim invoiceValue As Double = 0
-
-                        Do While ix <= zpDefinition.column.bis And invoiceValue = 0
-
-                            If Not IsNothing(currentWS.Cells(zeile, ix).value) Then
-                                Dim tstStr As String = currentWS.Cells(zeile, ix).value
-                                If IsNumeric(tstStr) Then
-                                    invoiceValue = CDbl(tstStr)
-                                    If invoiceValue <= 0 Then
-                                        ix = ix + 1
-                                        invoiceValue = 0
+                                If duration > 0 Then
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, ephaseStart.Date)
+                                    ephase.offset = offset
+                                    ephase.changeStartandDauer(offset, duration)
+                                    If item.Value.TaskStatus = "Fertig" Then
+                                        ephase.percentDone = 1.0
+                                    Else
+                                        ephase.percentDone = 0.0
                                     End If
-                                Else
-                                    ix = ix + 1
+                                    ephase.verantwortlich = item.Value.zugewPerson
+
+                                    ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                    Dim hrchynode As New clsHierarchyNode
+                                    hrchynode.elemName = ephase.name
+                                    hrchynode.parentNodeKey = rootPhaseName
+                                    hproj.AddPhase(ephase, origName:=origPhName, parentID:=rootPhaseName)
+                                    hrchynode.indexOfElem = hproj.AllPhases.Count
+                                    tasksInserted.Add(item.Value.Jira_ID, item.Value)
                                 End If
 
+                                '  Tasks filtern nach JIRA_ID des Epics
+                                Dim epicStoryPoints As Double = 0.0
+                                Dim epicVorg As New SortedList(Of Date, clsJIRA_Task)
+                                epicVorg = filternNach("Übergeordnet", item.Value.Jira_ID, taskList)
+                                epics(ie) = epicVorg
+                                Dim vgphase As clsPhase
+                                Dim phaseStart As Date = ephase.getStartDate
+                                Dim phaseEnd As Date = ephase.getEndDate
+                                Dim erledigteVgCount As Integer = 0
+
+                                For Each itemVg As KeyValuePair(Of Date, clsJIRA_Task) In epicVorg
+
+                                    vgphase = New clsPhase(hproj)
+                                    Dim vgphaseNameNew As String = itemVg.Value.Jira_ID & " " & itemVg.Value.Zusammenfassung
+                                    vgphase.nameID = calcHryElemKey(vgphaseNameNew, False)
+
+                                    ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                                    Dim origPhNameVG As String = vgphaseNameNew
+                                    vgphaseNameNew = phaseMappings.mapToStdName("", vgphaseNameNew)
+
+
+                                    ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                                    If Not PhaseDefinitions.Contains(vgphaseNameNew) Then
+                                        Dim newPhaseDef As New clsPhasenDefinition
+                                        newPhaseDef.name = vgphaseNameNew
+                                        ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                                        'If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                        '    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                                        'Else
+                                        newPhaseDef.shortName = itemVg.Value.Jira_ID
+                                        'End If
+
+                                        ' Task Class, falls Customfield visbo_taskclass definiert ist
+                                        'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                        '    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                                        'Else
+                                        newPhaseDef.darstellungsKlasse = ""
+                                        'End If
+                                        vgphase.appearanceName = newPhaseDef.darstellungsKlasse
+
+                                        newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                        'PhaseDefinitions.Add(newPhaseDef)
+                                        missingPhaseDefinitions.Add(newPhaseDef)
+                                    Else
+                                        'If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                        '    cphase.appearanceName = msTask.GetField(visbo_taskclass)
+                                        'Else
+                                        vgphase.appearanceName = appearanceDefinitions.getPhaseAppearance(vgphaseNameNew, "").name
+                                        'End If
+                                    End If
+
+
+                                    ' Bestimmung von Start und Ende der Task - evt. durch Sprint definiert
+                                    Dim durationVg As Integer = 0
+                                    Dim taskStart As Date
+                                    Dim taskEnd As Date
+
+                                    If Not IsNothing(itemVg.Value.SprintName) Then          ' Task wurde einem Sprint zugeordnet
+                                        taskStart = itemVg.Value.SprintStartDate
+                                        taskEnd = itemVg.Value.SprintEndDate
+                                        If itemVg.Value.SprintCompleteDate > Date.MinValue And itemVg.Value.SprintCompleteDate < Date.MaxValue Then
+                                            taskEnd = itemVg.Value.SprintCompleteDate
+                                        End If
+                                        durationVg = calcDauerIndays(taskStart, taskEnd)
+                                    Else
+                                        taskStart = ephaseStart
+                                        If Not IsNothing(itemVg.Value.Erstellt) And itemVg.Value.Erstellt > Date.MinValue Then
+                                            taskStart = itemVg.Value.Erstellt
+                                        End If
+                                        'If Not IsNothing(itemVg.Value.aktualisiert) And itemVg.Value.aktualisiert > Date.MinValue Then
+                                        '    taskStart = itemVg.Value.aktualisiert
+                                        'End If
+                                        If Not IsNothing(itemVg.Value.StartDate) And itemVg.Value.StartDate > Date.MinValue Then
+                                            taskStart = itemVg.Value.StartDate
+                                        End If
+
+                                        If Not IsNothing(itemVg.Value.fällig) And itemVg.Value.fällig > Date.MinValue Then
+                                            taskEnd = item.Value.fällig
+                                        End If
+                                        If Not IsNothing(item.Value.erledigt) And item.Value.erledigt > Date.MinValue Then
+                                            taskEnd = item.Value.erledigt
+                                        End If
+
+                                        durationVg = calcDauerIndays(taskStart, taskEnd)
+                                        If durationVg < 0 Then
+
+                                            If Not IsNothing(itemVg.Value.erledigt) Then
+                                                taskEnd = itemVg.Value.erledigt
+                                            End If
+                                            If itemVg.Value.fällig <= taskStart Then
+                                                If taskStart <= itemVg.Value.aktualisiert Then
+                                                    taskEnd = itemVg.Value.aktualisiert
+                                                Else
+                                                    taskEnd = projEnde
+                                                End If
+                                            End If
+                                            If taskEnd <= Date.MinValue Then
+                                                taskEnd = ephaseEnd
+                                            End If
+
+                                            'Call MsgBox("Phase " & item.Jira_ID & " hat eine negative Dauer: " & item.Erstellt & " " & item.fällig)
+                                            durationVg = calcDauerIndays(taskStart, itemVg.Value.fällig)
+                                        End If
+
+                                    End If
+
+                                    ' Anfang der Task kann nicht vor dem Start des Epic sein
+                                    If (taskStart < ephaseStart) Then
+                                        taskStart = ephaseStart
+                                    End If
+
+                                    If durationVg > 0 Then
+                                        Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, taskStart.Date)
+                                        vgphase.offset = offset
+                                        vgphase.changeStartandDauer(offset, durationVg)
+                                        If itemVg.Value.TaskStatus = "Fertig" Then
+                                            vgphase.percentDone = 1.0
+                                        Else
+                                            vgphase.percentDone = 0.0
+                                        End If
+                                        vgphase.verantwortlich = itemVg.Value.zugewPerson
+
+
+                                        ' Ressources auf Vorgang verteilen
+                                        Dim vgXwerte As Double() = Nothing
+                                        Dim vgoldXwerte As Double()
+                                        Dim vganfang As Integer = vgphase.relStart
+                                        Dim vgende As Integer = vgphase.relEnde
+                                        If itemVg.Value.StoryPoints > 0.0 Then
+
+                                            ' Aufsammeln der StoryPoints aller Tasks zu einer Epic
+                                            epicStoryPoints = epicStoryPoints + itemVg.Value.StoryPoints
+
+                                            ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                            Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                            Dim hrole As New clsRolle(vgende - vganfang + 1)
+                                            Dim otherRoledef As clsRollenDefinition
+                                            Dim roledef As clsRollenDefinition
+                                            If (aktOrga.allRoles.containsName(vgphase.verantwortlich)) Then
+                                                otherRoledef = RoleDefinitions.getRoledef(vgphase.verantwortlich)
+                                                roledef = aktOrga.allRoles.getRoledef(vgphase.verantwortlich)
+                                            Else
+                                                Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                                otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                                roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                            End If
+
+                                            hrole.uid = roledef.UID
+                                            hrole.teamID = -1
+
+                                            ReDim vgoldXwerte(0)
+                                            vgoldXwerte(0) = itemVg.Value.StoryPoints
+
+                                            With vgphase
+                                                ReDim vgXwerte(vgende - vganfang + 1)
+                                                .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
+                                            End With
+                                            hrole.Xwerte = vgXwerte
+
+                                            vgphase.addRole(hrole)
+
+                                        End If
+
+                                        ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+
+                                            tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+                                            ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                            ephase.unionizeWith(vgphase)
+
+                                        Else
+                                            ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                            Dim hrchynode As New clsHierarchyNode
+                                            hrchynode.elemName = vgphase.name
+                                            hrchynode.parentNodeKey = ephase.nameID
+                                            hproj.AddPhase(vgphase, origName:=itemVg.Value.Jira_ID, parentID:=ephase.nameID)
+                                            tasksInserted.Add(itemVg.Value.Jira_ID, itemVg.Value)
+                                            hrchynode.indexOfElem = hproj.AllPhases.Count
+                                        End If
+
+                                    End If
+
+                                    ' bestimme retrospektiv phaseStart und phaseEnd
+                                    If vgphase.getStartDate < phaseStart Then
+                                        phaseStart = vgphase.getStartDate
+                                    End If
+                                    If vgphase.getEndDate > phaseEnd Then
+                                        phaseEnd = vgphase.getEndDate
+                                    End If
+                                    ' hier werden die Anzahl erledigter Issues je epic gezählt
+                                    If itemVg.Value.erledigt > Date.MinValue Then
+                                        erledigteVgCount = erledigteVgCount + 1
+                                    End If
+
+                                    Call logger(ptErrLevel.logInfo, "JIRA-Task " & itemVg.Value.Jira_ID & ":" & itemVg.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                                Next     ' itemvg = Vorgang
+
+
+
+                                ' Dauer der Phase anpassen an Tasks-Dates
+                                duration = calcDauerIndays(phaseStart, phaseEnd)
+                                If duration > 0 Then
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, phaseStart.Date)
+                                    ephase.offset = offset
+                                    ephase.changeStartandDauer(offset, duration)
+                                End If
+                                ' Dauer ist nun korrigiert
+
+                                ' wieviel vorgänge des Epic erledigt sind in Prozent
+                                If epicVorg.Count > 0 Then
+                                    ephase.percentDone = erledigteVgCount / epicVorg.Count
+                                Else
+                                    ephase.percentDone = 0
+                                End If
+
+                                ' Ressources der Phase (= Summe der Tasks zu einem Epic) auf die Dauer verteilen
+                                Dim Xwerte As Double() = Nothing
+                                Dim oldXwerte As Double()
+                                Dim anfang As Integer = ephase.relStart
+                                Dim ende As Integer = ephase.relEnde
+
+                                If epicStoryPoints > 0.0 Then
+                                    ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                    Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+                                    Dim hrole As New clsRolle(ende - anfang + 1)
+                                    Dim otherRoledef As clsRollenDefinition
+                                    Dim roledef As clsRollenDefinition
+
+                                    If (aktOrga.allRoles.containsName(ephase.verantwortlich)) Then
+                                        otherRoledef = RoleDefinitions.getRoledef(ephase.verantwortlich)
+                                        roledef = aktOrga.allRoles.getRoledef(ephase.verantwortlich)
+                                    Else
+                                        Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                        otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                        roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                    End If
+
+                                    hrole.uid = roledef.UID
+                                    hrole.teamID = -1
+
+                                    ReDim oldXwerte(0)
+                                    oldXwerte(0) = item.Value.StoryPoints
+
+                                    With ephase
+                                        ReDim Xwerte(ende - anfang)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                    End With
+                                    hrole.Xwerte = Xwerte
+
+                                    ephase.addRole(hrole)
+
+                                End If
+
+                                ie = ie + 1
+                                Call logger(ptErrLevel.logInfo, "JIRA-Phase " & item.Value.Jira_ID & ":" & item.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                            Next    ' item = epic
+
+                        Catch ex2 As Exception
+                            Call logger(ptErrLevel.logError, "JIRA-Phase " & ex2.Message, "readProjectsJIRA", anzFehler)
+                            Call MsgBox("line 4789")
+
+                        End Try
+
+                        'restliche Tasks des Projektes in die RootPhase eintragen und wenn einem Sprint zugeordnet
+                        For Each task As KeyValuePair(Of String, clsJIRA_Task) In taskListSorted
+
+                            If Not tasksInserted.ContainsKey(task.Key) Then
+                                tasksRemaining.Add(task.Key, task.Value)
+                                If (task.Value.SprintName = "" Or IsNothing(task.Value.SprintName)) And task.Value.TaskStatus <> "Fertig" Then
+                                    ' diese Tasks sind keinem Sprint zugeordnet und nicht fertig, müssen also noch erledigt werden, sind also im Backlog
+                                    tasksBacklog.Add(task.Key, task.Value)
+                                ElseIf task.Value.TaskStatus = "Fertig" Then
+                                    ' diese Tasks sind keinem Epic zugeordnet, sind aber bereits fertig
+                                    tasksFertigOSprint.Add(task.Key, task.Value)
+                                Else
+                                    ' diese Tasks sind einem Sprint zugeordnet und nicht fertig
+                                    tasksNichtFertig.Add(task.Key, task.Value)
+                                End If
+                            End If
+                        Next  ' Ende bestimmen der restl. Tasks
+
+                        ' Backlog bearbeiten, sofern es gibt
+
+                        If tasksBacklog.Count <= 0 Then
+                            Call logger(ptErrLevel.logInfo, "Es gibt keine Backlog-Tasks", "readProjectsJIRA", anzFehler)
+                        Else
+                            ' Backlog-Tasks eintragen last SprintEnde - ProjektEnde
+                            ' Bestimmung von Start und Ende der Tasks - evt. durch last SprintEnde und ProjektEnde definiert
+                            Dim bphase As clsPhase
+                            'Dim testDate As Date = sprintList.ElementAt(sprintList.Count - 1).Value.SprintEndDate
+                            Dim backStart As Date = lastSprintEnd
+                            Dim backend As Date = backStart.AddYears(BacklogLength)
+                            'Dim backEnd As Date = hproj.endeDate
+
+                            bphase = New clsPhase(hproj)
+                            Dim backphaseNameNew As String = "Backlog without epics"
+                            bphase.nameID = calcHryElemKey(backphaseNameNew, False)
+                            Dim durationBL As Integer = 0
+
+                            durationBL = calcDauerIndays(backStart, backEnd)
+
+                            If durationBL > 0 Then
+                                If backStart < hproj.startDate Then
+                                    backStart = hproj.startDate
+                                End If
+                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, backStart.Date)
+                                bphase.offset = offset
+                                bphase.changeStartandDauer(offset, durationBL)
+
+                                ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                Dim hrchynode As New clsHierarchyNode
+                                hrchynode.elemName = bphase.name
+                                hrchynode.parentNodeKey = rootPhaseName
+                                hproj.AddPhase(bphase, origName:=backphaseNameNew, parentID:=rootPhaseName)
+                                hrchynode.indexOfElem = hproj.AllPhases.Count
                             End If
 
+                            Dim backphase As clsPhase
+                            Dim backlogPhaseID As String = bphase.nameID         ' ist der Parent der Backlog - Tasks
+                            For Each backlogItem As KeyValuePair(Of String, clsJIRA_Task) In tasksBacklog
 
+                                backphase = New clsPhase(hproj)
+                                backphaseNameNew = backlogItem.Value.Jira_ID & " " & backlogItem.Value.Zusammenfassung
+                                backphase.nameID = calcHryElemKey(backphaseNameNew, False)
 
-                        Loop
+                                ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                                Dim origPhNameVG As String = backphaseNameNew
+                                backphaseNameNew = phaseMappings.mapToStdName("", backphaseNameNew)
 
-                        Dim myDate As Date = getDateofColumn(getColumnOfDate(startDate) + ix - (zpDefinition.column.von + offsets(1)), True)
-                        Dim myValuePair As New KeyValuePair(Of String, Double)(myMilestoneName, invoiceValue)
-                        invoiceMilestones.Add(myDate, myValuePair)
+                                If durationBL > 0 Then
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate.Date, backStart.Date)
+                                    backphase.offset = offset
+                                    backphase.changeStartandDauer(offset, durationBL)
+                                    If backlogItem.Value.TaskStatus = "Fertig" Then
+                                        backphase.percentDone = 1.0
+                                    Else
+                                        backphase.percentDone = 0.0
+                                    End If
+                                    backphase.verantwortlich = backlogItem.Value.zugewPerson
 
-                    Next
+                                    ' Ressources eintragen für Backlog-Tasks
+                                    Dim Xwerte As Double() = Nothing
+                                    Dim oldXwerte As Double()
+                                    Dim anfang As Integer = backphase.relStart
+                                    Dim ende As Integer = backphase.relEnde
+                                    If backlogItem.Value.StoryPoints > 0.0 Then
+                                        ' ein StoryPoint in JIRA entspricht  1 PT in VISBO-Ressources
+                                        Dim aktOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
 
-                    ' now close the Excel file 
-                    If Not IsNothing(projectWB) Then
-                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
-                    End If
+                                        Dim hrole As New clsRolle(ende - anfang)
+                                        Dim otherRoledef As clsRollenDefinition
+                                        Dim roledef As clsRollenDefinition
 
-                    ' now check/protocol the sums ...
-                    Dim checkSumPT As Double = 0.0
-                    For Each kvp1 As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseRoleValues
-                        For Each kvp2 As KeyValuePair(Of String, Double()) In kvp1.Value
-                            checkSumPT = checkSumPT + kvp2.Value.Sum
-                        Next
-                    Next
+                                        If (aktOrga.allRoles.containsName(backphase.verantwortlich)) Then
+                                            otherRoledef = RoleDefinitions.getRoledef(backphase.verantwortlich)
+                                            roledef = aktOrga.allRoles.getRoledef(backphase.verantwortlich)
+                                        Else
+                                            Dim defaultTopNode As String = RoleDefinitions.getDefaultTopNodeName()
+                                            otherRoledef = RoleDefinitions.getRoledef(defaultTopNode)
+                                            roledef = aktOrga.allRoles.getRoledef(defaultTopNode)
+                                        End If
 
-                    Dim checkSumTE As Double = 0.0
-                    For Each kvp1 As KeyValuePair(Of String, SortedList(Of String, Double())) In phaseCostValues
-                        For Each kvp2 As KeyValuePair(Of String, Double()) In kvp1.Value
-                            checkSumTE = checkSumTE + kvp2.Value.Sum
-                        Next
-                    Next
+                                        hrole.uid = roledef.UID
+                                        hrole.teamID = -1
 
-                    Dim checkSumIV As Double = 0.0
-                    For Each kvp1 As KeyValuePair(Of Date, KeyValuePair(Of String, Double)) In invoiceMilestones
-                        checkSumIV = checkSumIV + kvp1.Value.Value
-                    Next
+                                        ReDim oldXwerte(0)
+                                        oldXwerte(0) = backlogItem.Value.StoryPoints
 
-                    outputline = "PT Sum: " & checkSumPT.ToString("#.##") & "; T€ Sum: " & checkSumTE.ToString("#.##") & "; Invoice Summe: " & checkSumIV.ToString("#.##")
-                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
-                    ' Ende Protocolling ... 
+                                        With backphase
+                                            ReDim Xwerte(ende - anfang)
+                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                        End With
+                                        hrole.Xwerte = Xwerte
 
-                    ' now create the project ...
-                    ' it is guaranteed that the project/variant-Name does not exist ... 
+                                        backphase.addRole(hrole)
+                                    End If
 
-                    Dim phaseMilestones As New SortedList(Of String, SortedList(Of Date, KeyValuePair(Of String, Double)))
-                    phaseMilestones.Add(elemNameOfElemID(rootPhaseName), invoiceMilestones)
+                                    ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
-                    ' now define phaseDates ... 
-                    Dim startEndDates As Date()
-                    ReDim startEndDates(1)
-                    startEndDates(0) = startDate
-                    startEndDates(1) = endDate
-                    Dim phDates As New SortedList(Of String, Date())
+                                        ' PMO schreibt BaseLine, die aber nur die Epics enthalten soll
+                                        bphase.unionizeWith(backphase)
 
-                    For Each kvp As KeyValuePair(Of String, String) In phaseNames
-                        If Not phDates.ContainsKey(kvp.Value) Then
-                            phDates.Add(kvp.Value, startEndDates)
+                                    Else
+                                        ' hphase in Hierarchie auf Level 1 eintragen und in Projekt einhängen
+                                        Dim hrchynode As New clsHierarchyNode
+                                        hrchynode.elemName = backphase.name
+                                        hrchynode.parentNodeKey = rootPhaseName
+                                        hproj.AddPhase(backphase, origName:=backlogItem.Value.Jira_ID, parentID:=backlogPhaseID)
+                                        'tasksInserted.Add(backlogItem.Value.Jira_ID, backlogItem.Value)
+                                        hrchynode.indexOfElem = hproj.AllPhases.Count
+                                    End If
+
+                                End If
+                                Call logger(ptErrLevel.logInfo, "JIRA-Task " & backlogItem.Value.Jira_ID & ":" & backlogItem.Value.Zusammenfassung & " gelesen", "readProjectsJIRA", anzFehler)
+
+                            Next     ' backlogItem
                         End If
-                    Next
 
-                    Dim newProj As clsProjekt = erstelleProjektausParametern(pName:=pName, vName:=vName, startDate:=startDate, endeDate:=endDate,
-                                                                             budget:=budget, businessUnit:=businessUnit, description:="Project for " & kunde,
-                                                                             responsible:="", sfitKPI:=Nothing, riskKPI:=Nothing,
-                                                                             phaseDates:=phDates,
-                                                                             phaseRoleValues:=phaseRoleValues, phaseCostValues:=phaseCostValues,
-                                                                             phaseMilestones:=phaseMilestones,
-                                                                             phaseDeliverables:=Nothing, msDeliverables:=Nothing)
+                        If result Then
 
+                            Dim keyStr As String = ""
+                            Try
+                                keyStr = calcProjektKey(hproj)
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
-                    If Not IsNothing(newProj) Then
-                        Dim prCheckSumPT As Double = newProj.getAlleRessourcen.Sum
-                        Dim prCheckSumTE As Double = newProj.getGesamtAndereKosten.Sum
-                        Dim prCheckSumIV As Double = newProj.getInvoicesPenalties.Sum
-
-                        ' now protocol after project is created 
-                        outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & "; Invoice Summe: " & prCheckSumIV.ToString("#.##")
-                        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
-
-                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
-                        result = True
-                        outputline = "Success! project created: " & newProj.getShapeText
-                        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
-                    Else
-                        result = False
-                        outputline = "Failed! no project created: " & pName & "[ " & vName & " ]"
-                        Call logger(ptErrLevel.logError, outputline, "readCalcTemplatesWithConfig", anzFehler)
-                    End If
-
-                    Dim stopp As Integer = 0
-
-                Catch ex As Exception
-
-                    ' now close the Excel file 
-                    If Not IsNothing(projectWB) Then
-                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
-                    End If
-
-                    Call logger(ptErrLevel.logError, ex.Message, "readCalcTemplatesWithConfig 1", anzFehler)
-                    meldungen.Add(ex.Message)
-                    result = False
-                End Try
-            End If
-        Catch ex As Exception
-            Call logger(ptErrLevel.logError, ex.Message, "readCalcTemplatesWithConfig 2", anzFehler)
-            meldungen.Add(ex.Message)
-            result = False
-        End Try
+                                Call logger(ptErrLevel.logInfo, "Einlesen JIRA-Projekte erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
+                                ' hier: merken der erfolgreich importierten Projects Dateien
+                                If Not listOfArchivFiles.Contains(tmpDatei) Then
+                                    listOfArchivFiles.Add(tmpDatei)
+                                End If
 
 
+                            Catch ex2 As Exception
+                                Call MsgBox("Projekt " & keyStr & " kann nicht zweimal importiert werden ...")
+                            End Try
 
-        '
-        ' Ende protokollieren 
-        outputline = "Ende Import CalcTemplate: " & tmpDatei
-        Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
-        '
-        '
+                        Else
+                            Call logger(ptErrLevel.logWarning, "Einlesen JIRA-Projekt nicht erfolgt " & tmpDatei, "readProjectsJIRA", anzFehler)
+                        End If
 
-        readCalcTemplatesWithConfig = result
+                    Next        ' for each kvp in projListSortedName
+
+                End If      ' reading of all tasks ok
+
+            Next    ' for each tmpDatei
+
+        Else
+            Dim errMsg As String = "Es gibt keine Datei zur Projekt-Anlage" & vbLf _
+                             & "Es wurden daher jetzt keine berücksichtigt"
+
+            ' das sollte nicht dazu führen, dass nichts gemacht wird 
+            'meldungen.Add(errMsg)
+            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+            'Call MsgBox(errMsg)
+
+            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
+        End If
+
+        If result Then
+            readProjectsJIRA = listOfArchivFiles
+        Else
+            readProjectsJIRA = New List(Of String)
+        End If
+
     End Function
 
-    ''' <summary>
-    ''' updates projects with Telair Tagetik Import Files 
-    ''' </summary>
-    ''' <param name="projectConfig"></param>
-    ''' <param name="tmpDatei"></param>
-    ''' <param name="meldungen"></param>
-    ''' <returns></returns>
-    Function updateProjectWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
-                                    ByVal tmpDatei As String,
-                                    ByRef meldungen As Collection) As Boolean
+    Public Function filternNach(ByVal Field As String, ByVal testValue As String, ByVal taskList As SortedList(Of Date, clsJIRA_Task)) As SortedList(Of Date, clsJIRA_Task)
 
+
+        Dim resCollection As New SortedList(Of Date, clsJIRA_Task)
+
+        For Each item As KeyValuePair(Of Date, clsJIRA_Task) In taskList
+            Select Case Field
+                Case "Vorgangstyp"
+                    If item.Value.Vorgangstyp = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "ZugewiesenePerson"
+                    If item.Value.zugewPerson = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "Autor"
+                    If item.Value.Autor = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "Prio"
+                    If item.Value.Prio = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "Task-Status"
+                    If item.Value.TaskStatus = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "Verknüpfte Vorgänge"
+                    If item.Value.verknüpfte_JiraID = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "Area"
+                    If item.Value.Area = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "Label"
+                Case "Übergeordnet"
+                    If item.Value.parent_JiraID = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case "SprintName"
+                    If item.Value.SprintName = testValue Then
+                        resCollection.Add(item.Value.Erstellt, item.Value)
+                    End If
+                Case Else
+
+            End Select
+        Next
+
+        filternNach = resCollection
+    End Function
+
+
+    Public Function readJIRATasks(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                  ByVal JiraExcelFile As String, ByRef projtaskList As SortedList(Of String, SortedList(Of Date, clsJIRA_Task)),
+                                  ByRef projListSorted As SortedList(Of String, SortedList(Of String, clsJIRA_Task)),
+                                  ByRef projsprintList As SortedList(Of String, SortedList(Of String, clsJIRA_sprint)), ByRef meldungen As Collection) As Boolean
+        Dim result As Boolean = False
         Dim outputline As String = ""
         Dim ok As Boolean = False
-        Dim result As Boolean = False
         Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim regexpression As Regex
-        Dim firstValueSpalte As Integer
-        Dim lastValueSpalte As Integer
-        Dim firstValueZeile As Integer
+        Dim firstUrlspalte As Integer
+        Dim firstUrlzeile As Integer
         Dim lastSpalte As Integer
         Dim lastZeile As Integer
-
-
-        ' Variables to create a Project
-        Dim hproj As clsProjekt = Nothing
-        Dim baseline As clsProjekt = Nothing
-        Dim pName As String = ""
-        Dim vName As String = ""
-        Dim vorlagenName As String = ""
-
-        Dim projectNumber As String = ""
-
-        Dim zeile As Integer = 0
-        Dim roleNames() As String = Nothing
-        Dim roleValues() As Double = Nothing
-        Dim roleListNameValues As New SortedList(Of String, Double())
-        Dim costNames() As String = Nothing
-        Dim costValues() As Double = Nothing
-
-        Dim combinedName As Boolean = True
-        Dim createBudget As Boolean = True
-        Dim createCostsRolesAnyhow As Boolean = True
-
-        Dim monthVon As Integer = 0
-        Dim monthBis As Integer = 0
-        Dim arrayOffset As Integer = 0
-        Dim arrayDimension As Integer = 0
+        Dim anz_Proj_created As Integer = 0
+        Dim anz_Proj_notCreated As Integer = 0
+        Dim oneNextTask As New clsJIRA_Task
+        Dim taskListSorted As New SortedList(Of String, clsJIRA_Task)
+        Dim taskList As New SortedList(Of Date, clsJIRA_Task)
+        Dim sprintList As New SortedList(Of String, clsJIRA_sprint)
 
         Dim noGo As Integer = 0   'Sobald diese Variable > 0 ist, wird das Projekt nicht importiert
-        Dim offsetCorrection As Integer = 0
-
-        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
-
-        ' do it as project leader 
-        myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
         Try
-            If My.Computer.FileSystem.FileExists(tmpDatei) Then
-
+            If My.Computer.FileSystem.FileExists(JiraExcelFile) Then
 
                 Try
+                    projectWB = appInstance.Workbooks.Open(JiraExcelFile)
 
-                    projectWB = appInstance.Workbooks.Open(tmpDatei)
-                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
-
-                    ' now define vz=zeile, vc=spalte, wo der jeweilige Wert steckt
-                    Dim monthValuesDefinition As clsConfigProjectsImport = projectConfig("months")
-                    Dim resourceNameDefinition As clsConfigProjectsImport = projectConfig("Ressourcen")
-                    Dim anchorDef1 As clsConfigProjectsImport = projectConfig("anchor1")
-                    Dim anchorDef2 As clsConfigProjectsImport = projectConfig("anchor2")
-                    Dim constraints As clsConfigProjectsImport = projectConfig("constraint")
-
+                    Dim vstart As clsConfigProjectsImport = projectConfig("valueStart")
                     ' Auslesen erste Projekt-Spalte
-                    firstValueSpalte = monthValuesDefinition.column.von
-                    lastValueSpalte = monthValuesDefinition.column.bis
-                    firstValueZeile = monthValuesDefinition.row.von
-                    ' need to searchedFor ... 
-                    If firstValueZeile = 0 Then
-                        firstValueZeile = 11
-                    End If
+                    firstUrlspalte = vstart.column.von
+                    firstUrlzeile = vstart.row.von
 
                     If appInstance.Worksheets.Count > 0 Then
 
-                        If Not IsNothing(monthValuesDefinition.sheet) Then
-                            Try
-                                currentWS = CType(projectWB.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                ok = True
-                            Catch ex As Exception
-                                currentWS = Nothing
-                                ok = False
-                            End Try
+                        If Not IsNothing(vstart.sheet) Then
+                            currentWS = CType(appInstance.Worksheets(vstart.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            ok = (currentWS.Name = vstart.sheetDescript)
                         End If
-
                         If Not ok Then
-                            If Not IsNothing(monthValuesDefinition.sheetDescript) Then
-                                Try
-                                    If monthValuesDefinition.sheetDescript <> "" Then
-                                        currentWS = CType(appInstance.Worksheets(monthValuesDefinition.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                    currentWS = Nothing
-                                Catch ex As Exception
-                                    currentWS = Nothing
-                                End Try
-
+                            If Not IsNothing(vstart.sheetDescript) Then
+                                currentWS = CType(appInstance.Worksheets(vstart.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
                             Else
                                 currentWS = Nothing
                             End If
@@ -5383,343 +5082,1206 @@ Public Module agm3
                         If IsNothing(currentWS) Then
                             outputline = "The Worksheet you want to import cannot be matched"
                             meldungen.Add(outputline)
-                            Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
                         Else
-
-                            ' are there constraints, i.e which kind of rows should be considered 
-                            Dim validConstraints() As String = Nothing
-                            If Not IsNothing(constraints.content) Then
-                                If constraints.content.Trim <> "" Then
-                                    validConstraints = constraints.content.Split(New Char() {CChar(",")})
-                                End If
-                            End If
-
-                            ' should be parameterised
-                            Dim searcharea As Excel.Range = CType(currentWS.Columns(monthValuesDefinition.column.von), Excel.Range)
-                            Dim colOfStartForeCast As Integer = -1
-                            Dim headerRow As Integer = 9
-
-                            Try
-                                ' searchFor Actual 
-                                headerRow = searcharea.Find(anchorDef1.Identifier).Row
-                            Catch ex As Exception
-                                headerRow = searcharea.Find(anchorDef2.Identifier).Row
-                                colOfStartForeCast = monthValuesDefinition.column.von
-                            End Try
-
-
-                            ' Zeile 5 enthält die verschieden Configurationselemente
-
-                            colOfStartForeCast = monthValuesDefinition.column.bis + 1
-                            Try
-                                searcharea = CType(currentWS.Rows(headerRow), Excel.Range)
-                                Dim testString As String = CStr(CType(searcharea.Cells(1, 4), Excel.Range).Value)
-                                testString = CStr(currentWS.Cells(headerRow, 4).Value)
-                                '                        What:="Forecast", After:=ActiveCell, LookIn:=xlValues,
-                                'LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext,
-                                'MatchCase:=False, SearchFormat:=False
-                                Dim searchErg As Excel.Range = searcharea.Find(What:="Forecast", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
-                                                                               SearchOrder:=XlSearchOrder.xlByColumns, SearchDirection:=XlSearchDirection.xlNext, MatchCase:=False, SearchFormat:=False)
-                                If Not IsNothing(searchErg) Then
-                                    colOfStartForeCast = searchErg.Column
-                                Else
-                                    searchErg = searcharea.Find(What:="Forecast", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
-                                                                               SearchOrder:=XlSearchOrder.xlByColumns, SearchDirection:=XlSearchDirection.xlPrevious, MatchCase:=False, SearchFormat:=False)
-                                    If Not IsNothing(searchErg) Then
-                                        colOfStartForeCast = searchErg.Column
-                                    End If
-
-                                End If
-                            Catch ex As Exception
-
-                            End Try
-
-                            arrayDimension = monthValuesDefinition.column.bis - monthValuesDefinition.column.von
-
-                            Dim yearValue As String = CStr(currentWS.Cells(headerRow, monthValuesDefinition.column.von).value).Split(New Char() {CChar(" ")}, 2)(0)
-                            Dim mthValue As String = currentWS.Cells(headerRow + 1, monthValuesDefinition.column.von).value
-
-                            ' Geschäftsjahr xy Telair beginnt im Okt des Vorjahres  
-                            Dim startDateValues As Date = CDate(mthValue & " " & yearValue).AddYears(-1)
-                            Dim startColOfArray = getColumnOfDate(startDateValues)
-                            'Dim endDateValues As Date = startDateValues.AddMonths(arrayDimension)
-
-                            Dim colOfStartDateValues As Integer = getColumnOfDate(startDateValues)
-                            Dim colOfEndDateValues As Integer = colOfStartDateValues + (monthValuesDefinition.column.bis - monthValuesDefinition.column.von)
-
-                            arrayOffset = colOfStartForeCast - monthValuesDefinition.column.von
-
-                            monthVon = colOfStartDateValues + arrayOffset
-                            monthBis = colOfEndDateValues
-
-                            lastSpalte = lastValueSpalte
-                            lastZeile = CType(currentWS.Cells(2000, resourceNameDefinition.column.von), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
-
-                            ' now get projNumber as part of the fileName
+                            ' bestimme letzte Zeile und Spalte
+                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, firstUrlspalte), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
 
                             Try
 
 
-                                Dim projNumber As String = ""
-                                If dateiName.Contains("(") Then
-                                    Dim tmpstr() As String = dateiName.Split(New Char() {CChar("("), CChar(")")}, 3)
-                                    projNumber = tmpstr(0).Trim
+                                For i = firstUrlzeile To lastZeile
 
-                                    Dim datumsAngabe As String = tmpstr(1)
+                                    oneNextTask = New clsJIRA_Task
 
-                                Else
-                                    Dim tmpstr() As String = dateiName.Split(New Char() {CChar(".")}, 2)
-                                    projNumber = tmpstr(0)
-                                End If
-
-                                hproj = getProjektFromSessionOrDB("", "", AlleProjekte, Date.Now, kdNr:=projNumber)
-
-                                Dim tryPName As String = ""
-                                If IsNothing(hproj) Then
-                                    ' project with given Number does not exist 
-                                    Dim tmpstr() As String = dateiName.Split(New Char() {CChar(".")}, 2)
-                                    tryPName = tmpstr(0).Trim
-                                    hproj = getProjektFromSessionOrDB(tryPName, "", AlleProjekte, Date.Now)
-                                End If
-
-                                If Not IsNothing(hproj) Then
-                                    ' weitermachen 
-
-                                    ' Baseline holen ... 
-                                    baseline = getProjektFromSessionOrDB(hproj.name, ptVariantFixNames.pfv.ToString, AlleProjekte, Date.Now)
-                                    If Not IsNothing(baseline) Then
-                                        If getColumnOfDate(baseline.startDate) <> getColumnOfDate(hproj.startDate) Or
-                                           getColumnOfDate(baseline.endeDate) <> getColumnOfDate(hproj.endeDate) Then
-
-                                            baseline = Nothing
-
-                                            If awinSettings.englishLanguage Then
-                                                outputline = hproj.name & ": Baseline Dates were'nt starting / ending as planning version - Baseline will be adopted"
+                                    ' projectName:
+                                    Try
+                                        Dim projectNameConfig As clsConfigProjectsImport = projectConfig("Projekt")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> projectNameConfig.sheet Then
+                                            If Not IsNothing(projectNameConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projectNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
                                             Else
-                                                outputline = hproj.name & ": Baseline Start bzw Ende-Datum waren unterschiedlich zu Planning version - Baseline wurde angepasst "
+                                                currentWS = CType(appInstance.Worksheets(projectNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
                                             End If
-                                            meldungen.Add(outputline)
-                                            Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
                                         End If
-                                    End If
+                                        With currentWS
+                                            Select Case projectNameConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.projectName = CStr(.Cells(i, projectNameConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.projectName = CInt(.Cells(i, projectNameConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.projectName = CDbl(.Cells(i, projectNameConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.projectName = CDate(.Cells(i, projectNameConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.projectName = .Cells(i, projectNameConfig.column.von).value
+                                            End Select
 
+                                            If projectNameConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(projectNameConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.projectName)
+                                                If match.Success Then
+                                                    oneNextTask.projectName = match.Value
+                                                Else
+                                                    oneNextTask.projectName = Nothing
+                                                End If
+                                            End If
+                                        End With
+                                    Catch ex As Exception
+                                        ' Fehler bei ProjectName
+                                        outputline = "problems reading ProjektName: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
 
-                                    offsetCorrection = getColumnOfDate(hproj.startDate) - startColOfArray
-
-                                    For ize = firstValueZeile To lastZeile + 1
-
-                                        Dim curRoleName As String = ""
-                                        ' new stuff 
-
-                                        Dim checkConstraint As String = CStr(currentWS.Cells(ize, constraints.column.von).value)
-                                        If IsNothing(checkConstraint) Then
-                                            checkConstraint = ""
+                                    ' Vorgangstyp:
+                                    Try
+                                        Dim vorgangstypConfig As clsConfigProjectsImport = projectConfig("Vorgangstyp")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> vorgangstypConfig.sheet Then
+                                            If Not IsNothing(vorgangstypConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(vorgangstypConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(vorgangstypConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
                                         End If
+                                        With currentWS
+                                            Select Case vorgangstypConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Vorgangstyp = CStr(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Vorgangstyp = CInt(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Vorgangstyp = CDbl(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Vorgangstyp = CDate(.Cells(i, vorgangstypConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Vorgangstyp = .Cells(i, vorgangstypConfig.column.von).value
+                                            End Select
 
-                                        Dim weiterMachen As Boolean = IsNothing(validConstraints)
+                                            If vorgangstypConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(vorgangstypConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Vorgangstyp)
+                                                If match.Success Then
+                                                    oneNextTask.Vorgangstyp = match.Value
+                                                Else
+                                                    oneNextTask.Vorgangstyp = Nothing
+                                                End If
+                                            End If
+                                        End With
+                                    Catch ex As Exception
+                                        ' Fehler bei Vorgangstyp
+                                        outputline = "problems reading Vorgangstyp: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
 
-                                        If Not IsNothing(validConstraints) Then
-                                            weiterMachen = False
-                                            For Each cItem As String In validConstraints
-                                                weiterMachen = weiterMachen Or (cItem.Trim = checkConstraint.Trim)
-                                            Next
+                                    'Jira-ID:
+                                    Try
+                                        Dim JiraIDConfig As clsConfigProjectsImport = projectConfig("Jira-ID")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> JiraIDConfig.sheet Then
+                                            If Not IsNothing(JiraIDConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(JiraIDConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(JiraIDConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
                                         End If
+                                        With currentWS
+                                            Select Case JiraIDConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Jira_ID = CStr(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Jira_ID = CInt(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Jira_ID = CDbl(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Jira_ID = CDate(.Cells(i, JiraIDConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Jira_ID = .Cells(i, JiraIDConfig.column.von).value
+                                            End Select
 
-                                        If weiterMachen Then
+                                            If JiraIDConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(JiraIDConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Jira_ID)
+                                                If match.Success Then
+                                                    oneNextTask.Jira_ID = match.Value
+                                                Else
+                                                    oneNextTask.Jira_ID = Nothing
+                                                End If
+                                            End If
+                                        End With
 
-                                            ' read roleName / costName
-                                            Dim curString As String = ""
+                                    Catch ex As Exception
+                                        ' Fehler bei Jira-ID:
+                                        outputline = "problems reading JIRA-ID: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'Zusammenfassung:
+                                    Try
+                                        Dim subjectConfig As clsConfigProjectsImport = projectConfig("Zusammenfassung")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> subjectConfig.sheet Then
+                                            If Not IsNothing(subjectConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(subjectConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(subjectConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case subjectConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Zusammenfassung = CStr(.Cells(i, subjectConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Zusammenfassung = CInt(.Cells(i, subjectConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Zusammenfassung = CDbl(.Cells(i, subjectConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Zusammenfassung = CDate(.Cells(i, subjectConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Zusammenfassung = .Cells(i, subjectConfig.column.von).value
+                                            End Select
+
+                                            If subjectConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(subjectConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Zusammenfassung)
+                                                If match.Success Then
+                                                    oneNextTask.Zusammenfassung = match.Value
+                                                Else
+                                                    oneNextTask.Zusammenfassung = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Zusammenfassung:
+                                        outputline = "problems reading Zusammenfassung: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'zugewiesene Person:
+                                    Try
+                                        Dim personConfig As clsConfigProjectsImport = projectConfig("ZugewiesenePerson")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> personConfig.sheet Then
+
+                                            If Not IsNothing(personConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(personConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(personConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case personConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.zugewPerson = CStr(.Cells(i, personConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.zugewPerson = CInt(.Cells(i, personConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.zugewPerson = CDbl(.Cells(i, personConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.zugewPerson = CDate(.Cells(i, personConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.zugewPerson = .Cells(i, personConfig.column.von).value
+                                            End Select
+
+                                            If personConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(personConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.zugewPerson)
+                                                If match.Success Then
+                                                    oneNextTask.zugewPerson = match.Value
+                                                Else
+                                                    oneNextTask.zugewPerson = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei zugewiesene Person:
+                                        outputline = "problems reading zugewiesene Person: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    'Autor:
+                                    Try
+                                        Dim autorConfig As clsConfigProjectsImport = projectConfig("Autor")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> autorConfig.sheet Then
+                                            If Not IsNothing(autorConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(autorConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(autorConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case autorConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Autor = CStr(.Cells(i, autorConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Autor = CInt(.Cells(i, autorConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Autor = CDbl(.Cells(i, autorConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Autor = CDate(.Cells(i, autorConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Autor = .Cells(i, autorConfig.column.von).value
+                                            End Select
+
+                                            If autorConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(autorConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Autor)
+                                                If match.Success Then
+                                                    oneNextTask.Autor = match.Value
+                                                Else
+                                                    oneNextTask.Autor = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei zugewiesene Person:
+                                        outputline = "problems reading Autor: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Priorität:
+                                    Try
+                                        Dim prioConfig As clsConfigProjectsImport = projectConfig("Prio")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> prioConfig.sheet Then
+                                            If Not IsNothing(prioConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(prioConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(prioConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case prioConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Prio = CStr(.Cells(i, prioConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Prio = CInt(.Cells(i, prioConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Prio = CDbl(.Cells(i, prioConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Prio = CDate(.Cells(i, prioConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Prio = .Cells(i, prioConfig.column.von).value
+                                            End Select
+
+                                            If prioConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(prioConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Prio)
+                                                If match.Success Then
+                                                    oneNextTask.Prio = match.Value
+                                                Else
+                                                    oneNextTask.Prio = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Priorität:
+                                        outputline = "problems reading Priorität: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Task-Status:
+                                    Try
+                                        Dim statusConfig As clsConfigProjectsImport = projectConfig("Task-Status")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> statusConfig.sheet Then
+                                            If Not IsNothing(statusConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(statusConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(statusConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case statusConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.TaskStatus = CStr(.Cells(i, statusConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.TaskStatus = CInt(.Cells(i, statusConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.TaskStatus = CDbl(.Cells(i, statusConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.TaskStatus = CDate(.Cells(i, statusConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.TaskStatus = .Cells(i, statusConfig.column.von).value
+                                            End Select
+
+                                            If statusConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(statusConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.TaskStatus)
+                                                If match.Success Then
+                                                    oneNextTask.TaskStatus = match.Value
+                                                Else
+                                                    oneNextTask.TaskStatus = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Task-Status:
+                                        outputline = "problems reading Status: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Lösung:
+                                    Try
+                                        Dim lösungConfig As clsConfigProjectsImport = projectConfig("Lösung(*)")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> lösungConfig.sheet Then
+                                            If Not IsNothing(lösungConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(lösungConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(lösungConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case lösungConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.loesung = CStr(.Cells(i, lösungConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.loesung = CInt(.Cells(i, lösungConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.loesung = CDbl(.Cells(i, lösungConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.loesung = CDate(.Cells(i, lösungConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.loesung = .Cells(i, lösungConfig.column.von).value
+                                            End Select
+
+                                            If lösungConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(lösungConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.loesung)
+                                                If match.Success Then
+                                                    oneNextTask.loesung = match.Value
+                                                Else
+                                                    oneNextTask.loesung = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Lösung(*)
+                                        outputline = "problems reading Lösung: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Erstellungsdatum:
+                                    Try
+                                        Dim createdAtConfig As clsConfigProjectsImport = projectConfig("Erstellungsdatum")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> createdAtConfig.sheet Then
+                                            If Not IsNothing(createdAtConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(createdAtConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(createdAtConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case createdAtConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Erstellt = CStr(.Cells(i, createdAtConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.Erstellt = CInt(.Cells(i, createedAtConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.Erstellt = CDbl(.Cells(i, createedAtConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.Erstellt = CDate(.Cells(i, createdAtConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Erstellt = .Cells(i, createdAtConfig.column.von).value
+                                            End Select
+
+                                            If createdAtConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(createdAtConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Erstellt)
+                                                If match.Success Then
+                                                    oneNextTask.Erstellt = match.Value
+                                                Else
+                                                    oneNextTask.Erstellt = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Erstellungsdatum
+                                        outputline = "problems reading Erstellungsdatum: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Aktualisiert:
+                                    Try
+                                        Dim updatedAtConfig As clsConfigProjectsImport = projectConfig("Aktualisiert")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> updatedAtConfig.sheet Then
+                                            If Not IsNothing(updatedAtConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(updatedAtConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(updatedAtConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case updatedAtConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.aktualisiert = CStr(.Cells(i, updatedAtConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.aktualisiert = CInt(.Cells(i, createedAtConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.aktualisiert = CDbl(.Cells(i, createedAtConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.aktualisiert = CDate(.Cells(i, updatedAtConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.aktualisiert = .Cells(i, updatedAtConfig.column.von).value
+                                            End Select
+
+                                            If updatedAtConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(updatedAtConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.aktualisiert)
+                                                If match.Success Then
+                                                    oneNextTask.aktualisiert = match.Value
+                                                Else
+                                                    oneNextTask.aktualisiert = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Aktualisiert
+                                        outputline = "problems reading Aktualisierungs-Datum: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Fälligkeitsdatum:
+                                    Try
+                                        Dim toBeReadyConfig As clsConfigProjectsImport = projectConfig("Fälligkeitsdatum")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> toBeReadyConfig.sheet Then
+                                            If Not IsNothing(toBeReadyConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(toBeReadyConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(toBeReadyConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case toBeReadyConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.fällig = CStr(.Cells(i, toBeReadyConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.fällig = CInt(.Cells(i, toBeReadyConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.fällig = CDbl(.Cells(i, toBeReadyConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.fällig = CDate(.Cells(i, toBeReadyConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.fällig = .Cells(i, toBeReadyConfig.column.von).value
+                                            End Select
+
+                                            If toBeReadyConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(toBeReadyConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.fällig)
+                                                If match.Success Then
+                                                    oneNextTask.fällig = match.Value
+                                                Else
+                                                    oneNextTask.fällig = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Fälligkeitsdatum
+                                        outputline = "problems reading Fälligkeit: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' StartDatum:
+                                    Try
+                                        Dim startDateConfig As clsConfigProjectsImport = projectConfig("StartDate")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> startDateConfig.sheet Then
+                                            If Not IsNothing(startDateConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(startDateConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(startDateConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case startDateConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.StartDate = CStr(.Cells(i, startDateConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.StartDate = CInt(.Cells(i, toBeReadyConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.StartDate = CDbl(.Cells(i, toBeReadyConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.StartDate = CDate(.Cells(i, startDateConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.StartDate = .Cells(i, startDateConfig.column.von).value
+                                            End Select
+
+                                            If startDateConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(startDateConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.StartDate)
+                                                If match.Success Then
+                                                    oneNextTask.StartDate = match.Value
+                                                Else
+                                                    oneNextTask.StartDate = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Startdate
+                                        outputline = "problems reading Start Date: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Verknüpfte Vorgänge(Jira-ID):
+                                    Try
+                                        Dim connectedConfig As clsConfigProjectsImport = projectConfig("Verknüpfte Vorgänge(Jira-ID)")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> connectedConfig.sheet Then
+                                            If Not IsNothing(connectedConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(connectedConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(connectedConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case connectedConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.verknüpfte_JiraID = CStr(.Cells(i, connectedConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.verknüpfte_JiraID = CInt(.Cells(i, connectedConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.verknüpfte_JiraID = CDbl(.Cells(i, connectedConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.verknüpfte_JiraID = CDate(.Cells(i, connectedConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.verknüpfte_JiraID = .Cells(i, connectedConfig.column.von).value
+                                            End Select
+
+                                            If connectedConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(connectedConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.verknüpfte_JiraID)
+                                                If match.Success Then
+                                                    oneNextTask.verknüpfte_JiraID = match.Value
+                                                Else
+                                                    oneNextTask.verknüpfte_JiraID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei verknüpfte Vorgänge
+                                        outputline = "problems reading verknüpfte Vorgänge: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Area:
+                                    Try
+                                        Dim areaConfig As clsConfigProjectsImport = projectConfig("Area")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> areaConfig.sheet Then
+                                            If Not IsNothing(areaConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(areaConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(areaConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case areaConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.verknüpfte_JiraID = CStr(.Cells(i, areaConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.verknüpfte_JiraID = CInt(.Cells(i, areaConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.verknüpfte_JiraID = CDbl(.Cells(i, areaConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.verknüpfte_JiraID = CDate(.Cells(i, areaConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.verknüpfte_JiraID = .Cells(i, areaConfig.column.von).value
+                                            End Select
+
+                                            If areaConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(areaConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.verknüpfte_JiraID)
+                                                If match.Success Then
+                                                    oneNextTask.verknüpfte_JiraID = match.Value
+                                                Else
+                                                    oneNextTask.verknüpfte_JiraID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Area
+                                        outputline = "problems reading Area: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Parent(Jira-ID):
+                                    Try
+                                        Dim parentConfig As clsConfigProjectsImport = projectConfig("Parent(Jira-ID)")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> parentConfig.sheet Then
+                                            If Not IsNothing(parentConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(parentConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(parentConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case parentConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.parent_JiraID = CStr(.Cells(i, parentConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.parent_JiraID = CInt(.Cells(i, parentConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.parent_JiraID = CDbl(.Cells(i, parentConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.parent_JiraID = CDate(.Cells(i, parentConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.parent_JiraID = .Cells(i, parentConfig.column.von).value
+                                            End Select
+
+                                            If parentConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(parentConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.parent_JiraID)
+                                                If match.Success Then
+                                                    oneNextTask.parent_JiraID = match.Value
+                                                Else
+                                                    oneNextTask.parent_JiraID = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei übergeordnet
+                                        outputline = "problems reading Übergeordnet: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Fortschritt:
+                                    Try
+                                        Dim fortschrittConfig As clsConfigProjectsImport = projectConfig("Fortschritt")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> fortschrittConfig.sheet Then
+                                            If Not IsNothing(fortschrittConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(fortschrittConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(fortschrittConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case fortschrittConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.Fortschritt = CStr(.Cells(i, fortschrittConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.Fortschritt = CInt(.Cells(i, fortschrittConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.Fortschritt = CDbl(.Cells(i, fortschrittConfig.column.von).value)
+                                                    'Case "Date"
+                                                    '    oneNextTask.Fortschritt = CDate(.Cells(i, fortschrittConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.Fortschritt = .Cells(i, fortschrittConfig.column.von).value
+                                            End Select
+
+                                            If fortschrittConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(fortschrittConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.Fortschritt)
+                                                If match.Success Then
+                                                    oneNextTask.Fortschritt = match.Value
+                                                Else
+                                                    oneNextTask.Fortschritt = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei Fortschritt
+                                        outputline = "problems reading Fortschritt: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Story Point-Schätzung:
+                                    Try
+                                        Dim aufwandConfig As clsConfigProjectsImport = projectConfig("Story Point-Schätzung")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> aufwandConfig.sheet Then
+                                            If Not IsNothing(aufwandConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(aufwandConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(aufwandConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case aufwandConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.StoryPoints = CStr(.Cells(i, aufwandConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.StoryPoints = CInt(.Cells(i, aufwandConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.StoryPoints = CDbl(.Cells(i, aufwandConfig.column.von).value)
+                                                    'Case "Date"
+                                                    '    oneNextTask.StoryPoints = CDate(.Cells(i, aufwandConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.StoryPoints = .Cells(i, aufwandConfig.column.von).value
+                                            End Select
+
+                                            If aufwandConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(aufwandConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.StoryPoints)
+                                                If match.Success Then
+                                                    oneNextTask.StoryPoints = match.Value
+                                                Else
+                                                    oneNextTask.StoryPoints = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  Story Point-Schätzung
+                                        outputline = "problems reading Story Point-Schätzung: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' Erledigt-Datum:
+                                    Try
+                                        Dim erledigtConfig As clsConfigProjectsImport = projectConfig("Erledigt-Datum")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> erledigtConfig.sheet Then
+                                            If Not IsNothing(erledigtConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(erledigtConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(erledigtConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case erledigtConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.erledigt = CStr(.Cells(i, erledigtConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.erledigt = CInt(.Cells(i, erledigtConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.erledigt = CDbl(.Cells(i, erledigtConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.erledigt = CDate(.Cells(i, erledigtConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.erledigt = .Cells(i, erledigtConfig.column.von).value
+                                            End Select
+
+                                            If erledigtConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(erledigtConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.erledigt)
+                                                If match.Success Then
+                                                    oneNextTask.erledigt = match.Value
+                                                Else
+                                                    oneNextTask.erledigt = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  Erledigt-Datum
+                                        outputline = "problems reading Erledigt-Datum: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintName:
+                                    Try
+                                        Dim sprintNameConfig As clsConfigProjectsImport = projectConfig("SprintName")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> sprintNameConfig.sheet Then
+                                            If Not IsNothing(sprintNameConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintNameConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintName = CStr(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.SprintName = CInt(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.SprintName = CDbl(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintName = CDate(.Cells(i, sprintNameConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintName = .Cells(i, sprintNameConfig.column.von).value
+                                            End Select
+
+                                            If sprintNameConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintNameConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintName)
+                                                If match.Success Then
+                                                    oneNextTask.SprintName = match.Value
+                                                Else
+                                                    oneNextTask.SprintName = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintName
+                                        outputline = "problems reading SprintName: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintStartDate:
+                                    Try
+                                        Dim sprintStartConfig As clsConfigProjectsImport = projectConfig("SprintStartDate")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> sprintStartConfig.sheet Then
+                                            If Not IsNothing(sprintStartConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintStartConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintStartConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintStartConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintStartDate = CStr(.Cells(i, sprintStartConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.SprintStartDate = CInt(.Cells(i, sprintStartConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.SprintStartDate = CDbl(.Cells(i, sprintStartConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintStartDate = CDate(.Cells(i, sprintStartConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintStartDate = .Cells(i, sprintStartConfig.column.von).value
+                                            End Select
+
+                                            If sprintStartConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintStartConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintStartDate)
+                                                If match.Success Then
+                                                    oneNextTask.SprintStartDate = match.Value
+                                                Else
+                                                    oneNextTask.SprintStartDate = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintStartDate
+                                        oneNextTask.SprintStartDate = Nothing
+                                        outputline = "problems reading SprintStartDate: line: " & i.ToString
+                                        'meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+
+                                    ' SprintEndDate:
+                                    Try
+                                        Dim sprintEndConfig As clsConfigProjectsImport = projectConfig("SprintEndDate")
+                                        'richtige Tabelle öffnen
+
+                                        If currentWS.Index <> sprintEndConfig.sheet Then
+                                            If Not IsNothing(sprintEndConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintEndConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintEndConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Select Case sprintEndConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintEndDate = CStr(.Cells(i, sprintEndConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.Sprint.SprintEndDate = CInt(.Cells(i, sprintEndConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.Sprint.SprintEndDate = CDbl(.Cells(i, sprintEndConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintEndDate = CDate(.Cells(i, sprintEndConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintEndDate = .Cells(i, sprintEndConfig.column.von).value
+                                            End Select
+
+                                            If sprintEndConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintEndConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintEndDate)
+                                                If match.Success Then
+                                                    oneNextTask.SprintEndDate = match.Value
+                                                Else
+                                                    oneNextTask.SprintEndDate = Nothing
+                                                End If
+                                            End If
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintEndDate
+                                        oneNextTask.SprintEndDate = Nothing
+                                        outputline = "problems reading SprintEndDate: line: " & i.ToString
+                                        'meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintCompleteDate:
+                                    Try
+                                        Dim sprintCompleteConfig As clsConfigProjectsImport = projectConfig("SprintCompleteDate")
+                                        'richtige Tabelle öffnen
+
+                                        If currentWS.Index <> sprintCompleteConfig.sheet Then
+                                            If Not IsNothing(sprintCompleteConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintCompleteConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintCompleteConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+                                            Dim sprintCompleteObject As Object = Nothing
                                             Try
-                                                If Not IsNothing(currentWS.Cells(ize, resourceNameDefinition.column.von).value) Then
-                                                    curString = CStr(currentWS.Cells(ize, resourceNameDefinition.column.von).value)
+                                                sprintCompleteObject = .Cells(i, sprintCompleteConfig.column.von).value
+                                                If sprintCompleteObject = "[no subfield found]" Then
+                                                    sprintCompleteObject = Nothing
                                                 End If
                                             Catch ex As Exception
-
+                                                sprintCompleteObject = Nothing
                                             End Try
 
-                                            If curString <> "" Then
 
-                                                regexpression = New Regex(resourceNameDefinition.content)
-                                                Dim match As Match = regexpression.Match(curString)
-                                                If match.Success Then
-                                                    Dim tmpstr() As String = match.Value.Split(New Char() {CChar("("), CChar(")")}, 3)
-                                                    curRoleName = tmpstr(1)
-                                                Else
-                                                    curRoleName = ""
-                                                End If
+                                            If Not IsNothing(sprintCompleteObject) Then
+                                                Select Case sprintCompleteConfig.Typ
+                                                    Case "Text"
+                                                        oneNextTask.SprintCompleteDate = CStr(.Cells(i, sprintCompleteConfig.column.von).value)
+                                                'Case "Integer"
+                                                '    oneNextTask.SprintCompleteDate = CInt(.Cells(i, sprintEndConfig.column.von).value)
+                                                'Case "Decimal"
+                                                '    oneNextTask.SprintCompleteDate = CDbl(.Cells(i, sprintEndConfig.column.von).value)
+                                                    Case "Date"
+                                                        oneNextTask.SprintCompleteDate = CDate(.Cells(i, sprintCompleteConfig.column.von).value)
+                                                    Case Else
+                                                        oneNextTask.SprintCompleteDate = .Cells(i, sprintCompleteConfig.column.von).value
+                                                End Select
 
-                                                If curRoleName <> "" Then
-                                                    If RoleDefinitions.containsName(curRoleName) Then
-                                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
-                                                        ' now get real-Name instead of Alias Name
-                                                        curRoleName = RoleDefinitions.getRoleDefByID(tmpRole.UID).name
-
-                                                        Dim tmpValues() As Double
-                                                        ReDim tmpValues(arrayDimension)
-
-                                                        ' now read the values 
-                                                        For isp As Integer = 0 To arrayDimension
-                                                            If Not IsNothing(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) Then
-                                                                If monthValuesDefinition.content = "hours" Then
-                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) / 8
-                                                                ElseIf monthValuesDefinition.content = "weeks" Then
-                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 5
-                                                                ElseIf monthValuesDefinition.content = "months" Then
-                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value) * 20
-                                                                Else
-                                                                    tmpValues(isp) = CDbl(currentWS.Cells(ize, monthValuesDefinition.column.von + isp).value)
-                                                                End If
-
-                                                            End If
-                                                        Next
-
-                                                        ' now add values ... 
-                                                        If roleListNameValues.ContainsKey(curRoleName) Then
-                                                            ' es muss aufsummiert werden 
-                                                            For isp As Integer = 0 To arrayDimension
-                                                                roleListNameValues.Item(curRoleName)(isp) = roleListNameValues.Item(curRoleName)(isp) + tmpValues(isp)
-                                                            Next
-                                                        Else
-                                                            roleListNameValues.Add(curRoleName, tmpValues)
-                                                        End If
-
+                                                If sprintCompleteConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(sprintCompleteConfig.content)
+                                                    Dim match As Match = regexpression.Match(oneNextTask.SprintCompleteDate)
+                                                    If match.Success Then
+                                                        oneNextTask.SprintCompleteDate = match.Value
+                                                    Else
+                                                        oneNextTask.SprintCompleteDate = Nothing
                                                     End If
                                                 End If
+                                            Else
+                                                oneNextTask.SprintCompleteDate = Date.MaxValue
                                             End If
 
+                                        End With
+
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintCompleteDate
+                                        outputline = "problems reading SprintCompleteDate: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    ' SprintGoal:
+                                    Try
+                                        Dim sprintGoalConfig As clsConfigProjectsImport = projectConfig("SprintGoal")
+                                        'richtige Tabelle öffnen
+                                        If currentWS.Index <> sprintGoalConfig.sheet Then
+                                            If Not IsNothing(sprintGoalConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(sprintGoalConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(sprintGoalConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
                                         End If
+                                        With currentWS
+                                            Select Case sprintGoalConfig.Typ
+                                                Case "Text"
+                                                    oneNextTask.SprintGoal = CStr(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case "Integer"
+                                                    oneNextTask.SprintGoal = CInt(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case "Decimal"
+                                                    oneNextTask.SprintGoal = CDbl(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case "Date"
+                                                    oneNextTask.SprintGoal = CDate(.Cells(i, sprintGoalConfig.column.von).value)
+                                                Case Else
+                                                    oneNextTask.SprintGoal = .Cells(i, sprintGoalConfig.column.von).value
+                                            End Select
 
-                                    Next ize
+                                            If sprintGoalConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(sprintGoalConfig.content)
+                                                Dim match As Match = regexpression.Match(oneNextTask.SprintGoal)
+                                                If match.Success Then
+                                                    oneNextTask.SprintGoal = match.Value
+                                                Else
+                                                    oneNextTask.SprintGoal = Nothing
+                                                End If
+                                            End If
+                                        End With
 
-                                Else
-                                    ' Fehler ... 
-                                    If awinSettings.englishLanguage Then
-                                        outputline = "Couldn't find project " & projNumber & " / " & tryPName
-                                    Else
-                                        outputline = "Projekt-Nummer / Name excistiert nicht:  " & projNumber & " / " & tryPName
+                                    Catch ex As Exception
+                                        ' Fehler bei  SprintGoal
+                                        outputline = "problems reading SprintGoal: line: " & i.ToString
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, "readJIRATasks", anzFehler)
+                                    End Try
+
+                                    '------------------------------------------
+                                    ' Plausibilitäten prüfen und ggfs. anpassen
+                                    '------------------------------------------
+                                    '' wenn kein Fälligkeitdatum angegeben ist, so wird date.maxvalue hierfür gesetzt
+                                    'If oneNextTask.fällig <= Date.MinValue Then
+                                    '    oneNextTask.fällig = Date.MaxValue
+                                    'End If
+                                    ' wenn task einem Sprint zugeordnet, so ist Fälligkeit = enddate des Sprints
+                                    If Not IsNothing(oneNextTask.SprintName) And Not IsNothing(oneNextTask.SprintEndDate) Then
+                                        oneNextTask.fällig = oneNextTask.SprintEndDate
                                     End If
-                                    meldungen.Add(outputline)
-                                    Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
 
-                                End If
+                                    ' ist die Task bereits fertig ,
+                                    If oneNextTask.TaskStatus = "Fertig" Then
+                                        oneNextTask.fällig = oneNextTask.erledigt
+                                    End If
+                                    '?????UR: TODO
+                                    If Not projListSorted.ContainsKey(oneNextTask.projectName) Then
+                                        taskListSorted = New SortedList(Of String, clsJIRA_Task)
+                                    Else
+                                        taskListSorted = projListSorted(oneNextTask.projectName)
+                                    End If
+
+                                    If Not taskListSorted.ContainsKey(oneNextTask.Jira_ID) Then
+                                        taskListSorted.Add(oneNextTask.Jira_ID, oneNextTask)
+                                    Else ' sollte eigentlich nicht vorkommen
+                                        taskListSorted.Remove(oneNextTask.Jira_ID)
+                                        taskListSorted.Add(oneNextTask.Jira_ID, oneNextTask)
+                                    End If
+
+                                    If Not projListSorted.ContainsKey(oneNextTask.projectName) Then
+                                        projListSorted.Add(oneNextTask.projectName, taskListSorted)
+                                    Else
+                                        projListSorted.Remove(oneNextTask.projectName)
+                                        projListSorted.Add(oneNextTask.projectName, taskListSorted)
+                                    End If
+
+                                    If Not projtaskList.ContainsKey(oneNextTask.projectName) Then
+                                        taskList = New SortedList(Of Date, clsJIRA_Task)
+                                    Else
+                                        taskList = projtaskList(oneNextTask.projectName)
+                                    End If
+
+                                    While taskList.ContainsKey(oneNextTask.Erstellt)
+                                        oneNextTask.Erstellt = DateAdd(DateInterval.Second, 1, oneNextTask.Erstellt)
+                                    End While
+                                    If Not IsNothing(oneNextTask.Erstellt) Then
+                                        taskList.Add(oneNextTask.Erstellt, oneNextTask)
+                                    End If
+
+                                    If Not projtaskList.ContainsKey(oneNextTask.projectName) Then
+                                        projtaskList.Add(oneNextTask.projectName, taskList)
+                                    Else
+                                        projtaskList.Remove(oneNextTask.projectName)
+                                        projtaskList.Add(oneNextTask.projectName, taskList)
+                                    End If
+
+                                    If Not projsprintList.ContainsKey(oneNextTask.projectName) Then
+                                        sprintList = New SortedList(Of String, clsJIRA_sprint)
+                                    Else
+                                        sprintList = projsprintList(oneNextTask.projectName)
+                                    End If
+
+                                    ' SprintList erstellen
+                                    Dim sprintItem As clsJIRA_sprint
+                                    If Not IsNothing(oneNextTask.SprintName) Then
+                                        If Not sprintList.ContainsKey(oneNextTask.SprintName) Then
+                                            sprintItem = New clsJIRA_sprint
+                                            sprintItem.SprintName = oneNextTask.SprintName
+                                            sprintItem.SprintStartDate = oneNextTask.SprintStartDate
+                                            sprintItem.SprintEndDate = oneNextTask.SprintEndDate
+                                            sprintItem.SprintCompleteDate = oneNextTask.SprintCompleteDate
+                                            sprintItem.SprintGoal = oneNextTask.SprintGoal
+                                            sprintItem.SprintTasks.Add(oneNextTask.Jira_ID, oneNextTask.Jira_ID)
+                                            sprintList.Add(sprintItem.SprintName, sprintItem)
+                                        Else
+                                            sprintItem = New clsJIRA_sprint
+                                            sprintItem = sprintList.Item(oneNextTask.SprintName)
+                                            sprintItem.SprintTasks.Add(oneNextTask.Jira_ID, oneNextTask.Jira_ID)
+                                            sprintList.Remove(oneNextTask.SprintName)
+                                            sprintList.Add(sprintItem.SprintName, sprintItem)
+                                        End If
+                                    End If
+                                    If Not projsprintList.ContainsKey(oneNextTask.projectName) Then
+                                        projsprintList.Add(oneNextTask.projectName, sprintList)
+                                    Else
+                                        projsprintList.Remove(oneNextTask.projectName)
+                                        projsprintList.Add(oneNextTask.projectName, sprintList)
+                                    End If
+
+                                    outputline = "line " & i.ToString & " Done"
+                                    Call logger(ptErrLevel.logInfo, outputline, "readJIRATasks", anzFehler)
+
+                                Next i       ' next line
 
                             Catch ex As Exception
-                                If awinSettings.englishLanguage Then
-                                    outputline = "The actual file isn't conform with the Configuration!"
-                                Else
-                                    outputline = "die ausgewählte Datei entspricht nicht der Konfiguration!"
-                                End If
-
+                                outputline = "problems reading project: catch ex of lines-loop : " & ex.Message
                                 meldungen.Add(outputline)
-                                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                                Call MsgBox(outputline)
                             End Try
 
-                        End If
+                        End If      ' worksheet gibt es nicht
 
                     End If
 
-                    projectWB.Close(SaveChanges:=False)
 
                 Catch ex As Exception
-                    If awinSettings.englishLanguage Then
-                        outputline = "There is something wrong with the inputfile: " & tmpDatei
-                    Else
-                        outputline = "Fehler im Inputfile: " & tmpDatei
-                    End If
-
+                    outputline = "problems reading project: catch ex of projectWB : " & ex.Message
                     meldungen.Add(outputline)
-                    Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
+                    Call MsgBox(outputline)
+
                 End Try
-            Else
-                If awinSettings.englishLanguage Then
-                    outputline = "The file you selected doesn't exist!"
-                Else
-                    outputline = "Die ausgewählte Datei existiert nicht!"
-                End If
-                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
             End If
+
+            ' Schliessen der Excel-Ausleitung von Jira
+
+
+            appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
 
         Catch ex As Exception
-
-        End Try
-
-        Dim planningMerge As Boolean = False
-        Dim baselineMerge As Boolean = False
-
-        Try
-            If Not IsNothing(hproj) Then
-
-                ' now do the Planning Version 
-                planningMerge = hproj.mergeForecastValues(roleListNameValues, monthVon, monthBis, arrayOffset, offsetCorrection, meldungen)
-
-                ' now do the Baseline Version 
-                If Not IsNothing(baseline) Then
-                    baselineMerge = baseline.mergeForecastValues(roleListNameValues, monthVon, monthBis, arrayOffset, offsetCorrection, meldungen)
-                Else
-                    baseline = hproj.createVariant(ptVariantFixNames.pfv.ToString, "Baseline")
-                    baselineMerge = True
-                End If
-
-            End If
-
-        Catch ex As Exception
-
-        End Try
-
-        If planningMerge And baselineMerge Then
-            If ImportProjekte.Containskey(calcProjektKey(hproj.name, hproj.variantName)) Then
-                ImportProjekte.Remove(calcProjektKey(hproj.name, hproj.variantName), updateCurrentConstellation:=False)
-                If awinSettings.englishLanguage Then
-                    outputline = hproj.name & " exists in multiple versions - last is used ...  "
-                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-                Else
-                    outputline = hproj.name & " existiert mehrfach - die Letzte wird verwendet ...  "
-                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-                End If
-                meldungen.Add(outputline)
-            End If
-
-            If ImportBaselineProjekte.Containskey(calcProjektKey(baseline.name, baseline.variantName)) Then
-                ImportBaselineProjekte.Remove(calcProjektKey(baseline.name, baseline.variantName), updateCurrentConstellation:=False)
-                If awinSettings.englishLanguage Then
-                    outputline = baseline.name & " baseline exists in multiple versions - last is used ...  "
-                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-                Else
-                    outputline = baseline.name & " Baseline existiert mehrfach - die Letzte wird verwendet ...  "
-                    Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-                End If
-                meldungen.Add(outputline)
-            End If
-
-            ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-            ImportBaselineProjekte.Add(baseline, updateCurrentConstellation:=False)
-
-            If awinSettings.englishLanguage Then
-                outputline = hproj.name & " updated! "
-                Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-
-            Else
-                outputline = hproj.name & " aktualisiert! "
-                Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
-            End If
-            result = True
-        Else
-            If awinSettings.englishLanguage Then
-                outputline = tmpDatei & " failed! "
-                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
-            Else
-                outputline = tmpDatei & " fehlgeschlagen! "
-                Call logger(ptErrLevel.logError, outputline, "updateProjectsWithConfig", anzFehler)
-            End If
+            outputline = "problems reading project: catch from the beginning of readJIRATasks : " & ex.Message
             meldungen.Add(outputline)
+            Call MsgBox(outputline)
+        End Try
+
+        If meldungen.Count <= 0 Then
+            result = True
         End If
 
-        ' bring back to normal user Role
-        myCustomUserRole.customUserRole = saveUserRole
-
-        updateProjectWithConfig = result
+        readJIRATasks = result
 
     End Function
+
+
+
     Public Sub writeYearInitialPlanningSupportToExcel(ByVal von As Integer, ByVal bis As Integer,
                                                       ByVal roleCollection As Collection, ByVal costCollection As Collection,
                                                       ByVal unit As PTEinheiten)

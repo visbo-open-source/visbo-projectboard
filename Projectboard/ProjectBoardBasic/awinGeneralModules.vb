@@ -1119,15 +1119,16 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
-    ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
+    '''  ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
     ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
     ''' wenn ein importiertes Projekt bereits in der Datenbank existiert und verändert ist, dann wird es markiert und gleichzeitig temporär geschützt 
     ''' wenn ein importiertes Projekt bereits in der Datenbank existiert, verändert wurde und von anderen geschützt ist, dann wird eine Variante angelegt 
     ''' </summary>
     ''' <param name="importDate"></param>
-    ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
+    ''' <param name="drawPlanTafel">>sollen die PRojekte gezeichnet werden</param>
     ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
-    ''' <remarks></remarks>
+    ''' <param name="getSomeValuesFromOldProj">sollen z.B. Kundennummer, vpID, actualDataUntilübernommen werden</param>
+    ''' <param name="calledFromActualDataImport">Aufwände sollen auch ggfs. IstDaten übernommen werden</param>
     Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean,
                                        ByVal fileFrom3rdParty As Boolean,
                                        ByVal getSomeValuesFromOldProj As Boolean,
@@ -3804,6 +3805,8 @@ Public Module awinGeneralModules
             activeSummaryConstellation = New clsConstellation(skey:=ptSortCriteria.customTF)
             Dim zaehler As Integer = 1
 
+
+
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
                 '' '???ur:8..4.2019: Portfolio-Projekte lesen'' es werden erst mal alle Projekte zu der Constellation kvp geholt
@@ -3827,6 +3830,10 @@ Public Module awinGeneralModules
                         variantName = ""
                     End If
 
+                    ' This function (ReSt-Call) delivers all projects of this constellation
+                    Dim projList As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Value.constellationName, kvp.Value.vpID, kvp.Value.variantName, err, storedAtOrBefore)
+                    AlleProjekte.liste = projList
+
                     curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                     If Not IsNothing(curSummaryProjVorgabe) Then
                         vorgabeBudget = curSummaryProjVorgabe.Erloes
@@ -3835,13 +3842,15 @@ Public Module awinGeneralModules
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
                         ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
 
-                        If IsNothing(curSummaryProjVorgabe) Then
-                            ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
-                            curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
-                        End If
-                        curSummaryProjToUse = curSummaryProjVorgabe
+                        '  ur: 20211108: accelerate the load of an portfolio without summaryProject
+                        'If IsNothing(curSummaryProjVorgabe) Then
+                        '    ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
+                        '    curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
+                        'End If
+                        'curSummaryProjToUse = curSummaryProjVorgabe
                     Else
-                        curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
+                        '  ur: 20211108: accelerate the load of an portfolio without summaryProject
+                        '  curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
                     End If
 
 
@@ -4048,19 +4057,21 @@ Public Module awinGeneralModules
 
                 If calculateAndStoreSummaryProjekt Then
 
-                    If Not IsNothing(oldSummaryP) Then
-                        'budget = oldSummaryP.budgetWerte.Sum
-                        budget = oldSummaryP.Erloes
-                        If budget = 0 Then
-                            budget = currentConstellation.getBudgetOfShownProjects
-                            oldSummaryP.Erloes = budget
-                        End If
-                        sproj = oldSummaryP
-                    Else
-                        budget = currentConstellation.getBudgetOfShownProjects
-                        sproj = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
-                        sproj.variantName = tmpVariantName
-                    End If
+                    ' ur: 20211108: accelerate the load of an portfolio without summaryProject - calcUnionProject needs to much time
+
+                    'If Not IsNothing(oldSummaryP) Then
+                    '    'budget = oldSummaryP.budgetWerte.Sum
+                    '    budget = oldSummaryP.Erloes
+                    '    If budget = 0 Then
+                    '        budget = currentConstellation.getBudgetOfShownProjects
+                    '        oldSummaryP.Erloes = budget
+                    '    End If
+                    '    sproj = oldSummaryP
+                    'Else
+                    '    budget = currentConstellation.getBudgetOfShownProjects
+                    '    sproj = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
+                    '    sproj.variantName = tmpVariantName
+                    'End If
 
 
 

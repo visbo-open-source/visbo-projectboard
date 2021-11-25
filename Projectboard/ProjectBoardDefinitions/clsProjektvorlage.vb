@@ -535,50 +535,53 @@
 
                         If isMilestone Then
 
-                            Dim msDef As clsMeilensteinDefinition
-                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
-                            If IsNothing(msDef) Then
-                                msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
-                            End If
+                            description2 = Me.getMilestoneByID(nameID).shortName
 
-                            If IsNothing(msDef) Then
-                                ' nichts zu tun
-                            Else
-                                If IsNothing(msDef.shortName) Then
-                                    description2 = ""
-                                Else
-                                    If msDef.shortName = "" Then
-                                        description2 = ""
-                                    Else
-                                        description2 = msDef.shortName
-                                    End If
+                            'Dim msDef As clsMeilensteinDefinition
+                            'msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            'If IsNothing(msDef) Then
+                            '    msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
+                            'End If
 
-                                End If
-                            End If
+                            'If IsNothing(msDef) Then
+                            '    ' nichts zu tun
+                            'Else
+                            '    If IsNothing(msDef.shortName) Then
+                            '        description2 = ""
+                            '    Else
+                            '        If msDef.shortName = "" Then
+                            '            description2 = ""
+                            '        Else
+                            '            description2 = msDef.shortName
+                            '        End If
+
+                            '    End If
+                            'End If
 
                         Else
 
-                            phDef = PhaseDefinitions.getPhaseDef(description2)
-                            If IsNothing(phDef) Then
+                            description2 = Me.getPhaseByID(nameID).shortName
+                            'phDef = PhaseDefinitions.getPhaseDef(description2)
+                            'If IsNothing(phDef) Then
 
-                                phDef = missingPhaseDefinitions.getPhaseDef(description2)
-                            End If
+                            '    phDef = missingPhaseDefinitions.getPhaseDef(description2)
+                            'End If
 
-                            If IsNothing(phDef) Then
-                                ' nichts zu tun
-                            Else
+                            'If IsNothing(phDef) Then
+                            '    ' nichts zu tun
+                            'Else
 
-                                If IsNothing(phDef.shortName) Then
-                                    description2 = ""
-                                Else
-                                    If phDef.shortName = "" Then
-                                        description2 = ""
-                                    Else
-                                        description2 = phDef.shortName
-                                    End If
+                            '    If IsNothing(phDef.shortName) Then
+                            '        description2 = ""
+                            '    Else
+                            '        If phDef.shortName = "" Then
+                            '            description2 = ""
+                            '        Else
+                            '            description2 = phDef.shortName
+                            '        End If
 
-                                End If
-                            End If
+                            '    End If
+                            'End If
 
                         End If
                     Else
@@ -586,51 +589,53 @@
 
                         If isMilestone Then
 
-                            Dim msDef As clsMeilensteinDefinition
-                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
-                            If IsNothing(msDef) Then
-                                msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
-                            End If
+                            description2 = Me.getMilestoneByID(nameID).shortName
+                            'Dim msDef As clsMeilensteinDefinition
+                            'msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            'If IsNothing(msDef) Then
+                            '    msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
+                            'End If
 
-                            If IsNothing(msDef) Then
-                                description2 = ""
-                            Else
+                            'If IsNothing(msDef) Then
+                            '    description2 = ""
+                            'Else
 
-                                If IsNothing(msDef.shortName) Then
-                                    description2 = ""
-                                Else
-                                    If msDef.shortName = "" Then
-                                        description2 = ""
-                                    Else
-                                        description2 = msDef.shortName
-                                    End If
+                            '    If IsNothing(msDef.shortName) Then
+                            '        description2 = ""
+                            '    Else
+                            '        If msDef.shortName = "" Then
+                            '            description2 = ""
+                            '        Else
+                            '            description2 = msDef.shortName
+                            '        End If
 
-                                End If
-                            End If
+                            '    End If
+                            'End If
 
                         Else
 
-                            phDef = PhaseDefinitions.getPhaseDef(description2)
-                            If IsNothing(phDef) Then
+                            description2 = Me.getPhaseByID(nameID).shortName
+                            'phDef = PhaseDefinitions.getPhaseDef(description2)
+                            'If IsNothing(phDef) Then
 
-                                phDef = missingPhaseDefinitions.getPhaseDef(description2)
-                            End If
+                            '    phDef = missingPhaseDefinitions.getPhaseDef(description2)
+                            'End If
 
-                            If IsNothing(phDef) Then
-                                'description2 = "-"
-                            Else
+                            'If IsNothing(phDef) Then
+                            '    'description2 = "-"
+                            'Else
 
-                                If IsNothing(phDef.shortName) Then
-                                    description2 = ""
-                                Else
-                                    If phDef.shortName = "" Then
-                                        description2 = ""
-                                    Else
-                                        description2 = phDef.shortName
-                                    End If
+                            '    If IsNothing(phDef.shortName) Then
+                            '        description2 = ""
+                            '    Else
+                            '        If phDef.shortName = "" Then
+                            '            description2 = ""
+                            '        Else
+                            '            description2 = phDef.shortName
+                            '        End If
 
-                                End If
-                            End If
+                            '    End If
+                            'End If
 
                         End If
 
