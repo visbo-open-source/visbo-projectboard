@@ -442,4 +442,88 @@ Public Module agm4
 
 
 
+    ''' <summary>
+    ''' sorts the currentSessionConstellation according BU, Start-Date, End-Date
+    ''' if name ist provided then Constellation gets that name
+    ''' </summary>
+    ''' <param name="name"></param>
+    Public Sub sortCurrentConst(ByVal name As String, ByVal vName As String)
+
+        Dim sortType As Integer = ptSortCriteria.buStartName
+
+        ' Vorbesetzungen 
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        Try
+
+            If Not IsNothing(currentSessionConstellation) Then
+                If currentSessionConstellation.Liste.Count <> 0 Then
+
+                    Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True, cName:="Sort Result")
+
+                    If currentSortConstellation.sortCriteria <> sortType Then
+                        appInstance.ScreenUpdating = False
+                        Try
+                            ' nur dann muss was gemacht werden ...  
+                            currentSortConstellation.sortCriteria = sortType
+
+                            If name <> "" Then
+                                currentSortConstellation.constellationName = name
+                                currentSortConstellation.variantName = vName
+                            End If
+
+                            Dim tmpConstellation As New clsConstellations
+                            tmpConstellation.Add(currentSortConstellation)
+
+                            ' es in der Session Liste verfügbar machen
+                            If projectConstellations.Contains(currentSortConstellation.constellationName) Then
+                                projectConstellations.Remove(currentSortConstellation.constellationName)
+                            End If
+
+                            projectConstellations.Add(currentSortConstellation)
+
+                            Call showConstellations(constellationsToShow:=tmpConstellation,
+                                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+
+                        Catch ex As Exception
+
+                        End Try
+
+                        appInstance.ScreenUpdating = True
+
+                    End If
+
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please load projects/portfolios first ...")
+                    Else
+                        Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+                    End If
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("please load projects/portfolios first ...")
+                Else
+                    Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+                End If
+            End If
+
+        Catch ex As Exception
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
+        End Try
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = True
+    End Sub
+
+
+
 End Module
