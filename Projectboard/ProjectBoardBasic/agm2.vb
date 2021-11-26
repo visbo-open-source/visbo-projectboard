@@ -21352,7 +21352,7 @@ Public Module agm2
                 ' Lesen appearance Defintions
                 appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
 
-                If IsNothing(appearanceDefinitions.liste) Then
+                If IsNothing(appearanceDefinitions.liste) Or (appearanceDefinitions.liste.Count < 1) Then
 
                     appearanceDefinitions = New clsAppearances
 
