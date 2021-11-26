@@ -429,6 +429,8 @@ Module SIModule1
         ' wenn nein, dann wird noDBAccessInPPT auf false gesetzt 
         Call getDBsettings(sld)
 
+        logfileNamePath = createLogfileName()
+
         ' hier muss demnächst die Abfrage rein, ob der anwender auch die entsprechende customUserRole hat, um die Slide zu aktualisieren / zu sehen 
         ' ... Code ...
         ' Ende CustomUser Role Behandlung

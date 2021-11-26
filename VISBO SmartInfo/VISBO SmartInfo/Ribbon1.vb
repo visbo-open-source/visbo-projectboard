@@ -559,6 +559,9 @@ Public Class Ribbon1
         awinSettings.userNamePWD = My.Settings.userNamePWD
 
 
+        logfileNamePath = createLogfileName()
+
+
         If awinSettings.visboServer Then
 
             If logInToMongoDB(True) Then
@@ -787,6 +790,8 @@ Public Class Ribbon1
 
                     dbUsername = ""
                     dbPasswort = ""
+
+                    logfileNamePath = createLogfileName()
 
                     If logInToMongoDB(True) Then
                         ' weitermachen ...
@@ -1168,7 +1173,7 @@ Public Class Ribbon1
                 Call MsgBox(ex.Message)
             End Try
         Else
-            Call MsgBox("Login Cancelled ... - no further action")
+            Call MsgBox("Login Cancelled ... - no further action" & vbCrLf & errMsg)
         End If
 
     End Sub
@@ -1394,6 +1399,8 @@ Public Class Ribbon1
 
             dbUsername = ""
             dbPasswort = ""
+
+            logfileNamePath = createLogfileName()
 
             If logInToMongoDB(True) Then
                 ' weitermachen ...

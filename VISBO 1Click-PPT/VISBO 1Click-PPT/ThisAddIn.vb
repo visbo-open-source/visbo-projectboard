@@ -40,7 +40,13 @@ Public Class ThisAddIn
             If awinSettings.rememberUserPwd Then
                 awinSettings.userNamePWD = My.Settings.userNamePWD
             End If
-            visboClient = "VISBO MSProjectAddIn / "
+
+            ''visboClient = "VISBO MSProjectAddIn / "
+            visboClient = divClients(client.VisboMSProject)
+
+            awinPath = awinSettings.awinPath
+            logfileNamePath = createLogfileName()
+
 
         Catch ex As Exception
 
