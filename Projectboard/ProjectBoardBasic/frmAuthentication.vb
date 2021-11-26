@@ -206,9 +206,17 @@ Public Class frmAuthentication
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
+            ' führt bei Aufruf aus Powerpoint zu Fehler ...
 
-            Me.Top = appInstance.Top + (appInstance.Height - Me.Height) / 2
-            Me.Left = appInstance.Left + (appInstance.Width - Me.Width) / 2
+
+            If Not IsNothing(appInstance) Then
+                Me.Top = appInstance.Top + (appInstance.Height - Me.Height) / 2
+                Me.Left = appInstance.Left + (appInstance.Width - Me.Width) / 2
+            Else
+                Me.Top = 50
+                Me.Left = 50
+            End If
+
 
             If awinSettings.visboServer Then
                 pwforgotten.Visible = True
@@ -313,4 +321,7 @@ Public Class frmAuthentication
 
     End Sub
 
+    Private Sub frmAuthentication_Click(sender As Object, e As EventArgs) Handles Me.Click
+
+    End Sub
 End Class

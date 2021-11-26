@@ -3,8 +3,14 @@
     Public itemsCollection As New List(Of String)
     Private Sub frmSelectOneItem_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
-        Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
+        If Not IsNothing(appInstance) Then
+            Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
+            Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
+        Else
+            Me.Top = 50
+            Me.Left = 50
+        End If
+
 
         Call languageSettings()
 
