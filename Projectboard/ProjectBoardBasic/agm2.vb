@@ -4456,10 +4456,14 @@ Public Module agm2
     ''' <param name="importdate"></param>
     Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef mapProj As clsProjekt, ByRef importdate As Date)
 
-        Dim mapStruktur As String = awinSettings.mappingVorlage
+        Dim prj As MSProject.Application
+        If modus = "RPA" Then
+            prj = New MSProject.Application
+        End If
 
-        Dim prj As New MSProject.Application
         Dim msproj As MSProject.Project
+
+        Dim mapStruktur As String = awinSettings.mappingVorlage
         Dim i As Integer = 1
         Dim lastphase As clsPhase
         Dim lasthrchyNode As clsHierarchyNode
