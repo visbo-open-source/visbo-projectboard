@@ -1572,18 +1572,24 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                err, variantName, storedAtOrBefore)
 
+
                     If Not IsNothing(result) Then
 
                         Select Case err.errorCode
 
                             Case 200 ' success
-                                     ' nothing to do
+                                ' nothing to do, except check whether healing row-Nrs is necessary
+                                Call result.healIt()
 
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, variantName, storedAtOrBefore)
+
+                                    If Not IsNothing(result) Then
+                                        Call result.healIt()
+                                    End If
                                 End If
 
                             Case Else ' all others

@@ -32,6 +32,25 @@
     ' gibt den Zeitpunkt an, zu dem das Portfolio zusammengestellt wurde
     Private _timestamp As Date
 
+    Public Sub healIt()
+
+        ' is there a row Entry with value 1? icn case portfolio was defined by server 
+        Dim healingnecessary As Boolean = False
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            If kvp.Value.zeile = 1 Then
+                healingnecessary = True
+                Exit For
+            End If
+        Next
+
+        ' if so , increase row entry by 1 for each item , because project board always starts with line nr 2
+        If healingnecessary Then
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                kvp.Value.zeile = kvp.Value.zeile + 1
+            Next
+        End If
+
+    End Sub
 
     Public Property timestamp As Date
         Get

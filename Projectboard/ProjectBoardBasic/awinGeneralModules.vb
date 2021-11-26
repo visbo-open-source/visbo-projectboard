@@ -3799,7 +3799,6 @@ Public Module awinGeneralModules
 
             End If
 
-            ' hier muss eine summaryConstellation gemacht werden 
 
             ' wird im Falle showSummaryProject benötigt 
             activeSummaryConstellation = New clsConstellation(skey:=ptSortCriteria.customTF)
@@ -3980,8 +3979,6 @@ Public Module awinGeneralModules
 
             Call awinNeuZeichnenDiagramme(2)
 
-            ' die aktuelle Konstellation in "Last" speichern 
-            'Call storeSessionConstellation("Last")
 
         Catch ex As Exception
             Call MsgBox("Fehler bei Laden : " & vbLf & ex.Message)

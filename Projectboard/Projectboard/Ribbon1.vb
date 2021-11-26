@@ -284,7 +284,15 @@ Imports System.Web
 
                     Dim clearBoard As Boolean = True
                     Dim clearSession As Boolean = False
+                    Dim cName As String = ""
+                    Dim cvName As String = ""
+
                     If constellationsToDo.Count > 0 Then
+                        If constellationsToDo.Count = 1 Then
+                            cName = constellationsToDo.Liste.First.Value.constellationName
+                            cvName = constellationsToDo.Liste.First.Value.variantName
+                        End If
+                        ' now the projects are drawn
                         Call showConstellations(constellationsToDo, clearBoard, clearSession, Date.Now, showSummaryProject:=False, onlySessionLoad:=(control.Id = loadfromSession))
                     End If
 
@@ -862,7 +870,16 @@ Imports System.Web
 
                                 'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
                                 Dim clearSession As Boolean = False
+
+                                Dim cName As String = ""
+                                Dim cvName As String = ""
+
                                 If constellationsToDo.Count > 0 Then
+
+                                    If constellationsToDo.Count = 1 Then
+                                        cName = constellationsToDo.Liste.First.Value.constellationName
+                                        cvName = constellationsToDo.Liste.First.Value.variantName
+                                    End If
 
                                     Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProject:=showSummaryProjects)
 
@@ -883,6 +900,11 @@ Imports System.Web
                                 ' Window so positionieren, dass die Projekte sichtbar sind ...  
                                 If boardWasEmpty Then
                                     If ShowProjekte.Count > 0 Then
+
+                                        If cName <> "" Then
+                                            Call sortCurrentConst(cName, cvName)
+                                        End If
+
                                         Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
                                         If clearBoard Then
                                             If leftborder - 12 > 0 Then
