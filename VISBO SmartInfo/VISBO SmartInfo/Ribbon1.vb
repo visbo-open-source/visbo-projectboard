@@ -791,6 +791,8 @@ Public Class Ribbon1
                     dbUsername = ""
                     dbPasswort = ""
 
+                    logfileNamePath = createLogfileName()
+
                     If logInToMongoDB(True) Then
                         ' weitermachen ...
 
@@ -1397,6 +1399,8 @@ Public Class Ribbon1
 
             dbUsername = ""
             dbPasswort = ""
+
+            logfileNamePath = createLogfileName()
 
             If logInToMongoDB(True) Then
                 ' weitermachen ...
