@@ -197,9 +197,9 @@ Public Class Tabelle2
 
                         Dim rcNameID As String = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
 
+
                         'Dim rcNameID As String = getRCNameIDfromExcelRange(CType(meWS.Range(Cells(zeile, columnRC), Cells(zeile, columnRC + 1)), Excel.Range))
                         Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
-
 
                         Dim hproj As clsProjekt = Nothing
                         If Not IsNothing(pName) Then
@@ -471,9 +471,25 @@ Public Class Tabelle2
                     If rcName <> "" Then
                         curRole = RoleDefinitions.getRoledef(rcName)
                     End If
+
                     If Not IsNothing(curRole) Then
-                        ' check if the curRole does have skills
-                        noSkills = (curRole.getSkillCount <= 0)
+
+                        Dim topNodeSkills As List(Of Integer) = RoleDefinitions.getTopLevelTeamIDs
+                        If Not curRole.isSummaryRole Then
+                            'check If the curRole does have skills
+                            noSkills = (curRole.getSkillCount <= 0)
+                        Else
+                            ' es handelt sich um eine Summary Role 
+                            Dim ix As Integer = 1
+                            noSkills = True
+                            Do While ix <= topNodeSkills.Count And noSkills
+                                noSkills = (RoleDefinitions.getCommonChildsOfParents(topNodeSkills.ElementAt(ix - 1), curRole.UID).Count = 0)
+                                If noSkills Then
+                                    ix = ix + 1
+                                End If
+                            Loop
+                        End If
+
                     End If
 
                     If noSkills And frmMERoleCost.showSkillsOnly Then
@@ -753,7 +769,7 @@ Public Class Tabelle2
                         If Not IsNothing(cphase) Then
 
                             If Target.Column = columnRC Then
-                                ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
+                                ' es handelt sich um eine Rollen-Änderung ...
 
                                 Dim weitermachen As Boolean = True
 
@@ -829,11 +845,28 @@ Public Class Tabelle2
                                             ' isCOst ist falsch und isValidRCChange ... 
                                             isRole = True
 
+                                            Dim autoDefineSkillName As Boolean = awinSettings.onePersonOneRole
+
                                             If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
                                                 skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
                                                 If skillName.Length > 0 Then
                                                     If RoleDefinitions.containsName(skillName) Then
+                                                        autoDefineSkillName = False
                                                         skillID = RoleDefinitions.getRoledef(skillName).UID
+                                                    End If
+                                                End If
+
+                                            End If
+
+                                            If autoDefineSkillName And skillName = "" Then
+                                                Dim myRole As clsRollenDefinition = RoleDefinitions.getRoledef(rcName)
+                                                If Not IsNothing(myRole) Then
+                                                    Dim mySkillIDS As SortedList(Of Integer, Double) = myRole.getSkillIDs()
+                                                    If Not IsNothing(mySkillIDS) Then
+                                                        If mySkillIDS.Count = 1 Then
+                                                            skillName = RoleDefinitions.getRoleDefByID(mySkillIDS.First.Key).name
+                                                            meWS.Cells(zeile, columnRC + 1).value = skillName
+                                                        End If
                                                     End If
                                                 End If
 
@@ -946,11 +979,6 @@ Public Class Tabelle2
 
 
                                         End If
-
-                                        ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
-                                        ' tk 16.1.21 not any more necessary: it is either only PD or only T€
-                                        'Call defineHeaderTitleOfRoleCost(Target.Row)
-
 
 
 

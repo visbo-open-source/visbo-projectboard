@@ -150,6 +150,41 @@ Public Class clsRollen
     End Sub
 
     ''' <summary>
+    ''' retunrs a List of Skill Ids the current Role is having 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Public Function getSkillIDs(ByVal uid As Integer) As List(Of Integer)
+        Dim result As New List(Of Integer)
+
+        Try
+            Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(uid)
+
+            If Not IsNothing(myRole) Then
+
+                If Not myRole.isSkill Then
+                    Dim mySkills As SortedList(Of Integer, Double) = myRole.getSkillIDs
+
+                    If Not IsNothing(mySkills) Then
+                        For Each kvp As KeyValuePair(Of Integer, Double) In mySkills
+                            If Not result.Contains(kvp.Key) Then
+                                result.Add(kvp.Key)
+                            End If
+                        Next
+                    End If
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+        getSkillIDs = result
+
+    End Function
+
+    ''' <summary>
     ''' erstellt die virtuellen Zuordnungen von Teams zu ihren Organisations-Einheiten
     ''' die virtuelle Organisations- oder Eltern-Einheit ist die, die alle Team Member als Eltern umfasst
     ''' </summary>
@@ -997,29 +1032,29 @@ Public Class clsRollen
     End Property
 
 
-    ''' <summary>
-    ''' gibt eine sortierte Liste (uid, roleName) zurück, die nur die Rollen enthält , die beim Einlesen der Istdaten berücksichtigt werden sollen
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getActualDataRelevantRoles As SortedList(Of Integer, String)
-        Get
-            Dim tmpList As New SortedList(Of Integer, String)
+    '''' <summary>
+    '''' gibt eine sortierte Liste (uid, roleName) zurück, die nur die Rollen enthält , die beim Einlesen der Istdaten berücksichtigt werden sollen
+    '''' </summary>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public ReadOnly Property getActualDataRelevantRoles As SortedList(Of Integer, String)
+    '    Get
+    '        Dim tmpList As New SortedList(Of Integer, String)
 
-            For r As Integer = 1 To _allRollen.Count
-                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
-                If tmpRole.isActDataRelevant Then
-                    If Not tmpList.ContainsKey(tmpRole.UID) Then
-                        tmpList.Add(tmpRole.UID, tmpRole.name)
-                    End If
-                End If
-            Next
+    '        For r As Integer = 1 To _allRollen.Count
+    '            Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+    '            If tmpRole.isActDataRelevant Then
+    '                If Not tmpList.ContainsKey(tmpRole.UID) Then
+    '                    tmpList.Add(tmpRole.UID, tmpRole.name)
+    '                End If
+    '            End If
+    '        Next
 
-            getActualDataRelevantRoles = tmpList
+    '        getActualDataRelevantRoles = tmpList
 
-        End Get
-    End Property
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' calculates for all intern employees fullCost, consisting of defaultKapa per month , multiplied with generalCostFactor multiplied with dayRate

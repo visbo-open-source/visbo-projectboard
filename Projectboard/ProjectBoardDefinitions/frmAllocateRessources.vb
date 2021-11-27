@@ -5,6 +5,8 @@ Public Class frmAllocateRessources
     ' die Rollen-ID in der form roleUid;teamID oder roleUid.tostring bzw. costuid.tostring 
     Public rcNameID As String
 
+    ' wenn nach einem Ersatz für eine Person gesucht wird ...
+
     ' die PhaseNameID der Zeile  
     Public phaseNameID As String
 
@@ -17,6 +19,9 @@ Public Class frmAllocateRessources
 
     ' holds the initial sum and sum when being changed ... 
     Private amountToSubstitute As Double
+
+    ' in case of a person: what is the parent organisation 
+    Private lookUpID As String
 
     ' holds the last value a Amount cell contained 
     Private lastValue As Double = 0.0
@@ -58,6 +63,9 @@ Public Class frmAllocateRessources
         End If
 
         Dim errMsg As String = ""
+
+        lookUpID = rcNameID
+
         Call buildAllocationContent(errMsg)
 
         If errMsg <> "" Then
@@ -104,6 +112,20 @@ Public Class frmAllocateRessources
             End If
         End If
 
+        ' by default lookup this combination 
+        lookUpID = rcNameID
+
+        ' but if rcnameID  is a person then get the parent structure in order to be able to substitute 
+
+        If Not myRoleDef.isSummaryRole And Not myRoleDef.isSkill Then
+            Dim parentID As Integer
+            If skillID > 0 Then
+                parentID = RoleDefinitions.getContainingRoleOfSkillMembers(skillID).UID
+            Else
+                parentID = RoleDefinitions.getParentRoleOf(myRoleDef.UID).UID
+            End If
+            lookUpID = RoleDefinitions.bestimmeRoleNameID(parentID, skillID)
+        End If
 
         cPhase = hproj.getPhaseByID(phaseNameID)
         myRole = cPhase.getRoleByRoleNameID(rcNameID)
@@ -134,10 +156,12 @@ Public Class frmAllocateRessources
 
                 lblSum.Text = amountToSubstitute.ToString("###0.#")
 
-                Dim candidatesList As SortedList(Of Double, Integer) = cPhase.getCandidates(rcNameID, 1, amountToSubstitute)
+                Dim candidatesList As SortedList(Of Double, Integer) = cPhase.getCandidates(lookUpID, 1, amountToSubstitute)
+                'Dim candidatesList As SortedList(Of Double, Integer) = cPhase.getCandidates(rcNameID, 1, amountToSubstitute)
 
                 Dim tableIndex As Integer = 0
                 For Each kvp As KeyValuePair(Of Double, Integer) In candidatesList
+
                     Dim curRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Value)
                     Dim candidatesName As String = curRoleDef.name
                     Dim freeCapacity As Double = System.Math.Truncate(10 * kvp.Key) / 10

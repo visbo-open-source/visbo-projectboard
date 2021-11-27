@@ -10205,8 +10205,19 @@ Imports System.Web
     ''' <param name="pressed"></param>
     Public Sub awinPTshowHeader(control As IRibbonControl, ByRef pressed As Boolean)
 
-        awinSettings.meAllowOverTime = pressed
-        
+        tempShowHeaders = pressed
+
+        If tempShowHeaders Then
+            With appInstance.ActiveWindow
+                .DisplayHeadings = True
+            End With
+        Else
+            With appInstance.ActiveWindow
+                .DisplayHeadings = False
+            End With
+        End If
+
+
     End Sub
 
     Public Sub awinMELastOrBasline(control As IRibbonControl, ByRef pressed As Boolean)

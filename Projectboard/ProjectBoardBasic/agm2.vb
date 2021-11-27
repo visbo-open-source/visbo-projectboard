@@ -4456,7 +4456,7 @@ Public Module agm2
     ''' <param name="importdate"></param>
     Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef mapProj As clsProjekt, ByRef importdate As Date)
 
-        Dim prj As MSProject.Application
+        Dim prj As MSProject.Application = Nothing
         If modus = "RPA" Then
             prj = New MSProject.Application
         End If
@@ -18909,6 +18909,11 @@ Public Module agm2
                     End If
 
                     If Not IsNothing(hproj) Then
+
+                        ' if setup, that one person is haviing exactly one role then make sure that each person has its role applied ...
+                        If awinSettings.onePersonOneRole Then
+                            Call hproj.mapRole2Person()
+                        End If
 
                         Dim projectWithActualData As Boolean = False
                         Dim actualDataRelColumn As Integer = -1

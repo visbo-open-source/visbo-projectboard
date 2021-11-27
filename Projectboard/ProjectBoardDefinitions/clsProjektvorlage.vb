@@ -5074,7 +5074,45 @@
 
     End Property
 
+    ''' <summary>
+    ''' if setting onePErsonOneRole is true 
+    ''' each person receives the one and only role it was assigned to 
+    ''' </summary>
+    Public Sub mapRole2Person()
 
+        Try
+            If awinSettings.onePersonOneRole Then
+
+                For Each phase As clsPhase In AllPhases
+
+                    For Each phRole As clsRolle In phase.rollenListe
+
+                        Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(phRole.uid)
+                        If Not IsNothing(myRole) Then
+
+                            If Not myRole.isSummaryRole Then
+                                Dim skillIDs As List(Of Integer) = RoleDefinitions.getSkillIDs(myRole.UID)
+                                If Not IsNothing(skillIDs) Then
+                                    If skillIDs.Count = 1 Then
+                                        If RoleDefinitions.containsUid(skillIDs.Item(0)) Then
+                                            phRole.teamID = skillIDs.Item(0)
+                                        End If
+                                    End If
+                                End If
+                            End If
+
+                        End If
+
+                    Next
+                Next
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     Public Sub New()
 
