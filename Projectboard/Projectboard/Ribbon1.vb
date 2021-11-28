@@ -3653,6 +3653,13 @@ Imports System.Web
                     tmpLabel = "Create Projects from list (customized)"
                 End If
 
+            Case "PT4G1B18" 'Update Projekte 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Aktualisiere Projekte aus Liste (konfiguriert)"
+                Else
+                    tmpLabel = "Update Projects from list (customized)"
+                End If
+
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export"
