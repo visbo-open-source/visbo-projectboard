@@ -8894,11 +8894,20 @@ Imports System.Web
 
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
         Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
+        Dim configProposalImport As String = awinPath & configfilesOrdner & "configCalcTemplateImport.xlsx"
+
+        ' check here which Configuration file is given:
+        ' Instart: a lot of Files or 
+        ' Telair, normally just one file 
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim telairImportConfigOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim instartImportConfigOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
-        If allesOK Then
+        If telairImportConfigOK Or instartImportConfigOK Then
+
+            ' one of the two/several ImPortConfigFiles probably does not exist, that is why it should be reset 
+            outPutCollection.Clear()
 
             Dim getProjConfigImport As New frmSelectImportFiles
 
@@ -8931,6 +8940,8 @@ Imports System.Web
 
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear(False)
+                ImportBaselineProjekte.Clear(False)
+
 
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
@@ -8938,19 +8949,17 @@ Imports System.Web
                 'Call logfileOpen()
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                Dim i As Integer
+                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+                If telairImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                ElseIf instartImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
 
-                For i = 1 To listofVorlagen.Count
-                    dateiName = listofVorlagen.Item(i).ToString
 
-
-                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
-
-                    If listofArchivAllg.Count > 0 Then
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
-                    End If
-
-                Next
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
 
                 'Call logfileSchreiben(outPutCollection)
                 ''Call logfileSchliessen()
