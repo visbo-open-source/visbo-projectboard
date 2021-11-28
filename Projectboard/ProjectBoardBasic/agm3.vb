@@ -289,7 +289,6 @@ Public Module agm3
 
     End Function
 
-
     ''' <summary>
     ''' überprüft, ob die Voraussetzungen für das Einlesen der Projekte. 
     ''' </summary>
@@ -311,6 +310,8 @@ Public Module agm3
         Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim outputLine As String
+
+        Dim oldAnzMsg As Integer = outputCollection.Count
 
         ''
         '' Config-file wird geöffnet
@@ -375,7 +376,6 @@ Public Module agm3
                                             configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
                                             ProjectsFile = configLine.ProjectsFile
 
-
                                         Case Else
                                             configLine.Titel = CStr(.Cells(i, titleCol).value)
                                             configLine.Identifier = CStr(.Cells(i, IdentCol).value)
@@ -384,6 +384,10 @@ Public Module agm3
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
                                             configLine.sheet = CInt(.Cells(i, TabNCol).value)
                                             configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
+
+                                            ' check out, whether there really is a valid Range Definition 
+                                            Dim validRange As Boolean = True
+
                                             If configLine.cellrange Then
                                                 Dim colrange As String = CStr(.Cells(i, SNCol).value)
                                                 Dim hstr() As String = Split(colrange, ":")
@@ -391,17 +395,20 @@ Public Module agm3
                                                     configLine.column.von = CInt(hstr(0))
                                                     configLine.column.bis = CInt(hstr(1))
                                                 ElseIf hstr.Length = 1 Then
-                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
-                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.column.bis = CInt(.Cells(i, SNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    validRange = False
+                                                    'outputCollection.Add(outputLine)
                                                 End If
+
                                             Else
                                                 configLine.column.von = CInt(.Cells(i, SNCol).value)
                                                 configLine.column.bis = CInt(.Cells(i, SNCol).value)
                                             End If
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
 
+                                            ' now consider potential Row Range 
                                             If configLine.cellrange Then
                                                 Dim colrange As String = CStr(.Cells(i, ZNCol).value)
                                                 Dim hstr() As String = Split(colrange, ":")
@@ -412,12 +419,18 @@ Public Module agm3
                                                     configLine.row.von = CInt(.Cells(i, ZNCol).value)
                                                     configLine.row.bis = CInt(.Cells(i, ZNCol).value)
                                                 Else
-                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    If Not validRange Then
+                                                        ' if there was no valid column nor a valid row Range: add message , make sure it is considered invalid
+                                                        outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                        outputCollection.Add(outputLine)
+                                                    End If
                                                 End If
                                             Else
                                                 configLine.row.von = CInt(.Cells(i, ZNCol).value)
                                                 configLine.row.bis = CInt(.Cells(i, ZNCol).value)
                                             End If
+
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
                                             configLine.objType = CStr(.Cells(i, ObjCol).value)
                                             configLine.content = CStr(.Cells(i, InhaltCol).value)
@@ -477,7 +490,10 @@ Public Module agm3
             outputCollection.Add(outputLine)
         End If
 
-        checkProjectImportConfig = (ProjectsConfigs.Count > 0)
+
+        'checkProjectImportConfig = (ProjectsConfigs.Count > 0)
+        ' tk: return false, if no Config Entries or a new Error message was entered into outputCollection   
+        checkProjectImportConfig = (ProjectsConfigs.Count > 0) And (outputCollection.Count = oldAnzMsg)
 
     End Function
 
