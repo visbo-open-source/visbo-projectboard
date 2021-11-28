@@ -10195,7 +10195,7 @@ Imports System.Web
     End Function
 
     Public Sub awinMEOvertime(control As IRibbonControl, ByRef pressed As Boolean)
-        Dim result As Boolean = pressed
+        awinSettings.meAllowOverTime = pressed
     End Sub
 
     ''' <summary>

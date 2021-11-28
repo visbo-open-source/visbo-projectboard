@@ -102,7 +102,7 @@
                 <!--label="VISBO-Steckbriefe"-->
                 <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
                 <!--label ="VISBO Open XML-->
-                <button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
+                <!--<button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>-->
                 <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
                 <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
                 <!--<separator id="PT4G1s1"/>-->
@@ -111,7 +111,7 @@
                 <!--label="Import MS Project"-->
                 <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
                 <!--label="Import RPLAN RXF"-->
-                <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+                <!--<button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />-->
                 <!--label="Import JIRA Projekte (Excel-Ausleitung)"-->
                 <button id="PT4G1B10" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportJIRAProjects" supertip ="es können eine oder mehrere Jira-Projekte (EXcel-Ausleitung) gemäß Konfiguration importiert werden;" />
               </menu>
@@ -142,8 +142,8 @@
               <menu id="PT4G2M-1" getLabel ="bestimmeLabel" getVisible="chckVisibility">
                 <!--label="Export VISBO-Steckbriefe"-->
                 <button id="PT4G1M1B3" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
-                <!--label="Export VISBO Open XML"-->
-                <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" enabled ="false" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
+                <!--label="Export VISBO Open XML"--><!--
+                <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" enabled ="false" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />-->
                 <!--label="Export Excel"-->
                 <button id="PT4G1M1B1" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="planExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
                 <!--label="exportieren in MSProject Projekte-->
@@ -289,33 +289,33 @@
         </group>      
       </tab>-->
       <!--label="Filter"-->
-      <tab id="PTfilter" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTfilter" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT0G1" >
-          <!--label="Auswahl über Namen"-->
+          --><!--label="Auswahl über Namen"--><!--
           <button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
-          <!--label="Filter zurücksetzen"-->
+          --><!--label="Filter zurücksetzen"--><!--
           <button id="PT0G1B9" imageMso="FilterClearAllFilters" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Filter wird wieder zurückgesetzt"/>
-          <!--label="Projekte mit Ampel=rot"-->
+          --><!--label="Projekte mit Ampel=rot"--><!--
           <button id="PT0G1B10"  getLabel ="bestimmeLabel" enabled="false" supertip="Alle Projekte mit roter ProjektAmpel visualisieren"/>
-          <!--label="Projekte mit ungedeckter Finanzierung"-->
+          --><!--label="Projekte mit ungedeckter Finanzierung"--><!--
           <button id="PT0G1B11"  getLabel ="bestimmeLabel" enabled="false" supertip="Alle Projekte, dessen Finanzierung nicht vollständig geklärt ist, visualisieren"/>
-          <!--<button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>-->
+          --><!--<button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>--><!--
         </group>
-      </tab>
+      </tab>-->
       <!--label="Sortieren"-->
-      <tab id="PTsort" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTsort" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT6G1" >
-          <!--label="alphabetisch"-->
+          --><!--label="alphabetisch"--><!--
           <button id ="PT6G1B1" imageMso="SortUp" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
-          <!--label="Business Unit StartDate Name"-->
+          --><!--label="Business Unit StartDate Name"--><!--
           <button id ="PT6G1B2" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
-          <!--label="Strategy Profit Risk"-->
+          --><!--label="Strategy Profit Risk"--><!--
           <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
-          <!--label="sort by individual criterias"-->
+          --><!--label="sort by individual criterias"--><!--
           <button id ="PT6G1B4" imageMso="SortDialog"  enabled ="false" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
           <button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>      
         </group>
-      </tab>
+      </tab>-->
       <!--label="Charts"-->
       <tab id="PTcharts" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
         <!--label="Charts"-->
@@ -379,7 +379,7 @@
             <menuSeparator id="PTXG1s4"/>
             <button id="PTXG1B9" getVisible="chckVisibility" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0ShowCashFlow" supertip ="CashFlow anzeigen, über alle aktuell angezeigten Projekte"/>
             <!--label="Custom"-->
-            <button id="PTcustom" getVisible="chckVisibility" label ="Custom" enabled="false"/>
+            <!--<button id="PTcustom" getVisible="chckVisibility" label ="Custom" enabled="false"/>-->
             <!--<menuSeparator id="PTXG1s4"/>-->
             <!--label="größter Engpass"
             <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/>--> 
@@ -388,10 +388,10 @@
           <!--<separator id="PT0G1s7"/>
           <button id="PT7G1B1" label="Copy chart style" supertip ="muss noch programmiert werden"/>
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
-          <separator id="PT0G1s9" getVisible="chckVisibility" />
+          <!--<separator id="PT0G1s9" getVisible="chckVisibility" />-->
           <!--label="Optimieren"-->
-          <button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>
-          <button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
+          <!--<button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>
+          <button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
           <!--<separator id="PT0G1s8"/>
           --><!--- Cockpit--><!--
           <splitButton id="PT0G1split" size="large">
@@ -465,7 +465,7 @@
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->
-      <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTTestG1" >
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
@@ -474,7 +474,7 @@
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
           <button id="PTTestAPIvsClient" label="compare API versus Client Berechnung"  onAction ="PTTestAPI_Client" />
         </group>
-      </tab>
+      </tab>-->
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
@@ -509,8 +509,6 @@
         <group id="PT2G1M2" >
           <!--label="Ressource/Kostenart hinzufügen"-->
           <button id="PT2G1M2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
-          <!--label="Ressource/Kostenart hinzufügen"--><!--
-          <button id="PT2G1M2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>-->
           <!--label="Ressource/Kostenart löschen"-->
           <button id="PT2G1M2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileLoeschen" supertip ="die Ressource / Kostenart der aktuellen Zeile wird aus der Projekt-Phase gelöscht."/>
         </group>
