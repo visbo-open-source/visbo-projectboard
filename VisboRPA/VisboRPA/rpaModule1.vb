@@ -3344,10 +3344,11 @@ Module rpaModule1
                         If Not IsNothing(hproj) Then
                             ' es wird pro Projekt eine Variante erzeugt 
 
+                            'ur:211206: den Status zu ändern ist hier unglücklich, da dies im VP erledigt werden müsste Soll dies erfolgen???
                             ' wenn es noch nicht beauftragt ist ... dann beauftragen 
-                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
                                 Try
-                                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                    hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                 Catch ex As Exception
 
                                 End Try

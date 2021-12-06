@@ -2246,20 +2246,23 @@ Imports System.Web
                         Dim newvName As String = ""
 
                         Try
-                            Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.Status)
+                            Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.vpStatus)
                             ' Plausibilitätsprüfung, es dürfen keine abgebrochenen / abgeschlossenen Projekte überschrieben werden   
 
-                            If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And
-                                oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+                            'ur: 211202: If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And
+                            '    oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+                            If oldStatus <> VProjectStatus(PTVPStati.stopped) And
+                                oldStatus <> VProjectStatus(PTVPStati.finished) Then
 
                                 ' nur dann darf die Variante übernommen werden ... 
-                                If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
+                                ' ur: 211202: If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
+                                If oldStatus = VProjectStatus(PTVPStati.ordered) Then
                                     ' tk 23.4.19 bis auf weiteres soll das ohne ChangeRequest auskommen 
                                     ' muss noch überdacht werden 
                                     'hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
-                                    hproj.Status = oldStatus
+                                    hproj.vpStatus = oldStatus
                                 Else
-                                    hproj.Status = oldStatus
+                                    hproj.vpStatus = oldStatus
                                 End If
 
                                 ' die aktuelle Variante aus der AlleProjekte rausnehmen 
@@ -5580,9 +5583,12 @@ Imports System.Web
                             Try
                                 Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
-                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or
-                                    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And
-                                     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
+                                'If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or
+                                '    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And
+                                '     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
+                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                    (hproj.variantName <> "" And Not hproj.vpStatus = VProjectStatus(PTVPStati.stopped) And
+                                     Not hproj.vpStatus = VProjectStatus(PTVPStati.finished)) Then
 
                                     If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
 
@@ -7694,9 +7700,10 @@ Imports System.Web
                                     ' es wird pro Projekt eine Variante erzeugt 
 
                                     ' wenn es noch nicht beauftragt ist ... dann beauftragen 
-                                    If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    'ur:211202: If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
                                         Try
-                                            hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                            hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                         Catch ex As Exception
 
                                         End Try

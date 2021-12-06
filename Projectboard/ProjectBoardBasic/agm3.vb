@@ -4354,7 +4354,8 @@ Public Module agm3
 
                                                 ' Beauftragen , weil aus Controlling Sheet kommt und Nummer hat 
                                                 If hproj.kundenNummer <> "" Then
-                                                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                                    'ur: 211202: 
+                                                    'hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                                                     hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                                 End If
 
@@ -7868,7 +7869,6 @@ Public Module agm3
                                 ByVal kurzBeschreibung As String, ByVal buName As String, Optional ByVal kdNr As String = "", Optional ByVal template As Boolean = False) As clsProjekt
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
-        Dim pStatus As String = ProjektStatus(0)
         Dim zeile As Integer = tafelZeile
         'Dim spalte As Integer = start
         Dim plen As Integer
@@ -7974,7 +7974,9 @@ Public Module agm3
                         .Erloes = budgetVorgabe
                         .earliestStartDate = .startDate.AddMonths(.earliestStart)
                         .latestStartDate = .startDate.AddMonths(.latestStart)
-                        .Status = ProjektStatus(PTProjektStati.geplant)
+                        'ur: 211202: 
+                        '.Status = ProjektStatus(PTProjektStati.geplant)
+                        .vpStatus = VProjectStatus(PTVPStati.initialized)
                         .description = kurzBeschreibung
 
                         .StrategicFit = sfit
