@@ -3662,6 +3662,12 @@ Imports System.Web
                 Else
                     tmpLabel = "Update Projects from list (customized)"
                 End If
+            Case "PT4G1B20" 'CostAssertionSheet 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "CostAssertion (konfiguriert)"
+                Else
+                    tmpLabel = "CostAssertion (customized)"
+                End If
 
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -8896,7 +8902,7 @@ Imports System.Web
 
         Dim outputLine As String = ""
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
@@ -8955,11 +8961,13 @@ Imports System.Web
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
 
+                Dim importOK As Boolean = True
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
                 If telairImportConfigOK And projectsFile = projectConfig("DateiName").ProjectsFile Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
                 ElseIf telairCostAssertionImportConfigOK Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
+                    If listofArchivAllg.Count = 0 Then importOK = False
                 ElseIf instartImportConfigOK Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
                 End If
@@ -8972,21 +8980,25 @@ Imports System.Web
                 'Call logfileSchreiben(outPutCollection)
                 ''Call logfileSchliessen()
 
+                If importOK Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
 
-                ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
-                Try
-                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
-                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Else
+                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        End If
 
-                Catch ex As Exception
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("Error at Import: " & vbLf & ex.Message)
-                    Else
-                        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
-                    End If
+                    End Try
+                Else
 
-                End Try
+                End If
+
 
                 '' Cursor auf Default setzen
                 Cursor.Current = Cursors.Default

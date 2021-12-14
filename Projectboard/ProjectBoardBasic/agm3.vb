@@ -4391,6 +4391,9 @@ Public Module agm3
                     Dim myCostPercent As Double = 0.0
                     Dim lfdNr As Integer = 0
 
+                    Dim myHours As Double = 0.0
+                    Dim myEuros As Double = 0.0
+
                     Dim roleHoursList As New SortedList(Of String, Double)  ' hours je rolle
                     Dim costEurosList As New SortedList(Of String, Double)  ' Euros je Kostenart
 
@@ -4419,6 +4422,14 @@ Public Module agm3
                             End If
                             Do While myValue <> trennZeichen
                                 myRowNr = myRowNr + 1
+                                ' löschen der alten Werte
+                                myPhaseName = ""
+                                myOrgaUnit = ""
+                                myRoleName = ""
+                                myCostPercent = 0.0
+                                myHours = 0.0
+                                myEuros = 0.0
+
                                 If awinSettings.englishLanguage Then
                                     outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
                                 Else
@@ -4434,30 +4445,10 @@ Public Module agm3
                                         ' read the phase-Name 
                                         If Not IsNothing(currentWS.Cells(myRowNr, phasenameCol).value) Then
                                             myPhaseName = CStr(currentWS.Cells(myRowNr, phasenameCol).value).Trim
-                                            'If myPhaseName = "" Then
-                                            '    If awinSettings.englishLanguage Then
-                                            '        outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
-                                            '    Else
-                                            '        outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
-                                            '    End If
-                                            '    meldungen.Add(outputline)
-                                            '    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                                            '    CType(currentWS.Cells(myRowNr, phasenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                            'End If
-                                        Else
-                                            'If awinSettings.englishLanguage Then
-                                            '    outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
-                                            'Else
-                                            '    outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
-                                            'End If
-                                            'meldungen.Add(outputline)
-                                            'Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                                            'CType(currentWS.Cells(myRowNr, phasenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                        End If
 
-                                        ' Hier evt check ob phase definiert ist
-                                        '
-                                        '
+                                        Else
+
+                                        End If
 
                                         ' Initialisierung der Listen für RollenStunden und KostenEuros
                                         If myPhaseName <> "" Then
@@ -4469,16 +4460,7 @@ Public Module agm3
                                                 roleHoursList = phaseRoleValues.Item(myPhaseName)
                                             End If
 
-                                            '' hier werden die CostenEuros aufgesammelt je Phase
-                                            'If Not phaseCostValues.ContainsKey(myPhaseName) Then
-                                            '    costEurosList = New SortedList(Of String, Double) ' Liste mit den aufsummierten Euros je Kostenart
-                                            '    phaseCostValues.Add(myPhaseName, costEurosList)
-                                            'Else
-                                            '    costEurosList = phaseCostValues.Item(myPhaseName)
-                                            'End If
                                         End If
-
-
 
                                         ' read Role
                                         If Not IsNothing(currentWS.Cells(myRowNr, rolenameCol).value) Then
@@ -4486,7 +4468,7 @@ Public Module agm3
                                         End If
 
                                         ' read Hours
-                                        Dim myHours As Double = currentWS.Cells(myRowNr, hoursCol).value
+                                        'myHours = currentWS.Cells(myRowNr, hoursCol).value
                                         If Not IsNothing(currentWS.Cells(myRowNr, hoursCol).value) And IsNumeric(currentWS.Cells(myRowNr, hoursCol).value) Then
                                             myHours = CDbl(currentWS.Cells(myRowNr, hoursCol).value)
                                         Else
@@ -4501,7 +4483,7 @@ Public Module agm3
                                         End If
 
                                         'read Euros
-                                        Dim myEuros As Double = currentWS.Cells(myRowNr, costCol).value
+                                        'myEuros = currentWS.Cells(myRowNr, costCol).value
                                         If Not IsNothing(currentWS.Cells(myRowNr, costCol).value) And IsNumeric(currentWS.Cells(myRowNr, costCol).value) Then
                                             myEuros = CDbl(currentWS.Cells(myRowNr, costCol).value)
                                         Else
@@ -4509,87 +4491,62 @@ Public Module agm3
                                         End If
 
                                         If myPhaseName = "" Then
-                                                If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
-
-                                                    If awinSettings.englishLanguage Then
-                                                        outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
-                                                    Else
-                                                        outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
-                                                    End If
-                                                    meldungen.Add(outputline)
-                                                    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                                                    CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-
-                                                End If
-                                            End If
-
-                                            If Not RoleDefinitions.containsName(myRoleName) Then
-                                                If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
-
-                                                    If awinSettings.englishLanguage Then
-                                                        outputline = currentWS.Name & ": Rolename in Line " & myRowNr & " is not defined: " & myRoleName.Trim
-                                                    Else
-                                                        outputline = currentWS.Name & ": Angegebener Rollenname in Zeile " & myRowNr & " ist nicht definiert: " & myRoleName.Trim
-                                                    End If
-                                                    meldungen.Add(outputline)
-                                                    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                                                    CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-
-                                                End If
-                                            End If
-
-                                            If (myPhaseName <> "" And RoleDefinitions.containsName(myRoleName)) Then
-                                                If roleHoursList.ContainsKey(myRoleName) Then
-                                                    roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + myHours
-                                                    ' unter folgendem sind die Kosten externer MA verstanden
-                                                    If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
-                                                        Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
-                                                        Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
-                                                        roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + anzPT * hoursPerDay * myCostPercent
-
-                                                    End If
+                                            If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
                                                 Else
-                                                    roleHoursList.Add(myRoleName, myHours)
-                                                    ' unter folgendem sind die Kosten externer MA verstanden
-                                                    If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
-                                                        Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
-                                                        Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
-                                                        roleHoursList.Add(myRoleName, anzPT * hoursPerDay * myCostPercent)
-                                                    End If
+                                                    outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
                                                 End If
-                                                'Else
+                                                meldungen.Add(outputline)
+                                                Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
 
-                                                '    If awinSettings.englishLanguage Then
-                                                '        outputline = "Import Project " & pName & "stopped with error: the role " & myRoleName & " is not defined in the organization"
-                                                '    Else
-                                                '        outputline = "Import Project " & pName & "ist mit Fehler abgebrochen: die Ressource " & myRoleName & " ist nicht in der Organisation enthalten"
-                                                '    End If
-                                                '    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                                                '    meldungen.Add(outputline)
+                                                ' zurücksetzen des Druckbereichs - es können die fehlerhaften Felder ansonsten nicht eingefärbt werden
+                                                currentWS.PageSetup.PrintArea = ""
+                                                CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                            End If
+                                        End If
 
-                                                '    CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                        If Not RoleDefinitions.containsName(myRoleName) Then
+                                            If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
+
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = currentWS.Name & ": Rolename in Line " & myRowNr & " is not defined: " & myRoleName.Trim
+                                                Else
+                                                    outputline = currentWS.Name & ": Angegebener Rollenname in Zeile " & myRowNr & " ist nicht definiert: " & myRoleName.Trim
+                                                End If
+                                                meldungen.Add(outputline)
+                                                Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+
+                                                ' zurücksetzen des Druckbereichs - es können die fehlerhaften Felder ansonsten nicht eingefärbt werden
+                                                currentWS.PageSetup.PrintArea = ""
+                                                CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+
+                                            End If
+                                        End If
+
+                                        If (myPhaseName <> "" And RoleDefinitions.containsName(myRoleName)) Then
+                                            If roleHoursList.ContainsKey(myRoleName) Then
+                                                roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + myHours
+                                                ' unter folgendem sind die Kosten externer MA verstanden
+                                                If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
+                                                    Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
+                                                    Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
+                                                    roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + anzPT * hoursPerDay * myCostPercent
+
+                                                End If
+                                            Else
+                                                roleHoursList.Add(myRoleName, myHours)
+                                                ' unter folgendem sind die Kosten externer MA verstanden
+                                                If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
+                                                    Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
+                                                    Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
+                                                    roleHoursList.Add(myRoleName, anzPT * hoursPerDay * myCostPercent)
+                                                End If
                                             End If
 
+                                        End If
 
-                                            'If CostDefinitions.containsName(myCostPercent) Then
-                                            '        If costEurosList.ContainsKey(myCostPercent) Then
-                                            '            costEurosList.Item(myCostPercent) = costEurosList.Item(myCostPercent) + myEuros
-                                            '        Else
-                                            '            costEurosList.Add(myCostPercent, myEuros)
-                                            '        End If
-                                            '    Else
-                                            '        If myEuros <> 0.0 Then
-                                            '            If awinSettings.englishLanguage Then
-                                            '                outputline = "Import Project " & pName & " stopped with error: the costType " & myCostPercent & " is not defined in the organization"
-                                            '            Else
-                                            '                outputline = "Import Project " & pName & " ist mit Fehler abgebrochen: Kostenart  " & myCostPercent & " ist nicht in der Organisation enthalten"
-                                            '            End If
-                                            '            Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                                            '        End If
-                                            '    End If
-
-                                            'End If
-                                        Else
+                                    Else
                                             Dim a As Integer = 0
                                     End If
 
@@ -4635,22 +4592,25 @@ Public Module agm3
                         End If
                     Next
 
-                    'check if all mentioned Phases exist in the newProj (out of the template)
-                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseCostValues
-                        If Not newProj.containsPhase(kvp.Key, False) Then
-                            'Fehlermeldung
-                            If awinSettings.englishLanguage Then
-                                outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project template"
-                            Else
-                                outputline = "Die Phase '" & kvp.Key & "' existiert in ausgewählter Projektvorlage nicht."
-                            End If
-                            meldungen.Add(outputline)
-                            Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
-                        End If
-                    Next
+                    ''check if all mentioned Phases exist in the newProj (out of the template)
+                    'For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseCostValues
+                    '    If Not newProj.containsPhase(kvp.Key, False) Then
+                    '        'Fehlermeldung
+                    '        If awinSettings.englishLanguage Then
+                    '            outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project template"
+                    '        Else
+                    '            outputline = "Die Phase '" & kvp.Key & "' existiert in ausgewählter Projektvorlage nicht."
+                    '        End If
+                    '        meldungen.Add(outputline)
+                    '        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                    '    End If
+                    'Next
 
 
                     For Each phase In newProj.AllPhases
+
+                        Dim vSum As Double()
+                        ReDim vSum(0)
 
                         ' bestimme Länge der Phase
                         Dim phaseLength As Integer = phase.relEnde - phase.relStart + 1
@@ -4664,12 +4624,13 @@ Public Module agm3
                                 For Each role As KeyValuePair(Of String, Double) In roleList
                                     Dim roleDef As clsRollenDefinition = RoleDefinitions.getRoledef(role.Key)
                                     Dim newRole As New clsRolle(phaseLength - 1)
-                                    Dim monthNeed As Double = role.Value / hoursPerDay / phaseLength
+                                    Dim monthNeed As Double = role.Value / hoursPerDay
+                                    vSum(0) = monthNeed
+
+                                    newRole.Xwerte = calcVerteilungAufMonate(phase.getStartDate, phase.getEndDate, vSum, 1)
                                     newRole.uid = roleDef.UID
-                                    For i As Integer = 1 To phaseLength
-                                        newRole.Xwerte(i - 1) = monthNeed
-                                    Next
-                                    If newRole.summe = Math.Round(monthNeed * phaseLength) Then
+
+                                    If newRole.summe = monthNeed Then
                                         ok = True
                                     End If
                                     phase.addRole(newRole)
@@ -4752,7 +4713,16 @@ Public Module agm3
             result = False
         End Try
 
+        If meldungen.Count > 0 Then
+            If awinSettings.englishLanguage Then
+                outputline = " Project was  n o t  imported now ! "
+            Else
+                outputline = " Projekt wurde N I C H T  erzeugt !"
+            End If
 
+            meldungen.Add(outputline)
+            result = False
+        End If
 
         '
         ' Ende protokollieren 
