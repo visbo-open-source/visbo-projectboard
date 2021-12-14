@@ -8886,6 +8886,7 @@ Imports System.Web
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
 
         Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectCostAssertConfig As New SortedList(Of String, clsConfigProjectsImport)
         Dim projectsFile As String = ""
         Dim lastrow As Integer = 0
         Dim outputString As String = ""
@@ -8902,6 +8903,7 @@ Imports System.Web
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
         Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
         Dim configProposalImport As String = awinPath & configfilesOrdner & "configCalcTemplateImport.xlsx"
+        Dim configCostAssertionImport As String = awinPath & configfilesOrdner & "configCostAssertionImport.xlsx"
 
         ' check here which Configuration file is given:
         ' Instart: a lot of Files or 
@@ -8909,9 +8911,10 @@ Imports System.Web
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
         Dim telairImportConfigOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim telairCostAssertionImportConfigOK As Boolean = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
         Dim instartImportConfigOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
-        If telairImportConfigOK Or instartImportConfigOK Then
+        If telairImportConfigOK Or instartImportConfigOK Or telairCostAssertionImportConfigOK Then
 
             ' one of the two/several ImPortConfigFiles probably does not exist, that is why it should be reset 
             outPutCollection.Clear()
@@ -8949,16 +8952,14 @@ Imports System.Web
                 ImportProjekte.Clear(False)
                 ImportBaselineProjekte.Clear(False)
 
-
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
 
-                'Call logfileOpen()
-
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                If telairImportConfigOK Then
+                If telairImportConfigOK And projectsFile = projectConfig("DateiName").ProjectsFile Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                ElseIf telairCostAssertionImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
                 ElseIf instartImportConfigOK Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
                 End If

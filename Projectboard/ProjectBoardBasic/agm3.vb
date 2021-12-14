@@ -3478,6 +3478,19 @@ Public Module agm3
                         ' hier: merken der erfolgreich importierten Projects Dateien
                         listOfArchivFiles.Add(tmpDatei)
                     End If
+                ElseIf importType = ptImportTypen.telairCostAssertionImport Then
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Importing Project from " & tmpDatei
+                    Else
+                        msgTxt = "Einlesen Projekt aus " & tmpDatei
+                    End If
+                    Call logger(ptErrLevel.logInfo, msgTxt, "", anzFehler)
+                    result = readTelairCostAssertionWithConfig(projectConfig, tmpDatei, meldungen)
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten Projects Dateien
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
 
                 ElseIf importType = ptImportTypen.instartCalcTemplateImport Then
 
@@ -4149,6 +4162,606 @@ Public Module agm3
         '
 
         readCalcTemplatesWithConfig = result
+    End Function
+
+    ''' <summary>
+    ''' creates from a Telair Cost Assertion Sheet in Excel a VISBO Project 
+    ''' </summary>
+    ''' <param name="projectConfig"></param>
+    ''' <param name="tmpDatei"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Public Function readTelairCostAssertionWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
+                                    ByVal tmpDatei As String,
+                                    ByRef meldungen As Collection) As Boolean
+        Dim outputline As String = ""
+        Dim ok As Boolean = False
+        Dim result As Boolean = False
+        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim searchColNr As Integer = 1
+        Dim myRowNr As Integer = 1
+
+        Dim offsets As Integer() = Nothing
+
+        Dim pName As String = ""
+        Dim vName As String = ""
+        Dim startDate As Date = Nothing
+        Dim startAndEndDate As String = ""
+        Dim endDate As Date = Nothing
+        Dim creationDate As Date = Nothing
+        Dim pNr As String = ""
+        Dim pTemplate As String = ""
+        Dim pDescription As String = ""
+        Dim hoursPerDay As Integer = 8
+
+        Dim budget As Double = 0.0
+        Dim kunde As String = ""
+        Dim businessUnit As String = ""
+
+        Dim projectDimension As Integer = 0
+
+        Dim phaseRoleValues As New SortedList(Of String, SortedList(Of String, Double))
+        Dim phaseCostValues As New SortedList(Of String, SortedList(Of String, Double))
+        'Dim invoiceMilestones As New SortedList(Of Date, KeyValuePair(Of String, Double))
+        'Dim phaseDates As New SortedList(Of String, Date())
+
+
+        Try
+            If My.Computer.FileSystem.FileExists(tmpDatei) Then
+                Try
+
+                    appInstance.DisplayAlerts = False
+                    projectWB = appInstance.Workbooks.Open(tmpDatei, UpdateLinks:=0)
+                    projectWB.Final = False
+                    appInstance.DisplayAlerts = True
+
+                    projectWB = appInstance.Workbooks.Open(tmpDatei)
+                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
+                    '
+                    ' Start protokollieren 
+                    outputline = "Start Import CalcTemplate: " & tmpDatei
+                    Call logger(ptErrLevel.logInfo, outputline, "readCalcTemplatesWithConfig", anzFehler)
+                    '
+                    '
+                    Dim searchColumn As Excel.Range = Nothing
+                    Dim trennZeichen As String = projectConfig("Ende-Zeichen").content
+
+                    Dim pNameDefinition As clsConfigProjectsImport = projectConfig("Projekt-Name")
+                    Dim startDefinition As clsConfigProjectsImport = projectConfig("Start")
+                    Dim endeDefinition As clsConfigProjectsImport = projectConfig("Ende")
+                    Dim vNameDefinition As clsConfigProjectsImport = projectConfig("Varianten-Name")
+                    Dim datumsDefinition As clsConfigProjectsImport = projectConfig("Datum")
+                    Dim pnumberDefinition As clsConfigProjectsImport = projectConfig("Projekt-Nummer")
+                    Dim pTemplateDefinition As clsConfigProjectsImport = projectConfig("Projekt-Template")
+                    Dim pDescriptDefinition As clsConfigProjectsImport = projectConfig("Projekt-Beschreibung")
+
+                    Dim taskDefinition As clsConfigProjectsImport = projectConfig("Task")
+                    Dim phaseNameDefinition As clsConfigProjectsImport = projectConfig("PhasenName")
+                    Dim ressourceDefinition As clsConfigProjectsImport = projectConfig("Ressource")
+                    Dim costTypeDefinition As clsConfigProjectsImport = projectConfig("CostType")
+                    Dim pkDefinition As clsConfigProjectsImport = projectConfig("Personalkosten")
+                    Dim skDefinition As clsConfigProjectsImport = projectConfig("SonstKosten")
+
+                    Dim anzZeilen As Integer = 0
+                    Dim myValue As String = ""
+
+                    ' read PName 
+                    currentWS = projectWB.Worksheets(pNameDefinition.sheetDescript)
+                    searchColNr = pNameDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+
+                    myRowNr = searchColumn.Find(What:=pNameDefinition.Identifier).Row
+                    offsets = pNameDefinition.getRowColumnOffset
+                    pName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+
+                    ' check PName
+                    If Not isValidProjectName(pName) Then
+                        outputline = "invalid Project-Name ... Exit ... : " & pName & " in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
+                    ' read Start and Ende: this and all following information has to be on the same Worksheet ! 
+                    currentWS = projectWB.Worksheets(startDefinition.sheetDescript)
+                    searchColNr = startDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=startDefinition.Identifier).Row
+                    offsets = startDefinition.getRowColumnOffset
+                    startAndEndDate = currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value
+                    Dim hstr() As String = Split(startAndEndDate, "-")
+                    If hstr.Length < 2 Then
+                        startDate = CDate(hstr(0).Trim)
+                        endDate = CDate(hstr(0).Trim)
+                    Else
+                        startDate = CDate(hstr(0).Trim)
+                        endDate = CDate(hstr(1).Trim)
+                    End If
+
+                    ' check Validity
+                    If getColumnOfDate(startDate) <= 0 Or getColumnOfDate(startDate) > getColumnOfDate(endDate) Then
+                        outputline = "invalid Start and/or End-Dates  ... Exit ... : " & startDate.ToShortDateString & " - " & endDate.ToShortDateString & " in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
+
+                    ' read Datum: 
+                    currentWS = projectWB.Worksheets(datumsDefinition.sheetDescript)
+                    searchColNr = datumsDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=datumsDefinition.Identifier).Row
+                    offsets = datumsDefinition.getRowColumnOffset
+                    creationDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+
+
+                    ' read VariantName 
+                    currentWS = projectWB.Worksheets(vNameDefinition.sheetDescript)
+                    searchColNr = vNameDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=vNameDefinition.Identifier).Row
+                    offsets = vNameDefinition.getRowColumnOffset
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        vName = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        vName = ""
+                    End If
+
+                    ' check vName
+                    If vName <> "" Then
+                        If Not isValidProjectName(vName) Then
+                            outputline = "invalid Variant-Name ... Exit ... : " & vName & " in File " & dateiName
+                            Throw New Exception(outputline)
+                        End If
+                    End If
+
+                    ' read Projekt-Nummer
+                    currentWS = projectWB.Worksheets(pnumberDefinition.sheetDescript)
+                    searchColNr = pnumberDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=pnumberDefinition.Identifier).Row
+                    offsets = vNameDefinition.getRowColumnOffset
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        pNr = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        pNr = ""
+                    End If
+
+                    ' read Projekt-Beschreibung
+                    currentWS = projectWB.Worksheets(pDescriptDefinition.sheetDescript)
+                    searchColNr = pDescriptDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=pDescriptDefinition.Identifier).Row
+                    offsets = pDescriptDefinition.getRowColumnOffset
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        pDescription = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        pDescription = ""
+                    End If
+
+
+                    ' read Projekt-Template
+                    currentWS = projectWB.Worksheets(pTemplateDefinition.sheetDescript)
+                    searchColNr = pTemplateDefinition.column.von
+                    searchColumn = currentWS.Columns(searchColNr)
+                    myRowNr = searchColumn.Find(What:=pTemplateDefinition.Identifier).Row
+                    offsets = pTemplateDefinition.getRowColumnOffset
+                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                        pTemplate = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputline = "There is no project template given! "
+                        Else
+                            outputline = "Die Projektvorlage wurde nicht angegeben! "
+                        End If
+                        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", 0)
+                        pTemplate = ""
+                    End If
+
+                    If Not Projektvorlagen.Contains(pTemplate) Then
+                        If awinSettings.englishLanguage Then
+                            outputline = "The project template '" & pTemplate & "' does not exist "
+                        Else
+                            outputline = "Die Projektvorlage '" & pTemplate & "' existiert nicht"
+                        End If
+                        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", 0)
+                        Throw New Exception(outputline)
+                    End If
+
+                    ' now check whether pName, vName already exists ... 
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now, pNr)
+                    If Not IsNothing(hproj) Then
+                        ' not allowed .. 
+                        outputline = "Project with given Name and Variant-Name or Project No. already exists ... Exit ... : " & pName & "[ " & vName & " ] in File " & dateiName
+                        Throw New Exception(outputline)
+                    End If
+
+                    ' hier müssen nun die anderen Tabellenblätter geöffnet werden
+
+                    ' now define arrayLength 
+                    projectDimension = getColumnOfDate(endDate) - getColumnOfDate(startDate)
+
+                    Dim phasenameCol As Integer = phaseNameDefinition.column.von
+                    Dim rolenameCol As Integer = ressourceDefinition.column.von
+                    Dim costpercentCol As Integer = costTypeDefinition.column.von
+                    Dim hoursCol As Integer = pkDefinition.column.von
+                    Dim costCol As Integer = skDefinition.column.von
+
+                    Dim myPhaseName As String = ""
+                    Dim myOrgaUnit As String = ""
+                    Dim myRoleName As String = ""
+                    Dim myCostPercent As Double = 0.0
+                    Dim lfdNr As Integer = 0
+
+                    Dim roleHoursList As New SortedList(Of String, Double)  ' hours je rolle
+                    Dim costEurosList As New SortedList(Of String, Double)  ' Euros je Kostenart
+
+
+
+                    For Each currentWS In projectWB.Worksheets
+
+                        Dim sheetDescript As String = pkDefinition.sheetDescript.Trim("*")
+                        If currentWS.Name.Contains(sheetDescript) Then
+
+                            ' read Tasks: only where a task is mentioned, there will be personal- oder other Cost
+                            searchColNr = taskDefinition.column.von
+
+                            ' verbundene Zellen trennen
+                            Dim lastrow As Integer = CInt(CType(currentWS.Cells(40000, searchColNr), Excel.Range).End(XlDirection.xlUp).Row)
+                            Dim verbRange As Excel.Range
+                            verbRange = currentWS.Range(currentWS.Cells(1, searchColNr), currentWS.Cells(lastrow, searchColNr + 2))
+                            verbRange.UnMerge()
+
+                            searchColumn = currentWS.Columns(searchColNr)
+                            myRowNr = searchColumn.Find(What:=taskDefinition.Identifier).Row
+                            offsets = taskDefinition.getRowColumnOffset
+
+                            If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr).value) Then
+                                myValue = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr).value).Trim
+                            End If
+                            Do While myValue <> trennZeichen
+                                myRowNr = myRowNr + 1
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
+                                Else
+                                    outputline = currentWS.Name & ": Zeile Nr. " & myRowNr & " wird gelesen!"
+                                End If
+                                Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+
+                                If Not IsNothing(currentWS.Cells(myRowNr, searchColNr).value) Then
+                                    myValue = CStr(currentWS.Cells(myRowNr, searchColNr).value).Trim
+
+                                    If myValue <> trennZeichen Then   ' es ist eine task angegeben
+
+                                        ' read the phase-Name 
+                                        If Not IsNothing(currentWS.Cells(myRowNr, phasenameCol).value) Then
+                                            myPhaseName = CStr(currentWS.Cells(myRowNr, phasenameCol).value).Trim
+                                            'If myPhaseName = "" Then
+                                            '    If awinSettings.englishLanguage Then
+                                            '        outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
+                                            '    Else
+                                            '        outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
+                                            '    End If
+                                            '    meldungen.Add(outputline)
+                                            '    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                            '    CType(currentWS.Cells(myRowNr, phasenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                            'End If
+                                        Else
+                                            'If awinSettings.englishLanguage Then
+                                            '    outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
+                                            'Else
+                                            '    outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
+                                            'End If
+                                            'meldungen.Add(outputline)
+                                            'Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                            'CType(currentWS.Cells(myRowNr, phasenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                        End If
+
+                                        ' Hier evt check ob phase definiert ist
+                                        '
+                                        '
+
+                                        ' Initialisierung der Listen für RollenStunden und KostenEuros
+                                        If myPhaseName <> "" Then
+                                            ' hier werden die RollenStunden aufgesammelt, je Phase
+                                            If Not phaseRoleValues.ContainsKey(myPhaseName) Then
+                                                roleHoursList = New SortedList(Of String, Double) ' liste mit den aufsummierten Hours je Rolle
+                                                phaseRoleValues.Add(myPhaseName, roleHoursList)   ' hier werden je Phase die RollenHours und KostenEuros aufgesammelt
+                                            Else
+                                                roleHoursList = phaseRoleValues.Item(myPhaseName)
+                                            End If
+
+                                            '' hier werden die CostenEuros aufgesammelt je Phase
+                                            'If Not phaseCostValues.ContainsKey(myPhaseName) Then
+                                            '    costEurosList = New SortedList(Of String, Double) ' Liste mit den aufsummierten Euros je Kostenart
+                                            '    phaseCostValues.Add(myPhaseName, costEurosList)
+                                            'Else
+                                            '    costEurosList = phaseCostValues.Item(myPhaseName)
+                                            'End If
+                                        End If
+
+
+
+                                        ' read Role
+                                        If Not IsNothing(currentWS.Cells(myRowNr, rolenameCol).value) Then
+                                            myRoleName = CStr(currentWS.Cells(myRowNr, rolenameCol).value).Trim
+                                        End If
+
+                                        ' read Hours
+                                        Dim myHours As Double = currentWS.Cells(myRowNr, hoursCol).value
+                                        If Not IsNothing(currentWS.Cells(myRowNr, hoursCol).value) And IsNumeric(currentWS.Cells(myRowNr, hoursCol).value) Then
+                                            myHours = CDbl(currentWS.Cells(myRowNr, hoursCol).value)
+                                        Else
+                                            myHours = 0.0
+                                        End If
+
+                                        'read Percent to regard in ressource-needs
+                                        If Not IsNothing(currentWS.Cells(myRowNr, costpercentCol).value) And IsNumeric(currentWS.Cells(myRowNr, costpercentCol).value) Then
+                                            myCostPercent = CDbl(currentWS.Cells(myRowNr, costpercentCol).value)
+                                        Else
+                                            myCostPercent = 0.0
+                                        End If
+
+                                        'read Euros
+                                        Dim myEuros As Double = currentWS.Cells(myRowNr, costCol).value
+                                        If Not IsNothing(currentWS.Cells(myRowNr, costCol).value) And IsNumeric(currentWS.Cells(myRowNr, costCol).value) Then
+                                            myEuros = CDbl(currentWS.Cells(myRowNr, costCol).value)
+                                        Else
+                                            myEuros = 0.0
+                                        End If
+
+                                        If myPhaseName = "" Then
+                                                If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
+
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
+                                                    Else
+                                                        outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
+                                                    End If
+                                                    meldungen.Add(outputline)
+                                                    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                                    CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+
+                                                End If
+                                            End If
+
+                                            If Not RoleDefinitions.containsName(myRoleName) Then
+                                                If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
+
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = currentWS.Name & ": Rolename in Line " & myRowNr & " is not defined: " & myRoleName.Trim
+                                                    Else
+                                                        outputline = currentWS.Name & ": Angegebener Rollenname in Zeile " & myRowNr & " ist nicht definiert: " & myRoleName.Trim
+                                                    End If
+                                                    meldungen.Add(outputline)
+                                                    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                                    CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+
+                                                End If
+                                            End If
+
+                                            If (myPhaseName <> "" And RoleDefinitions.containsName(myRoleName)) Then
+                                                If roleHoursList.ContainsKey(myRoleName) Then
+                                                    roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + myHours
+                                                    ' unter folgendem sind die Kosten externer MA verstanden
+                                                    If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
+                                                        Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
+                                                        Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
+                                                        roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + anzPT * hoursPerDay * myCostPercent
+
+                                                    End If
+                                                Else
+                                                    roleHoursList.Add(myRoleName, myHours)
+                                                    ' unter folgendem sind die Kosten externer MA verstanden
+                                                    If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
+                                                        Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
+                                                        Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
+                                                        roleHoursList.Add(myRoleName, anzPT * hoursPerDay * myCostPercent)
+                                                    End If
+                                                End If
+                                                'Else
+
+                                                '    If awinSettings.englishLanguage Then
+                                                '        outputline = "Import Project " & pName & "stopped with error: the role " & myRoleName & " is not defined in the organization"
+                                                '    Else
+                                                '        outputline = "Import Project " & pName & "ist mit Fehler abgebrochen: die Ressource " & myRoleName & " ist nicht in der Organisation enthalten"
+                                                '    End If
+                                                '    Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                                '    meldungen.Add(outputline)
+
+                                                '    CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                            End If
+
+
+                                            'If CostDefinitions.containsName(myCostPercent) Then
+                                            '        If costEurosList.ContainsKey(myCostPercent) Then
+                                            '            costEurosList.Item(myCostPercent) = costEurosList.Item(myCostPercent) + myEuros
+                                            '        Else
+                                            '            costEurosList.Add(myCostPercent, myEuros)
+                                            '        End If
+                                            '    Else
+                                            '        If myEuros <> 0.0 Then
+                                            '            If awinSettings.englishLanguage Then
+                                            '                outputline = "Import Project " & pName & " stopped with error: the costType " & myCostPercent & " is not defined in the organization"
+                                            '            Else
+                                            '                outputline = "Import Project " & pName & " ist mit Fehler abgebrochen: Kostenart  " & myCostPercent & " ist nicht in der Organisation enthalten"
+                                            '            End If
+                                            '            Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                            '        End If
+                                            '    End If
+
+                                            'End If
+                                        Else
+                                            Dim a As Integer = 0
+                                    End If
+
+                                End If
+
+                            Loop
+
+                        Else
+                            ' Tabellenblatt überspringen - do nothing
+                        End If
+                    Next
+
+
+                    ' Excel workbook schließen
+                    If Not IsNothing(projectWB) Then
+                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                    End If
+
+
+                    Dim newProj As clsProjekt = erstelleProjektAusVorlage(Nothing, pName, pTemplate, startDate, endDate, 0, 2, 5, 5, 0, pDescription, "", pNr, True)
+
+
+                    ' alle Rollen aus dem newProj herauslöschen
+                    For Each ph In newProj.AllPhases
+                        ph.clearCosts()
+                        ph.clearRoles()
+                    Next
+
+                    ' VariantenNamen richtig setzen
+                    newProj.variantName = vName
+
+                    'check if all mentioned Phases exist in the newProj (out of the template)
+                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseRoleValues
+                        If Not newProj.containsPhase(kvp.Key, False) Then
+                            'Fehlermeldung 
+                            If awinSettings.englishLanguage Then
+                                outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project template"
+                            Else
+                                outputline = "Die Phase '" & kvp.Key & "' existiert in ausgewählten Projektvorlage nicht."
+                            End If
+                            meldungen.Add(outputline)
+                            Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        End If
+                    Next
+
+                    'check if all mentioned Phases exist in the newProj (out of the template)
+                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseCostValues
+                        If Not newProj.containsPhase(kvp.Key, False) Then
+                            'Fehlermeldung
+                            If awinSettings.englishLanguage Then
+                                outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project template"
+                            Else
+                                outputline = "Die Phase '" & kvp.Key & "' existiert in ausgewählter Projektvorlage nicht."
+                            End If
+                            meldungen.Add(outputline)
+                            Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        End If
+                    Next
+
+
+                    For Each phase In newProj.AllPhases
+
+                        ' bestimme Länge der Phase
+                        Dim phaseLength As Integer = phase.relEnde - phase.relStart + 1
+
+                        If phaseLength > 0 Then
+                            ' Rollenbedarfe richtig verteilen
+                            If phaseRoleValues.ContainsKey(phase.name) Then
+
+                                Dim roleList As SortedList(Of String, Double) = phaseRoleValues(phase.name)
+
+                                For Each role As KeyValuePair(Of String, Double) In roleList
+                                    Dim roleDef As clsRollenDefinition = RoleDefinitions.getRoledef(role.Key)
+                                    Dim newRole As New clsRolle(phaseLength - 1)
+                                    Dim monthNeed As Double = role.Value / hoursPerDay / phaseLength
+                                    newRole.uid = roleDef.UID
+                                    For i As Integer = 1 To phaseLength
+                                        newRole.Xwerte(i - 1) = monthNeed
+                                    Next
+                                    If newRole.summe = Math.Round(monthNeed * phaseLength) Then
+                                        ok = True
+                                    End If
+                                    phase.addRole(newRole)
+                                Next
+                            Else
+                                Dim a As Integer = 0
+                            End If
+
+
+                            '' Kosten-Bedarfe richtig verteilen
+                            'If phaseCostValues.ContainsKey(phase.name) Then
+                            '    Dim costList As SortedList(Of String, Double) = phaseCostValues(phase.name)
+
+                            '    For Each cost As KeyValuePair(Of String, Double) In costList
+
+                            '        Dim newCost As New clsKostenart(phaseLength - 1)
+                            '        Dim monthNeed As Double = cost.Value / hoursPerDay / phaseLength
+                            '        newCost.KostenTyp = CostDefinitions.getCostdef(cost.Key).UID
+                            '        For i As Integer = 1 To phaseLength
+                            '            newCost.Xwerte(i - 1) = monthNeed
+                            '        Next
+                            '        If newCost.summe = Math.Round(monthNeed * phaseLength) Then
+                            '            ok = True
+                            '        End If
+                            '    Next
+                            'Else
+                            '    Dim a As Integer = 0
+                            'End If
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "The duration of the phase '" & phase.name & "' cannot be  " & phaseLength.ToString
+                            Else
+                                outputline = "Die Dauer der Phase '" & phase.name & "' darf nicht " & phaseLength.ToString & " sein"
+                            End If
+                            meldungen.Add(outputline)
+                            Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        End If
+
+                    Next
+
+
+
+                    If Not IsNothing(newProj) Then
+                        Dim prCheckSumPT As Double = newProj.getAlleRessourcen.Sum
+                        Dim prCheckSumTE As Double = newProj.getGesamtAndereKosten.Sum
+
+                        ' now protocol after project is created 
+                        outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & ";"
+                        Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+
+                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+                        result = True
+                        outputline = "Success! project created: " & newProj.getShapeText
+                        Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                    Else
+                        result = False
+                        outputline = "Failed! no project created: " & pName & "[ " & vName & " ]"
+                        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        meldungen.Add(outputline)
+                    End If
+
+                    Dim stopp As Integer = 0
+
+                Catch ex As Exception
+
+                    ' now close the Excel file 
+                    If Not IsNothing(projectWB) Then
+                        appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                    End If
+
+                    Call logger(ptErrLevel.logError, ex.Message, "readTelairCostAssertionWithConfig 1", anzFehler)
+                    meldungen.Add(ex.Message)
+                    result = False
+                End Try
+            End If
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "readTelairCostAssertionWithConfig 2", anzFehler)
+            meldungen.Add(ex.Message)
+            result = False
+        End Try
+
+
+
+        '
+        ' Ende protokollieren 
+        outputline = "Ende Import CostAssertion: " & tmpDatei
+        Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+        '
+        '
+
+        readTelairCostAssertionWithConfig = result
     End Function
 
 

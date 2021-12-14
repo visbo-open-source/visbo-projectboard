@@ -3346,16 +3346,25 @@ Module rpaModule1
 
                             'ur:211206: den Status zu ändern ist hier unglücklich, da dies im VP erledigt werden müsste Soll dies erfolgen???
                             ' wenn es noch nicht beauftragt ist ... dann beauftragen 
-                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                hproj.vpStatus = VProjectStatus(PTVPStati.proposed) Or
+                                hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Or
+                                hproj.vpStatus = VProjectStatus(PTVPStati.finished) Then
                                 Try
-                                    hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
+                                    If awinSettings.englishLanguage Then
+                                        msgTxt = "Attention! Your project " & hproj.name & "/" & hproj.variantName & "is actually - " & hproj.vpStatus & "!!"
+                                    Else
+                                        msgTxt = "Achtung! Das Projekt " & hproj.name & "/" & hproj.variantName & "hat aktuell den Status - " & hproj.vpStatus & "!!"
+                                    End If
+                                    Call logger(ptErrLevel.logWarning, "processVisboActualData2", msgTxt)
+                                    'ur: 211206: hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                 Catch ex As Exception
 
                                 End Try
 
                             End If
                             Dim istDatenVName As String = ptVariantFixNames.acd.ToString
-                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+                                Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
                             ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
                             ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...

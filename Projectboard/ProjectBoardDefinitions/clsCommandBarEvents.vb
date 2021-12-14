@@ -7,6 +7,7 @@ Public Class clsCommandBarEvents
     ' appInstance.OnKey("{clear}", MsgBox("delelte gedrückt")) eventuell für bestimmte Tastenkombi Entf
 
 
+
     Private Sub cmdbars_OnUpdate() Handles cmdbars.OnUpdate
         'Dim ws As Excel.Worksheet = appInstance.ActiveSheet
 

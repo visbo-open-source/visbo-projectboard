@@ -363,6 +363,7 @@ Public Module Module1
         telairTagetikImport = 12
         telairTagetikUpdate = 13
         instartCalcTemplateImport = 14
+        telairCostAssertionImport = 15
     End Enum
 
     Public Enum ptImportSettings
