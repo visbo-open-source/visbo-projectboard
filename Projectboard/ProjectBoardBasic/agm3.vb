@@ -4376,9 +4376,6 @@ Public Module agm3
 
                     ' hier müssen nun die anderen Tabellenblätter geöffnet werden
 
-                    ' now define arrayLength 
-                    projectDimension = getColumnOfDate(endDate) - getColumnOfDate(startDate)
-
                     Dim phasenameCol As Integer = phaseNameDefinition.column.von
                     Dim rolenameCol As Integer = ressourceDefinition.column.von
                     Dim costpercentCol As Integer = costTypeDefinition.column.von
@@ -4396,7 +4393,7 @@ Public Module agm3
 
                     Dim roleHoursList As New SortedList(Of String, Double)  ' hours je rolle
                     Dim costEurosList As New SortedList(Of String, Double)  ' Euros je Kostenart
-
+                    Const topLevelRole = "."
 
 
                     For Each currentWS In projectWB.Worksheets
@@ -4465,6 +4462,9 @@ Public Module agm3
                                         ' read Role
                                         If Not IsNothing(currentWS.Cells(myRowNr, rolenameCol).value) Then
                                             myRoleName = CStr(currentWS.Cells(myRowNr, rolenameCol).value).Trim
+                                            If myRoleName = topLevelRole Then
+                                                myRoleName = RoleDefinitions.getDefaultTopNodeName
+                                            End If
                                         End If
 
                                         ' read Hours
@@ -4525,23 +4525,24 @@ Public Module agm3
                                         End If
 
                                         If (myPhaseName <> "" And RoleDefinitions.containsName(myRoleName)) Then
+                                            Dim myNewHours As Double = 0.0
                                             If roleHoursList.ContainsKey(myRoleName) Then
-                                                roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + myHours
                                                 ' unter folgendem sind die Kosten externer MA verstanden
                                                 If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
                                                     Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
-                                                    Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
-                                                    roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + anzPT * hoursPerDay * myCostPercent
+                                                    Dim anzPT As Double = myEuros / roledef.tagessatzIntern
+                                                    myNewHours = anzPT * hoursPerDay * myCostPercent
+                                                End If
+                                                roleHoursList.Item(myRoleName) = roleHoursList.Item(myRoleName) + myNewHours + myHours
 
-                                                End If
                                             Else
-                                                roleHoursList.Add(myRoleName, myHours)
                                                 ' unter folgendem sind die Kosten externer MA verstanden
                                                 If myCostPercent > 0 And myCostPercent <= 1.0 And myEuros > 0.0 Then
                                                     Dim roledef As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
-                                                    Dim anzPT As Double = Math.Round(myEuros / roledef.tagessatzIntern)
-                                                    roleHoursList.Add(myRoleName, anzPT * hoursPerDay * myCostPercent)
+                                                    Dim anzPT As Double = myEuros / roledef.tagessatzIntern
+                                                    myNewHours = anzPT * hoursPerDay * myCostPercent
                                                 End If
+                                                roleHoursList.Add(myRoleName, myNewHours + myHours)
                                             End If
 
                                         End If
