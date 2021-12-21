@@ -1666,6 +1666,17 @@ Public Module awinGeneralModules
 
                 If Not IsNothing(standInDB) Then
 
+
+                    Try
+                        Dim array1 As Double() = standInDB.getInvoicesPenalties
+                        Dim array2 As Double() = hproj.getInvoicesPenalties
+                        If array1.Sum > 0 And array2.Sum = 0 Then
+                            Call hproj.updateProjectwithInvoicesFrom(standInDB)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
                     Call awinAdjustValuesByExistingProj(hproj, standInDB, False, Date.Now, 2, True)
 
                 End If

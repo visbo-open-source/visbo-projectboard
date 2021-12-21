@@ -26385,7 +26385,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub storeSessionConstellation(ByVal constellationName As String,
                                          Optional ByVal fullProjectNames As SortedList(Of String, String) = Nothing,
-                                         Optional ByVal takeWhat As Integer = ptSzenarioConsider.all)
+                                         Optional ByVal takeWhat As Integer = ptSzenarioConsider.show)
 
         Dim newC As clsConstellation
 

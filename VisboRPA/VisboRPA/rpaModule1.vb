@@ -2036,9 +2036,29 @@ Module rpaModule1
             Dim removeSPList As New List(Of String)
             Dim removeAPList As New List(Of String)
 
+            Dim first As Boolean = True
+            Dim minMonthColumn As Integer = 0
+            Dim maxMonthColumn As Integer = 0
+
             For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
                 Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
                 If Not IsNothing(hproj) Then
+
+                    If first Then
+                        first = False
+                        minMonthColumn = getColumnOfDate(hproj.startDate)
+                        maxMonthColumn = getColumnOfDate(hproj.endeDate)
+                    Else
+                        Dim myMin As Integer = getColumnOfDate(hproj.startDate)
+                        Dim myMax As Integer = getColumnOfDate(hproj.endeDate)
+                        If myMin < minMonthColumn Then
+                            minMonthColumn = myMin
+                        End If
+                        If myMax > maxMonthColumn Then
+                            maxMonthColumn = myMax
+                        End If
+                    End If
+
                     If Not AlleProjekte.Containskey(rankingPair.Value) Then
                         AlleProjekte.Add(hproj)
                         removeAPList.Add(rankingPair.Value)
@@ -2081,8 +2101,8 @@ Module rpaModule1
             ' now check whether there are overutilizations 
             ' if so , move showRangeLeft and showrangeRight  1 by 1 , until there are no overutilizations any more 
 
-            showRangeLeft = ShowProjekte.getMinMonthColumn
-            showRangeRight = ShowProjekte.getMaxMonthColumn
+            showRangeLeft = minMonthColumn
+            showRangeRight = maxMonthColumn
             Dim stopValue As Integer = showRangeRight
 
             Dim overutilizationFound As Boolean = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
@@ -2113,7 +2133,7 @@ Module rpaModule1
                 Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
                 Dim stdDuration As Integer = hproj.dauerInDays
                 Dim myDuration As Integer = stdDuration
-                Dim minDuration As Integer = CInt(stdDuration * 0.8)
+                Dim minDuration As Integer = CInt(stdDuration * 0.7)
 
 
 
@@ -2216,6 +2236,8 @@ Module rpaModule1
 
                                     Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
                                     Console.WriteLine(infomsg)
+                                    Dim myMessages As New Collection
+                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
 
@@ -2252,6 +2274,8 @@ Module rpaModule1
 
                                     Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
                                     Console.WriteLine(infomsg)
+                                    Dim myMessages As New Collection
+                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
 
