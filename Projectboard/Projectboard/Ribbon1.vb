@@ -4067,107 +4067,112 @@ Imports System.Web
     ''' <remarks></remarks>
     Function chckVisibility(control As IRibbonControl) As Boolean
 
-        If visboZustaende.projectBoardMode = ptModus.graficboard Then
-
-            If myCustomUserRole.isEntitledForMenu(control.Id) Then
-                Select Case control.Id
-                    Case "PTMEC" ' Massen-Edit Charts
-                        chckVisibility = False
-                    Case "PTmassEdit" ' Mass-Edit bearbeiten
-                        chckVisibility = False
-                    Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
-                        chckVisibility = False
-                    Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
-                        chckVisibility = False
-                    Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
-                        chckVisibility = False
-                    Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
-                        chckVisibility = False
-                    Case "PTzurück" ' Zurück
-                        chckVisibility = False
-                    Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
-                        chckVisibility = False
-                    Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
-                        chckVisibility = False
-                    Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
-                        chckVisibility = False
-                    Case "PT6G2B5" ' Sortierung ermöglichen
-                        chckVisibility = False
-                    Case "PT6G2B7" ' Header anzeigen
-                        chckVisibility = False
-                    Case "PThelp" ' Help anzeigen
-                        chckVisibility = False
-                    Case Else
-                        ' alle anderen werden sichtbar gemacht
-                        chckVisibility = True
-                End Select
-            Else
-                chckVisibility = False
-            End If
-
+        If isInChartWindow Then
+            chckVisibility = False
         Else
-            Select Case control.Id
 
-                Case "PTproj"
-                    chckVisibility = False
-                Case "PTedit"
-                    chckVisibility = False
-                Case "PTview"
-                    chckVisibility = False
-                Case "PTfilter"
-                    chckVisibility = False
-                Case "PTsort"
-                    chckVisibility = False
-                Case "PToptimize"
-                    chckVisibility = False
-                Case "PTcharts"
-                    chckVisibility = False
-                Case "PTreport"
-                    chckVisibility = False
-                Case "PTeinst"
-                    chckVisibility = False
-                Case "PThelp"
-                    chckVisibility = False
-                Case "PTWebServer"
-                    chckVisibility = False
-                Case "PTTestfunktionen"
-                    chckVisibility = False
-                Case "PTlizenz"
-                    chckVisibility = False
+            If visboZustaende.projectBoardMode = ptModus.graficboard Then
 
-                Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
+                If myCustomUserRole.isEntitledForMenu(control.Id) Then
+                    Select Case control.Id
+                        Case "PTMEC" ' Massen-Edit Charts
+                            chckVisibility = False
+                        Case "PTmassEdit" ' Mass-Edit bearbeiten
+                            chckVisibility = False
+                        Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
+                            chckVisibility = False
+                        Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
+                            chckVisibility = False
+                        Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
+                            chckVisibility = False
+                        Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
+                            chckVisibility = False
+                        Case "PTzurück" ' Zurück
+                            chckVisibility = False
+                        Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
+                            chckVisibility = False
+                        Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
+                            chckVisibility = False
+                        Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
+                            chckVisibility = False
+                        Case "PT6G2B5" ' Sortierung ermöglichen
+                            chckVisibility = False
+                        Case "PT6G2B7" ' Header anzeigen
+                            chckVisibility = False
+                        Case "PThelp" ' Help anzeigen
+                            chckVisibility = False
+                        Case Else
+                            ' alle anderen werden sichtbar gemacht
+                            chckVisibility = True
+                    End Select
+                Else
                     chckVisibility = False
+                End If
 
-                Case "PTMEC" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        chckVisibility = True
-                    Else
+            Else
+                Select Case control.Id
+
+                    Case "PTproj"
                         chckVisibility = False
-                    End If
+                    Case "PTedit"
+                        chckVisibility = False
+                    Case "PTview"
+                        chckVisibility = False
+                    Case "PTfilter"
+                        chckVisibility = False
+                    Case "PTsort"
+                        chckVisibility = False
+                    Case "PToptimize"
+                        chckVisibility = False
+                    Case "PTcharts"
+                        chckVisibility = False
+                    Case "PTreport"
+                        chckVisibility = False
+                    Case "PTeinst"
+                        chckVisibility = False
+                    Case "PThelp"
+                        chckVisibility = False
+                    Case "PTWebServer"
+                        chckVisibility = False
+                    Case "PTTestfunktionen"
+                        chckVisibility = False
+                    Case "PTlizenz"
+                        chckVisibility = False
+
+                    Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
+                        chckVisibility = False
+
+                    Case "PTMEC" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = True
+                        Else
+                            chckVisibility = False
+                        End If
 
 
-                Case "PTmassEdit" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                    Case "PTmassEdit" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
-                    Else
-                        chckVisibility = False
-                    End If
+                        Else
+                            chckVisibility = False
+                        End If
 
-                Case "PTMECsettings" ' Charts und Info 
-                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                    Case "PTMECsettings" ' Charts und Info 
+                        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            chckVisibility = True
+                        Else
+                            chckVisibility = False
+                        End If
+
+                    Case Else
                         chckVisibility = True
-                    Else
-                        chckVisibility = False
-                    End If
+                End Select
 
-                Case Else
-                    chckVisibility = True
-            End Select
+            End If
 
         End If
-
     End Function
 
     ''' <summary>
@@ -12782,7 +12787,8 @@ Imports System.Web
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
 
         ' in Abhängigkeit von der Resolution soll jetzt mehr oder weniger prozentualer Platz spendiert werden 
-        Dim teilungsfaktor As Double = 0.7
+        'Dim teilungsfaktor As Double = 0.7
+        Dim teilungsfaktor As Double = 0.67
         If maxScreenHeight < 520 Then
             teilungsfaktor = 0.6
         End If
@@ -12837,11 +12843,13 @@ Imports System.Web
             Dim chWidth As Double = stdBreite
             Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 2
 
-            If chHeight < 0.8 * projectboardWindows(PTwindows.meChart).Height Then
-                chHeight = 0.8 * projectboardWindows(PTwindows.meChart).Height
+            ' tk 21.12.22 0.7 was formerly 0.8
+            If chHeight < 0.7 * projectboardWindows(PTwindows.meChart).Height Then
+                chHeight = 0.7 * projectboardWindows(PTwindows.meChart).Height
             End If
 
-            Dim chTop As Double = 5
+            'Dim chTop As Double = 5
+            Dim chTop As Double = 0
 
             ' show the project Profit/Lost Diagram
             If ShowProjekte.contains(pName) Then

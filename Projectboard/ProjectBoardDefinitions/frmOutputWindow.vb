@@ -3,14 +3,17 @@
     Public textCollection As Collection
     Private Sub frmOutputWindow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        If Not IsNothing(appInstance) Then
-            Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
-            Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
-        Else
-            Me.Top = 50
-            Me.Left = 50
-        End If
+        ' tk 21.12.21 causes problems in Office 365 , positions it at negative Top coordinates ... 
+        'If Not IsNothing(appInstance) Then
+        '    Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
+        '    Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
+        'Else
+        '    Me.Top = 50
+        '    Me.Left = 50
+        'End If
 
+        Me.Top = 50
+        Me.Left = 50
 
         For i As Integer = 1 To textCollection.Count
 

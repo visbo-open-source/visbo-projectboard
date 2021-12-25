@@ -533,11 +533,11 @@ Public Class ThisWorkbook
                     ' in ribbon1.chckvisibility wird das Menu in Abhängigkeit von isInChartWindow gezeigt oder auch nicht
 
                     ' tk 23.5.21 deprecated
-                    ''If bIShrankTheRibbon = False Then
-                    ''    Dim resultObject As Object = (appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)"))
-                    ''    bIShrankTheRibbon = True
+                    'If bIShrankTheRibbon = False Then
+                    '    Dim resultObject As Object = (appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)"))
+                    '    bIShrankTheRibbon = True
 
-                    ''End If
+                    'End If
                 Else
                     isInChartWindow = False
 
