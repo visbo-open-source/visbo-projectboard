@@ -37,6 +37,7 @@ Partial Class frmEinstellungen
         Me.chkbx_KUG_active = New System.Windows.Forms.CheckBox()
         Me.chkbx_TakeCapaFromOldOrga = New System.Windows.Forms.CheckBox()
         Me.chkbx_autoSetActualDataDate = New System.Windows.Forms.CheckBox()
+        Me.chkbxAutoCalc = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -53,7 +54,7 @@ Partial Class frmEinstellungen
         'chkboxAmpel
         '
         Me.chkboxAmpel.AutoSize = True
-        Me.chkboxAmpel.Location = New System.Drawing.Point(16, 137)
+        Me.chkboxAmpel.Location = New System.Drawing.Point(16, 159)
         Me.chkboxAmpel.Name = "chkboxAmpel"
         Me.chkboxAmpel.Size = New System.Drawing.Size(101, 17)
         Me.chkboxAmpel.TabIndex = 2
@@ -64,7 +65,7 @@ Partial Class frmEinstellungen
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!)
-        Me.Label1.Location = New System.Drawing.Point(13, 268)
+        Me.Label1.Location = New System.Drawing.Point(13, 290)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(116, 15)
         Me.Label1.TabIndex = 4
@@ -74,7 +75,7 @@ Partial Class frmEinstellungen
         '
         Me.SprachAusw.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.SprachAusw.FormattingEnabled = True
-        Me.SprachAusw.Location = New System.Drawing.Point(146, 265)
+        Me.SprachAusw.Location = New System.Drawing.Point(146, 289)
         Me.SprachAusw.MaxDropDownItems = 4
         Me.SprachAusw.Name = "SprachAusw"
         Me.SprachAusw.Size = New System.Drawing.Size(158, 21)
@@ -84,7 +85,7 @@ Partial Class frmEinstellungen
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(13, 297)
+        Me.statusLabel.Location = New System.Drawing.Point(13, 319)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(45, 15)
         Me.statusLabel.TabIndex = 45
@@ -138,7 +139,7 @@ Partial Class frmEinstellungen
         'chkbxPhasesAnteilig
         '
         Me.chkbxPhasesAnteilig.AutoSize = True
-        Me.chkbxPhasesAnteilig.Location = New System.Drawing.Point(16, 115)
+        Me.chkbxPhasesAnteilig.Location = New System.Drawing.Point(16, 137)
         Me.chkbxPhasesAnteilig.Name = "chkbxPhasesAnteilig"
         Me.chkbxPhasesAnteilig.Size = New System.Drawing.Size(314, 17)
         Me.chkbxPhasesAnteilig.TabIndex = 50
@@ -148,7 +149,7 @@ Partial Class frmEinstellungen
         'chkbxInvoices
         '
         Me.chkbxInvoices.AutoSize = True
-        Me.chkbxInvoices.Location = New System.Drawing.Point(16, 159)
+        Me.chkbxInvoices.Location = New System.Drawing.Point(16, 181)
         Me.chkbxInvoices.Name = "chkbxInvoices"
         Me.chkbxInvoices.Size = New System.Drawing.Size(195, 17)
         Me.chkbxInvoices.TabIndex = 51
@@ -158,7 +159,7 @@ Partial Class frmEinstellungen
         'chkbx_KUG_active
         '
         Me.chkbx_KUG_active.AutoSize = True
-        Me.chkbx_KUG_active.Location = New System.Drawing.Point(16, 182)
+        Me.chkbx_KUG_active.Location = New System.Drawing.Point(16, 203)
         Me.chkbx_KUG_active.Name = "chkbx_KUG_active"
         Me.chkbx_KUG_active.Size = New System.Drawing.Size(125, 17)
         Me.chkbx_KUG_active.TabIndex = 52
@@ -168,7 +169,7 @@ Partial Class frmEinstellungen
         'chkbx_TakeCapaFromOldOrga
         '
         Me.chkbx_TakeCapaFromOldOrga.AutoSize = True
-        Me.chkbx_TakeCapaFromOldOrga.Location = New System.Drawing.Point(16, 205)
+        Me.chkbx_TakeCapaFromOldOrga.Location = New System.Drawing.Point(16, 225)
         Me.chkbx_TakeCapaFromOldOrga.Name = "chkbx_TakeCapaFromOldOrga"
         Me.chkbx_TakeCapaFromOldOrga.Size = New System.Drawing.Size(277, 17)
         Me.chkbx_TakeCapaFromOldOrga.TabIndex = 53
@@ -178,18 +179,29 @@ Partial Class frmEinstellungen
         'chkbx_autoSetActualDataDate
         '
         Me.chkbx_autoSetActualDataDate.AutoSize = True
-        Me.chkbx_autoSetActualDataDate.Location = New System.Drawing.Point(16, 229)
+        Me.chkbx_autoSetActualDataDate.Location = New System.Drawing.Point(16, 247)
         Me.chkbx_autoSetActualDataDate.Name = "chkbx_autoSetActualDataDate"
         Me.chkbx_autoSetActualDataDate.Size = New System.Drawing.Size(295, 17)
         Me.chkbx_autoSetActualDataDate.TabIndex = 54
         Me.chkbx_autoSetActualDataDate.Text = "Daten aus Vergangenheit explizit als Ist-Daten bestätigen"
         Me.chkbx_autoSetActualDataDate.UseVisualStyleBackColor = True
         '
+        'chkbxAutoCalc
+        '
+        Me.chkbxAutoCalc.AutoSize = True
+        Me.chkbxAutoCalc.Location = New System.Drawing.Point(16, 115)
+        Me.chkbxAutoCalc.Name = "chkbxAutoCalc"
+        Me.chkbxAutoCalc.Size = New System.Drawing.Size(201, 17)
+        Me.chkbxAutoCalc.TabIndex = 55
+        Me.chkbxAutoCalc.Text = "Ressourcen Bedarfe autom. verteilen"
+        Me.chkbxAutoCalc.UseVisualStyleBackColor = True
+        '
         'frmEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(352, 327)
+        Me.ClientSize = New System.Drawing.Size(352, 350)
+        Me.Controls.Add(Me.chkbxAutoCalc)
         Me.Controls.Add(Me.chkbx_autoSetActualDataDate)
         Me.Controls.Add(Me.chkbx_TakeCapaFromOldOrga)
         Me.Controls.Add(Me.chkbx_KUG_active)
@@ -225,4 +237,5 @@ Partial Class frmEinstellungen
     Friend WithEvents chkbx_KUG_active As Windows.Forms.CheckBox
     Friend WithEvents chkbx_TakeCapaFromOldOrga As Windows.Forms.CheckBox
     Friend WithEvents chkbx_autoSetActualDataDate As Windows.Forms.CheckBox
+    Friend WithEvents chkbxAutoCalc As Windows.Forms.CheckBox
 End Class

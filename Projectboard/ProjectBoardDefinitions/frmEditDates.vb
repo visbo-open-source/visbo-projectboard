@@ -31,6 +31,8 @@
         If awinSettings.englishLanguage Then
             btn_Cancel.Text = "Cancel"
             btn_OK.Text = "OK"
+            chkbx_adjustChilds.Text = "autom. adjust childs"
+            chkbxAutoDistr.Text = "autom. adjust ress. & cost"
             If IsMilestone Then
                 Text = "Edit Milestone Date"
             Else
@@ -88,4 +90,6 @@
             startdatePicker.Value = enddatePicker.Value
         End If
     End Sub
+
+
 End Class

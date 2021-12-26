@@ -29,6 +29,7 @@ Partial Class frmEditDates
         Me.btn_OK = New System.Windows.Forms.Button()
         Me.btn_Cancel = New System.Windows.Forms.Button()
         Me.chkbx_adjustChilds = New System.Windows.Forms.CheckBox()
+        Me.chkbxAutoDistr = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'startdatePicker
@@ -94,11 +95,23 @@ Partial Class frmEditDates
         Me.chkbx_adjustChilds.UseVisualStyleBackColor = True
         Me.chkbx_adjustChilds.Visible = False
         '
+        'chkbxAutoDistr
+        '
+        Me.chkbxAutoDistr.AutoSize = True
+        Me.chkbxAutoDistr.Location = New System.Drawing.Point(22, 76)
+        Me.chkbxAutoDistr.Name = "chkbxAutoDistr"
+        Me.chkbxAutoDistr.Size = New System.Drawing.Size(191, 17)
+        Me.chkbxAutoDistr.TabIndex = 7
+        Me.chkbxAutoDistr.Text = "Ress.- und Kosten autom. verteilen"
+        Me.chkbxAutoDistr.UseVisualStyleBackColor = True
+        Me.chkbxAutoDistr.Visible = False
+        '
         'frmEditDates
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(473, 145)
+        Me.Controls.Add(Me.chkbxAutoDistr)
         Me.Controls.Add(Me.chkbx_adjustChilds)
         Me.Controls.Add(Me.btn_Cancel)
         Me.Controls.Add(Me.btn_OK)
@@ -120,4 +133,5 @@ Partial Class frmEditDates
     Public WithEvents enddatePicker As Windows.Forms.DateTimePicker
     Public WithEvents lblElemName As Windows.Forms.Label
     Public WithEvents chkbx_adjustChilds As Windows.Forms.CheckBox
+    Public WithEvents chkbxAutoDistr As Windows.Forms.CheckBox
 End Class

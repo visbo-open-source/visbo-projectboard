@@ -1007,6 +1007,9 @@ Public Class Tabelle3
                         frmDateEdit.startdatePicker.Value = cMilestone.getDate
                         frmDateEdit.startdatePicker.Enabled = False
 
+                        ' Checkbox Auto Distribution is invisible ..
+                        frmDateEdit.chkbxAutoDistr.Visible = False
+
                         frmDateEdit.enddatePicker.Value = cMilestone.getDate
                         frmDateEdit.IsMilestone = True
 
@@ -1035,6 +1038,10 @@ Public Class Tabelle3
                             frmDateEdit.chkbx_adjustChilds.Checked = True
                         End If
 
+                        ' Checkbox Auto Distribution is invisible ..
+                        frmDateEdit.chkbxAutoDistr.Visible = True
+                        frmDateEdit.chkbxAutoDistr.Checked = Not awinSettings.noNewCalculation
+
                         frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
                         frmDateEdit.IsMilestone = False
 
@@ -1052,6 +1059,8 @@ Public Class Tabelle3
                         If frmDateEdit.ShowDialog() = DialogResult.OK Then
                             ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
                             ' hier ist bereits im Formular sichergestellt, dass es sich um valide Datum-Angaben handelt .. 
+                            awinSettings.noNewCalculation = Not frmDateEdit.chkbxAutoDistr.Checked
+
                             Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
                             Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
                             Dim autoAdjustChilds As Boolean = frmDateEdit.chkbx_adjustChilds.Checked
