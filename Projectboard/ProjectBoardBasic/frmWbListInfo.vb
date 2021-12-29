@@ -60,8 +60,8 @@ Public Class frmWbListInfo
     End Sub
 
     Private Sub frmWbListInfo_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
-        frmCoord(PTfrm.listInfo, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.listInfo, PTpinfo.left) = Me.Left
+        frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
     End Sub
 
 
@@ -71,13 +71,13 @@ Public Class frmWbListInfo
         Dim syn As String
         Dim elemName As String = elementName.Text
 
-        If frmCoord(PTfrm.listInfo, PTpinfo.top) = 0 And _
-            frmCoord(PTfrm.listInfo, PTpinfo.left) = 0 Then
+        If frmCoord(PTfrm.other, PTpinfo.top) = 0 And
+            frmCoord(PTfrm.other, PTpinfo.left) = 0 Then
             Me.Top = 50
             Me.Left = 50
         Else
-            Me.Top = frmCoord(PTfrm.listInfo, PTpinfo.top)
-            Me.Left = frmCoord(PTfrm.listInfo, PTpinfo.left)
+            Me.Top = frmCoord(PTfrm.other, PTpinfo.top)
+            Me.Left = frmCoord(PTfrm.other, PTpinfo.left)
         End If
 
         ergebnisListe.Items.Clear()

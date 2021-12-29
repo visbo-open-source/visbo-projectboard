@@ -3,6 +3,7 @@ Imports ProjectBoardDefinitions
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.VisualBasic
+Imports System.Windows.Forms
 
 Public Class frmProjekteSpeichern
 
@@ -15,7 +16,9 @@ Public Class frmProjekteSpeichern
 
     Private Sub frmProjekteSpeichern_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Call LanguageSettings()
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
+        Call languageSettings()
 
     End Sub
 
@@ -26,5 +29,15 @@ Public Class frmProjekteSpeichern
             JAButton.Text = "Yes"
             NEINButton.Text = "No"
         End If
+    End Sub
+
+    Private Sub frmProjekteSpeichern_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 End Class

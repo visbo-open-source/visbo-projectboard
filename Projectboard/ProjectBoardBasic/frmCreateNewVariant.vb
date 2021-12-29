@@ -1,15 +1,12 @@
 ﻿Imports ProjectBoardDefinitions
 Imports DBAccLayer
+Imports System.Windows.Forms
+
 Public Class frmCreateNewVariant
 
     Public multiSelect As Boolean = False
 
-    Private Sub frmCreateNewVariant_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
-        frmCoord(PTfrm.createVariant, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.createVariant, PTpinfo.left) = Me.Left
-
-    End Sub
 
     ''' <summary>
     ''' setzt in Abhängigkeit von menuCult die Texte der Formular-Felder 
@@ -31,8 +28,7 @@ Public Class frmCreateNewVariant
     End Sub
     Private Sub frmCreateNewVariant_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Me.Top = frmCoord(PTfrm.createVariant, PTpinfo.top)
-        Me.Left = frmCoord(PTfrm.createVariant, PTpinfo.left)
+        Call getFrmPosition(PTfrm.createVariant, Me.Top, Me.Left)
 
         txtDescription.Text = ""
 
@@ -65,9 +61,9 @@ Public Class frmCreateNewVariant
 
 
             If Not noDB Then
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     If Not _
                        (CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:=Me.projektName.Text,
@@ -135,6 +131,17 @@ Public Class frmCreateNewVariant
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
         End If
+
+    End Sub
+
+    Private Sub frmCreateNewVariant_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+
+        Try
+            frmCoord(PTfrm.createVariant, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.createVariant, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 

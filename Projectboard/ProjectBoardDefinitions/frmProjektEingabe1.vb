@@ -22,8 +22,12 @@ Public Class frmProjektEingabe1
 
     Private Sub frmProjektEingabe1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
-        frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
+        Try
+            frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
 
 
     End Sub
@@ -70,6 +74,8 @@ Public Class frmProjektEingabe1
     End Sub
 
     Private Sub frmProjektEingabe1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.eingabeProj, Top, Left)
 
         Call defineButtonVisibility()
 
@@ -151,10 +157,6 @@ Public Class frmProjektEingabe1
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
             .DateTimeEnde.Visible = False
-
-            ' das Formular an die letzte / Default-Position setzen 
-            .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
-            .Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
 
             dontFire = False
 

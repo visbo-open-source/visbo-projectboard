@@ -1038,7 +1038,7 @@ Public Class Tabelle3
                             frmDateEdit.chkbx_adjustChilds.Checked = True
                         End If
 
-                        ' Checkbox Auto Distribution is invisible ..
+                        ' Checkbox Auto Distribution is visible ..
                         frmDateEdit.chkbxAutoDistr.Visible = True
                         frmDateEdit.chkbxAutoDistr.Checked = Not awinSettings.noNewCalculation
 

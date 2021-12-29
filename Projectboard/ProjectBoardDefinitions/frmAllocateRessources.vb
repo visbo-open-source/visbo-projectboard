@@ -1,4 +1,5 @@
-﻿Imports System.Windows.Forms
+﻿Imports System.ComponentModel
+Imports System.Windows.Forms
 
 Public Class frmAllocateRessources
 
@@ -47,13 +48,8 @@ Public Class frmAllocateRessources
 
     Private Sub frmAllocateRessources_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        If frmCoord(PTfrm.rolecostME, PTpinfo.top) > 0 Then
-            Me.Top = CInt(frmCoord(PTfrm.rolecostME, PTpinfo.top))
-            Me.Left = CInt(frmCoord(PTfrm.rolecostME, PTpinfo.left))
-        Else
-            Me.Top = 60
-            Me.Left = 100
-        End If
+        Call getFrmPosition(PTfrm.rolecostME, Top, Left)
+
 
         Dim headerText As String = ""
         If awinSettings.englishLanguage Then
@@ -252,5 +248,16 @@ Public Class frmAllocateRessources
 
     Private Sub okBtn_Click(sender As Object, e As EventArgs) Handles okBtn.Click
         Call pickupInput()
+    End Sub
+
+    Private Sub frmAllocateRessources_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+
+        frmCoord(PTfrm.rolecostME, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.rolecostME, PTpinfo.left) = Me.Left
+
+    End Sub
+
+    Private Sub frmAllocateRessources_HelpButtonClicked(sender As Object, e As CancelEventArgs) Handles Me.HelpButtonClicked
+
     End Sub
 End Class

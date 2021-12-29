@@ -49,6 +49,8 @@ Public Class frmStoreReportProfil
 
     Private Sub frmStoreReportProfil_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
         Dim dirName As String
         Dim dateiName As String
         Dim profilName As String = ""
@@ -106,5 +108,14 @@ Public Class frmStoreReportProfil
     Private Sub NameReportProfil_KeyDown(sender As Object, e As KeyEventArgs) Handles NameReportProfil.KeyDown
         
         profilDescription.Text = ""
+    End Sub
+
+    Private Sub frmStoreReportProfil_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

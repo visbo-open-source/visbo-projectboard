@@ -1,7 +1,12 @@
-﻿Public Class frmSelectOneItem
+﻿Imports System.Windows.Forms
+
+Public Class frmSelectOneItem
 
     Public itemsCollection As New List(Of String)
     Private Sub frmSelectOneItem_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
 
         If Not IsNothing(appInstance) Then
             Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
@@ -35,5 +40,14 @@
 
     Private Sub itemList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles itemList.SelectedIndexChanged
 
+    End Sub
+
+    Private Sub frmSelectOneItem_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

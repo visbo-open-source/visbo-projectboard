@@ -29,13 +29,7 @@ Public Class frmSelectPhasesMilestones
     Private Sub frmSelectPhasesMilestones_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
-        If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
-            Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
-            Me.Left = CInt(frmCoord(PTfrm.listselP, PTpinfo.left))
-        Else
-            Me.Top = 60
-            Me.Left = 100
-        End If
+        Call getFrmPosition(PTfrm.listSelM, Top, Left)
 
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
             vonDate.MinDate = getDateofColumn(showRangeLeft, False).AddMonths(-3)
@@ -1088,4 +1082,12 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
+    Private Sub frmSelectPhasesMilestones_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.listSelM, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.listSelM, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+    End Sub
 End Class

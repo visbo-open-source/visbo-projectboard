@@ -14,9 +14,9 @@ Public Class frmLoadConstellation
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
+        Call getFrmPosition(PTfrm.loadC, Top, Left)
+
         Call languageSettings()
-
-
 
 
         If constellationsToShow.Count > 0 Then
@@ -46,6 +46,21 @@ Public Class frmLoadConstellation
 
     End Sub
 
+    Private Sub definePosition()
+        ' This method will position the size of the form to utilize 
+        ' the working area of the screen.
+
+
+        ' Retrieve the working rectangle from the Screen class
+        ' using the PrimaryScreen and the WorkingArea properties. 
+        Dim workingRectangle As System.Drawing.Rectangle =
+        Screen.PrimaryScreen.WorkingArea
+
+
+        ' Set the location so the entire form is visible.
+        Me.Location = New System.Drawing.Point(workingRectangle.Top + 5, workingRectangle.Left + 5)
+
+    End Sub
     Private Sub languageSettings()
 
         If awinSettings.englishLanguage Then
@@ -589,5 +604,14 @@ Public Class frmLoadConstellation
 
     Private Sub loadAsSummary_CheckedChanged(sender As Object, e As EventArgs) Handles loadAsSummary.CheckedChanged
 
+    End Sub
+
+    Private Sub frmLoadConstellation_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.loadC, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.loadC, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

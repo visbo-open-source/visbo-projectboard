@@ -699,8 +699,6 @@ Public Class frmHierarchySelection
 
     Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
 
-        frmCoord(PTfrm.listselP, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.listselP, PTpinfo.left) = Me.Left
 
         awinSettings.isHryNameFrmActive = False
         If appInstance.ScreenUpdating = False Then
@@ -719,13 +717,7 @@ Public Class frmHierarchySelection
 
     Private Sub frmHierarchySelection_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
-            Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
-            Me.Left = CInt(frmCoord(PTfrm.listselP, PTpinfo.left))
-        Else
-            Me.Top = 60
-            Me.Left = 100
-        End If
+        Call getFrmPosition(PTfrm.listselP, Top, Left)
 
         Cursor = Cursors.WaitCursor
 
@@ -5229,5 +5221,14 @@ Public Class frmHierarchySelection
 
     Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
 
+    End Sub
+
+    Private Sub frmHierarchySelection_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.listselP, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.listselP, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

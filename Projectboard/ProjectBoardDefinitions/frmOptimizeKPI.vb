@@ -13,6 +13,9 @@ Public Class frmOptimizeKPI
 
     Private Sub frmOptimizeKPI_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
+
         Dim tmpKennung As String
         Dim title As String
         Dim selectedIndex As Integer = 0
@@ -285,5 +288,12 @@ Public Class frmOptimizeKPI
 
     End Sub
 
-    
+    Private Sub frmOptimizeKPI_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+    End Sub
 End Class

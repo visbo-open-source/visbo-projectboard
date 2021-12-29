@@ -6,9 +6,16 @@ Public Class frmdemoModusDate
     Public oldHistoryDate As Date
 
     Private Sub frmdemoModusDate_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
 
+        End Try
     End Sub
     Private Sub frmdemoModusDate_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         oldHistoryDate = historicDate
         DateTimeHistory.Value = historicDate

@@ -858,7 +858,8 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(23, 3) As Double
+    Public frmCoord(25, 3) As Double
+
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -883,9 +884,11 @@ Public Module Module1
         listSelM = 18
         phaseInfo = 19
         createVariant = 20
-        listInfo = 21
+        other = 21
         projInfoPL = 22
         rolecostME = 23
+        showOutPut = 24
+        basis = 25
     End Enum
 
     Public Enum PTpinfo
@@ -7702,19 +7705,23 @@ Public Module Module1
             chartWidth = 140
         End If
 
-        Dim oGrenze As Integer = UBound(frmCoord, 1)
-        ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-        For i = 0 To oGrenze
-            frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-            frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-        Next
+        ' tk 28.12.21 - ausschalten der festen Zuordnung von Positionen 
+        ' das wird jetzt in Abhängigkeit von der Position des Projectboard Windws gemacht 
+        ' siehe Windows_Activate Event 
 
-        ' jetzt setzen der Werte für Status-Information und Milestone-Information
-        frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-        frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+        'Dim oGrenze As Integer = UBound(frmCoord, 1)
+        '' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+        'For i = 0 To oGrenze
+        '    frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+        '    frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+        'Next
 
-        frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-        frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+        '' jetzt setzen der Werte für Status-Information und Milestone-Information
+        'frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+        'frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+        'frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+        'frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
     End Sub
 
 
@@ -9787,6 +9794,37 @@ Public Module Module1
         addBrackets = name
 
     End Function
+
+    ''' <summary>
+    ''' returns top and left position in a way so that Form is always shown within the bounds of the app window
+    ''' </summary>
+    ''' <param name="frmTyp"></param>
+    ''' <param name="myTop"></param>
+    ''' <param name="myLeft"></param>
+    Public Sub getFrmPosition(ByVal frmTyp As PTfrm, ByRef myTop As Integer, ByRef myLeft As Integer)
+
+        Try
+            myTop = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.top))
+            myLeft = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.left))
+
+            If frmCoord(frmTyp, PTpinfo.top) <> 0 Or
+               frmCoord(frmTyp, PTpinfo.left) <> 0 Then
+
+                If frmCoord(frmTyp, PTpinfo.top) > frmCoord(PTfrm.basis, PTpinfo.top) And
+                    frmCoord(frmTyp, PTpinfo.top) < frmCoord(PTfrm.basis, PTpinfo.top) + frmCoord(PTfrm.basis, PTpinfo.height) And
+                    frmCoord(frmTyp, PTpinfo.left) > frmCoord(PTfrm.basis, PTpinfo.left) And
+                    frmCoord(frmTyp, PTpinfo.left) < frmCoord(PTfrm.basis, PTpinfo.left) + frmCoord(PTfrm.basis, PTpinfo.width) Then
+
+                    myTop = CInt(frmCoord(frmTyp, PTpinfo.top))
+                    myLeft = CInt(frmCoord(frmTyp, PTpinfo.left))
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 
 
 End Module
