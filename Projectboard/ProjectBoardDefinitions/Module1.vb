@@ -7674,25 +7674,21 @@ Public Module Module1
         With appInstance.ActiveWindow
 
             If .WindowState = Excel.XlWindowState.xlMaximized Then
-                'maxScreenHeight = .UsableHeight
                 maxScreenHeight = .Height
-                'maxScreenWidth = .UsableWidth
                 maxScreenWidth = .Width
             Else
-                'Dim formerState As Excel.XlWindowState = .WindowState
                 .WindowState = Excel.XlWindowState.xlMaximized
-                'maxScreenHeight = .UsableHeight
+
                 maxScreenHeight = .Height
-                'maxScreenWidth = .UsableWidth
                 maxScreenWidth = .Width
-                '.WindowState = formerState
+
             End If
 
 
         End With
 
         ' jetzt das ProjectboardWindows (0) setzen 
-        projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
+        'projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
 
         chartHeight = maxScreenHeight / 6
         chartWidth = maxScreenWidth / 5
@@ -7705,23 +7701,6 @@ Public Module Module1
             chartWidth = 140
         End If
 
-        ' tk 28.12.21 - ausschalten der festen Zuordnung von Positionen 
-        ' das wird jetzt in Abhängigkeit von der Position des Projectboard Windws gemacht 
-        ' siehe Windows_Activate Event 
-
-        'Dim oGrenze As Integer = UBound(frmCoord, 1)
-        '' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-        'For i = 0 To oGrenze
-        '    frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-        '    frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-        'Next
-
-        '' jetzt setzen der Werte für Status-Information und Milestone-Information
-        'frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-        'frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        'frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-        'frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
     End Sub
 
 
@@ -8533,14 +8512,12 @@ Public Module Module1
             If anzLegendEintraege > 2 Then
                 korrfaktorH2 = 1 + 0.15 * (CInt(anzLegendEintraege / 2) - 1)
             End If
-            'korrfaktorH = 1080 / My.Computer.Screen.Bounds.Height
-            'korrfaktorB = 1920 / My.Computer.Screen.Bounds.Width
+
         Catch ex As Exception
 
         End Try
-        'Dim tmpWidth As Double = maxScreenWidth / 5 - 29
+
         Dim tmpWidth As Double = chartWidth - 10
-        'Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
         Dim tmpHeight As Double = chartHeight * korrfaktorH1 * korrfaktorH2
 
 
@@ -8749,10 +8726,13 @@ Public Module Module1
                             .WindowState = Excel.XlWindowState.xlNormal
                             .EnableResize = True
                             '.Left = 4 * maxScreenWidth / 5
-                            .Left = maxScreenWidth - stdPfPrWindowBreite
+                            '.Left = maxScreenWidth - stdPfPrWindowBreite
+                            ' tk 29.12.21
+                            .Left = maxScreenWidth - stdPfPrWindowBreite + frmCoord(PTfrm.basis, PTpinfo.left)
                             .Width = stdPfPrWindowBreite
                             ' wenn prWindows schon existert hat ..
                             If prWindowAlreadyExisting Then
+                                '.Top = projectboardWindows(PTwindows.mpt).Top
                                 .Top = projectboardWindows(PTwindows.mpt).Top
                                 .Height = projectboardWindows(PTwindows.mpt).Height
                             End If
@@ -8783,16 +8763,17 @@ Public Module Module1
                     If Not pfWindowAlreadyExisting Then
 
                         With projectboardWindows(PTwindows.mpt)
+
                             If .WindowState = Excel.XlWindowState.xlMaximized Then
                                 .WindowState = Excel.XlWindowState.xlNormal
                             End If
 
                             If prWindowAlreadyExisting Then
-                                .Left = 1 + stdPfPrWindowBreite + 1
-                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
+                                .Left = frmCoord(PTfrm.basis, PTpinfo.left) + stdPfPrWindowBreite + 1
+                                .Width = frmCoord(PTfrm.basis, PTpinfo.width) - (2 * stdPfPrWindowBreite + 1)
                             Else
-                                .Left = 1
-                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1
+                                .Left = frmCoord(PTfrm.basis, PTpinfo.left)
+                                .Width = frmCoord(PTfrm.basis, PTpinfo.width) - (stdPfPrWindowBreite + 1)
                             End If
 
 
@@ -8829,7 +8810,8 @@ Public Module Module1
                             .Visible = True
                             .WindowState = Excel.XlWindowState.xlNormal
                             .EnableResize = True
-                            .Left = 1
+                            '.Left = 1
+                            .Left = 1 + frmCoord(PTfrm.basis, PTpinfo.left)
                             .Width = stdPfPrWindowBreite
                             ' wenn pfWindows schon existert hat ..
                             If pfWindowAlreadyExisting Then
@@ -8862,17 +8844,18 @@ Public Module Module1
                     If Not prWindowAlreadyExisting Then
 
                         With projectboardWindows(PTwindows.mpt)
+
+
                             If .WindowState = Excel.XlWindowState.xlMaximized Then
                                 .WindowState = Excel.XlWindowState.xlNormal
                             End If
 
-                            .Left = projectboardWindows(PTwindows.mptpr).Left +
-                                    projectboardWindows(PTwindows.mptpr).Width + 1
-
                             If pfWindowAlreadyExisting Then
-                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
+                                .Left = frmCoord(PTfrm.basis, PTpinfo.left) + stdPfPrWindowBreite + 1
+                                .Width = frmCoord(PTfrm.basis, PTpinfo.width) - (2 * stdPfPrWindowBreite + 1)
                             Else
-                                .Width = maxScreenWidth - (projectboardWindows(PTwindows.mptpr).Width + 1)
+                                .Left = frmCoord(PTfrm.basis, PTpinfo.left) + stdPfPrWindowBreite + 1
+                                .Width = frmCoord(PTfrm.basis, PTpinfo.width) - (stdPfPrWindowBreite + 1)
                             End If
 
 

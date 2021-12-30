@@ -12330,9 +12330,6 @@ Imports System.Web
                         Call showVisboWindow(PTwindows.mptpf)
                     End If
 
-                    ' jetzt Unterauslastung
-                    ''top = top + height + 10
-                    ''Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
 
                 Catch ex As Exception
                     Call MsgBox("keine Information vorhanden")
@@ -12796,7 +12793,7 @@ Imports System.Web
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.massEdit)
             .Top = 0
-            .Left = 1.0
+            .Left = 1.0 + frmCoord(PTfrm.basis, PTpinfo.left)
             '.Height = 3 / 4 * maxScreenHeight
             .Height = teilungsfaktor * maxScreenHeight
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
@@ -12805,7 +12802,7 @@ Imports System.Web
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.meChart)
             .Top = teilungsfaktor * maxScreenHeight + 1
-            .Left = 1.0
+            .Left = 1.0 + frmCoord(PTfrm.basis, PTpinfo.left)
             .Height = (1 - teilungsfaktor) * maxScreenHeight - 1
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
