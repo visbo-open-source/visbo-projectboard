@@ -363,6 +363,7 @@ Public Module Module1
         telairTagetikImport = 12
         telairTagetikUpdate = 13
         instartCalcTemplateImport = 14
+        telairCostAssertionImport = 15
     End Enum
 
     Public Enum ptImportSettings
@@ -1797,35 +1798,35 @@ Public Module Module1
         isAggregationRole = tmpResult
     End Function
 
-    ''' <summary>
-    ''' wenn ein Portfolio Manager speichert, muss der Variant-NAme auf pfv gesetzt werden
-    ''' er kann nur Vorgaben speichern, niemals Planungen , also VariantName=""
-    ''' entsprechend muss das AlleProjekte upgedated werden
-    ''' </summary>
-    ''' <param name="projekt"></param>
-    Public Sub changeVariantNameAccordingUserRole(ByRef projekt As clsProjekt)
-        Dim oldVariantName As String = projekt.variantName
-        Dim oldPkey As String = calcProjektKey(projekt)
+    '''' <summary>
+    '''' wenn ein Portfolio Manager speichert, muss der Variant-NAme auf pfv gesetzt werden
+    '''' er kann nur Vorgaben speichern, niemals Planungen , also VariantName=""
+    '''' entsprechend muss das AlleProjekte upgedated werden
+    '''' </summary>
+    '''' <param name="projekt"></param>
+    'Public Sub changeVariantNameAccordingUserRole(ByRef projekt As clsProjekt)
+    '    Dim oldVariantName As String = projekt.variantName
+    '    Dim oldPkey As String = calcProjektKey(projekt)
 
-        Call projekt.setVariantNameAccordingUserRole()
-        ' jetzt muss in AlleProjekte ggf der Schlüssel ausgetauscht werden 
+    '    Call projekt.setVariantNameAccordingUserRole()
+    '    ' jetzt muss in AlleProjekte ggf der Schlüssel ausgetauscht werden 
 
-        Dim newPkey As String = calcProjektKey(projekt)
-        If newPkey <> oldPkey Then
-            ' es ergab sich eine Änderung 
+    '    Dim newPkey As String = calcProjektKey(projekt)
+    '    If newPkey <> oldPkey Then
+    '        ' es ergab sich eine Änderung 
 
-            If AlleProjekte.Containskey(oldPkey) Then
-                AlleProjekte.Remove(oldPkey)
-            End If
+    '        If AlleProjekte.Containskey(oldPkey) Then
+    '            AlleProjekte.Remove(oldPkey)
+    '        End If
 
-            If AlleProjekte.Containskey(newPkey) Then
-                AlleProjekte.Remove(newPkey)
-            End If
+    '        If AlleProjekte.Containskey(newPkey) Then
+    '            AlleProjekte.Remove(newPkey)
+    '        End If
 
-            ' jetzt aufnehmen 
-            AlleProjekte.Add(projekt)
-        End If
-    End Sub
+    '        ' jetzt aufnehmen 
+    '        AlleProjekte.Add(projekt)
+    '    End If
+    'End Sub
 
     ''' <summary>
     ''' setzt die Markierungen alle Projekte zurück ...

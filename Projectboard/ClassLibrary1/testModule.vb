@@ -7714,223 +7714,224 @@ Public Module testModule
 
     End Sub
 
-    ''' <summary>
-    ''' gibt für ein gegebenes Projekt die errechnete Farbe und den errechneten Status zurück
-    ''' dabei wird das aktuelle Projekt in Relation zur Beauftragung/letzten Freigabe gesetzt
-    ''' wenn es noch keine Projekt-Historie gibt, so wird grün und "0" zurückgegeben   
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' das Projekt in Question
-    ''' <param name="compareTo">
-    ''' =0 : Vergleich mit erstem Projekt-Stand überhaupt
-    ''' =1 : Vergleich mit Beauftragung 
-    ''' =2 : Vergleich mit letzter Freigabe
-    ''' =3 : Vergleich mit letztem Planungs-Stand
-    ''' </param>
-    ''' <param name="auswahl">
-    ''' einer der Werte aus 1=Personalkosten, 2=Sonstige Kosten, 3=Gesamtkosten, 4=Rolle, 5=Kostenart 
-    ''' </param>
-    ''' <param name="statusValue">
-    ''' Rückgabe Paarmeter - ein Wert zwischen 0 und sehr groß; je größer über 1, desto besser im Fortschritt 
-    ''' je kleiner unter 1, desto schlechter im Fortschritt
-    ''' </param>
-    ''' <param name="statusColor">
-    ''' Rückgabe Parameter: entweder grün, gelb oder rot
-    ''' </param>
-    ''' <remarks></remarks>
-    Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String,
-                                  ByRef statusValue As Double, ByRef statusColor As Long)
+    '''' <summary>
+    '''' gibt für ein gegebenes Projekt die errechnete Farbe und den errechneten Status zurück
+    '''' dabei wird das aktuelle Projekt in Relation zur Beauftragung/letzten Freigabe gesetzt
+    '''' wenn es noch keine Projekt-Historie gibt, so wird grün und "0" zurückgegeben   
+    '''' </summary>
+    '''' <param name="hproj"></param>
+    '''' das Projekt in Question
+    '''' <param name="compareTo">
+    '''' =0 : Vergleich mit erstem Projekt-Stand überhaupt
+    '''' =1 : Vergleich mit Beauftragung 
+    '''' =2 : Vergleich mit letzter Freigabe
+    '''' =3 : Vergleich mit letztem Planungs-Stand
+    '''' </param>
+    '''' <param name="auswahl">
+    '''' einer der Werte aus 1=Personalkosten, 2=Sonstige Kosten, 3=Gesamtkosten, 4=Rolle, 5=Kostenart 
+    '''' </param>
+    '''' <param name="statusValue">
+    '''' Rückgabe Paarmeter - ein Wert zwischen 0 und sehr groß; je größer über 1, desto besser im Fortschritt 
+    '''' je kleiner unter 1, desto schlechter im Fortschritt
+    '''' </param>
+    '''' <param name="statusColor">
+    '''' Rückgabe Parameter: entweder grün, gelb oder rot
+    '''' </param>
+    '''' <remarks></remarks>
+    '''' ur: 211202: im Rahmen von VS-1070 Konsolidierung vpStatus
+    'Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String,
+    '                              ByRef statusValue As Double, ByRef statusColor As Long)
 
-        Dim err As New clsErrorCodeMsg
+    '    Dim err As New clsErrorCodeMsg
 
-        Dim currentValues() As Double
-        Dim formerValues() As Double
-        Dim vglProj As clsProjekt
-        Dim vglName As String, pname As String, variantName As String
-        Dim anzSnapshots As Integer, index As Integer
-        Dim heuteColumn As Integer = getColumnOfDate(Date.Now)
-        Dim cValue As Double, fValue As Double
+    '    Dim currentValues() As Double
+    '    Dim formerValues() As Double
+    '    Dim vglProj As clsProjekt
+    '    Dim vglName As String, pname As String, variantName As String
+    '    Dim anzSnapshots As Integer, index As Integer
+    '    Dim heuteColumn As Integer = getColumnOfDate(Date.Now)
+    '    Dim cValue As Double, fValue As Double
 
-        With hproj
-            pname = .name
-            variantName = .variantName
-        End With
-        vglName = " "
+    '    With hproj
+    '        pname = .name
+    '        variantName = .variantName
+    '    End With
+    '    vglName = " "
 
-        Try
-            ReDim currentValues(hproj.anzahlRasterElemente - 1)
+    '    Try
+    '        ReDim currentValues(hproj.anzahlRasterElemente - 1)
 
-        Catch ex As Exception
+    '    Catch ex As Exception
 
-            statusValue = 1.0
-            statusColor = awinSettings.AmpelGruen
-            Exit Sub
+    '        statusValue = 1.0
+    '        statusColor = awinSettings.AmpelGruen
+    '        Exit Sub
 
-        End Try
-
-
-        If Not projekthistorie Is Nothing Then
-            If projekthistorie.Count > 0 Then
-                vglName = projekthistorie.First.getShapeText
-            End If
-        Else
-            projekthistorie = New clsProjektHistorie
-        End If
+    '    End Try
 
 
-        If vglName <> hproj.getShapeText Then
-            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
-                                                                   storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
-                If projekthistorie.Count > 0 Then
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
-
-            Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-            End If
-
-        Else
-            ' es muss nichts gemacht werden - es ist bereits die richtige Historie 
-        End If
+    '    If Not projekthistorie Is Nothing Then
+    '        If projekthistorie.Count > 0 Then
+    '            vglName = projekthistorie.First.getShapeText
+    '        End If
+    '    Else
+    '        projekthistorie = New clsProjektHistorie
+    '    End If
 
 
-        ' jetzt sind in der Projekt-Historie die richtigen Snapshots 
-        ' jetzt muss das Vergleichs-Projekt gesetzt werden 
+    '    If vglName <> hproj.getShapeText Then
+    '        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+    '            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+    '            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+    '                                                               storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
+    '            If projekthistorie.Count > 0 Then
+    '                projekthistorie.Add(Date.Now, hproj)
+    '            End If
+
+    '        Else
+    '            Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+    '        End If
+
+    '    Else
+    '        ' es muss nichts gemacht werden - es ist bereits die richtige Historie 
+    '    End If
 
 
-
-
-        Try
-            anzSnapshots = projekthistorie.Count
-        Catch ex1 As Exception
-            anzSnapshots = 0
-        End Try
+    '    ' jetzt sind in der Projekt-Historie die richtigen Snapshots 
+    '    ' jetzt muss das Vergleichs-Projekt gesetzt werden 
 
 
 
-        If anzSnapshots > 0 Then
 
-            Select Case compareTo
-
-                Case 0
-                    ' mit erstem Planungs-Stand vergleichen
-                    vglProj = projekthistorie.ElementAt(0)
-
-                Case 1
-                    ' mit Beauftragung vergleichen 
-
-                    vglProj = projekthistorie.beauftragung
-                    If IsNothing(vglProj) Then
-                        vglProj = projekthistorie.ElementAt(0)
-                    End If
+    '    Try
+    '        anzSnapshots = projekthistorie.Count
+    '    Catch ex1 As Exception
+    '        anzSnapshots = 0
+    '    End Try
 
 
 
-                Case 2
-                    ' mit letzter Freigabe vergleichen
-                    index = getIndexPrevFreigabe(projekthistorie.liste, anzSnapshots - 1)
-                    vglProj = projekthistorie.ElementAt(index)
+    '    If anzSnapshots > 0 Then
 
-                Case 3
-                    ' mit letztem Stand vergleichen , das ist das vorletzte Element , da hproj auf der letzten Position ist
-                    vglProj = projekthistorie.ElementAt(anzSnapshots - 2)
+    '        Select Case compareTo
 
-                Case Else
-                    ' mit erstem Element vergleichen 
-                    vglProj = projekthistorie.ElementAt(0)
-            End Select
+    '            Case 0
+    '                ' mit erstem Planungs-Stand vergleichen
+    '                vglProj = projekthistorie.ElementAt(0)
 
+    '            Case 1
+    '                ' mit Beauftragung vergleichen 
 
-            ReDim formerValues(vglProj.anzahlRasterElemente - 1)
-            Dim hsum As Double = 0.0
-            Dim vsum As Double = 0.0
-
-            Select Case auswahl
-                Case 1
-                    currentValues = hproj.getAllPersonalKosten
-                    formerValues = vglProj.getAllPersonalKosten
-
-                Case 2
-                    currentValues = hproj.getGesamtAndereKosten
-                    formerValues = vglProj.getGesamtAndereKosten
-
-                Case 3
-                    currentValues = hproj.getGesamtKostenBedarf
-                    formerValues = vglProj.getGesamtKostenBedarf
-
-                Case 4
-                    If RoleDefinitions.containsName(qualifier) Then
-                        currentValues = hproj.getRessourcenBedarf(qualifier)
-                        formerValues = vglProj.getRessourcenBedarf(qualifier)
-                    End If
-                Case 5
-                    If CostDefinitions.containsName(qualifier) Then
-                        currentValues = hproj.getKostenBedarf(qualifier)
-                        formerValues = vglProj.getKostenBedarf(qualifier)
-                    End If
-                Case Else
-                    ' wie Gesamtkosten
-                    currentValues = hproj.getGesamtKostenBedarf
-                    formerValues = vglProj.getGesamtKostenBedarf
-
-            End Select
+    '                vglProj = projekthistorie.beauftragung
+    '                If IsNothing(vglProj) Then
+    '                    vglProj = projekthistorie.ElementAt(0)
+    '                End If
 
 
-            ' jetzt muss abgefangen werden, daß in dem Vergleichs-Projekt gar keine Werte dafür da sind 
-            ' in dem aktuellen Projekt dagegen schon ; oder umgekehrt 
-            ' es muss natürlich auch abgefangen werden, daß der Wert bei beiden nicht existiert 
+
+    '            Case 2
+    '                ' mit letzter Freigabe vergleichen
+    '                index = getIndexPrevFreigabe(projekthistorie.liste, anzSnapshots - 1)
+    '                vglProj = projekthistorie.ElementAt(index)
+
+    '            Case 3
+    '                ' mit letztem Stand vergleichen , das ist das vorletzte Element , da hproj auf der letzten Position ist
+    '                vglProj = projekthistorie.ElementAt(anzSnapshots - 2)
+
+    '            Case Else
+    '                ' mit erstem Element vergleichen 
+    '                vglProj = projekthistorie.ElementAt(0)
+    '        End Select
 
 
-            If currentValues.Sum <= 0 And formerValues.Sum <= 0 Then
-                statusValue = 0.0
-                statusColor = awinSettings.AmpelNichtBewertet
-                ' beide existieren nicht 
+    '        ReDim formerValues(vglProj.anzahlRasterElemente - 1)
+    '        Dim hsum As Double = 0.0
+    '        Dim vsum As Double = 0.0
 
-            ElseIf currentValues.Sum <= 0 Then
-                statusValue = 0.0
-                statusColor = awinSettings.AmpelRot
+    '        Select Case auswahl
+    '            Case 1
+    '                currentValues = hproj.getAllPersonalKosten
+    '                formerValues = vglProj.getAllPersonalKosten
 
-            ElseIf formerValues.Sum <= 0 Then
-                statusValue = 2.0
-                statusColor = awinSettings.AmpelGruen
+    '            Case 2
+    '                currentValues = hproj.getGesamtAndereKosten
+    '                formerValues = vglProj.getGesamtAndereKosten
 
-            Else
-                Dim korrFaktor As Double = formerValues.Sum / currentValues.Sum
+    '            Case 3
+    '                currentValues = hproj.getGesamtKostenBedarf
+    '                formerValues = vglProj.getGesamtKostenBedarf
 
-                For h = hproj.Start To heuteColumn - 1
-                    hsum = hsum + currentValues(h - hproj.Start)
-                Next
-                cValue = hsum / currentValues.Sum
+    '            Case 4
+    '                If RoleDefinitions.containsName(qualifier) Then
+    '                    currentValues = hproj.getRessourcenBedarf(qualifier)
+    '                    formerValues = vglProj.getRessourcenBedarf(qualifier)
+    '                End If
+    '            Case 5
+    '                If CostDefinitions.containsName(qualifier) Then
+    '                    currentValues = hproj.getKostenBedarf(qualifier)
+    '                    formerValues = vglProj.getKostenBedarf(qualifier)
+    '                End If
+    '            Case Else
+    '                ' wie Gesamtkosten
+    '                currentValues = hproj.getGesamtKostenBedarf
+    '                formerValues = vglProj.getGesamtKostenBedarf
 
-                For v = vglProj.Start To heuteColumn - 1
-                    vsum = vsum + formerValues(v - vglProj.Start)
-                Next
-                fValue = vsum / formerValues.Sum
+    '        End Select
 
-                If fValue > 0 Then
-                    statusValue = korrFaktor * cValue / fValue
-                Else
-                    statusValue = 2
-                End If
 
-                If statusValue >= 1.0 Then
-                    statusColor = awinSettings.AmpelGruen
-                ElseIf statusValue >= 0.9 Then
-                    statusColor = awinSettings.AmpelGelb
-                Else
-                    statusColor = awinSettings.AmpelRot
-                End If
+    '        ' jetzt muss abgefangen werden, daß in dem Vergleichs-Projekt gar keine Werte dafür da sind 
+    '        ' in dem aktuellen Projekt dagegen schon ; oder umgekehrt 
+    '        ' es muss natürlich auch abgefangen werden, daß der Wert bei beiden nicht existiert 
 
-            End If
 
-        Else
-            statusValue = 1.0
-            statusColor = awinSettings.AmpelGruen
-        End If
+    '        If currentValues.Sum <= 0 And formerValues.Sum <= 0 Then
+    '            statusValue = 0.0
+    '            statusColor = awinSettings.AmpelNichtBewertet
+    '            ' beide existieren nicht 
 
-    End Sub
+    '        ElseIf currentValues.Sum <= 0 Then
+    '            statusValue = 0.0
+    '            statusColor = awinSettings.AmpelRot
+
+    '        ElseIf formerValues.Sum <= 0 Then
+    '            statusValue = 2.0
+    '            statusColor = awinSettings.AmpelGruen
+
+    '        Else
+    '            Dim korrFaktor As Double = formerValues.Sum / currentValues.Sum
+
+    '            For h = hproj.Start To heuteColumn - 1
+    '                hsum = hsum + currentValues(h - hproj.Start)
+    '            Next
+    '            cValue = hsum / currentValues.Sum
+
+    '            For v = vglProj.Start To heuteColumn - 1
+    '                vsum = vsum + formerValues(v - vglProj.Start)
+    '            Next
+    '            fValue = vsum / formerValues.Sum
+
+    '            If fValue > 0 Then
+    '                statusValue = korrFaktor * cValue / fValue
+    '            Else
+    '                statusValue = 2
+    '            End If
+
+    '            If statusValue >= 1.0 Then
+    '                statusColor = awinSettings.AmpelGruen
+    '            ElseIf statusValue >= 0.9 Then
+    '                statusColor = awinSettings.AmpelGelb
+    '            Else
+    '                statusColor = awinSettings.AmpelRot
+    '            End If
+
+    '        End If
+
+    '    Else
+    '        statusValue = 1.0
+    '        statusColor = awinSettings.AmpelGruen
+    '    End If
+
+    'End Sub
 
     Sub zeichneFortschrittDiagramm(ByVal boxName As String, ByVal compareToID As Integer, ByVal auswahl As Integer, ByVal qualifier As String,
                                    ByRef pptShape As pptNS.Shape, ByRef reportObj As xlNS.ChartObject, ByRef notYetDone As Boolean)
@@ -15211,7 +15212,8 @@ Public Module testModule
 
                         Try
                             .Line.ForeColor.RGB = hproj.farbe
-                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                            'If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
                                 .Line.DashStyle = MsoLineDashStyle.msoLineDash
                             End If
                         Catch ex As Exception

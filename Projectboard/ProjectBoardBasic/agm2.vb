@@ -9919,13 +9919,19 @@ Public Module agm2
                                     Try ' Status
 
                                         If budget = budgetBeauftragt And budget > 0 Then
-                                            allianzStatus = ProjektStatus(PTProjektStati.beauftragt)
+                                            'ur: 211202: 
+                                            'allianzStatus = ProjektStatus(PTProjektStati.beauftragt)
+                                            allianzStatus = VProjectStatus(PTVPStati.ordered)
                                         Else
-                                            allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                            'ur: 211202: 
+                                            'allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                            allianzStatus = VProjectStatus(PTVPStati.initialized)
                                         End If
 
                                     Catch ex As Exception
-                                        allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                        'ur: 211202: 
+                                        'allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                        allianzStatus = VProjectStatus(PTVPStati.initialized)
                                     End Try
 
                                     Try ' im richtigen Zeitfenster ?
@@ -11019,13 +11025,19 @@ Public Module agm2
 
                                 Try ' Status
                                     If itemType = 6 Then
-                                        allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                        'ur: 211202: 
+                                        'allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                        allianzStatus = VProjectStatus(PTVPStati.initialized)
                                     Else
-                                        allianzStatus = ProjektStatus(PTProjektStati.beauftragt)
+                                        'ur: 211202: 
+                                        'allianzStatus = ProjektStatus(PTProjektStati.beauftragt)
+                                        allianzStatus = VProjectStatus(PTVPStati.ordered)
                                     End If
 
                                 Catch ex As Exception
-                                    allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                    'ur: 211202: 
+                                    'allianzStatus = ProjektStatus(PTProjektStati.geplant)
+                                    allianzStatus = VProjectStatus(PTVPStati.initialized)
                                 End Try
 
                             End If
@@ -17780,7 +17792,7 @@ Public Module agm2
                     CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
                     CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
                     CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
-                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.Status
+                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.vpStatus
                     CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.leadPerson
                     CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.businessUnit
                     CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.startDate
@@ -22755,7 +22767,8 @@ Public Module agm2
                         hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
                         ' immer als beauftragtes PRojekt importieren 
 
-                        hproj.Status = getStatusOfBaseVariant(pName, ProjektStatus(PTProjektStati.geplant))
+                        'ur: 211202: hproj.Status = getStatusOfBaseVariant(pName, ProjektStatus(PTProjektStati.geplant))
+                        hproj.vpStatus = getStatusOfBaseVariant(pName, VProjectStatus(PTVPStati.initialized))
                         hproj.StrategicFit = zufall.NextDouble * 10
                         hproj.Risiko = zufall.NextDouble * 10
                         hproj.volume = zufall.NextDouble * 1000000

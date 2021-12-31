@@ -940,7 +940,8 @@ Public Module awinGeneralModules
                         .Erloes = vproj.Erloes
                         .earliestStartDate = vproj.earliestStartDate
                         .latestStartDate = vproj.latestStartDate
-                        .Status = vproj.Status
+                        '.Status = vproj.Status
+                        .vpStatus = vproj.vpStatus
                         .description = vproj.description
 
                         .StrategicFit = vproj.StrategicFit
@@ -1253,7 +1254,8 @@ Public Module awinGeneralModules
                             ' Inventur: erst mal auf geplant, sonst beauftragt 
                             '.Status = pStatus
                             If Not IsNothing(baseProj) Then
-                                .Status = baseProj.Status
+                                '.Status = baseProj.Status
+                                .vpStatus = baseProj.vpStatus
                                 If baseProj.name <> hproj.name Then
 
                                 End If
@@ -1723,7 +1725,8 @@ Public Module awinGeneralModules
                 .Id = vglName & "#" & importDate.ToString
 
                 .StartOffset = 0
-                .Status = formerProj.Status
+                '.Status = formerProj.Status
+                .vpStatus = formerProj.vpStatus
 
                 ' 
                 ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData von cProj übernommen werden 
@@ -3727,7 +3730,9 @@ Public Module awinGeneralModules
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
                     .Erloes = gesamtbudget
-                    .Status = ProjektStatus(PTProjektStati.beauftragt)
+                    .vpStatus = VProjectStatus(PTVPStati.ordered)
+                    'ur: 211202: 
+                    '.Status = ProjektStatus(PTProjektStati.beauftragt)
                     .description = description
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung
@@ -5184,7 +5189,9 @@ Public Module awinGeneralModules
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now, err) Then
                     baseVariantProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", "", Date.Now, err)
                     If Not IsNothing(baseVariantProj) Then
-                        baseVariantStatus = baseVariantProj.Status
+                        'ur:211202:
+                        'baseVariantStatus = baseVariantProj.Status
+                        baseVariantStatus = baseVariantProj.vpStatus
                     Else
 
                         If awinSettings.visboDebug Then
@@ -5195,7 +5202,9 @@ Public Module awinGeneralModules
 
                 End If
             Else
-                baseVariantStatus = baseVariantProj.Status
+                'ur:211202:
+                'baseVariantStatus = baseVariantProj.Status
+                baseVariantStatus = baseVariantProj.vpStatus
             End If
         End If
 

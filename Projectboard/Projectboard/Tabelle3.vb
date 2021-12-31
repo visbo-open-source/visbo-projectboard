@@ -220,11 +220,12 @@ Public Class Tabelle3
         Else
 
             Dim oldMovableStatus As Boolean = hproj.movable
-            Dim oldProjektStatus As String = hproj.Status
+            Dim oldProjektStatus As String = hproj.vpStatus
             Dim oldVariantName As String = hproj.variantName
 
             hproj.variantName = "$tmpv1"
-            hproj.Status = ProjektStatus(PTProjektStati.geplant)
+            'ur: 211202: hproj.Status = ProjektStatus(PTProjektStati.geplant)
+            hproj.vpStatus = VProjectStatus(PTVPStati.initialized)
             hproj.movable = True
 
             Dim allowedLeftDate As Date = StartofCalendar
@@ -762,7 +763,7 @@ Public Class Tabelle3
             ' jetzt wieder zurücksetzen 
 
             hproj.movable = oldMovableStatus
-            hproj.Status = oldProjektStatus
+            hproj.vpStatus = oldProjektStatus
             hproj.variantName = oldVariantName
 
 
@@ -940,11 +941,12 @@ Public Class Tabelle3
         Dim cMilestone As clsMeilenstein = Nothing
 
         Dim oldMovableStatus As Boolean = hproj.movable
-        Dim oldProjektStatus As String = hproj.Status
+        Dim oldProjektStatus As String = hproj.vpStatus
         Dim oldVariantName As String = hproj.variantName
 
         hproj.variantName = "$tmpv1"
-        hproj.Status = ProjektStatus(PTProjektStati.geplant)
+        'ur: 211202: hproj.Status = ProjektStatus(PTProjektStati.geplant)
+        hproj.vpStatus = VProjectStatus(PTVPStati.initialized)
         hproj.movable = True
 
         'Dim allowedLeftDate As Date = hproj.startDate
@@ -1159,7 +1161,7 @@ Public Class Tabelle3
         ' jetzt wieder zurücksetzen 
 
         hproj.movable = oldMovableStatus
-        hproj.Status = oldProjektStatus
+        hproj.vpStatus = oldProjektStatus
         hproj.variantName = oldVariantName
 
         appInstance.EnableEvents = True

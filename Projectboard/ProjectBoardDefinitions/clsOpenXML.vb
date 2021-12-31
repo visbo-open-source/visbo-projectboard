@@ -70,7 +70,8 @@ Public Class clsOpenXML
             Me.currency = "€"
 
             Me.projectTitle = ""
-            Me.status = .Status
+            'Me.status = .Status
+            'Me.vpStatus = .vpStatus
             Me.businessUnit = .businessUnit
 
             Me.strategicFit = .StrategicFit
@@ -161,7 +162,7 @@ Public Class clsOpenXML
             End If
 
             ' .projekttitle = Me.projekttitle
-            .Status = Me.status
+            '.Status = Me.status
             .businessUnit = Me.businessUnit
             .description = task0.description
 

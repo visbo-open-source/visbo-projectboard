@@ -2579,7 +2579,8 @@ Public Module Projekte
 
         ' Änderung 18.6 : Unterscheidung zwischen Soll-/Ist Vergleichen und Min/Max Vergleichen 
 
-        If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
+        'ur: 211202: If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
+        If hproj.vpStatus <> VProjectStatus(PTVPStati.initialized) Then
             ' Soll-Ist Vergleich
             isMinMax = False
 
@@ -3358,7 +3359,8 @@ Public Module Projekte
 
         ' Änderung 18.6 : Unterscheidung zwischen Soll-/Ist Vergleichen und Min/Max Vergleichen 
 
-        If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
+        'ur: 211202: If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
+        If hproj.vpStatus <> VProjectStatus(PTVPStati.initialized) Then
             ' Soll-Ist Vergleich
             isMinMax = False
 
@@ -13806,7 +13808,7 @@ Public Module Projekte
 
         ' wenn kein Wert angegeben ist, soll was verwendet werden?
         If status = "" Then
-            status = ProjektStatus(0)
+            status = VProjectStatus(PTVPStati.initialized)
         End If
 
         Try
@@ -13844,7 +13846,8 @@ Public Module Projekte
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
                 ' jedes Projekt zu Beginn als beauftragtes Projekt importieren
-                .Status = status
+                'ur: 211203: .Status = status
+                ' ur: 211203: .vpStatus = status
                 .StrategicFit = sfit
                 .Risiko = risk
 
@@ -13944,7 +13947,6 @@ Public Module Projekte
                                            ByVal profitUSerAskedFor As Double) As clsProjekt
 
         Dim newprojekt As New clsProjekt
-        Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
         Dim zeile As Integer = tafelZeile
         Dim spalte As Integer = getColumnOfDate(startdate)
         Dim heute As Date = Now
@@ -13992,7 +13994,8 @@ Public Module Projekte
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
                 ' jedes Projekt zu Beginn als beauftragtes Projekt importieren
-                .Status = ProjektStatus(PTProjektStati.geplant)
+                'ur: 211202: .Status = ProjektStatus(PTProjektStati.geplant)
+                'ur: 211203: .vpStatus = VProjectStatus(PTVPStati.initialized) wird in new clsProjekt erledigt
                 .StrategicFit = sfit
                 .Risiko = risk
 
@@ -15192,132 +15195,132 @@ Public Module Projekte
     ''' <param name="type">0: Accept Changes; 1: Beauftragung </param>
     ''' <remarks></remarks>
     Public Sub changeProjectStatus(ByVal pname As String, ByVal type As Integer)
-        Dim hproj As clsProjekt
-        Dim zeile As Integer
-        Dim errmsg As String
+        'Dim hproj As clsProjekt
+        'Dim zeile As Integer
+        'Dim errmsg As String
 
         ' prüfen, ob es in der ShowProjektListe ist ...
         If ShowProjekte.contains(pname) Then
+            ' ur: 211202: alles auf vpStatus umgestellt
+            'Try
+            '    hproj = ShowProjekte.getProject(pname)
+            '    ' Sicherstellen, dass der Status Wechsel nur bei der Basis-Variante vorgenommen werden kann ...
+            '    If hproj.variantName <> ptVariantFixNames.pfv.ToString And hproj.projectType = ptPRPFType.project Then
+            '        If awinSettings.englishLanguage Then
+            '            errmsg = hproj.getShapeText & " : status change only possible for Baseline!"
+            '        Else
+            '            errmsg = hproj.getShapeText & " : Status Wechsel ist nur für die Vorgabe möglich!"
+            '        End If
+            '        Throw New ArgumentException(errmsg)
+            '    End If
 
-            Try
-                hproj = ShowProjekte.getProject(pname)
-                ' Sicherstellen, dass der Status Wechsel nur bei der Basis-Variante vorgenommen werden kann ...
-                If hproj.variantName <> ptVariantFixNames.pfv.ToString And hproj.projectType = ptPRPFType.project Then
-                    If awinSettings.englishLanguage Then
-                        errmsg = hproj.getShapeText & " : status change only possible for Baseline!"
-                    Else
-                        errmsg = hproj.getShapeText & " : Status Wechsel ist nur für die Vorgabe möglich!"
-                    End If
-                    Throw New ArgumentException(errmsg)
-                End If
+            '    ' jetzt soll auch der Marker zurückgesetzt werden ..
+            '    hproj.marker = False
 
-                ' jetzt soll auch der Marker zurückgesetzt werden ..
-                hproj.marker = False
+            '    With hproj
+            '        Dim oldStatus As String = hproj.Status
 
-                With hproj
-                    Dim oldStatus As String = hproj.Status
+            '        Select Case type
+            '            Case PTProjektStati.geplant
+            '                ' old darf beauftragt, aber noch nicht begonnen sein
+            '                ' changerequest aber noch nicht begonnen 
+            '                If oldStatus = ProjektStatus(PTProjektStati.geplant) Or oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+            '                    ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) And
+            '                     hproj.startDate > Date.Now)) Then
+            '                    hproj.Status = ProjektStatus(type)
+            '                Else
 
-                    Select Case type
-                        Case PTProjektStati.geplant
-                            ' old darf beauftragt, aber noch nicht begonnen sein
-                            ' changerequest aber noch nicht begonnen 
-                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
-                                ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) And
-                                 hproj.startDate > Date.Now)) Then
-                                hproj.Status = ProjektStatus(type)
-                            Else
+            '                    If awinSettings.englishLanguage Then
+            '                        errmsg = hproj.name & " : status change not possible"
+            '                    Else
+            '                        errmsg = hproj.name & " : Status Wechsel nicht möglich"
+            '                    End If
+            '                    Throw New ArgumentException(errmsg)
+            '                End If
 
-                                If awinSettings.englishLanguage Then
-                                    errmsg = hproj.name & " : status change not possible"
-                                Else
-                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
-                                End If
-                                Throw New ArgumentException(errmsg)
-                            End If
+            '            Case PTProjektStati.beauftragt
+            '                ' old darf nicht abgebrochen oder abgeschlossen sein 
+            '                If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
+            '                    oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
+            '                     oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
+            '                     oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+            '                     oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Then
+            '                    hproj.Status = ProjektStatus(type)
+            '                Else
+            '                    If awinSettings.englishLanguage Then
+            '                        errmsg = hproj.name & " : status change not possible"
+            '                    Else
+            '                        errmsg = hproj.name & " : Status Wechsel nicht möglich"
+            '                    End If
+            '                    Throw New ArgumentException(errmsg)
+            '                End If
 
-                        Case PTProjektStati.beauftragt
-                            ' old darf nicht abgebrochen oder abgeschlossen sein 
-                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
-                                oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Then
-                                hproj.Status = ProjektStatus(type)
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    errmsg = hproj.name & " : status change not possible"
-                                Else
-                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
-                                End If
-                                Throw New ArgumentException(errmsg)
-                            End If
+            '            Case PTProjektStati.ChangeRequest
 
-                        Case PTProjektStati.ChangeRequest
+            '                If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
+            '                    oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
+            '                     oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+            '                     oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
+            '                     oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
+            '                        oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
+            '                    ' tk ChangeRequest soll es bis auf weiteres nicht mehr geben ... 
+            '                    ' das muss noch überdacht werden 
+            '                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+            '                    'hproj.Status = ProjektStatus(type)
+            '                Else
+            '                    If awinSettings.englishLanguage Then
+            '                        errmsg = hproj.name & " : status change not possible"
+            '                    Else
+            '                        errmsg = hproj.name & " : Status Wechsel nicht möglich"
+            '                    End If
+            '                    Throw New ArgumentException(errmsg)
+            '                End If
 
-                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
-                                oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
-                                    oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
-                                ' tk ChangeRequest soll es bis auf weiteres nicht mehr geben ... 
-                                ' das muss noch überdacht werden 
-                                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
-                                'hproj.Status = ProjektStatus(type)
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    errmsg = hproj.name & " : status change not possible"
-                                Else
-                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
-                                End If
-                                Throw New ArgumentException(errmsg)
-                            End If
+            '            Case PTProjektStati.abgebrochen
 
-                        Case PTProjektStati.abgebrochen
+            '                If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
+            '                        oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+            '                        oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
+            '                        oldStatus = ProjektStatus(PTProjektStati.ChangeRequest)) And hproj.startDate < Date.Now) Or
+            '                        oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
+            '                    hproj.Status = ProjektStatus(type)
+            '                Else
+            '                    If awinSettings.englishLanguage Then
+            '                        errmsg = hproj.name & " : status change not possible"
+            '                    Else
+            '                        errmsg = hproj.name & " : Status Wechsel nicht möglich"
+            '                    End If
+            '                    Throw New ArgumentException(errmsg)
+            '                End If
 
-                            If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
-                                    oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
-                                    oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
-                                    oldStatus = ProjektStatus(PTProjektStati.ChangeRequest)) And hproj.startDate < Date.Now) Or
-                                    oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
-                                hproj.Status = ProjektStatus(type)
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    errmsg = hproj.name & " : status change not possible"
-                                Else
-                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
-                                End If
-                                Throw New ArgumentException(errmsg)
-                            End If
+            '            Case PTProjektStati.abgeschlossen
 
-                        Case PTProjektStati.abgeschlossen
+            '                If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.beauftragt)) And hproj.endeDate < Date.Now) Then
+            '                    hproj.Status = ProjektStatus(type)
+            '                Else
+            '                    If awinSettings.englishLanguage Then
+            '                        errmsg = hproj.name & " : status change not possible"
+            '                    Else
+            '                        errmsg = hproj.name & " : Status Wechsel nicht möglich"
+            '                    End If
+            '                    Throw New ArgumentException(errmsg)
+            '                End If
+            '        End Select
+            '        zeile = .tfZeile
 
-                            If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.beauftragt)) And hproj.endeDate < Date.Now) Then
-                                hproj.Status = ProjektStatus(type)
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    errmsg = hproj.name & " : status change not possible"
-                                Else
-                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
-                                End If
-                                Throw New ArgumentException(errmsg)
-                            End If
-                    End Select
-                    zeile = .tfZeile
+            '        .Status = ProjektStatus(type)
+            '        .timeStamp = Date.Now
+            '    End With
 
-                    .Status = ProjektStatus(type)
-                    .timeStamp = Date.Now
-                End With
+            '    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+            '    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+            '    Dim tmpCollection As New Collection
+            '    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
-
-            Catch ex As Exception
-                Call MsgBox("Fehler in Beauftragung '" & pname & "' , Modul: changeProjectStatus" & vbCrLf & ex.Message)
-                Exit Sub
-            End Try
+            'Catch ex As Exception
+            '    Call MsgBox("Fehler in Beauftragung '" & pname & "' , Modul: changeProjectStatus" & vbCrLf & ex.Message)
+            '    Exit Sub
+            'End Try
 
 
         Else
@@ -17135,7 +17138,8 @@ Public Module Projekte
                 With hproj
 
                     ' Änderung THOMAS Start 
-                    If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                    'ur: 211202: If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                    If .vpStatus = VProjectStatus(PTVPStati.initialized) Then
                         .startDate = kvp.Value.start
                     ElseIf .startDate <> kvp.Value.start Then
                         ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
@@ -18100,7 +18104,9 @@ Public Module Projekte
 
             If elemID.Length = 0 Then
                 ' es soll das Projekt betrachtet werden 
-                If .Status = ProjektStatus(PTProjektStati.geplant) Then
+
+                'ur: 211202: If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                If .vpStatus = VProjectStatus(PTVPStati.initialized) Then
 
                     ' nur dann darf das Projekt noch verschoben werden ...
 
@@ -18125,7 +18131,8 @@ Public Module Projekte
                     If IsNothing(cMilestone) Then
                         relevant = False
                     Else
-                        If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                        'ur: 211202: If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                        If .vpStatus = VProjectStatus(PTVPStati.initialized) Then
 
                             bereichsAnfang = getColumnOfDate(cMilestone.getDate.AddDays(-15))
                             bereichsEnde = getColumnOfDate(cMilestone.getDate.AddDays(15))
@@ -18141,7 +18148,8 @@ Public Module Projekte
                     If IsNothing(cphase) Then
                         relevant = False
                     Else
-                        If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                        'ur: 211202: If .Status = ProjektStatus(PTProjektStati.geplant) Then
+                        If .vpStatus = VProjectStatus(PTVPStati.initialized) Then
 
                             bereichsAnfang = getColumnOfDate(cphase.getStartDate.AddDays(cphase.earliestStart))
                             bereichsEnde = getColumnOfDate(cphase.getEndDate.AddDays(cphase.latestStart))
@@ -18960,7 +18968,8 @@ Public Module Projekte
                 pcolor = .farbe
                 schriftfarbe = .Schriftfarbe
                 schriftgroesse = .Schrift
-                status = .Status
+                'status = .Status
+                status = .vpStatus
                 pMarge = .ProjectMarge
                 isSummaryProject = (.projectType = ptPRPFType.portfolio)
             End With
@@ -21186,7 +21195,7 @@ Public Module Projekte
 
                 schriftFarbe = CLng(.Schriftfarbe)
                 schriftGroesse = .Schrift
-                status = .Status
+                'ur: 211203:status = .Status
                 vpStatus = .vpStatus
                 pMarge = .ProjectMarge
                 pname = .name
@@ -21232,8 +21241,10 @@ Public Module Projekte
                             .Weight = 4.0
                         End If
 
-                        If status = ProjektStatus(PTProjektStati.geplant) Or
-                            status = ProjektStatus(PTProjektStati.abgebrochen) Then
+                        'ur: 211202: If .Status = ProjektStatus(PTProjektStati.geplant) Or
+                        '                   status = ProjektStatus(PTProjektStati.abgebrochen) Then
+                        If status = VProjectStatus(PTVPStati.initialized) Or
+                            status = VProjectStatus(PTVPStati.stopped) Then
                             .DashStyle = core.MsoLineDashStyle.msoLineDash
                         Else
                             .DashStyle = core.MsoLineDashStyle.msoLineSolid
@@ -21258,9 +21269,12 @@ Public Module Projekte
                 Try
 
                     With .Line
-                        If status = ProjektStatus(PTProjektStati.geplant) Or
-                            vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                        If vpStatus = VProjectStatus(PTVPStati.initialized) Or
                             vpStatus = VProjectStatus(PTVPStati.proposed) Then
+                            ' ur: 211202: 
+                            'If status = ProjektStatus(PTProjektStati.geplant) Or
+                            'vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                            'vpStatus = VProjectStatus(PTVPStati.proposed) Then
 
                             If myproject.movable Then
                                 .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
@@ -21270,9 +21284,9 @@ Public Module Projekte
                                 .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
                             End If
 
-
-                        ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Or
-                            vpStatus = VProjectStatus(PTVPStati.ordered) Or
+                            ' ur:211202: 
+                            'ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Or
+                        ElseIf vpStatus = VProjectStatus(PTVPStati.ordered) Or
                             vpStatus = VProjectStatus(PTVPStati.paused) Or
                             vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
@@ -21284,24 +21298,24 @@ Public Module Projekte
                                 .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
                             End If
 
-                        ElseIf status = ProjektStatus(PTProjektStati.ChangeRequest) Then
+                            'ur: 211202: ElseIf status = ProjektStatus(PTProjektStati.ChangeRequest) Then
 
-                            If myproject.movable Then
-                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
-                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
-                            Else
-                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
-                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
-                            End If
+                            '    If myproject.movable Then
+                            '        .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                            '        .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                            '    Else
+                            '        .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
+                            '        .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
+                            '    End If
 
-                        ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Or
-                            vpStatus = VProjectStatus(PTVPStati.stopped) Then
+                            'ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Or
+                        ElseIf vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
                             .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
                             .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
 
-                        ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Or
-                            vpStatus = VProjectStatus(PTVPStati.finished) Then
+                            'ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Or
+                        ElseIf vpStatus = VProjectStatus(PTVPStati.finished) Then
 
                             .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
                             .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
@@ -21350,7 +21364,8 @@ Public Module Projekte
                 Try
 
                     If .Adjustments.Count > 0 Then
-                        If status = ProjektStatus(0) Then
+                        ' ur: 211202: If status = ProjektStatus(0) Then
+                        If status = VProjectStatus(PTVPStati.initialized) Then
                             .Adjustments.Item(1) = 0.5
                         Else
                             .Adjustments.Item(1) = 0.25
@@ -23194,9 +23209,9 @@ Public Module Projekte
                 zeile = zeile + 1
                 startZeile = zeile
 
-                Dim anzahlS As Integer = ProjektStatus.Length
-                For i = 1 To ProjektStatus.Length
-                    .cells(zeile, spalte).value = ProjektStatus(i - 1)
+                Dim anzahlS As Integer = VProjectStatus.Length
+                For i = 1 To VProjectStatus.Length
+                    .cells(zeile, spalte).value = VProjectStatus(i - 1)
                     zeile = zeile + 1
                 Next
 
@@ -24818,33 +24833,33 @@ Public Module Projekte
         End Select
 
     End Function
+    ' ur: 211202: im Rahmen von VS-1070 vpStati consolidierung
+    'Public Function getIndexBeauftragung(ByRef pHistorie As SortedList(Of Date, clsProjekt)) As Integer
 
-    Public Function getIndexBeauftragung(ByRef pHistorie As SortedList(Of Date, clsProjekt)) As Integer
+    '    Dim tmpIndex As Integer = 0
+    '    Dim abbruch As Boolean = False
 
-        Dim abbruch As Boolean = False
-        Dim tmpIndex As Integer = 0
+    '    Dim anzSnapshots = pHistorie.Count
 
-        Dim anzSnapshots = pHistorie.Count
+    '    ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
+    '    Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
+    '        If tmpIndex + 1 < anzSnapshots Then
+    '            tmpIndex = tmpIndex + 1
+    '        Else
+    '            abbruch = True
+    '        End If
+    '    Loop
 
-        ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
-        Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
-            If tmpIndex + 1 < anzSnapshots Then
-                tmpIndex = tmpIndex + 1
-            Else
-                abbruch = True
-            End If
-        Loop
+    '    If abbruch Then
+    '        ' es gibt keine Beauftragung ... 
+    '        tmpIndex = -1
+    '    Else
+    '        ' index steht jetzt auf der Beauftragung 
+    '    End If
 
-        If abbruch Then
-            ' es gibt keine Beauftragung ... 
-            tmpIndex = -1
-        Else
-            ' index steht jetzt auf der Beauftragung 
-        End If
+    '    getIndexBeauftragung = tmpIndex
 
-        getIndexBeauftragung = tmpIndex
-
-    End Function
+    'End Function
 
     Public Function getIndexPrevFreigabe(ByRef pHistorie As SortedList(Of Date, clsProjekt),
                                          ByVal currentIndex As Integer) As Integer
@@ -24856,7 +24871,7 @@ Public Module Projekte
             tmpIndex = -1
         Else
 
-            Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
+            Do While pHistorie.ElementAt(tmpIndex).Value.vpStatus <> VProjectStatus(PTVPStati.ordered) And Not abbruch
                 If tmpIndex > 0 Then
                     tmpIndex = tmpIndex - 1
                 Else
@@ -24881,7 +24896,7 @@ Public Module Projekte
             tmpIndex = -1
         Else
 
-            Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
+            Do While pHistorie.ElementAt(tmpIndex).Value.vpStatus <> VProjectStatus(PTVPStati.ordered) And Not abbruch
                 If tmpIndex < pHistorie.Count - 1 Then
                     tmpIndex = tmpIndex + 1
                 Else
@@ -24916,10 +24931,15 @@ Public Module Projekte
 
         Try
             With hproj
+                'ur:211202:
+                'If .Start <= getColumnOfDate(Date.Now) And
+                '    .Start + .anzahlRasterElemente - 1 >= getColumnOfDate(Date.Now) And
+                '    .Status <> ProjektStatus(PTProjektStati.abgebrochen) And
+                '    .Status <> ProjektStatus(PTProjektStati.abgeschlossen) Then
                 If .Start <= getColumnOfDate(Date.Now) And
                     .Start + .anzahlRasterElemente - 1 >= getColumnOfDate(Date.Now) And
-                    .Status <> ProjektStatus(PTProjektStati.abgebrochen) And
-                    .Status <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+                    .vpStatus <> VProjectStatus(PTVPStati.stopped) And
+                    .vpStatus <> VProjectStatus(PTVPStati.finished) Then
                     erg = True
                 End If
             End With
