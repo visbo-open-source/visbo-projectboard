@@ -2246,20 +2246,23 @@ Imports System.Web
                         Dim newvName As String = ""
 
                         Try
-                            Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.Status)
+                            Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.vpStatus)
                             ' Plausibilitätsprüfung, es dürfen keine abgebrochenen / abgeschlossenen Projekte überschrieben werden   
 
-                            If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And
-                                oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+                            'ur: 211202: If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And
+                            '    oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+                            If oldStatus <> VProjectStatus(PTVPStati.stopped) And
+                                oldStatus <> VProjectStatus(PTVPStati.finished) Then
 
                                 ' nur dann darf die Variante übernommen werden ... 
-                                If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
+                                ' ur: 211202: If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
+                                If oldStatus = VProjectStatus(PTVPStati.ordered) Then
                                     ' tk 23.4.19 bis auf weiteres soll das ohne ChangeRequest auskommen 
                                     ' muss noch überdacht werden 
                                     'hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
-                                    hproj.Status = oldStatus
+                                    hproj.vpStatus = oldStatus
                                 Else
-                                    hproj.Status = oldStatus
+                                    hproj.vpStatus = oldStatus
                                 End If
 
                                 ' die aktuelle Variante aus der AlleProjekte rausnehmen 
@@ -3658,6 +3661,12 @@ Imports System.Web
                     tmpLabel = "Aktualisiere Projekte aus Liste (konfiguriert)"
                 Else
                     tmpLabel = "Update Projects from list (customized)"
+                End If
+            Case "PT4G1B20" 'CostAssertionSheet 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "CostAssertion (konfiguriert)"
+                Else
+                    tmpLabel = "CostAssertion (customized)"
                 End If
 
             Case "PT4G2" ' EXPORT
@@ -5585,9 +5594,12 @@ Imports System.Web
                             Try
                                 Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
-                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or
-                                    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And
-                                     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
+                                'If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or
+                                '    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And
+                                '     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
+                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                    (hproj.variantName <> "" And Not hproj.vpStatus = VProjectStatus(PTVPStati.stopped) And
+                                     Not hproj.vpStatus = VProjectStatus(PTVPStati.finished)) Then
 
                                     If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
 
@@ -7699,9 +7711,10 @@ Imports System.Web
                                     ' es wird pro Projekt eine Variante erzeugt 
 
                                     ' wenn es noch nicht beauftragt ist ... dann beauftragen 
-                                    If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    'ur:211202: If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
                                         Try
-                                            hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                            hproj.vpStatus = VProjectStatus(PTVPStati.ordered)
                                         Catch ex As Exception
 
                                         End Try
@@ -8884,6 +8897,7 @@ Imports System.Web
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
 
         Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectCostAssertConfig As New SortedList(Of String, clsConfigProjectsImport)
         Dim projectsFile As String = ""
         Dim lastrow As Integer = 0
         Dim outputString As String = ""
@@ -8893,13 +8907,14 @@ Imports System.Web
 
         Dim outputLine As String = ""
 
-        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
         Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
         Dim configProposalImport As String = awinPath & configfilesOrdner & "configCalcTemplateImport.xlsx"
+        Dim configCostAssertionImport As String = awinPath & configfilesOrdner & "configCostAssertionImport.xlsx"
 
         ' check here which Configuration file is given:
         ' Instart: a lot of Files or 
@@ -8907,9 +8922,10 @@ Imports System.Web
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
         Dim telairImportConfigOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+        Dim telairCostAssertionImportConfigOK As Boolean = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
         Dim instartImportConfigOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
-        If telairImportConfigOK Or instartImportConfigOK Then
+        If telairImportConfigOK Or instartImportConfigOK Or telairCostAssertionImportConfigOK Then
 
             ' one of the two/several ImPortConfigFiles probably does not exist, that is why it should be reset 
             outPutCollection.Clear()
@@ -8947,16 +8963,16 @@ Imports System.Web
                 ImportProjekte.Clear(False)
                 ImportBaselineProjekte.Clear(False)
 
-
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
 
-                'Call logfileOpen()
-
+                Dim importOK As Boolean = True
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                If telairImportConfigOK Then
+                If telairImportConfigOK And projectsFile = projectConfig("DateiName").ProjectsFile Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                ElseIf telairCostAssertionImportConfigOK Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
+                    If listofArchivAllg.Count = 0 Then importOK = False
                 ElseIf instartImportConfigOK Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
                 End If
@@ -8969,21 +8985,25 @@ Imports System.Web
                 'Call logfileSchreiben(outPutCollection)
                 ''Call logfileSchliessen()
 
+                If importOK Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
 
-                ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
-                Try
-                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
-                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Else
+                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        End If
 
-                Catch ex As Exception
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("Error at Import: " & vbLf & ex.Message)
-                    Else
-                        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
-                    End If
+                    End Try
+                Else
 
-                End Try
+                End If
+
 
                 '' Cursor auf Default setzen
                 Cursor.Current = Cursors.Default

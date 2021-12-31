@@ -239,7 +239,8 @@ Public Class clsEventsPrcCharts
 
                                 With kvp.Value
 
-                                    If .StartOffset <> 0 And .Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    'ur: 211202: If .StartOffset <> 0 And .Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    If .StartOffset <> 0 And .vpStatus = VProjectStatus(PTVPStati.initialized) Then
                                         .startDate = .startDate.AddMonths(.StartOffset)
 
                                         If .StartOffset < 0 Then

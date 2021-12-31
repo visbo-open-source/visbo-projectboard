@@ -7,6 +7,7 @@ Public Class clsCommandBarEvents
     ' appInstance.OnKey("{clear}", MsgBox("delelte gedrückt")) eventuell für bestimmte Tastenkombi Entf
 
 
+
     Private Sub cmdbars_OnUpdate() Handles cmdbars.OnUpdate
         'Dim ws As Excel.Worksheet = appInstance.ActiveSheet
 
@@ -243,7 +244,8 @@ Public Class clsCommandBarEvents
                                 '.dauer = laenge
                                 .tfZeile = zeile + anzahlZeilen - 1
                                 '.tfSpalte = spalte
-                                .Status = ProjektStatus(PTProjektStati.geplant)
+                                'ur: 211202: .Status = ProjektStatus(PTProjektStati.geplant)
+                                .vpStatus = VProjectStatus(PTVPStati.initialized)
                                 ' Änderung 8.11 : ein neues Projekt sollte in der Zukunft angelegt werden, wenn oldproj.startdate in der Vergangenheit liegt - 
                                 ' ansonsten ein Termin ein Monat nach oldproj ..
 
@@ -385,10 +387,12 @@ Public Class clsCommandBarEvents
 
                                 projectboardShapes.sync(shpelement, selCollection)
 
-                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or (hproj.variantName <> "" And hproj.movable) Then
+                                'ur: 211202: If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or (hproj.variantName <> "" And hproj.movable) Then
+                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or (hproj.variantName <> "" And hproj.movable) Then
                                     ' Charts müssen aktualisiert werden 
                                     updateKennung = 2
                                     ChartsNeedUpdate = True
+
 
                                 Else
                                     ' Charts müssen nicht aktualisiert werden, da beauftragte Projekte nicht verändert werden können

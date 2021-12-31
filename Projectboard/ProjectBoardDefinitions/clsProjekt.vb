@@ -137,9 +137,12 @@ Public Class clsProjekt
         End Get
         Set(value As Boolean)
             If value = True Then
-                If _Status = ProjektStatus(PTProjektStati.geplant) Or
-                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
-                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
+                'If _Status = ProjektStatus(PTProjektStati.geplant) Or
+                '_Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
+                '(_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
+                'value = False Then
+                If _vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Or
                 value = False Then
                     _movable = value
 
@@ -548,7 +551,11 @@ Public Class clsProjekt
                                 ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
                                 If Me.Erloes = vProj.Erloes Then
 
-                                    If Me.Status = vProj.Status And
+                                    'If Me.Status = vProj.Status And
+                                    '        Me.vpStatus = vProj.vpStatus And
+                                    '    Me.VorlagenName = vProj.VorlagenName And
+                                    '    Me.leadPerson = vProj.leadPerson Then
+                                    If Me.vpStatus = vProj.vpStatus And
                                         Me.VorlagenName = vProj.VorlagenName And
                                         Me.leadPerson = vProj.leadPerson Then
 
@@ -2259,8 +2266,8 @@ Public Class clsProjekt
 
             ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
             ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-            If (differenzInTagen <> 0 And Me.movable) And
-                (_Status = ProjektStatus(0) Or _variantName <> "") Then
+            If (differenzInTagen <> 0 And Me.movable) And (_vpStatus = VProjectStatus(PTVPStati.initialized) Or _variantName <> "") Then
+                'ur:211202: If (differenzInTagen <> 0 And Me.movable) And  (_Status = ProjektStatus(0) Or _variantName <> "") Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
@@ -2273,7 +2280,8 @@ Public Class clsProjekt
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
 
 
-            ElseIf _Status <> ProjektStatus(0) And _variantName = "" And Not Me.movable Then
+                'ur: 211202ElseIf _Status <> ProjektStatus(0) And _variantName = "" And Not Me.movable Then
+            ElseIf _vpStatus <> vprojectStatus(PTVPStati.initialized) And _variantName = "" And Not Me.movable Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
 
 
@@ -2974,8 +2982,8 @@ Public Class clsProjekt
             .earliestStart = _earliestStart
             .latestStart = _latestStart
             .leadPerson = _leadPerson
-            .Status = _Status
-            .vpStatus = Me.vpStatus
+            '.Status = _Status
+            .vpStatus = _vpStatus
             .extendedView = Me.extendedView
             .actualDataUntil = Me.actualDataUntil
             .kundenNummer = Me.kundenNummer
@@ -3390,7 +3398,8 @@ Public Class clsProjekt
                     .earliestStart = _earliestStart
                     .latestStart = _latestStart
                     .leadPerson = _leadPerson
-                    .Status = _Status
+                    'ur:211202: .Status = _Status
+                    .vpStatus = _vpStatus
                     .extendedView = Me.extendedView
                     .actualDataUntil = Me.actualDataUntil
                     .kundenNummer = Me.kundenNummer
@@ -3788,28 +3797,29 @@ Public Class clsProjekt
 
     End Function
 
-    ''' <summary>
-    ''' setzt den Varianten-Namen entsprechend der customUSerRole
-    ''' wird üblicherweise vor dem Speichern aufgerufen:
-    ''' - ein Portfolio Manager schreibt nur mit Varianten-Name "pfv" oder einem anderen Varianten-Namen
-    ''' - ein Resource Manager schreibt nur mit Varianten-NAme "" oder einem anderen Varianten-Namen 
-    ''' </summary>
-    Public Sub setVariantNameAccordingUserRole()
+    '''' <summary>
+    '''' setzt den Varianten-Namen entsprechend der customUSerRole
+    '''' wird üblicherweise vor dem Speichern aufgerufen:
+    '''' - ein Portfolio Manager schreibt nur mit Varianten-Name "pfv" oder einem anderen Varianten-Namen
+    '''' - ein Resource Manager schreibt nur mit Varianten-NAme "" oder einem anderen Varianten-Namen 
+    '''' </summary>
+    'Public Sub setVariantNameAccordingUserRole()
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-            If variantName = "" Then
-                variantName = getDefaultVariantNameAccordingUserRole()
-                Status = ProjektStatus(PTProjektStati.beauftragt)          ' ur: 2.11.2019: Projekt das Vorgaben bekommt ist autom. beauftragt
-            End If
-        Else
-            ' tk 7.7 bei allen anderen darf der Varianten-Name nicht pfv sein 
-            'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-            If variantName = ptVariantFixNames.pfv.ToString Then
-                variantName = getDefaultVariantNameAccordingUserRole()
-            End If
-        End If
+    '    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+    '        If variantName = "" Then
+    '            variantName = getDefaultVariantNameAccordingUserRole()
+    '            'ur: 211202: Status = ProjektStatus(PTProjektStati.beauftragt)          ' ur: 2.11.2019: Projekt das Vorgaben bekommt ist autom. beauftragt
+    '            'ur: 211203: vpStatus = VProjectStatus(PTVPStati.ordered)               ' hier kann sein, dass der Ordered nicht übernommen wird - testen ???
+    '        End If
+    '    Else
+    '        ' tk 7.7 bei allen anderen darf der Varianten-Name nicht pfv sein 
+    '        'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+    '        If variantName = ptVariantFixNames.pfv.ToString Then
+    '            variantName = getDefaultVariantNameAccordingUserRole()
+    '        End If
+    '    End If
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' checks whether or not project has roles with resource needs where role has already left the company or is not yet part of the company
@@ -4046,12 +4056,10 @@ Public Class clsProjekt
             '.earliestStart = _earliestStart
             '.latestStart = _latestStart
             .leadPerson = Me.leadPerson
-            .Status = Me.Status
+            ' ur: 211203: .Status = Me.Status
+            .vpStatus = Me.vpStatus
             .extendedView = Me.extendedView
             .movable = Me.movable
-
-
-
 
         End With
 
@@ -6309,31 +6317,31 @@ Public Class clsProjekt
 
     End Property
 
-    Public Property Status() As String
-        Get
-            Status = _Status
-        End Get
-        Set(value As String)
-            If value = ProjektStatus(0) Or
-                value = ProjektStatus(1) Or
-                value = ProjektStatus(2) Or
-                value = ProjektStatus(3) Or
-                value = ProjektStatus(4) Or
-                value = ProjektStatus(5) Or
-                value = ProjektStatus(6) Then
+    'Public Property Status() As String
+    '    Get
+    '        Status = _Status
+    '    End Get
+    '    Set(value As String)
+    '        If value = ProjektStatus(0) Or
+    '            value = ProjektStatus(1) Or
+    '            value = ProjektStatus(2) Or
+    '            value = ProjektStatus(3) Or
+    '            value = ProjektStatus(4) Or
+    '            value = ProjektStatus(5) Or
+    '            value = ProjektStatus(6) Then
 
-                ' bis auf weiteres soll es keinen ChangeRequest mehr geben ..
-                ' muss erst noch weiter spezifiziert werden 
-                If value = ProjektStatus(PTProjektStati.ChangeRequest) Then
-                    value = ProjektStatus(PTProjektStati.beauftragt)
-                End If
+    '            ' bis auf weiteres soll es keinen ChangeRequest mehr geben ..
+    '            ' muss erst noch weiter spezifiziert werden 
+    '            If value = ProjektStatus(PTProjektStati.ChangeRequest) Then
+    '                value = ProjektStatus(PTProjektStati.beauftragt)
+    '            End If
 
-                _Status = value
-            Else
-                Call MsgBox("Wert als Status nicht zugelassen: " & value)
-            End If
-        End Set
-    End Property
+    '            _Status = value
+    '        Else
+    '            Call MsgBox("Wert als Status nicht zugelassen: " & value)
+    '        End If
+    '    End Set
+    'End Property
 
 
     Public Property vpStatus() As String
@@ -6344,18 +6352,19 @@ Public Class clsProjekt
 
             _vpStatus = value
 
-            'If IsNothing(value) Or
-            '    value = vpStatus(0) Or
-            '    value = vpStatus(1) Or
-            '    value = vpStatus(2) Or
-            '    value = vpStatus(4) Or
-            '    value = vpStatus(5) Then
+            If IsNothing(value) Or
+                value = VProjectStatus(PTVPStati.initialized) Or
+                value = VProjectStatus(PTVPStati.proposed) Or
+                value = VProjectStatus(PTVPStati.ordered) Or
+                value = VProjectStatus(PTVPStati.paused) Or
+                value = VProjectStatus(PTVPStati.finished) Or
+                value = VProjectStatus(PTVPStati.stopped) Then
 
-            '    _vpStatus = value
-            '    _Status = value
-            'Else
-            '    Call MsgBox("Wert als Status nicht zugelassen: " & value)
-            'End If
+                _vpStatus = value
+                '  _Status = value
+            Else
+                Call MsgBox("Wert als Status nicht zugelassen: " & value)
+            End If
         End Set
     End Property
 
@@ -7950,7 +7959,8 @@ Public Class clsProjekt
         _startDate = NullDatum
         _earliestStart = 0
         _latestStart = 0
-        _Status = ProjektStatus(PTProjektStati.geplant)
+        'ur: 211202: _Status = ProjektStatus(PTProjektStati.geplant)
+        _vpStatus = VProjectStatus(PTVPStati.initialized)
         _shpUID = ""
         _timeStamp = Date.Now
         _projectType = ptPRPFType.project
@@ -8017,7 +8027,8 @@ Public Class clsProjekt
         _earliestStartDate = _startDate.AddMonths(_earliestStart)
         _latestStartDate = _startDate.AddMonths(_latestStart)
 
-        _Status = ProjektStatus(PTProjektStati.geplant)
+        'ur: 211202: _Status = ProjektStatus(PTProjektStati.geplant)
+        _vpStatus = VProjectStatus(PTVPStati.initialized)
         _shpUID = ""
         _timeStamp = Date.Now
 
@@ -8058,7 +8069,8 @@ Public Class clsProjekt
         _earliestStartDate = _startDate.AddMonths(_earliestStart)
         _latestStartDate = _startDate.AddMonths(_latestStart)
 
-        _Status = ProjektStatus(PTProjektStati.geplant)
+        'ur: 211202: _Status = ProjektStatus(PTProjektStati.geplant)
+        _vpStatus = VProjectStatus(PTVPStati.initialized)
         _shpUID = ""
         _timeStamp = Date.Now
         _projectType = ptPRPFType.project
@@ -8097,7 +8109,8 @@ Public Class clsProjekt
         _earliestStart = CInt(DateDiff(DateInterval.Month, startDate, earliestStartdate))
         _latestStart = CInt(DateDiff(DateInterval.Month, startDate, latestStartdate))
 
-        _Status = ProjektStatus(PTProjektStati.geplant)
+        'ur: 211202: _Status = ProjektStatus(PTProjektStati.geplant)
+        _vpStatus = VProjectStatus(PTVPStati.initialized)
         _timeStamp = Date.Now
 
         _projectType = ptPRPFType.project

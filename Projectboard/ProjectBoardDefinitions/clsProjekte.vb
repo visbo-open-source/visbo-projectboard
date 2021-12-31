@@ -2441,7 +2441,7 @@ Public Class clsProjekte
                     ' wenn onlyIntern gesucht wird, dann werden nur die Rollen betrachtet, die interne sind 
                     If Not onlyIntern Or Not curRole.isExternRole Then
                         ' in kvp.value steht jetzt der Prozentsatz, mit dem die Kapa der Rolle berücksichtig werden soll 
-                        For i = showRangeLeft To showRangeRight
+                        For i = showRangeLeft To Math.Min(showRangeRight, 240)
 
                             'tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
                             tmpValues(i - showRangeLeft) = curRole.kapazitaet(i)

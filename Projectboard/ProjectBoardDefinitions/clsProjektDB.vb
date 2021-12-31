@@ -117,7 +117,7 @@ Public Class clsProjektDB
             Me.latestStartDate = .latestStartDate.ToUniversalTime
             Me.earliestStart = .earliestStart
             Me.latestStart = .latestStart
-            Me.status = .Status
+            'Me.status = .vpStatus
             Me.ampelStatus = .ampelStatus
             Me.ampelErlaeuterung = .ampelErlaeuterung
             Me.farbe = .farbe
@@ -214,8 +214,8 @@ Public Class clsProjektDB
             .latestStartDate = Me.latestStartDate.ToLocalTime
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
-            .Status = Me.status
-
+            '.Status = Me.status
+            '.vpStatus = Me.vpstatus
             '.farbe = Me.farbe
             .Schrift = Me.Schrift
 

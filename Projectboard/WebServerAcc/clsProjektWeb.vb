@@ -140,7 +140,7 @@ Public Class clsProjektWeb
             Me.latestStartDate = .latestStartDate.ToUniversalTime
             Me.earliestStart = .earliestStart
             Me.latestStart = .latestStart
-            Me.status = .Status
+            'ur: 210203: Me.status = .Status        ' wird nicht mehr an die DB weitergegeben
             ' ur: 20210915 neues Property übernommen aus VP kann in Projectboard nicht geändert werden
             Me.vpStatus = .vpStatus
             Me.ampelStatus = .ampelStatus
@@ -293,7 +293,7 @@ Public Class clsProjektWeb
             .latestStartDate = Me.latestStartDate.ToLocalTime
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
-            .Status = Me.status
+            '.Status = Me.status
 
             '.farbe = Me.farbe
             .Schrift = Me.Schrift

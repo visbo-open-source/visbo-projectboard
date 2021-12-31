@@ -3034,7 +3034,7 @@ Module creationModule
 
                         Try
                             .Line.ForeColor.RGB = hproj.farbe
-                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
                                 .Line.DashStyle = MsoLineDashStyle.msoLineDash
                             Else
                                 .Line.DashStyle = MsoLineDashStyle.msoLineSolid

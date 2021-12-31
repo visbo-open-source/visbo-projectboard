@@ -24,7 +24,7 @@ Public Class clsProjektWebShort
         _Erloes = 0
         _startDate = Date.MinValue
         _endDate = Date.MaxValue
-        _status = ProjektStatus(0)
+        'ur: 211202: _status = ProjektStatus(0)
         _vpStatus = ""
         _variantName = ""
         _ampelStatus = ""

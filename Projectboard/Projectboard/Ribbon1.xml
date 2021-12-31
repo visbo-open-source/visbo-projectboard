@@ -114,6 +114,7 @@
                 <!--<button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />-->
                 <!--label="Import JIRA Projekte (Excel-Ausleitung)"-->
                 <button id="PT4G1B10" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportJIRAProjects" supertip ="es können eine oder mehrere Jira-Projekte (EXcel-Ausleitung) gemäß Konfiguration importiert werden;" />
+                <button id="PT4G1B20" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportProjectsWithConfig" supertip ="neue Projekte können auf Basis von einer oder mehreren Excel-Dateien aus dem Folder 'Import\projects with config' gemäss vorhandener Konfigurationsdatei importiert werden" />
               </menu>
               <!--<menuSeparator id="menuSeparator1"/>-->
               <!--label="Projekte (Batch)"-->
