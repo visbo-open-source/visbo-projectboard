@@ -89,9 +89,13 @@ Public Class frmProjPortfolioAdmin
     Private Sub frmDefineEditPortfolio_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
 
-        frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
-        'projektHistorien.clear()
+        Try
+            frmCoord(PTfrm.loadC, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.loadC, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+
 
 
         If aKtionskennung = PTTvActions.chgInSession Then
@@ -685,13 +689,8 @@ Public Class frmProjPortfolioAdmin
         Me.Cursor = Cursors.Default
         lastIndexChecked = -1
 
-        If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
-            Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
-        End If
+        Call getFrmPosition(PTfrm.loadC, Top, Left)
 
-        If frmCoord(PTfrm.eingabeProj, PTpinfo.left) > 0 Then
-            Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
-        End If
 
         ' was sollen die ToolTipps zeigen ? 
         If aKtionskennung = PTTvActions.setWriteProtection Then

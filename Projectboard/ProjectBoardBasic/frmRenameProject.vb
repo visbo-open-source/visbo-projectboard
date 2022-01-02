@@ -1,4 +1,5 @@
-﻿Imports DBAccLayer
+﻿Imports System.Windows.Forms
+Imports DBAccLayer
 Imports ProjectBoardDefinitions
 
 Public Class frmRenameProject
@@ -78,7 +79,7 @@ Public Class frmRenameProject
     End Sub
 
     Private Sub frmRenameProject_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
+        Call getFrmPosition(PTfrm.other, Top, Left)
     End Sub
 
     Private Sub Cancel_Button_Click(sender As Object, e As EventArgs) Handles Cancel_Button.Click
@@ -91,5 +92,13 @@ Public Class frmRenameProject
         End If
     End Sub
 
-    
+    Private Sub frmRenameProject_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 End Class

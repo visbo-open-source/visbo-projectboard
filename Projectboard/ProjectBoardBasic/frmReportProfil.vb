@@ -2,6 +2,7 @@
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
 Imports System.ComponentModel
+Imports System.Windows.Forms
 
 Public Class frmReportProfil
 
@@ -67,6 +68,7 @@ Public Class frmReportProfil
 
     Private Sub frmReportProfil_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
+
         If Not BGworkerReportBHTC.IsBusy Then
             MyBase.Close()
         Else
@@ -78,12 +80,14 @@ Public Class frmReportProfil
                     e.Cancel = True 'Fenster wird nicht geschlossen
             End Select
         End If
-      
+
     End Sub
 
 
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         Call defineFrmButtonVisibility()
 
@@ -340,9 +344,9 @@ Public Class frmReportProfil
                         End If
 
 
-                            If listOfFiles.Count > 0 Then
-                                '  RepProfilListbox.SelectedIndex = 1
-                            End If
+                        If listOfFiles.Count > 0 Then
+                            '  RepProfilListbox.SelectedIndex = 1
+                        End If
 
                     End If
 
@@ -478,10 +482,10 @@ Public Class frmReportProfil
 
 
                     If noPhExist And noMSExist Then
-                        Dim msgTxt As String = "Achtung: Projekt '" & hproj.name & _
+                        Dim msgTxt As String = "Achtung: Projekt '" & hproj.name &
                             "' enthält die ausgewählten Phasen und Meilensteine nicht!"
                         If awinSettings.englishLanguage Then
-                            msgTxt = "Warning: Project '" & hproj.name & _
+                            msgTxt = "Warning: Project '" & hproj.name &
                             "' does not contain the selected phases nor selected milestones!"
                         End If
                         Call MsgBox(msgTxt)
@@ -637,7 +641,7 @@ Public Class frmReportProfil
                     End If
 
                 Else
-                    Dim msgTxt As String = "Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & _
+                    Dim msgTxt As String = "Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf &
                         "Es sind keine Projekte geladen !"
                     If awinSettings.englishLanguage Then
                         msgTxt = "no Report Profile or no projects selected!"
@@ -1086,11 +1090,11 @@ Public Class frmReportProfil
                 Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
 
 
-                Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
-                                                selectedPhases, selectedMilestones, _
-                                                selectedRoles, selectedCosts, _
-                                                selectedBUs, selectedTypes, True, _
-                                                True, zeilenhoehe, legendFontSize, _
+                Call createPPTSlidesFromProject(hproj, vorlagendateiname,
+                                                selectedPhases, selectedMilestones,
+                                                selectedRoles, selectedCosts,
+                                                selectedBUs, selectedTypes, True,
+                                                True, zeilenhoehe, legendFontSize,
                                                 worker, e)
 
             Else
@@ -1181,10 +1185,10 @@ Public Class frmReportProfil
                     appInstance.EnableEvents = False
                     'appInstance.ScreenUpdating = False
 
-                    Call createPPTReportFromProjects(vorlagendateiname, _
-                                                     selectedPhases, selectedMilestones, _
-                                                     selectedRoles, selectedCosts, _
-                                                     selectedBUs, selectedTypes, _
+                    Call createPPTReportFromProjects(vorlagendateiname,
+                                                     selectedPhases, selectedMilestones,
+                                                     selectedRoles, selectedCosts,
+                                                     selectedBUs, selectedTypes,
                                                      worker, e)
 
                 End If
@@ -1200,10 +1204,10 @@ Public Class frmReportProfil
                 Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
 
-                    Call createPPTSlidesFromConstellation(vorlagendateiname, _
-                                                          selectedPhases, selectedMilestones, _
-                                                          selectedRoles, selectedCosts, _
-                                                          selectedBUs, selectedTypes, True, _
+                    Call createPPTSlidesFromConstellation(vorlagendateiname,
+                                                          selectedPhases, selectedMilestones,
+                                                          selectedRoles, selectedCosts,
+                                                          selectedBUs, selectedTypes, True,
                                                           worker, e)
 
                 End If
@@ -1345,5 +1349,12 @@ Public Class frmReportProfil
 
     End Sub
 
+    Private Sub frmReportProfil_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
 
+        End Try
+    End Sub
 End Class

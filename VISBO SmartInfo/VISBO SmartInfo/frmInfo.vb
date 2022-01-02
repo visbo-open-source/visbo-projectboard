@@ -37,6 +37,13 @@ Public Class frmInfo
     Private suchString As String = ""
 
     Private Sub frmInfo_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
+
+        Try
+            frmCoord(PTfrm.phaseInfo, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.phaseInfo, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
         infoFrm = Nothing
         formIsShown = False
     End Sub
@@ -74,6 +81,8 @@ Public Class frmInfo
     End Sub
 
     Private Sub frmInfo_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.phaseInfo, Top, Left)
 
         ' sind irgendwelche Ampel-Farben gesetzt 
         Dim ix As Integer = 1

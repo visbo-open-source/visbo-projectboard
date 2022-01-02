@@ -110,6 +110,13 @@ Public Class frmAuthentication
         Dim username_sav As String = dbUsername
         Dim dbPasswort_sav As String = dbPasswort
 
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 
 
@@ -209,13 +216,7 @@ Public Class frmAuthentication
             ' führt bei Aufruf aus Powerpoint zu Fehler ...
 
 
-            If Not IsNothing(appInstance) Then
-                Me.Top = appInstance.Top + (appInstance.Height - Me.Height) / 2
-                Me.Left = appInstance.Left + (appInstance.Width - Me.Width) / 2
-            Else
-                Me.Top = 50
-                Me.Left = 50
-            End If
+            Call getFrmPosition(PTfrm.other, Top, Left)
 
 
             If awinSettings.visboServer Then

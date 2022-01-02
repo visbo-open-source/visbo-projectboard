@@ -1,4 +1,5 @@
-﻿Imports ProjectBoardDefinitions
+﻿Imports System.Windows.Forms
+Imports ProjectBoardDefinitions
 Public Class frmInfoActualDataMonth
     Public Sub MonatJahr_ValueChanged(sender As Object, e As EventArgs) Handles MonatJahr.ValueChanged
 
@@ -13,6 +14,9 @@ Public Class frmInfoActualDataMonth
     End Sub
 
     Private Sub frmInfoActualDataMonth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
         ' zugelassenen Min und Max-Werte für das Datum setzen 
         MonatJahr.MinDate = StartofCalendar
         MonatJahr.MaxDate = Date.Now.AddDays(-1 * Date.Now.Day + 1).AddMonths(1)
@@ -59,5 +63,12 @@ Public Class frmInfoActualDataMonth
 
     End Sub
 
+    Private Sub frmInfoActualDataMonth_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
 
+        End Try
+    End Sub
 End Class

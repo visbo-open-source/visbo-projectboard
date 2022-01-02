@@ -3302,6 +3302,13 @@ Imports System.Web
                     tmpLabel = "Settings"
                 End If
 
+            Case "PTMeEinst" ' Einstellungen für Editieren Ressourcen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einstellungen Ressourcen/Kosten Tabelle"
+                Else
+                    tmpLabel = "Settings Resource / Cost table"
+                End If
+
             Case "PT6G2B3" ' prozentuale Auslastungs-Werte anzeigen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Prozentuale Auslastungs-Werte anzeigen"
@@ -12350,9 +12357,6 @@ Imports System.Web
                         Call showVisboWindow(PTwindows.mptpf)
                     End If
 
-                    ' jetzt Unterauslastung
-                    ''top = top + height + 10
-                    ''Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
 
                 Catch ex As Exception
                     Call MsgBox("keine Information vorhanden")
@@ -12674,7 +12678,7 @@ Imports System.Web
     End Sub
 
     ''' <summary>
-    ''' zeigt zwei Windows an, bestehend aus der Massen-Edit Ressourcen Tabelle und der meCharts Tabelle   
+    ''' zeigt zwei Windows an, bestehend aus der Massen-Edit Ressourcen bz. Kosten  Tabelle und der meCharts Tabelle   
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
@@ -12816,7 +12820,7 @@ Imports System.Web
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.massEdit)
             .Top = 0
-            .Left = 1.0
+            .Left = 1.0 + frmCoord(PTfrm.basis, PTpinfo.left)
             '.Height = 3 / 4 * maxScreenHeight
             .Height = teilungsfaktor * maxScreenHeight
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
@@ -12825,7 +12829,7 @@ Imports System.Web
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.meChart)
             .Top = teilungsfaktor * maxScreenHeight + 1
-            .Left = 1.0
+            .Left = 1.0 + frmCoord(PTfrm.basis, PTpinfo.left)
             .Height = (1 - teilungsfaktor) * maxScreenHeight - 1
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
@@ -12935,7 +12939,13 @@ Imports System.Web
                 .vergleichsArt = PTVergleichsArt.beauftragung
                 .einheit = PTEinheiten.euro
                 .prPF = ptPRPFType.project
-                .elementTyp = ptElementTypen.roles
+                If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+                    .elementTyp = ptElementTypen.roles
+                    scInfo.einheit = PTEinheiten.personentage
+                Else
+                    .elementTyp = ptElementTypen.costs
+                    scInfo.einheit = PTEinheiten.euro
+                End If
                 .chartTyp = PTChartTypen.Balken
                 .detailID = PTprdk.KostenBalken2
             End With
@@ -12948,7 +12958,7 @@ Imports System.Web
                 comparisonTyp = PTprdk.KostenBalken2
 
                 scInfo.vergleichsArt = PTVergleichsArt.planungsstand
-                scInfo.einheit = PTEinheiten.personentage
+
                 scInfo.vergleichsDatum = awinSettings.meDateForLastPlan
                 scInfo.vglProj = lproj
                 scInfo.vergleichsTyp = PTVergleichsTyp.standVom
@@ -15213,7 +15223,19 @@ Imports System.Web
 
 
     End Sub
+    Public Sub PTMeSettings(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Dim frmVisboEinst As New frmMeRcEinstellungen
+        Dim returnValue As DialogResult
+        returnValue = frmVisboEinst.ShowDialog
+
+        enableOnUpdate = True
+
+    End Sub
 
     ''' <summary>
     ''' Einstellungen zum Visual Board von VISBO

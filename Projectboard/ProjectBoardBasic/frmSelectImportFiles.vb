@@ -5,6 +5,8 @@ Imports DBAccLayer
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
+Imports System.Windows.Forms
+
 Public Class frmSelectImportFiles
 
 
@@ -15,6 +17,9 @@ Public Class frmSelectImportFiles
     Public selImportFiles As New Collection
 
     Private Sub frmSelectImportFiles_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
         Dim dateiName As String = ""
         Dim dirname As String = ""
 
@@ -88,7 +93,7 @@ Public Class frmSelectImportFiles
             MyBase.Close()
         End Try
 
-    
+
 
 
     End Sub
@@ -440,5 +445,15 @@ Public Class frmSelectImportFiles
 
     Private Sub SelectAbbruch_Click(sender As Object, e As EventArgs) Handles SelectAbbruch.Click
         MyBase.Close()
+    End Sub
+
+    Private Sub frmSelectImportFiles_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 End Class

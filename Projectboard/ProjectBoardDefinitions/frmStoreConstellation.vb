@@ -1,4 +1,6 @@
-﻿Public Class frmStoreConstellation
+﻿Imports System.Windows.Forms
+
+Public Class frmStoreConstellation
 
 
 
@@ -26,7 +28,9 @@
     End Sub
 
     Private Sub frmStoreConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'ComboBox1.Items.Add(" ")
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
         For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
             If kvp.Key <> "Start" Then
                 ComboBox1.Items.Add(kvp.Key)
@@ -44,5 +48,14 @@
 
     Private Sub Label1_Click(sender As Object, e As EventArgs) Handles Label1.Click
 
+    End Sub
+
+    Private Sub frmStoreConstellation_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

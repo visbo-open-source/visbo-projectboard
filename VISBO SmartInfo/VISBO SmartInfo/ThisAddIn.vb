@@ -220,11 +220,24 @@ Public Class ThisAddIn
     Private Sub Application_WindowSelectionChange(Sel As Selection) Handles Application.WindowSelectionChange
         ' bitte nicht benutzen siehe Module1.vb
         Dim a As Integer = 0
+
+
     End Sub
 
     Private Sub Application_WindowActivate(Pres As Presentation, Wn As DocumentWindow) Handles Application.WindowActivate
         ' bitte nicht benutzen siehe Module1.vb
-        Dim a As Integer = 0
+        Try
+
+            If Wn.WindowState = Microsoft.Office.Interop.PowerPoint.PpWindowState.ppWindowMaximized Then
+                frmCoord(PTfrm.basis, PTpinfo.top) = Wn.Top
+                frmCoord(PTfrm.basis, PTpinfo.left) = Wn.Left
+                frmCoord(PTfrm.basis, PTpinfo.height) = Wn.Height
+                frmCoord(PTfrm.basis, PTpinfo.width) = Wn.Width
+            End If
+
+        Catch ex As Exception
+
+        End Try
     End Sub
 
     Private Sub Application_WindowDeactivate(Pres As Presentation, Wn As DocumentWindow) Handles Application.WindowDeactivate
@@ -247,7 +260,8 @@ Public Class ThisAddIn
     End Sub
 
     Private Sub ThisAddIn_BindingContextChanged(sender As Object, e As EventArgs) Handles Me.BindingContextChanged
-
+        Dim a As Integer = 0
     End Sub
+
 
 End Class

@@ -1,4 +1,5 @@
-﻿Imports ProjectBoardDefinitions
+﻿Imports System.Windows.Forms
+Imports ProjectBoardDefinitions
 Public Class frmChooseCustomUserRole
 
     Public selectedIndex As Integer = -1
@@ -14,14 +15,7 @@ Public Class frmChooseCustomUserRole
 
     Private Sub frmChooseCustomUserRole_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        If Not IsNothing(appInstance) Then
-            Me.Top = appInstance.Top + (appInstance.Height - Me.Height) / 2
-            Me.Left = appInstance.Left + (appInstance.Width - Me.Width) / 2
-        Else
-            Me.Top = 50
-            Me.Left = 50
-        End If
-
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         Call listeAufbauen()
 
@@ -74,4 +68,12 @@ Public Class frmChooseCustomUserRole
         End If
     End Sub
 
+    Private Sub frmChooseCustomUserRole_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+    End Sub
 End Class

@@ -1,10 +1,13 @@
 ﻿Imports ProjectBoardDefinitions
 Imports DBAccLayer
+Imports System.Windows.Forms
 
 Public Class frmSelectVariant
     Friend pName As String = ""
     Friend vName As String = ""
     Private Sub frmSelectVariant_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.createVariant, Top, Left)
 
         Dim err As New clsErrorCodeMsg
 
@@ -95,5 +98,14 @@ Public Class frmSelectVariant
         Else
             Call MsgBox("wird bereits angezeigt ...")
         End If
+    End Sub
+
+    Private Sub frmSelectVariant_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.createVariant, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.createVariant, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

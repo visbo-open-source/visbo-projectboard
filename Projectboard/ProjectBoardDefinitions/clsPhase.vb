@@ -1182,15 +1182,16 @@ Public Class clsPhase
                                                     (Me.getEndDate.Date <> parentProject.startDate.AddDays(startOffset + dauer - 1).Date)) And
                                                     Me.dauerInDays > 0)
 
+        ' tk 26.12.21 auskommentiert ...
         ' damit wird bestimmt, ob die Verteilung auch dann neu berechnet werden soll, wenn die Dimension des alten und des neuen Arrays gleich ist.  
-        Dim calcAnyhow As Boolean = True
+        'Dim calcAnyhow As Boolean = True
 
-        If Me.nameID <> rootPhaseName And Not IsNothing(parentProject) Then
-            If System.Math.Abs(Me.getStartDate.Day - parentProject.startDate.AddDays(startOffset).Day) <= 1 And
-            System.Math.Abs(dauer - Me.dauerInDays) <= 1 Then
-                calcAnyhow = False
-            End If
-        End If
+        'If Me.nameID <> rootPhaseName And Not IsNothing(parentProject) Then
+        '    If System.Math.Abs(Me.getStartDate.Day - parentProject.startDate.AddDays(startOffset).Day) <= 1 And
+        '    System.Math.Abs(dauer - Me.dauerInDays) <= 1 Then
+        '        calcAnyhow = False
+        '    End If
+        'End If
 
 
         If dauer < 0 Then
@@ -1313,7 +1314,7 @@ Public Class clsPhase
                     If Me.countRoles > 0 Or Me.countCosts > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, faktor, calcAnyhow:=calcAnyhow)
+                        Call Me.calcNewXwerte(dimension, faktor)
 
                     End If
 
@@ -4314,13 +4315,11 @@ Public Class clsPhase
     ''' <summary>
     ''' synchronisiert bzw. berechnet die Xwerte der Rollen und Kosten
     ''' </summary>
-    ''' <param name="calcAnyhow">wenn true: berechnet die Verteilung neu, auch wenn die Dimension des Arrays gleich bleibt</param>
     ''' <remarks></remarks>
-    Public Sub calcNewXwerte(ByVal dimension As Integer, ByVal faktor As Double,
-                             ByVal Optional calcAnyhow As Boolean = False)
+    Public Sub calcNewXwerte(ByVal dimension As Integer, ByVal faktor As Double)
         Dim newXwerte() As Double
         Dim oldXwerte() As Double
-        Dim oldSum(0) As Double
+        'Dim oldSum(0) As Double
 
         Dim r As Integer, k As Integer
 
@@ -4332,33 +4331,46 @@ Public Class clsPhase
             ' alles wie bisher , ohne Istdaten
             For r = 1 To Me.countRoles
                 oldXwerte = Me.getRole(r).Xwerte
-                oldSum(0) = oldXwerte.Sum
+                'oldSum(0) = oldXwerte.Sum
                 ReDim newXwerte(dimension)
-                If calcAnyhow Then
-                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldSum, faktor, newXwerte)
-                Else
-                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
-                End If
+                ' tk 26.12.21 
+                Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                'If calcAnyhow Then
+                '    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldSum, faktor, newXwerte)
+                'Else
+                '    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                'End If
 
                 Me.getRole(r).Xwerte = newXwerte
             Next
 
             For k = 1 To Me.countCosts
                 oldXwerte = Me.getCost(k).Xwerte
-                oldSum(0) = oldXwerte.Sum
+                'oldSum(0) = oldXwerte.Sum
                 ReDim newXwerte(dimension)
-                If calcAnyhow Then
-                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldSum, faktor, newXwerte)
-                Else
-                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
-                End If
+
+                ' tk 26.12.21
+                Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                'If calcAnyhow Then
+                '    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldSum, faktor, newXwerte)
+                'Else
+                '    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                'End If
 
                 Me.getCost(k).Xwerte = newXwerte
             Next
 
         Else
             ' jetzt müssen die Ist-Daten unverändert bleiben 
-            Dim forecastDimension As Integer = dimension - actualIndex
+            Dim newForecastDimension As Integer = dimension - actualIndex
+            Dim oldForecastDimension As Integer = -1
+
+            If countRoles > 0 Then
+                oldForecastDimension = getRole(1).Xwerte.Length - 1 - (actualIndex + 1)
+            ElseIf countCosts > 0 Then
+                oldForecastDimension = getCost(1).Xwerte.Length - 1 - (actualIndex + 1)
+            End If
+
             Dim firstForecastMonth As Date = getDateofColumn(getColumnOfDate(parentProject.actualDataUntil) + 1, False)
 
             For r = 1 To Me.countRoles
@@ -4366,24 +4378,21 @@ Public Class clsPhase
                 oldXwerte = Me.getRole(r).Xwerte
 
                 ReDim newXwerte(dimension)
-                Dim newBedarf As Double = oldXwerte.Sum * faktor
 
+                ' actualData needs to be transferred without factor because actual data must no be changed
                 For ri As Integer = 0 To actualIndex
                     newXwerte(ri) = oldXwerte(ri)
                 Next
-                ' die bisher übertragenen Werte repräsentieren die Gesamt-summe an Ist-Daten 
-                Dim istDataSum As Double = newXwerte.Sum
 
-                Dim forecast(0) As Double
-                forecast(0) = newBedarf - istDataSum
+                Dim oldForecastXWerte() As Double
+                ReDim oldForecastXWerte(oldForecastDimension)
 
-                ' darf nicht negativ werden  
-                If forecast(0) < 0 Then
-                    forecast(0) = 0
-                End If
+                For ri As Integer = actualIndex + 1 To oldXwerte.Length - 1
+                    oldForecastXWerte(ri - (actualIndex + 1)) = oldXwerte(ri)
+                Next
 
 
-                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, forecast, 1.0)
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, oldForecastXWerte, faktor)
 
 
                 ' jetzt die Forecast Werte übernehmen 
@@ -4399,23 +4408,19 @@ Public Class clsPhase
                 oldXwerte = Me.getCost(k).Xwerte
 
                 ReDim newXwerte(dimension)
-                Dim newBedarf As Double = oldXwerte.Sum * faktor
 
                 For ri As Integer = 0 To actualIndex
                     newXwerte(ri) = oldXwerte(ri)
                 Next
-                ' die bisher übertragenen Werte repräsentieren die Gesamt-summe an Ist-Daten 
-                Dim istDataSum As Double = newXwerte.Sum
 
-                Dim forecast(0) As Double
-                forecast(0) = newBedarf - istDataSum
+                Dim oldForecastXWerte() As Double
+                ReDim oldForecastXWerte(oldForecastDimension)
 
-                ' darf nicht negativ werden  
-                If forecast(0) < 0 Then
-                    forecast(0) = 0
-                End If
+                For ri As Integer = actualIndex + 1 To oldXwerte.Length - 1
+                    oldForecastXWerte(ri - (actualIndex + 1)) = oldXwerte(ri)
+                Next
 
-                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, forecast, 1.0)
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, oldForecastXWerte, faktor)
 
                 ' jetzt die Forecast Werte übernehmen 
                 For ri As Integer = actualIndex + 1 To dimension
@@ -4426,7 +4431,6 @@ Public Class clsPhase
 
             Next
         End If
-
 
 
     End Sub
@@ -4444,41 +4448,75 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
                                ByVal corrFakt As Double, ByRef newValues() As Double)
+
+
+        newValues = Me.berechneBedarfeNew(startdate, endedate, oldXwerte, corrFakt)
+
+
+    End Sub
+
+    ''' <summary>
+    ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
+    ''' berücksichtigt die ActualDataUntil
+    ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
+    ''' wie die MEthode vorher ja auch ... 
+    ''' </summary>
+    ''' <param name="startdate"></param>
+    ''' <param name="endedate"></param>
+    ''' <param name="oldXwerte"></param>
+    ''' <param name="corrFakt"></param>
+    ''' <remarks></remarks>
+    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double,
+                               ByVal corrFakt As Double) As Double()
+
+
+        Dim newXwerte() As Double = calcVerteilungAufMonate(startdate, endedate, oldXwerte, corrFakt)
+
+        berechneBedarfeNew = newXwerte
+
+        ' tk 26.12.21
+        '' tk 11.2.19
+        '' alles folgende sollte, wenn sich Module1.calcVerteilungAufMonate(..) bewährt hat durch obigen Befehl ersetzt werden 
         'Dim k As Integer
         'Dim newXwerte() As Double
         'Dim gesBedarf As Double
         'Dim Rest As Integer
         'Dim hDatum As Date
         'Dim anzDaysthisMonth As Double
+        'Dim newLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+        'Dim gesBedarfReal As Double = 0.0
 
-        newValues = Me.berechneBedarfeNew(startdate, endedate, oldXwerte, corrFakt)
+        'ReDim newXwerte(newLength - 1)
 
-        ' Änderung tk 4.6.18 die berechneBedarfeNew verwendet 
-        'Try
-        '    ReDim newXwerte(newValues.Length - 1)
+        '' Vorbereitung für Summen Berechnung nur bei Forecast
+        ''Dim hasActualData As Boolean = Me.parentProject.actualDataUntil <> Date.MinValue
+        ''Dim actualDataColumn As Integer = -1
 
-        '    If corrFakt <= 0 Then
-        '        corrFakt = 1.0
-        '    End If
+        ''If hasActualData Then
+        ''    actualDataColumn = getColumnOfDate(Me.parentProject.actualDataUntil)
+        ''End If
 
-        '    gesBedarf = oldXwerte.Sum
-        '    gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+        '' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
+        '' andernfalls ist eh schon alles richtig 
+        'If oldXwerte.Sum > 0 Then
+
+        '    Try
+
+        '        gesBedarfReal = oldXwerte.Sum * corrFakt
+        '        gesBedarf = System.Math.Round(gesBedarfReal)
 
 
-        '    If newValues.Length = oldXwerte.Length Then
+        '        If newLength = oldXwerte.Length Then
 
-        '        'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
+        '            'Bedarfe-Verteilung bleibt wie gehabt ... allerdings unter Berücksichtigung corrFakt
 
-        '        'If gesBedarf = oldXwerte.Sum Then
-        '        If corrFakt = 1.0 Then
-        '            newXwerte = oldXwerte
-        '        Else
-        '            For i = 0 To newValues.Length - 1
-        '                newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
+
+        '            For i = 0 To newLength - 1
+        '                newXwerte(i) = oldXwerte(i) * corrFakt
         '            Next
 
         '            ' jetzt ggf die Reste verteilen 
-        '            Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
+        '            Rest = CInt(gesBedarf - newXwerte.Sum)
 
         '            k = newXwerte.Length - 1
         '            While Rest <> 0
@@ -4501,279 +4539,124 @@ Public Class clsPhase
 
         '            End While
 
-        '        End If
+        '            ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+        '            k = newXwerte.Length - 1
+        '            If newXwerte.Sum <> gesBedarfReal Then
+        '                Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+        '                If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+        '                    ' alles ok 
 
-        '    Else
+        '                    ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+        '                    Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+        '                        k = k - 1
+        '                    Loop
+        '                    ' jetzt ist ein k erreicht 
+        '                    newXwerte(k) = newXwerte(k) + RestDbl
+        '                    If newXwerte(k) < 0 Then
+        '                        newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+        '                    End If
 
-        '        Dim tmpSum As Double = 0
-        '        For k = 0 To newXwerte.Length - 1
-
-        '            If k = 0 Then
-        '                ' damit ist 00:00 des Startdates gemeint 
-        '                hDatum = startdate
-
-        '                anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
-
-        '                'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-        '                'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
-
-        '            ElseIf k = newXwerte.Length - 1 Then
-        '                ' damit hDatum das End-Datum um 23.00 Uhr
-
-        '                anzDaysthisMonth = endedate.Day
-        '                'hDatum = endedate.AddHours(23)
-        '                'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
-
-        '            Else
-        '                hDatum = startdate
-        '                anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
-        '                'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
-        '            End If
-
-        '            newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-        '            tmpSum = tmpSum + anzDaysthisMonth
-        '        Next k
-
-        '        ' Kontrolle für Test ... aChck muss immer Null sein !
-        '        'Dim aChck As Double = Me.dauerInDays - tmpSum
-
-
-        '        ' Rest wird auf alle newXwerte verteilt
-
-        '        Rest = CInt(gesBedarf - newXwerte.Sum)
-
-        '        k = newXwerte.Length - 1
-        '        While Rest <> 0
-        '            If Rest > 0 Then
-        '                newXwerte(k) = newXwerte(k) + 1
-        '                Rest = Rest - 1
-        '            Else
-        '                If newXwerte(k) - 1 >= 0 Then
-        '                    newXwerte(k) = newXwerte(k) - 1
-        '                    Rest = Rest + 1
+        '                Else
+        '                    Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
         '                End If
         '            End If
-        '            k = k - 1
-        '            If k < 0 Then
-        '                k = newXwerte.Length - 1
+
+
+        '        Else
+
+        '            Dim tmpSum As Double = 0
+        '            For k = 0 To newXwerte.Length - 1
+
+        '                If k = 0 Then
+        '                    ' damit ist 00:00 des Startdates gemeint 
+        '                    hDatum = startdate
+
+        '                    anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+        '                    'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+        '                    'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+        '                ElseIf k = newXwerte.Length - 1 Then
+        '                    ' damit hDatum das End-Datum um 23.00 Uhr
+
+        '                    anzDaysthisMonth = endedate.Day
+        '                    'hDatum = endedate.AddHours(23)
+        '                    'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+        '                Else
+        '                    hDatum = startdate
+        '                    anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+        '                    'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+        '                End If
+
+        '                newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+        '                tmpSum = tmpSum + anzDaysthisMonth
+        '            Next k
+
+        '            ' Kontrolle für Test ... aChck muss immer Null sein !
+        '            'Dim aChck As Double = Me.dauerInDays - tmpSum
+
+
+        '            ' Rest wird auf alle newXwerte verteilt
+
+        '            Rest = CInt(gesBedarf - newXwerte.Sum)
+
+        '            k = newXwerte.Length - 1
+        '            While Rest <> 0
+        '                If Rest > 0 Then
+        '                    newXwerte(k) = newXwerte(k) + 1
+        '                    Rest = Rest - 1
+        '                Else
+        '                    If newXwerte(k) - 1 >= 0 Then
+        '                        newXwerte(k) = newXwerte(k) - 1
+        '                        Rest = Rest + 1
+        '                    End If
+        '                End If
+        '                k = k - 1
+        '                If k < 0 Then
+        '                    k = newXwerte.Length - 1
+        '                End If
+
+        '            End While
+
+        '            ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+        '            k = newXwerte.Length - 1
+        '            If newXwerte.Sum <> gesBedarfReal Then
+        '                Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+        '                If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+        '                    ' alles ok 
+
+        '                    ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+        '                    Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+        '                        k = k - 1
+        '                    Loop
+        '                    ' jetzt ist ein k erreicht 
+        '                    newXwerte(k) = newXwerte(k) + RestDbl
+        '                    If newXwerte(k) < 0 Then
+        '                        newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+        '                    End If
+
+        '                Else
+        '                    Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+        '                End If
         '            End If
 
-        '        End While
-
-        '    End If
-
-        '    newValues = newXwerte
-
-        'Catch ex As Exception
-
-        '    Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
-
-        'End Try
+        '        End If
 
 
 
+        '    Catch ex As Exception
+        '        Dim a As Integer = 0
+        '    End Try
 
-    End Sub
-
-    ''' <summary>
-    ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
-    ''' berücksichtigt die ActualDataUntil
-    ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
-    ''' wie die MEthode vorher ja auch ... 
-    ''' </summary>
-    ''' <param name="startdate"></param>
-    ''' <param name="endedate"></param>
-    ''' <param name="oldXwerte"></param>
-    ''' <param name="corrFakt"></param>
-    ''' <remarks></remarks>
-    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double,
-                               ByVal corrFakt As Double) As Double()
-
-        ' wenn sich der bewährt: übernehmen ..
-        'berechneBedarfeNew = calcVerteilungAufMonate(startdate, endedate, oldXwerte, corrFakt)
-
-        ' tk 11.2.19
-        ' alles folgende sollte, wenn sich Module1.calcVerteilungAufMonate(..) bewährt hat durch obigen Befehl ersetzt werden 
-        Dim k As Integer
-        Dim newXwerte() As Double
-        Dim gesBedarf As Double
-        Dim Rest As Integer
-        Dim hDatum As Date
-        Dim anzDaysthisMonth As Double
-        Dim newLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
-        Dim gesBedarfReal As Double = 0.0
-
-        ReDim newXwerte(newLength - 1)
-
-        ' Vorbereitung für Summen Berechnung nur bei Forecast
-        'Dim hasActualData As Boolean = Me.parentProject.actualDataUntil <> Date.MinValue
-        'Dim actualDataColumn As Integer = -1
-
-        'If hasActualData Then
-        '    actualDataColumn = getColumnOfDate(Me.parentProject.actualDataUntil)
+        'Else
+        '    ' alles auf Null setzen 
+        '    For ix = 0 To newLength - 1
+        '        newXwerte(ix) = 0
+        '    Next
         'End If
 
-        ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
-        ' andernfalls ist eh schon alles richtig 
-        If oldXwerte.Sum > 0 Then
 
-            Try
-
-                gesBedarfReal = oldXwerte.Sum * corrFakt
-                gesBedarf = System.Math.Round(gesBedarfReal)
-
-
-                If newLength = oldXwerte.Length Then
-
-                    'Bedarfe-Verteilung bleibt wie gehabt ... allerdings unter Berücksichtigung corrFakt
-
-
-                    For i = 0 To newLength - 1
-                        newXwerte(i) = oldXwerte(i) * corrFakt
-                    Next
-
-                    ' jetzt ggf die Reste verteilen 
-                    Rest = CInt(gesBedarf - newXwerte.Sum)
-
-                    k = newXwerte.Length - 1
-                    While Rest <> 0
-
-                        If Rest > 0 Then
-                            newXwerte(k) = newXwerte(k) + 1
-                            Rest = Rest - 1
-                        Else
-
-                            If newXwerte(k) - 1 >= 0 Then
-                                newXwerte(k) = newXwerte(k) - 1
-                                Rest = Rest + 1
-                            End If
-
-                        End If
-                        k = k - 1
-                        If k < 0 Then
-                            k = newXwerte.Length - 1
-                        End If
-
-                    End While
-
-                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
-                    k = newXwerte.Length - 1
-                    If newXwerte.Sum <> gesBedarfReal Then
-                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
-                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
-                            ' alles ok 
-
-                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
-                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
-                                k = k - 1
-                            Loop
-                            ' jetzt ist ein k erreicht 
-                            newXwerte(k) = newXwerte(k) + RestDbl
-                            If newXwerte(k) < 0 Then
-                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
-                            End If
-
-                        Else
-                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
-                        End If
-                    End If
-
-
-                Else
-
-                    Dim tmpSum As Double = 0
-                    For k = 0 To newXwerte.Length - 1
-
-                        If k = 0 Then
-                            ' damit ist 00:00 des Startdates gemeint 
-                            hDatum = startdate
-
-                            anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
-
-                            'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                            'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
-
-                        ElseIf k = newXwerte.Length - 1 Then
-                            ' damit hDatum das End-Datum um 23.00 Uhr
-
-                            anzDaysthisMonth = endedate.Day
-                            'hDatum = endedate.AddHours(23)
-                            'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
-
-                        Else
-                            hDatum = startdate
-                            anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
-                            'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
-                        End If
-
-                        newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-                        tmpSum = tmpSum + anzDaysthisMonth
-                    Next k
-
-                    ' Kontrolle für Test ... aChck muss immer Null sein !
-                    'Dim aChck As Double = Me.dauerInDays - tmpSum
-
-
-                    ' Rest wird auf alle newXwerte verteilt
-
-                    Rest = CInt(gesBedarf - newXwerte.Sum)
-
-                    k = newXwerte.Length - 1
-                    While Rest <> 0
-                        If Rest > 0 Then
-                            newXwerte(k) = newXwerte(k) + 1
-                            Rest = Rest - 1
-                        Else
-                            If newXwerte(k) - 1 >= 0 Then
-                                newXwerte(k) = newXwerte(k) - 1
-                                Rest = Rest + 1
-                            End If
-                        End If
-                        k = k - 1
-                        If k < 0 Then
-                            k = newXwerte.Length - 1
-                        End If
-
-                    End While
-
-                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
-                    k = newXwerte.Length - 1
-                    If newXwerte.Sum <> gesBedarfReal Then
-                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
-                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
-                            ' alles ok 
-
-                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
-                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
-                                k = k - 1
-                            Loop
-                            ' jetzt ist ein k erreicht 
-                            newXwerte(k) = newXwerte(k) + RestDbl
-                            If newXwerte(k) < 0 Then
-                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
-                            End If
-
-                        Else
-                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
-                        End If
-                    End If
-
-                End If
-
-
-
-            Catch ex As Exception
-                Dim a As Integer = 0
-            End Try
-
-        Else
-            ' alles auf Null setzen 
-            For ix = 0 To newLength - 1
-                newXwerte(ix) = 0
-            Next
-        End If
-
-        berechneBedarfeNew = newXwerte
 
     End Function
 

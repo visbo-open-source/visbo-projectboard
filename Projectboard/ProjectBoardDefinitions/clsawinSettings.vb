@@ -306,6 +306,10 @@ Public Class clsawinSettings
     ' unbedingt beachten: kann im Konflikt mit actzalDataMonth stehen ;
     Public Property autoSetActualDataDate As Boolean
 
+    ' tk 25.12.21 Setting, das die Voreinstellung bewirkt , ob bei einem Verlängern/Verkürzen einer Phase die Ressourcen und Cost Bedarfe 
+    ' automatisch neuberechnet werden 
+    Public Property noNewCalculation As Boolean
+
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
     Public Property actualDataMonth As Date
 
@@ -316,7 +320,7 @@ Public Class clsawinSettings
 
     Sub New()
 
-        ReDim _importSettings(17)
+        'ReDim _importSettings(17)
 
         _meAllowOverTime = False
         _onePersonOneRole = False
@@ -328,6 +332,9 @@ Public Class clsawinSettings
         _ActualdataOrgaUnits = ""
 
         _ExternRessourcesWithActualData = False
+
+        ' tk added 25.12.21
+        _noNewCalculation = False
 
         _autoSetActualDataDate = False
         _actualDataMonth = Date.MinValue

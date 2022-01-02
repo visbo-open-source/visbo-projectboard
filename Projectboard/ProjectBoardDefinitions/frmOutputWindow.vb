@@ -1,19 +1,12 @@
-﻿Public Class frmOutputWindow
+﻿Imports System.Windows.Forms
+
+Public Class frmOutputWindow
 
     Public textCollection As Collection
     Private Sub frmOutputWindow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        ' tk 21.12.21 causes problems in Office 365 , positions it at negative Top coordinates ... 
-        'If Not IsNothing(appInstance) Then
-        '    Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
-        '    Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
-        'Else
-        '    Me.Top = 50
-        '    Me.Left = 50
-        'End If
+        Call getFrmPosition(PTfrm.showOutPut, Top, Left)
 
-        Me.Top = 50
-        Me.Left = 50
 
         For i As Integer = 1 To textCollection.Count
 
@@ -64,5 +57,12 @@
 
     End Sub
 
+    Private Sub frmOutputWindow_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.showOutPut, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.showOutPut, PTpinfo.left) = Me.Left
+        Catch ex As Exception
 
+        End Try
+    End Sub
 End Class

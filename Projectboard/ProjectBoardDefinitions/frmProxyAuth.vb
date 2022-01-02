@@ -73,6 +73,9 @@ Public Class frmProxyAuth
     End Sub
 
     Private Sub frmProxyAuth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
         proxyURLbox.Text = proxyURL
         domainBox.Text = domain
         benutzer.Text = user
@@ -122,5 +125,15 @@ Public Class frmProxyAuth
 
     Private Sub Domain_TextChanged(sender As Object, e As EventArgs) Handles domainBox.TextChanged
 
+    End Sub
+
+    Private Sub frmProxyAuth_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

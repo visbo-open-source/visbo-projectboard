@@ -524,6 +524,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
 
         Try
+
             If appInstance.Version <> "14.0" Then
 
                 If CStr(Wn.Caption).Contains("Chart") Then
@@ -550,6 +551,17 @@ Public Class ThisWorkbook
 
             End If
 
+
+            If CStr(Wn.Caption).StartsWith("Projectboard") Then
+                If Wn.WindowState = XlWindowState.xlMaximized Then
+                    frmCoord(PTfrm.basis, PTpinfo.top) = Wn.Top
+                    frmCoord(PTfrm.basis, PTpinfo.left) = Wn.Left
+                    frmCoord(PTfrm.basis, PTpinfo.height) = Wn.Height
+                    frmCoord(PTfrm.basis, PTpinfo.width) = Wn.Width
+                    Call setWindowParameters()
+                End If
+
+            End If
 
 
         Catch ex As Exception
@@ -586,6 +598,20 @@ Public Class ThisWorkbook
         ' das Mitte Window 
         ' beim Verkleinern sollte gar nix passieren , auss
         Dim whatIs As Boolean = bIShrankTheRibbon
+        Try
+            If CStr(Wn.Caption).StartsWith("Projectboard") Then
+                If Wn.WindowState = XlWindowState.xlMaximized Then
+                    frmCoord(PTfrm.basis, PTpinfo.top) = Wn.Top
+                    frmCoord(PTfrm.basis, PTpinfo.left) = Wn.Left
+                    frmCoord(PTfrm.basis, PTpinfo.height) = Wn.Height
+                    frmCoord(PTfrm.basis, PTpinfo.width) = Wn.Width
+                    Call setWindowParameters()
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
     End Sub
 
     Private Sub ThisWorkbook_SheetActivate(Sh As Object) Handles Me.SheetActivate

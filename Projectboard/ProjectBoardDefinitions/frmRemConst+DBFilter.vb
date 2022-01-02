@@ -1,9 +1,13 @@
-﻿Public Class frmRemoveConstellation
+﻿Imports System.Windows.Forms
+
+Public Class frmRemoveConstellation
     Private formerselect As String
     Public frmOption As String
     Public dbPortfolioNames As SortedList(Of String, String)
 
     Private Sub frmRemoveConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         ListBox1.Items.Clear()
 
@@ -81,4 +85,12 @@
 
     End Sub
 
+    Private Sub frmRemoveConstellation_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+    End Sub
 End Class

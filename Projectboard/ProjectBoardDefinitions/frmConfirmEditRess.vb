@@ -107,8 +107,7 @@ Public Class frmConfirmEditRess
 
     Private Sub frmConfirmEditRess_Load(sender As Object, e As EventArgs) Handles Me.Load
 
-        Me.Top = CInt(frmCoord(PTfrm.editRess, PTpinfo.top))
-        Me.Left = CInt(frmCoord(PTfrm.editRess, PTpinfo.left))
+        Call getFrmPosition(PTfrm.editRess, Top, Left)
 
         okButtonClicked = False
 

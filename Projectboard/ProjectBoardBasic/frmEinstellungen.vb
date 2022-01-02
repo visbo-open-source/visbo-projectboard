@@ -14,6 +14,7 @@ Public Class frmEinstellungen
         'chkboxMassEdit.Checked = awinSettings.meExtendedColumnsView
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
+        chkbxAutoCalc.Checked = Not awinSettings.noNewCalculation
         chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
         chkbxInvoices.Checked = awinSettings.enableInvoices
 
@@ -90,6 +91,7 @@ Public Class frmEinstellungen
                 loadPFV.Text = "load baseline(s as planning version"
             End If
             chkboxPropAnpass.Text = "adjust ressource needs proportionally"
+            chkbxAutoCalc.Text = "automatically distribute resource-/cost needs over time"
             chkbxPhasesAnteilig.Text = "use monthly overlap percentage in phase bottleneck diagrams"
             chkboxAmpel.Text = "show traffic lights"
             chkbxInvoices.Text = "Edit Invoices & Penalties"
@@ -106,7 +108,8 @@ Public Class frmEinstellungen
             Else
                 loadPFV.Text = "Baseline laden und als Planungs-Version zeigen"
             End If
-            chkboxPropAnpass.Text = "Ressourcenbedarfe proportional anpassen"
+            chkboxPropAnpass.Text = "Ressourcen Bedarfe adjust ressource needs proportionally"
+            chkbxAutoCalc.Text = "Ressoucen- & Kostenbedarfe autom.  über die Zeit verteilen"
             chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
             chkboxAmpel.Text = "Ampel anzeigen"
             chkbxInvoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"
@@ -225,5 +228,9 @@ Public Class frmEinstellungen
 
         awinSettings.autoSetActualDataDate = chkbx_autoSetActualDataDate.Checked
 
+    End Sub
+
+    Private Sub chkbxAutoCalc_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxAutoCalc.CheckedChanged
+        awinSettings.noNewCalculation = Not chkbxAutoCalc.Checked
     End Sub
 End Class

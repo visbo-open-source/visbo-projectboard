@@ -190,7 +190,7 @@ Public Module awinDiagrams
         HDiagramList = DiagramList
 
         ' Farbe Null auf Standard zuweisen; wird dann später überschrieben; dient hier nur als definierter Start-Wert
-        objektFarbe = 0
+        objektFarbe = visboFarbeBlau
 
         With awinSettings
             ampelfarbe(0) = .AmpelNichtBewertet
@@ -455,7 +455,8 @@ Public Module awinDiagrams
 
                             Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
 
-                            objektFarbe = tmpRole.farbe
+                            'objektFarbe = tmpRole.farbe
+                            objektFarbe = visboFarbeBlau
 
                             If tmpRole.isCombinedRole Then
 
@@ -533,7 +534,8 @@ Public Module awinDiagrams
 
                                 ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                                 isPersCost = True
-                                objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                                objektFarbe = visboFarbeBlau
+                                'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                                 'datenreihe = ShowProjekte.getCostiValuesInMonth
                                 'edatenreihe = ShowProjekte.getCosteValuesInMonth
                                 datenreihe = ShowProjekte.getCostGpValuesInMonth
@@ -547,7 +549,8 @@ Public Module awinDiagrams
 
                                 ' es handelt sich nicht um die Personalkosten
                                 isPersCost = False
-                                objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                                objektFarbe = visboFarbeBlau
+                                'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                                 datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
                             End If
 
@@ -1250,7 +1253,7 @@ Public Module awinDiagrams
         'Dim nr_pts As Integer
         Dim diagramTitle As String
 
-        Dim objektFarbe As Object
+        Dim objektFarbe As Object = visboFarbeBlau
         Dim ampelfarbe(3) As Long
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double, edatenreihe() As Double, seriesSumDatenreihe() As Double
@@ -1306,7 +1309,7 @@ Public Module awinDiagrams
 
 
         ' Default Zuweisung ; wird später überschrieben ; verhindert , daß sie verwendet wird, ohne einen Wert zu haben 
-        objektFarbe = 0
+        objektFarbe = visboFarbeBlau
 
         With awinSettings
             ampelfarbe(0) = .AmpelNichtBewertet
@@ -1557,7 +1560,7 @@ Public Module awinDiagrams
 
                     Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
 
-                    objektFarbe = tmpRole.farbe
+                    objektFarbe = visboFarbeBlau
 
                     If tmpRole.isCombinedRole Then
 
@@ -1652,7 +1655,8 @@ Public Module awinDiagrams
                     ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
                         ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                         isPersCost = True
-                        objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                        objektFarbe = visboFarbeBlau
+                        'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                         'datenreihe = ShowProjekte.getCostiValuesInMonth
                         'edatenreihe = ShowProjekte.getCosteValuesInMonth
                         datenreihe = ShowProjekte.getCostGpValuesInMonth
@@ -1660,7 +1664,8 @@ Public Module awinDiagrams
                     Else
                         ' es handelt sich nicht um die Personalkosten
                         isPersCost = False
-                        objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                        objektFarbe = visboFarbeBlau
+                        'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                         datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
                         hmxWert = datenreihe.Max
 

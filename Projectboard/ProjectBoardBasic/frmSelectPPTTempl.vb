@@ -19,6 +19,8 @@ Public Class frmSelectPPTTempl
 
     Private Sub frmSelectPPTTempl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Call getFrmPosition(PTfrm.other, Top, Left)
+
         Dim dateiName As String = ""
         Dim dirname As String = ""
         Dim paramType As Boolean
@@ -414,5 +416,14 @@ Public Class frmSelectPPTTempl
 
 
 
+    End Sub
+
+    Private Sub frmSelectPPTTempl_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

@@ -1,10 +1,11 @@
-﻿Public Class frmProvideActualDataMonth
+﻿Imports System.Windows.Forms
+Imports ProjectBoardDefinitions
+Public Class frmProvideActualDataMonth
 
-    Private Sub valueMonth_TextChanged(sender As Object, e As EventArgs) Handles valueMonth.TextChanged
-
-    End Sub
 
     Private Sub frmProvideActualDataMonth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         Dim tmpMonth As Integer = Date.Now.Month - 1
 
@@ -19,5 +20,14 @@
 
     Private Sub cancelBtn_Click(sender As Object, e As EventArgs) Handles cancelBtn.Click
 
+    End Sub
+
+    Private Sub frmProvideActualDataMonth_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

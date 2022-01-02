@@ -1,4 +1,6 @@
-﻿Public Class frmMppSettings
+﻿Imports System.Windows.Forms
+
+Public Class frmMppSettings
 
     Public calledfrom As String
 
@@ -43,6 +45,8 @@
     End Sub
 
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         Call languageSettings()
 
@@ -118,24 +122,12 @@
 
     End Sub
 
+    Private Sub frmMppSettings_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
 
-    Private Sub notStrictly_CheckedChanged(sender As Object, e As EventArgs) Handles notStrictly.CheckedChanged
-
-    End Sub
-
-    Private Sub shwExtendedMode_CheckedChanged(sender As Object, e As EventArgs) Handles shwExtendedMode.CheckedChanged
-
-    End Sub
-
-    Private Sub filterEmptyProjects_CheckedChanged(sender As Object, e As EventArgs) Handles filterEmptyProjects.CheckedChanged
-
-    End Sub
-
-    Private Sub shwProjectLine_CheckedChanged(sender As Object, e As EventArgs) Handles shwProjectLine.CheckedChanged
-
-    End Sub
-
-    Private Sub KwInMilestone_CheckedChanged(sender As Object, e As EventArgs) Handles KwInMilestone.CheckedChanged
-
+        End Try
     End Sub
 End Class
