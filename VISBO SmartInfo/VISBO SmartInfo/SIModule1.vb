@@ -145,20 +145,22 @@ Module SIModule1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(2, 3) As Integer
+    'Public frmCoord(2, 3) As Integer
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
-    Public Enum PTfrm
-        changes = 0
-        calendar = 1
-    End Enum
+    'Public Enum PTfrm
+    '    changes = 0
+    '    calendar = 1
+    '    basis = 2
+    '    other = 4
+    'End Enum
 
-    Public Enum PTpinfo
-        top = 0
-        left = 1
-        width = 2
-        height = 3
-    End Enum
+    'Public Enum PTpinfo
+    '    top = 0
+    '    left = 1
+    '    width = 2
+    '    height = 3
+    'End Enum
     ' wird verwendet um in SlideSelectionChange wieder zu bestimmen, ob es eine TodayLine und ein Version-Field gibt
     Public Enum ptImportantShapes
         todayline = 0
@@ -1494,6 +1496,19 @@ Module SIModule1
     Private Sub pptAPP_WindowActivate(Pres As Microsoft.Office.Interop.PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowActivate
         ' Id des aktiven DocumentWindow
 
+        Try
+
+            If Wn.WindowState = Microsoft.Office.Interop.PowerPoint.PpWindowState.ppWindowMaximized Then
+                frmCoord(PTfrm.basis, PTpinfo.top) = Wn.Top
+                frmCoord(PTfrm.basis, PTpinfo.left) = Wn.Left
+                frmCoord(PTfrm.basis, PTpinfo.height) = Wn.Height
+                frmCoord(PTfrm.basis, PTpinfo.width) = Wn.Width
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
         Dim key As String = Pres.Name
         currentPresHasVISBOElements = presentationHasAnySmartSlides(Pres)
 
@@ -1578,6 +1593,7 @@ Module SIModule1
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
 
         Dim key As String = Pres.Name
+
 
         If currentPresHasVISBOElements Then
 

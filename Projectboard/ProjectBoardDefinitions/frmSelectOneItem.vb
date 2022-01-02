@@ -7,16 +7,6 @@ Public Class frmSelectOneItem
 
         Call getFrmPosition(PTfrm.other, Top, Left)
 
-
-        If Not IsNothing(appInstance) Then
-            Me.Top = CInt(appInstance.Top + (appInstance.Height - Me.Height) / 2)
-            Me.Left = CInt(appInstance.Left + (appInstance.Width - Me.Width) / 2)
-        Else
-            Me.Top = 50
-            Me.Left = 50
-        End If
-
-
         Call languageSettings()
 
         For Each itemName As String In itemsCollection

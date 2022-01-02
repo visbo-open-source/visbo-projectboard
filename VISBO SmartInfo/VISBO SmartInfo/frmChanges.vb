@@ -19,10 +19,13 @@ Public Class frmChanges
         Call undimAllShapes()
 
         ' Koordinaten merken
-        frmCoord(PTfrm.changes, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.changes, PTpinfo.left) = Me.Left
-        frmCoord(PTfrm.changes, PTpinfo.width) = Me.Width
-        frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
+        Try
+            frmCoord(PTfrm.other, PTpinfo.top) = Me.Top
+            frmCoord(PTfrm.other, PTpinfo.left) = Me.Left
+        Catch ex As Exception
+
+        End Try
+
 
 
         'Call faerbeShapes(0, showTrafficLights(0))
@@ -43,17 +46,7 @@ Public Class frmChanges
 
     Private Sub frmChanges_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        If frmCoord(PTfrm.changes, PTpinfo.top) > 0 Then
-            Me.Top = frmCoord(PTfrm.changes, PTpinfo.top)
-            Me.Left = frmCoord(PTfrm.changes, PTpinfo.left)
-            Me.Width = frmCoord(PTfrm.changes, PTpinfo.width)
-            Me.Height = frmCoord(PTfrm.changes, PTpinfo.height)
-        Else
-            ' Fehler: bei Bildschiremn mit weniger als HDMI Auflösung wird dieses Fenster nie sicht bar ...
-            'Me.Top = 922
-            Me.Top = My.Computer.Screen.Bounds.Height - (Me.Height + 20)
-            Me.Left = 24
-        End If
+        Call getFrmPosition(PTfrm.other, Top, Left)
 
         Call listeAufbauen()
 
