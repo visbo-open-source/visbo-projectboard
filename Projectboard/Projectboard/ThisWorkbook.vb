@@ -177,6 +177,7 @@ Public Class ThisWorkbook
 
         projectboardWindows(PTwindows.mpt) = Application.ActiveWindow
 
+
         With projectboardWindows(PTwindows.mpt)
             .WindowState = XlWindowState.xlMaximized
             .DisplayHeadings = False

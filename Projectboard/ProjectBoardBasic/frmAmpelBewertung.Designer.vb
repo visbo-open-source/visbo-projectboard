@@ -106,6 +106,7 @@ Partial Class frmAmpelBewertung
         Me.Controls.Add(Me.OKButton)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmAmpelBewertung"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Ampel Bewertung"
         Me.ResumeLayout(False)
         Me.PerformLayout()

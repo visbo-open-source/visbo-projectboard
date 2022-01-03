@@ -98,6 +98,7 @@ Partial Class frmOutputWindow
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmOutputWindow"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Meldungen"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)

@@ -168,6 +168,7 @@ Partial Class frmShowProjCharacteristics
         Me.Controls.Add(Me.timeSlider)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmShowProjCharacteristics"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Projekt Historie"
         Me.TopMost = True
         CType(Me.timeSlider, System.ComponentModel.ISupportInitialize).EndInit()

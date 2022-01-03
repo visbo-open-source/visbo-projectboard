@@ -43,12 +43,12 @@ Partial Class frmReportProfil
         Me.RepProfilListbox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.RepProfilListbox.FormattingEnabled = True
         Me.RepProfilListbox.HorizontalScrollbar = True
-        Me.RepProfilListbox.ItemHeight = 20
-        Me.RepProfilListbox.Location = New System.Drawing.Point(19, 37)
-        Me.RepProfilListbox.Margin = New System.Windows.Forms.Padding(7, 6, 7, 6)
+        Me.RepProfilListbox.ItemHeight = 16
+        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 30)
+        Me.RepProfilListbox.Margin = New System.Windows.Forms.Padding(5, 5, 5, 5)
         Me.RepProfilListbox.Name = "RepProfilListbox"
         Me.RepProfilListbox.ScrollAlwaysVisible = True
-        Me.RepProfilListbox.Size = New System.Drawing.Size(771, 424)
+        Me.RepProfilListbox.Size = New System.Drawing.Size(579, 340)
         Me.RepProfilListbox.Sorted = True
         Me.RepProfilListbox.TabIndex = 1
         '
@@ -56,10 +56,9 @@ Partial Class frmReportProfil
         '
         Me.zeitLabel.AutoSize = True
         Me.zeitLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte), True)
-        Me.zeitLabel.Location = New System.Drawing.Point(332, 491)
-        Me.zeitLabel.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.zeitLabel.Location = New System.Drawing.Point(249, 399)
         Me.zeitLabel.Name = "zeitLabel"
-        Me.zeitLabel.Size = New System.Drawing.Size(79, 20)
+        Me.zeitLabel.Size = New System.Drawing.Size(63, 16)
         Me.zeitLabel.TabIndex = 2
         Me.zeitLabel.Text = "Zeitraum:"
         Me.zeitLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
@@ -69,30 +68,27 @@ Partial Class frmReportProfil
         Me.vonDate.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.vonDate.Location = New System.Drawing.Point(448, 489)
-        Me.vonDate.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.vonDate.Location = New System.Drawing.Point(336, 397)
         Me.vonDate.Name = "vonDate"
-        Me.vonDate.Size = New System.Drawing.Size(143, 26)
+        Me.vonDate.Size = New System.Drawing.Size(108, 22)
         Me.vonDate.TabIndex = 5
         '
         'bisDate
         '
         Me.bisDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.bisDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.bisDate.Location = New System.Drawing.Point(621, 489)
-        Me.bisDate.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.bisDate.Location = New System.Drawing.Point(466, 397)
         Me.bisDate.Name = "bisDate"
-        Me.bisDate.Size = New System.Drawing.Size(141, 26)
+        Me.bisDate.Size = New System.Drawing.Size(107, 22)
         Me.bisDate.TabIndex = 6
         '
         'ReportErstellen
         '
         Me.ReportErstellen.BackColor = System.Drawing.SystemColors.Control
         Me.ReportErstellen.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ReportErstellen.Location = New System.Drawing.Point(167, 548)
-        Me.ReportErstellen.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ReportErstellen.Location = New System.Drawing.Point(125, 445)
         Me.ReportErstellen.Name = "ReportErstellen"
-        Me.ReportErstellen.Size = New System.Drawing.Size(193, 33)
+        Me.ReportErstellen.Size = New System.Drawing.Size(145, 27)
         Me.ReportErstellen.TabIndex = 7
         Me.ReportErstellen.Text = "Bericht erstellen"
         Me.ReportErstellen.UseVisualStyleBackColor = False
@@ -101,10 +97,9 @@ Partial Class frmReportProfil
         '
         Me.changeProfil.BackColor = System.Drawing.SystemColors.Control
         Me.changeProfil.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.changeProfil.Location = New System.Drawing.Point(427, 548)
-        Me.changeProfil.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.changeProfil.Location = New System.Drawing.Point(320, 445)
         Me.changeProfil.Name = "changeProfil"
-        Me.changeProfil.Size = New System.Drawing.Size(184, 33)
+        Me.changeProfil.Size = New System.Drawing.Size(138, 27)
         Me.changeProfil.TabIndex = 8
         Me.changeProfil.Text = "Profil bearbeiten"
         Me.changeProfil.UseVisualStyleBackColor = False
@@ -114,10 +109,9 @@ Partial Class frmReportProfil
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(19, 590)
-        Me.statusLabel.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.statusLabel.Location = New System.Drawing.Point(14, 479)
         Me.statusLabel.Name = "statusLabel"
-        Me.statusLabel.Size = New System.Drawing.Size(59, 20)
+        Me.statusLabel.Size = New System.Drawing.Size(51, 17)
         Me.statusLabel.TabIndex = 43
         Me.statusLabel.Text = "Label1"
         Me.statusLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
@@ -135,10 +129,9 @@ Partial Class frmReportProfil
         'rdbEPreports
         '
         Me.rdbEPreports.AutoSize = True
-        Me.rdbEPreports.Location = New System.Drawing.Point(19, 9)
-        Me.rdbEPreports.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.rdbEPreports.Location = New System.Drawing.Point(14, 7)
         Me.rdbEPreports.Name = "rdbEPreports"
-        Me.rdbEPreports.Size = New System.Drawing.Size(164, 21)
+        Me.rdbEPreports.Size = New System.Drawing.Size(125, 17)
         Me.rdbEPreports.TabIndex = 44
         Me.rdbEPreports.Text = "Einzelprojekt Reports"
         Me.rdbEPreports.UseVisualStyleBackColor = True
@@ -146,10 +139,9 @@ Partial Class frmReportProfil
         'rdbMPreports
         '
         Me.rdbMPreports.AutoSize = True
-        Me.rdbMPreports.Location = New System.Drawing.Point(228, 9)
-        Me.rdbMPreports.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.rdbMPreports.Location = New System.Drawing.Point(171, 7)
         Me.rdbMPreports.Name = "rdbMPreports"
-        Me.rdbMPreports.Size = New System.Drawing.Size(155, 21)
+        Me.rdbMPreports.Size = New System.Drawing.Size(119, 17)
         Me.rdbMPreports.TabIndex = 45
         Me.rdbMPreports.Text = "Multiprojekt Reports"
         Me.rdbMPreports.UseVisualStyleBackColor = True
@@ -162,9 +154,9 @@ Partial Class frmReportProfil
         '
         'frmReportProfil
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(816, 614)
+        Me.ClientSize = New System.Drawing.Size(612, 499)
         Me.Controls.Add(Me.rdbMPreports)
         Me.Controls.Add(Me.rdbEPreports)
         Me.Controls.Add(Me.statusLabel)
@@ -175,8 +167,8 @@ Partial Class frmReportProfil
         Me.Controls.Add(Me.zeitLabel)
         Me.Controls.Add(Me.RepProfilListbox)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmReportProfil"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Auswahl Report Profil"
         Me.ResumeLayout(False)
         Me.PerformLayout()

@@ -74,6 +74,7 @@ Partial Class frmProjekteSpeichern
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmProjekteSpeichern"
         Me.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Exit Projectboard"
         Me.TopMost = True
         Me.ResumeLayout(False)

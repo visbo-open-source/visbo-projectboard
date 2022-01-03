@@ -9785,22 +9785,22 @@ Public Module Module1
     Public Sub getFrmPosition(ByVal frmTyp As PTfrm, ByRef myTop As Integer, ByRef myLeft As Integer)
 
         Try
-            myTop = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.top))
-            myLeft = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.left))
+            'myTop = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.top))
+            'myLeft = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.left))
 
-            If frmCoord(frmTyp, PTpinfo.top) <> 0 Or
-               frmCoord(frmTyp, PTpinfo.left) <> 0 Then
+            'If frmCoord(frmTyp, PTpinfo.top) <> 0 Or
+            '   frmCoord(frmTyp, PTpinfo.left) <> 0 Then
 
-                If frmCoord(frmTyp, PTpinfo.top) > frmCoord(PTfrm.basis, PTpinfo.top) And
-                    frmCoord(frmTyp, PTpinfo.top) < frmCoord(PTfrm.basis, PTpinfo.top) + frmCoord(PTfrm.basis, PTpinfo.height) And
-                    frmCoord(frmTyp, PTpinfo.left) > frmCoord(PTfrm.basis, PTpinfo.left) And
-                    frmCoord(frmTyp, PTpinfo.left) < frmCoord(PTfrm.basis, PTpinfo.left) + frmCoord(PTfrm.basis, PTpinfo.width) Then
+            '    If frmCoord(frmTyp, PTpinfo.top) > frmCoord(PTfrm.basis, PTpinfo.top) And
+            '        frmCoord(frmTyp, PTpinfo.top) < frmCoord(PTfrm.basis, PTpinfo.top) + frmCoord(PTfrm.basis, PTpinfo.height) And
+            '        frmCoord(frmTyp, PTpinfo.left) > frmCoord(PTfrm.basis, PTpinfo.left) And
+            '        frmCoord(frmTyp, PTpinfo.left) < frmCoord(PTfrm.basis, PTpinfo.left) + frmCoord(PTfrm.basis, PTpinfo.width) Then
 
-                    myTop = CInt(frmCoord(frmTyp, PTpinfo.top))
-                    myLeft = CInt(frmCoord(frmTyp, PTpinfo.left))
-                End If
+            '        myTop = CInt(frmCoord(frmTyp, PTpinfo.top))
+            '        myLeft = CInt(frmCoord(frmTyp, PTpinfo.left))
+            '    End If
 
-            End If
+            'End If
         Catch ex As Exception
 
         End Try

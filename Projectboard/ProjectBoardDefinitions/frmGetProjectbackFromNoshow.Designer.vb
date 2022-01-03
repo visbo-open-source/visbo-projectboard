@@ -71,6 +71,7 @@ Partial Class frmGetProjectbackFromNoshow
         Me.Controls.Add(Me.ListBox1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmGetProjectbackFromNoshow"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Projekt wieder ins Show holen "
         Me.ResumeLayout(False)
 

@@ -125,6 +125,7 @@ Partial Class frmMeRcEinstellungen
         Me.Controls.Add(Me.chkbx_compareWithVersion)
         Me.Controls.Add(Me.chkbx_showHeader)
         Me.Name = "frmMeRcEinstellungen"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Einstellungen"
         Me.ResumeLayout(False)
         Me.PerformLayout()

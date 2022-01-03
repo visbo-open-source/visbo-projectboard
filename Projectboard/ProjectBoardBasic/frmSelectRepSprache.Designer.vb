@@ -70,6 +70,7 @@ Partial Class frmSelectRepSprache
         Me.Controls.Add(Me.SprachAusw)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectRepSprache"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Report Spracheinstellung"
         Me.ResumeLayout(False)
         Me.PerformLayout()

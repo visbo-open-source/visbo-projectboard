@@ -57,6 +57,7 @@ Partial Class frmSelectOneItem
         Me.Controls.Add(Me.OKBtn)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectOneItem"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Wählen Sie ein VISBO Project Center"
         Me.ResumeLayout(False)
 

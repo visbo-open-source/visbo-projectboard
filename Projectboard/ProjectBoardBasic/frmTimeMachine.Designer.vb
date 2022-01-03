@@ -131,6 +131,7 @@ Partial Class frmTimeMachine
         Me.Controls.Add(Me.TextBox1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmTimeMachine"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "VISBO Time Machine"
         Me.ResumeLayout(False)
         Me.PerformLayout()

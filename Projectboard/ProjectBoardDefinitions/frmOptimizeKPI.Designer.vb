@@ -118,6 +118,7 @@ Partial Class frmOptimizeKPI
         Me.Controls.Add(Me.progressText)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmOptimizeKPI"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Kennzahlen optimieren"
         Me.ResumeLayout(False)
         Me.PerformLayout()

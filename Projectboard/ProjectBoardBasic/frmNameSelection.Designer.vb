@@ -396,6 +396,7 @@ Partial Class frmNameSelection
         Me.Controls.Add(Me.nameListBox)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmNameSelection"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Visualisieren von Plan-Objekten"
         Me.TopMost = True
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()

@@ -138,6 +138,7 @@ Partial Class frmMilestoneInformation
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmMilestoneInformation"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Meilenstein Informationen"
         Me.TopMost = True
         Me.ResumeLayout(False)

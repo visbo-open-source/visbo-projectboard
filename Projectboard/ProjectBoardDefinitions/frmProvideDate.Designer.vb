@@ -43,14 +43,15 @@ Partial Class frmProvideDate
         Me.ok_btn.Text = "OK"
         Me.ok_btn.UseVisualStyleBackColor = True
         '
-        'clsFrmProvideDate
+        'frmProvideDate
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(251, 97)
         Me.Controls.Add(Me.ok_btn)
         Me.Controls.Add(Me.newDateValue)
-        Me.Name = "clsFrmProvideDate"
+        Me.Name = "frmProvideDate"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Provide Date"
         Me.ResumeLayout(False)
 

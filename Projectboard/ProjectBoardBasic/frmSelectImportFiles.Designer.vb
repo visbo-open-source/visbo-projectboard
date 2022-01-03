@@ -87,6 +87,7 @@ Partial Class frmSelectImportFiles
         Me.Controls.Add(Me.ListImportFiles)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectImportFiles"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Auswahl der Import-Dateien"
         Me.ResumeLayout(False)
 

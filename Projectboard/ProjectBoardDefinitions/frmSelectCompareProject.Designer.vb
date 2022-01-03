@@ -90,6 +90,7 @@ Partial Class frmSelectCompareProject
         Me.Controls.Add(Me.ListBox1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectCompareProject"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "zu vergleichendes Projekt wählen"
         Me.TopMost = True
         Me.ResumeLayout(False)

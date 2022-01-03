@@ -72,7 +72,7 @@ Partial Class frmDependencies
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(430, 13)
         Me.Label1.TabIndex = 3
-        Me.Label1.Text = "die sel. ""abhängigen Projekte"" sind von den sel. Projekten der anderen Gruppe abh" & _
+        Me.Label1.Text = "die sel. ""abhängigen Projekte"" sind von den sel. Projekten der anderen Gruppe abh" &
     "ängig;"
         '
         'Label2
@@ -226,6 +226,7 @@ Partial Class frmDependencies
         Me.Controls.Add(Me.dependentProjectList)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmDependencies"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Abhängigkeiten zwischen Projekten definieren"
         Me.ResumeLayout(False)
         Me.PerformLayout()

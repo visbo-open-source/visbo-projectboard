@@ -364,7 +364,7 @@ Partial Class frmProjektEingabe1
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.Name = "frmProjektEingabe1"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Neues Projekt anlegen"
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()

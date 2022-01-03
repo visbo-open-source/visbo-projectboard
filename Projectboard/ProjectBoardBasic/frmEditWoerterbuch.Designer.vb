@@ -197,7 +197,7 @@ Partial Class frmEditWoerterbuch
         'ToolStripStatusLabel1
         '
         Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(121, 17)
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(119, 17)
         Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
         '
         'clearUnknownList
@@ -257,7 +257,7 @@ Partial Class frmEditWoerterbuch
         '
         Me.storeButton.Enabled = False
         Me.storeButton.Location = New System.Drawing.Point(676, 502)
-        Me.storeButton.Name = "saveButton"
+        Me.storeButton.Name = "storeButton"
         Me.storeButton.Size = New System.Drawing.Size(75, 23)
         Me.storeButton.TabIndex = 22
         Me.storeButton.Text = "Speichern"
@@ -305,6 +305,7 @@ Partial Class frmEditWoerterbuch
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
         Me.Name = "frmEditWoerterbuch"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Editieren des Wörterbuchs"
         Me.StatusStrip1.ResumeLayout(False)
         Me.StatusStrip1.PerformLayout()

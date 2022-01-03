@@ -80,6 +80,7 @@ Partial Class frmStoreCockpit
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmStoreCockpit"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Speichern eines Chart-Cockpits"
         Me.ResumeLayout(False)
         Me.PerformLayout()

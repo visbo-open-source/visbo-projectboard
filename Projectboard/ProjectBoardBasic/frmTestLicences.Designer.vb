@@ -128,6 +128,7 @@ Partial Class frmTestLicences
         Me.Controls.Add(Me.LabelUser)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmTestLicences"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Test der Lizenzen"
         Me.ResumeLayout(False)
         Me.PerformLayout()

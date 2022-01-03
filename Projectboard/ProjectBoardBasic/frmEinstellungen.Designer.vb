@@ -216,6 +216,7 @@ Partial Class frmEinstellungen
         Me.Controls.Add(Me.chkboxPropAnpass)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmEinstellungen"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Einstellungen"
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox1.PerformLayout()

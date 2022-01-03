@@ -138,6 +138,7 @@ Partial Class frmCreateNewVariant
         Me.Controls.Add(Me.lblNeueVariante)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmCreateNewVariant"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Neue Variante anlegen"
         Me.TopMost = True
         Me.ResumeLayout(False)

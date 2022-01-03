@@ -55,7 +55,7 @@ Partial Class frmConfirmEditRess
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(500, 150)
         Me.Name = "frmConfirmEditRess"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Ressourcen Bedarfe ändern"
         Me.TopMost = True
         Me.ResumeLayout(False)

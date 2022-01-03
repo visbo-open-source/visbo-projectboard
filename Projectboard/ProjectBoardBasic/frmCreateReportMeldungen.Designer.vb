@@ -65,6 +65,7 @@ Partial Class frmCreateReportMeldungen
         Me.Controls.Add(Me.FileReportMessages)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmCreateReportMeldungen"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Meldungen der Reports in XML"
         Me.ResumeLayout(False)
         Me.PerformLayout()

@@ -61,6 +61,7 @@ Partial Class frmMoveTimeSpan
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmMoveTimeSpan"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Zeitraum verschieben"
         Me.TopMost = True
         Me.ResumeLayout(False)

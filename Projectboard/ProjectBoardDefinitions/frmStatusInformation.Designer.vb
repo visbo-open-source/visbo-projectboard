@@ -63,7 +63,7 @@ Partial Class frmStatusInformation
         Me.Controls.Add(Me.projectName)
         Me.Controls.Add(Me.bewertungsText)
         Me.Name = "frmStatusInformation"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Status Information"
         Me.TopMost = True
         Me.ResumeLayout(False)

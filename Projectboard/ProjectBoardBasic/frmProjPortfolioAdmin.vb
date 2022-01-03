@@ -689,7 +689,7 @@ Public Class frmProjPortfolioAdmin
         Me.Cursor = Cursors.Default
         lastIndexChecked = -1
 
-        Call getFrmPosition(PTfrm.loadC, Top, Left)
+        'Call getFrmPosition(PTfrm.loadC, wntop, wnleft)
 
 
         ' was sollen die ToolTipps zeigen ? 

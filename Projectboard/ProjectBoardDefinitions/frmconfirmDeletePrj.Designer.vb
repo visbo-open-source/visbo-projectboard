@@ -65,6 +65,7 @@ Partial Class frmconfirmDeletePrj
         Me.Controls.Add(Me.OK_Button)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmconfirmDeletePrj"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Löschen bestätigen"
         Me.ResumeLayout(False)
         Me.PerformLayout()

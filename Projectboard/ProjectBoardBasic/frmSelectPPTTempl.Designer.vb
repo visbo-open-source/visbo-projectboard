@@ -57,8 +57,9 @@ Partial Class frmSelectPPTTempl
         Me.Panel1.Controls.Add(Me.SelectAbbruch)
         Me.Panel1.Controls.Add(Me.createReport)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(431, 242)
+        Me.Panel1.Size = New System.Drawing.Size(345, 194)
         Me.Panel1.TabIndex = 0
         '
         'einstellungen
@@ -67,10 +68,9 @@ Partial Class frmSelectPPTTempl
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(304, 90)
-        Me.einstellungen.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.einstellungen.Location = New System.Drawing.Point(243, 72)
         Me.einstellungen.Name = "einstellungen"
-        Me.einstellungen.Size = New System.Drawing.Size(93, 17)
+        Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 29
         Me.einstellungen.Text = "Einstellungen"
         '
@@ -78,10 +78,10 @@ Partial Class frmSelectPPTTempl
         '
         Me.statusNotification.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.statusNotification.Location = New System.Drawing.Point(37, 180)
+        Me.statusNotification.Location = New System.Drawing.Point(30, 144)
         Me.statusNotification.Margin = New System.Windows.Forms.Padding(2)
         Me.statusNotification.Name = "statusNotification"
-        Me.statusNotification.Size = New System.Drawing.Size(358, 22)
+        Me.statusNotification.Size = New System.Drawing.Size(287, 20)
         Me.statusNotification.TabIndex = 28
         Me.statusNotification.Text = "Status-Meldungen"
         '
@@ -93,21 +93,21 @@ Partial Class frmSelectPPTTempl
         Me.RepVorlagenDropbox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.RepVorlagenDropbox.FormattingEnabled = True
         Me.RepVorlagenDropbox.IntegralHeight = False
-        Me.RepVorlagenDropbox.ItemHeight = 18
-        Me.RepVorlagenDropbox.Location = New System.Drawing.Point(152, 40)
+        Me.RepVorlagenDropbox.ItemHeight = 15
+        Me.RepVorlagenDropbox.Location = New System.Drawing.Point(122, 32)
         Me.RepVorlagenDropbox.Margin = New System.Windows.Forms.Padding(2)
         Me.RepVorlagenDropbox.Name = "RepVorlagenDropbox"
-        Me.RepVorlagenDropbox.Size = New System.Drawing.Size(239, 26)
+        Me.RepVorlagenDropbox.Size = New System.Drawing.Size(192, 23)
         Me.RepVorlagenDropbox.TabIndex = 27
         '
         'Label1
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(33, 40)
+        Me.Label1.Location = New System.Drawing.Point(26, 32)
         Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(112, 18)
+        Me.Label1.Size = New System.Drawing.Size(93, 15)
         Me.Label1.TabIndex = 26
         Me.Label1.Text = "Report-Vorlage:"
         '
@@ -115,10 +115,10 @@ Partial Class frmSelectPPTTempl
         '
         Me.SelectAbbruch.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.SelectAbbruch.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.SelectAbbruch.Location = New System.Drawing.Point(244, 126)
+        Me.SelectAbbruch.Location = New System.Drawing.Point(195, 101)
         Me.SelectAbbruch.Margin = New System.Windows.Forms.Padding(2)
         Me.SelectAbbruch.Name = "SelectAbbruch"
-        Me.SelectAbbruch.Size = New System.Drawing.Size(151, 31)
+        Me.SelectAbbruch.Size = New System.Drawing.Size(121, 25)
         Me.SelectAbbruch.TabIndex = 25
         Me.SelectAbbruch.Text = "Abbrechen"
         Me.SelectAbbruch.UseVisualStyleBackColor = True
@@ -127,24 +127,25 @@ Partial Class frmSelectPPTTempl
         '
         Me.createReport.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.createReport.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.createReport.Location = New System.Drawing.Point(37, 126)
+        Me.createReport.Location = New System.Drawing.Point(30, 101)
         Me.createReport.Margin = New System.Windows.Forms.Padding(2)
         Me.createReport.Name = "createReport"
-        Me.createReport.Size = New System.Drawing.Size(110, 31)
+        Me.createReport.Size = New System.Drawing.Size(88, 25)
         Me.createReport.TabIndex = 24
         Me.createReport.Text = "OK"
         Me.createReport.UseVisualStyleBackColor = True
         '
         'frmSelectPPTTempl
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(431, 241)
+        Me.ClientSize = New System.Drawing.Size(345, 193)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmSelectPPTTempl"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Auswählen Report-Vorlage"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)

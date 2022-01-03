@@ -66,7 +66,7 @@ Partial Class frmCompareConstellation
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(290, 0)
         Me.Name = "frmCompareConstellation"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Vergleich von zwei Portfolios"
         Me.ResumeLayout(False)
 

@@ -108,6 +108,7 @@ Partial Class frmStoreReportProfil
         Me.Controls.Add(Me.NameReportProfil)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmStoreReportProfil"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Aktuelles ReportProfil speichern"
         Me.ResumeLayout(False)
         Me.PerformLayout()

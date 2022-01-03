@@ -104,6 +104,7 @@ Partial Class frmInfoActualDataMonth
         Me.Controls.Add(Me.Label1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmInfoActualDataMonth"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Import Actual Data"
         Me.ResumeLayout(False)
         Me.PerformLayout()
