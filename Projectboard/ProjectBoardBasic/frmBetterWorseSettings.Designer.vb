@@ -248,6 +248,7 @@ Partial Class frmBetterWorseSettings
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmBetterWorseSettings"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Einstellungen für Besser / Schlechter Diagramme"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)

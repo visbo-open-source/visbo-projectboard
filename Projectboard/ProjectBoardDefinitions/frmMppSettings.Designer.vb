@@ -261,6 +261,7 @@ Partial Class frmMppSettings
         Me.Controls.Add(Me.shwPhaseText)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmMppSettings"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Einstellungen"
         Me.TopMost = True
         Me.ResumeLayout(False)

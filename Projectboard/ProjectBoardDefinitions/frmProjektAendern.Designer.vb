@@ -210,6 +210,7 @@ Partial Class frmProjektAendern
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.Name = "frmProjektAendern"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Daten ändern"
         Me.ResumeLayout(False)
         Me.PerformLayout()

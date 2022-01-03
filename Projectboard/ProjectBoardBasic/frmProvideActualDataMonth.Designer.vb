@@ -99,6 +99,7 @@ Partial Class frmProvideActualDataMonth
         Me.Controls.Add(Me.valueMonth)
         Me.Controls.Add(Me.Label1)
         Me.Name = "frmProvideActualDataMonth"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Import Ist-Daten"
         Me.ResumeLayout(False)
         Me.PerformLayout()

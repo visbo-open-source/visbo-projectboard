@@ -69,7 +69,7 @@ Partial Class frmEarliestLatestStart
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.OKButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.OKButton.Location = New System.Drawing.Point(30, 136)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(2)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(94, 31)
         Me.OKButton.TabIndex = 5
@@ -81,7 +81,7 @@ Partial Class frmEarliestLatestStart
         Me.AbbruchButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
         Me.AbbruchButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.AbbruchButton.Location = New System.Drawing.Point(227, 137)
-        Me.AbbruchButton.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.AbbruchButton.Margin = New System.Windows.Forms.Padding(2)
         Me.AbbruchButton.Name = "AbbruchButton"
         Me.AbbruchButton.Size = New System.Drawing.Size(98, 31)
         Me.AbbruchButton.TabIndex = 6
@@ -92,7 +92,7 @@ Partial Class frmEarliestLatestStart
         '
         Me.EarliestStart.LargeChange = 1
         Me.EarliestStart.Location = New System.Drawing.Point(21, 74)
-        Me.EarliestStart.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.EarliestStart.Margin = New System.Windows.Forms.Padding(2)
         Me.EarliestStart.Maximum = 0
         Me.EarliestStart.Minimum = -10
         Me.EarliestStart.Name = "EarliestStart"
@@ -123,7 +123,7 @@ Partial Class frmEarliestLatestStart
         '
         Me.LatestStart.LargeChange = 1
         Me.LatestStart.Location = New System.Drawing.Point(171, 74)
-        Me.LatestStart.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.LatestStart.Margin = New System.Windows.Forms.Padding(2)
         Me.LatestStart.Name = "LatestStart"
         Me.LatestStart.Size = New System.Drawing.Size(154, 45)
         Me.LatestStart.TabIndex = 11
@@ -198,8 +198,9 @@ Partial Class frmEarliestLatestStart
         Me.Controls.Add(Me.labelearliestStart)
         Me.Controls.Add(Me.labellatestStart)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmEarliestLatestStart"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Zeitspanne für den Projektstart"
         CType(Me.EarliestStart, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.LatestStart, System.ComponentModel.ISupportInitialize).EndInit()

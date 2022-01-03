@@ -96,6 +96,7 @@ Partial Class frmshowBedarfe
         Me.Controls.Add(Me.lblTyp)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmshowBedarfe"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "detaillierte Bedarfe"
         Me.ResumeLayout(False)
         Me.PerformLayout()

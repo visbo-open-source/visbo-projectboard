@@ -225,6 +225,7 @@ Partial Class frmSelectPhasesMilestones
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectPhasesMilestones"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Auswahl von Projekten, Phasen und Meilensteinen"
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()

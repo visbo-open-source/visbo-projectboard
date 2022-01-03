@@ -44,7 +44,7 @@ Partial Class frmdemoModusDate
         'DateTimeHistory
         '
         Me.DateTimeHistory.Location = New System.Drawing.Point(144, 22)
-        Me.DateTimeHistory.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.DateTimeHistory.Margin = New System.Windows.Forms.Padding(2)
         Me.DateTimeHistory.Name = "DateTimeHistory"
         Me.DateTimeHistory.Size = New System.Drawing.Size(208, 20)
         Me.DateTimeHistory.TabIndex = 27
@@ -83,8 +83,9 @@ Partial Class frmdemoModusDate
         Me.Controls.Add(Me.DateTimeHistory)
         Me.Controls.Add(Me.kennzeichnungDate)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmdemoModusDate"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Datum für die Historie (Demo)"
         Me.ResumeLayout(False)
         Me.PerformLayout()

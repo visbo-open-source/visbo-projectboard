@@ -94,6 +94,7 @@ Partial Class frmProjectInfo1
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmProjectInfo1"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Projekt-Info"
         Me.TopMost = True
         Me.ResumeLayout(False)

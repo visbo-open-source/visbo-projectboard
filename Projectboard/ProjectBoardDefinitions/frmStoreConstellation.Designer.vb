@@ -77,6 +77,7 @@ Partial Class frmStoreConstellation
         Me.Controls.Add(Me.ComboBox1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmStoreConstellation"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Portfolio speichern"
         Me.ResumeLayout(False)
         Me.PerformLayout()

@@ -90,6 +90,7 @@ Partial Class frmRemoveConstellation
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmRemoveConstellation"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Portfolio löschen"
         Me.Panel1.ResumeLayout(False)
         Me.ResumeLayout(False)

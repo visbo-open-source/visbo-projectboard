@@ -71,6 +71,7 @@ Partial Class frmMEhryRoleCost
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmMEhryRoleCost"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Auswahl Rollen/Kosten"
         Me.TopMost = True
         Me.ResumeLayout(False)

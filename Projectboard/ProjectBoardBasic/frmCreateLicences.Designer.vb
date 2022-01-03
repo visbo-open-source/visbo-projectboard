@@ -162,6 +162,7 @@ Partial Class frmCreateLicences
         Me.Controls.Add(Me.untilDate)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmCreateLicences"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Erzeugen der Lizenzen"
         Me.ResumeLayout(False)
         Me.PerformLayout()

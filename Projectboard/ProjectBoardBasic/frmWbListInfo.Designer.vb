@@ -82,6 +82,7 @@ Partial Class frmWbListInfo
         Me.Controls.Add(Me.elementName)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmWbListInfo"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Information"
         Me.TopMost = True
         Me.ResumeLayout(False)

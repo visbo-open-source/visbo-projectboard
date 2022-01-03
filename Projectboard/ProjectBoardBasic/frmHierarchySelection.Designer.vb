@@ -539,6 +539,7 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmHierarchySelection"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Auswahl von Plan-Objekten"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)

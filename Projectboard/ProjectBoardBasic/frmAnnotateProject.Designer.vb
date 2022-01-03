@@ -123,6 +123,7 @@ Partial Class frmAnnotateProject
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmAnnotateProject"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Plan-Elemente beschriften"
         Me.TopMost = True
         Me.ResumeLayout(False)

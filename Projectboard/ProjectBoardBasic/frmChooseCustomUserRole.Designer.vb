@@ -40,7 +40,7 @@ Partial Class frmChooseCustomUserRole
         Me.Panel1.Controls.Add(Me.dgv_customUserRoles)
         Me.Panel1.Controls.Add(Me.btnOK)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(366, 243)
         Me.Panel1.TabIndex = 0
@@ -100,6 +100,7 @@ Partial Class frmChooseCustomUserRole
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmChooseCustomUserRole"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Wählen Sie Ihre Rolle"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)

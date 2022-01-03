@@ -26,8 +26,8 @@ Public Class frmProjectInfo1
 
     Private Sub frmProjectInfo1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Me.Top = CInt(frmCoord(PTfrm.projInfoPL, PTpinfo.top))
-        Me.Left = CInt(frmCoord(PTfrm.projInfoPL, PTpinfo.left))
+        'Me.Top = CInt(frmCoord(PTfrm.projInfoPL, PTpinfo.top))
+        'Me.Left = CInt(frmCoord(PTfrm.projInfoPL, PTpinfo.left))
 
         Call checkLanguageAndVisibility()
 

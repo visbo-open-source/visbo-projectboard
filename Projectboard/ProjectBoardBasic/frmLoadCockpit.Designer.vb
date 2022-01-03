@@ -85,6 +85,7 @@ Partial Class frmLoadCockpit
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmLoadCockpit"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Chart - Cockpit Laden"
         Me.ResumeLayout(False)
         Me.PerformLayout()

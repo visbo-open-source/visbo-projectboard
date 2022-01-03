@@ -169,6 +169,7 @@ Partial Class frmAllocateRessources
         Me.ClientSize = New System.Drawing.Size(547, 367)
         Me.Controls.Add(Me.Panel1)
         Me.Name = "frmAllocateRessources"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Allocate Ressources"
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()

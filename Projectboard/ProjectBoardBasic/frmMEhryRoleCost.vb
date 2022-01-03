@@ -71,7 +71,7 @@ Public Class frmMEhryRoleCost
 
     Private Sub frmMEhryRoleCost_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Call getFrmPosition(PTfrm.rolecostME, Top, Left)
+        'Call getFrmPosition(PTfrm.rolecostME, Top, Left)
 
 
         Dim headerText As String = ""
