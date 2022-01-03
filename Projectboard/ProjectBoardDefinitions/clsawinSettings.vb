@@ -342,7 +342,7 @@ Public Class clsawinSettings
 
         ' tk added 3.1.22 , to distinguish between total Project and Phase values comparison
         ' applies only to massEdit: Soll-Ist Vergleich 
-        _considerProjectTotals = False
+        _considerProjectTotals = True
 
         _autoSetActualDataDate = False
         _actualDataMonth = Date.MinValue
