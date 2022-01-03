@@ -7322,7 +7322,8 @@ Public Module awinDiagrams
                                         ByRef Xdatenreihe() As String, ByRef tdatenreihe() As Double, ByRef vdatenreihe() As Double,
                                         ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double, ByRef internKapaDatenreihe() As Double,
                                         ByRef invoiceDatenReihe() As Double, ByRef formerInvoiceDatenReihe() As Double,
-                                        ByRef errMsg As String)
+                                        ByRef errMsg As String,
+                                        ByVal Optional restrictedToPhaseNameID As String = "")
 
 
 
@@ -7383,10 +7384,14 @@ Public Module awinDiagrams
                         ' es ist alles gemeint ... 
                         If myCustomUserRole.isAllowedToSee("") Then
 
-                            tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                            tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf("", inclSubRoles:=True,
+                                                                              outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage),
+                                                                              phaseNameID:=restrictedToPhaseNameID)
 
                             If Not IsNothing(scInfo.vglProj) Then
-                                tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                                tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf("", inclSubRoles:=True,
+                                                                                    outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage),
+                                                                                    phaseNameID:=restrictedToPhaseNameID)
                             End If
 
                         Else
@@ -7406,10 +7411,14 @@ Public Module awinDiagrams
 
                             If myCustomUserRole.isAllowedToSee(roleNameID) Then
 
-                                tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                                tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True,
+                                                                                  outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage),
+                                                                                  phaseNameID:=restrictedToPhaseNameID)
 
                                 If Not IsNothing(scInfo.vglProj) Then
-                                    tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                                    tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True,
+                                                                                        outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage),
+                                                                                        phaseNameID:=restrictedToPhaseNameID)
                                 End If
 
                             Else
@@ -8064,7 +8073,8 @@ Public Module awinDiagrams
     Public Function bestimmeChartDiagramTitle(ByVal scInfo As clsSmartPPTChartInfo, ByVal tsum As Double, vsum As Double,
                                               ByRef startRed As Integer, ByRef lengthRed As Integer,
                                               Optional ByVal calledFromMassEdit As Boolean = False,
-                                              Optional ByVal isMESkillChart As Boolean = False) As String
+                                              Optional ByVal isMESkillChart As Boolean = False,
+                                              Optional ByVal restrictedToPhaseNameID As String = "") As String
 
         Dim tmpResult As String = ""
         Dim bezeichner As String = ""
@@ -8233,15 +8243,25 @@ Public Module awinDiagrams
             If calledFromMassEdit Then
 
                 Dim modifiedTitle As String = ""
+                Dim projectPhaseName As String = scInfo.hproj.name
+
+                If restrictedToPhaseNameID.Length > 0 Then
+                    projectPhaseName = elemNameOfElemID(restrictedToPhaseNameID)
+                End If
+
+                If projectPhaseName.Length > 15 Then
+                    projectPhaseName = projectPhaseName.Substring(0, 13) & "..."
+                End If
+
                 If scInfo.vergleichsArt = PTVergleichsArt.beauftragung Then
-                    modifiedTitle = "Soll-Ist-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
+                    modifiedTitle = "Soll-Ist-Vergleich " & projectPhaseName & vbLf & tmpResult
                     If awinSettings.englishLanguage Then
-                        modifiedTitle = "Target-Actual Comparison " & scInfo.hproj.name & vbLf & tmpResult
+                        modifiedTitle = "Target-Actual Comparison " & projectPhaseName & vbLf & tmpResult
                     End If
                 Else
-                    modifiedTitle = "Aktuell-Vorher-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
+                    modifiedTitle = "Aktuell-Vorher-Vergleich " & projectPhaseName & vbLf & tmpResult
                     If awinSettings.englishLanguage Then
-                        modifiedTitle = "Current-Before Comparison " & scInfo.hproj.name & vbLf & tmpResult
+                        modifiedTitle = "Current-Before Comparison " & projectPhaseName & vbLf & tmpResult
                     End If
                 End If
 

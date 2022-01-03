@@ -848,10 +848,10 @@ Public Class Tabelle3
         If Not IsNothing(curCell.Comment) Then
             elemNameID = curCell.Comment.Text.Trim
             If elemNameID = "" Then
-                Call calcHryElemKey(CStr(curCell.Value), isMilestone)
+                elemNameID = calcHryElemKey(CStr(curCell.Value), isMilestone)
             End If
         Else
-            Call calcHryElemKey(CStr(curCell.Value), isMilestone)
+            elemNameID = calcHryElemKey(CStr(curCell.Value), isMilestone)
         End If
 
         isMilestone = elemIDIstMeilenstein(elemNameID)

@@ -20,15 +20,18 @@ Public Class frmMeRcEinstellungen
 
         If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
             chkbx_allowOvertime.Visible = True
+            chkbx_compareProjectTotals.Visible = True
             chkbx_allowOvertime.Checked = awinSettings.meAllowOverTime
         Else
             chkbx_allowOvertime.Visible = False
             chkbx_allowOvertime.Enabled = False
+            chkbx_compareProjectTotals.Visible = False
         End If
 
         chkbx_showHeader.Checked = appInstance.ActiveWindow.DisplayHeadings
 
         chkbx_compareWithVersion.Checked = awinSettings.meCompareVsLastPlan
+        chkbx_compareProjectTotals.Checked = awinSettings.considerProjectTotals
         chkbx_noAutoDistribution.Checked = awinSettings.noNewCalculation
 
     End Sub
@@ -39,6 +42,7 @@ Public Class frmMeRcEinstellungen
             Me.Text = "Edit Resources / Costs Settings"
             chkbx_showHeader.Text = "show Header"
             chkbx_compareWithVersion.Text = "compare with version from"
+            chkbx_compareProjectTotals.Text = "compare project totals"
             chkbx_allowOvertime.Text = "allow Overtime"
             chkbx_noAutoDistribution.Text = "no auto distribution of resources"
             cancel_btn.Text = "Cancel"
@@ -78,6 +82,7 @@ Public Class frmMeRcEinstellungen
             awinSettings.meAllowOverTime = chkbx_allowOvertime.Checked
 
             awinSettings.meCompareVsLastPlan = chkbx_compareWithVersion.Checked
+            awinSettings.considerProjectTotals = chkbx_compareProjectTotals.Checked
             awinSettings.meDateForLastPlan = VersionDatePicker.Value
 
             awinSettings.noNewCalculation = chkbx_noAutoDistribution.Checked
