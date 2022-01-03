@@ -58,6 +58,7 @@ Partial Class frmSelectVariant
         Me.Controls.Add(Me.variantNamesListBox)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectVariant"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "show Variant"
         Me.TopMost = True
         Me.ResumeLayout(False)

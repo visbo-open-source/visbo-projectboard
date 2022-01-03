@@ -30,10 +30,9 @@ Partial Class frmEditLink
         'okBtn
         '
         Me.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.okBtn.Location = New System.Drawing.Point(134, 95)
-        Me.okBtn.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.okBtn.Location = New System.Drawing.Point(89, 63)
         Me.okBtn.Name = "okBtn"
-        Me.okBtn.Size = New System.Drawing.Size(112, 35)
+        Me.okBtn.Size = New System.Drawing.Size(75, 23)
         Me.okBtn.TabIndex = 0
         Me.okBtn.Text = "OK"
         Me.okBtn.UseVisualStyleBackColor = True
@@ -41,36 +40,34 @@ Partial Class frmEditLink
         'clearBtn
         '
         Me.clearBtn.DialogResult = System.Windows.Forms.DialogResult.No
-        Me.clearBtn.Location = New System.Drawing.Point(378, 95)
-        Me.clearBtn.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.clearBtn.Location = New System.Drawing.Point(252, 63)
         Me.clearBtn.Name = "clearBtn"
-        Me.clearBtn.Size = New System.Drawing.Size(112, 35)
+        Me.clearBtn.Size = New System.Drawing.Size(75, 23)
         Me.clearBtn.TabIndex = 1
         Me.clearBtn.Text = "Clear"
         Me.clearBtn.UseVisualStyleBackColor = True
         '
         'linkValue
         '
-        Me.linkValue.Location = New System.Drawing.Point(18, 40)
-        Me.linkValue.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.linkValue.Location = New System.Drawing.Point(12, 27)
         Me.linkValue.Name = "linkValue"
         Me.linkValue.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.linkValue.Size = New System.Drawing.Size(644, 26)
+        Me.linkValue.Size = New System.Drawing.Size(431, 20)
         Me.linkValue.TabIndex = 2
         Me.linkValue.WordWrap = False
         '
         'frmEditLink
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(144.0!, 144.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(682, 160)
+        Me.ClientSize = New System.Drawing.Size(455, 107)
         Me.Controls.Add(Me.linkValue)
         Me.Controls.Add(Me.clearBtn)
         Me.Controls.Add(Me.okBtn)
-        Me.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.MaximizeBox = False
         Me.Name = "frmEditLink"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Provide Link"
         Me.TopMost = True
         Me.ResumeLayout(False)

@@ -24,17 +24,17 @@ Partial Class frmSettings
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSettings))
         Me.TabPage4 = New System.Windows.Forms.TabPage()
-        Me.btnLanguageImp = New System.Windows.Forms.Button()
-        Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.btnLanguageExp = New System.Windows.Forms.Button()
+        Me.btnLanguageImp = New System.Windows.Forms.Button()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.txtboxAbstandsEinheit = New System.Windows.Forms.ComboBox()
-        Me.lbl_schrift = New System.Windows.Forms.Label()
-        Me.txtboxSchriftGroesse = New System.Windows.Forms.TextBox()
-        Me.Label5 = New System.Windows.Forms.Label()
-        Me.lblLanguage = New System.Windows.Forms.Label()
-        Me.txtboxLanguage = New System.Windows.Forms.ComboBox()
         Me.btnChangeLanguage = New System.Windows.Forms.Button()
+        Me.txtboxLanguage = New System.Windows.Forms.ComboBox()
+        Me.lblLanguage = New System.Windows.Forms.Label()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.txtboxSchriftGroesse = New System.Windows.Forms.TextBox()
+        Me.lbl_schrift = New System.Windows.Forms.Label()
+        Me.txtboxAbstandsEinheit = New System.Windows.Forms.ComboBox()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage4.SuspendLayout()
         Me.TabPage1.SuspendLayout()
@@ -53,14 +53,14 @@ Partial Class frmSettings
         Me.TabPage4.Text = "Sprachen I/E"
         Me.TabPage4.UseVisualStyleBackColor = True
         '
-        'btnLanguageImp
+        'Label1
         '
-        Me.btnLanguageImp.Location = New System.Drawing.Point(37, 59)
-        Me.btnLanguageImp.Name = "btnLanguageImp"
-        Me.btnLanguageImp.Size = New System.Drawing.Size(75, 23)
-        Me.btnLanguageImp.TabIndex = 0
-        Me.btnLanguageImp.Text = "Importieren"
-        Me.btnLanguageImp.UseVisualStyleBackColor = True
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(37, 28)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(81, 13)
+        Me.Label1.TabIndex = 2
+        Me.Label1.Text = "Sprachen-Datei"
         '
         'btnLanguageExp
         '
@@ -71,14 +71,14 @@ Partial Class frmSettings
         Me.btnLanguageExp.Text = "Exportieren"
         Me.btnLanguageExp.UseVisualStyleBackColor = True
         '
-        'Label1
+        'btnLanguageImp
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(37, 28)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(81, 13)
-        Me.Label1.TabIndex = 2
-        Me.Label1.Text = "Sprachen-Datei"
+        Me.btnLanguageImp.Location = New System.Drawing.Point(37, 59)
+        Me.btnLanguageImp.Name = "btnLanguageImp"
+        Me.btnLanguageImp.Size = New System.Drawing.Size(75, 23)
+        Me.btnLanguageImp.TabIndex = 0
+        Me.btnLanguageImp.Text = "Importieren"
+        Me.btnLanguageImp.UseVisualStyleBackColor = True
         '
         'TabPage1
         '
@@ -97,51 +97,14 @@ Partial Class frmSettings
         Me.TabPage1.Text = "Allgemein"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
-        'txtboxAbstandsEinheit
+        'btnChangeLanguage
         '
-        Me.txtboxAbstandsEinheit.FormattingEnabled = True
-        Me.txtboxAbstandsEinheit.Items.AddRange(New Object() {"Days", "Weeks", "Months"})
-        Me.txtboxAbstandsEinheit.Location = New System.Drawing.Point(183, 28)
-        Me.txtboxAbstandsEinheit.Name = "txtboxAbstandsEinheit"
-        Me.txtboxAbstandsEinheit.Size = New System.Drawing.Size(83, 21)
-        Me.txtboxAbstandsEinheit.TabIndex = 25
-        Me.txtboxAbstandsEinheit.Text = "Days"
-        '
-        'lbl_schrift
-        '
-        Me.lbl_schrift.AutoSize = True
-        Me.lbl_schrift.Location = New System.Drawing.Point(2, 9)
-        Me.lbl_schrift.Name = "lbl_schrift"
-        Me.lbl_schrift.Size = New System.Drawing.Size(67, 13)
-        Me.lbl_schrift.TabIndex = 18
-        Me.lbl_schrift.Text = "Schriftgröße:"
-        '
-        'txtboxSchriftGroesse
-        '
-        Me.txtboxSchriftGroesse.Location = New System.Drawing.Point(183, 6)
-        Me.txtboxSchriftGroesse.Name = "txtboxSchriftGroesse"
-        Me.txtboxSchriftGroesse.Size = New System.Drawing.Size(83, 20)
-        Me.txtboxSchriftGroesse.TabIndex = 19
-        Me.txtboxSchriftGroesse.Text = "8"
-        Me.txtboxSchriftGroesse.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
-        '
-        'Label5
-        '
-        Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(2, 31)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(85, 13)
-        Me.Label5.TabIndex = 36
-        Me.Label5.Text = "Abstand messen"
-        '
-        'lblLanguage
-        '
-        Me.lblLanguage.AutoSize = True
-        Me.lblLanguage.Location = New System.Drawing.Point(3, 54)
-        Me.lblLanguage.Name = "lblLanguage"
-        Me.lblLanguage.Size = New System.Drawing.Size(50, 13)
-        Me.lblLanguage.TabIndex = 37
-        Me.lblLanguage.Text = "Sprache:"
+        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 104)
+        Me.btnChangeLanguage.Name = "btnChangeLanguage"
+        Me.btnChangeLanguage.Size = New System.Drawing.Size(83, 40)
+        Me.btnChangeLanguage.TabIndex = 39
+        Me.btnChangeLanguage.Text = "Namen übersetzen"
+        Me.btnChangeLanguage.UseVisualStyleBackColor = True
         '
         'txtboxLanguage
         '
@@ -152,14 +115,51 @@ Partial Class frmSettings
         Me.txtboxLanguage.TabIndex = 38
         Me.txtboxLanguage.Text = "Original"
         '
-        'btnChangeLanguage
+        'lblLanguage
         '
-        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 104)
-        Me.btnChangeLanguage.Name = "btnChangeLanguage"
-        Me.btnChangeLanguage.Size = New System.Drawing.Size(83, 40)
-        Me.btnChangeLanguage.TabIndex = 39
-        Me.btnChangeLanguage.Text = "Namen übersetzen"
-        Me.btnChangeLanguage.UseVisualStyleBackColor = True
+        Me.lblLanguage.AutoSize = True
+        Me.lblLanguage.Location = New System.Drawing.Point(3, 54)
+        Me.lblLanguage.Name = "lblLanguage"
+        Me.lblLanguage.Size = New System.Drawing.Size(50, 13)
+        Me.lblLanguage.TabIndex = 37
+        Me.lblLanguage.Text = "Sprache:"
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(2, 31)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(85, 13)
+        Me.Label5.TabIndex = 36
+        Me.Label5.Text = "Abstand messen"
+        '
+        'txtboxSchriftGroesse
+        '
+        Me.txtboxSchriftGroesse.Location = New System.Drawing.Point(183, 6)
+        Me.txtboxSchriftGroesse.Name = "txtboxSchriftGroesse"
+        Me.txtboxSchriftGroesse.Size = New System.Drawing.Size(83, 20)
+        Me.txtboxSchriftGroesse.TabIndex = 19
+        Me.txtboxSchriftGroesse.Text = "8"
+        Me.txtboxSchriftGroesse.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        '
+        'lbl_schrift
+        '
+        Me.lbl_schrift.AutoSize = True
+        Me.lbl_schrift.Location = New System.Drawing.Point(2, 9)
+        Me.lbl_schrift.Name = "lbl_schrift"
+        Me.lbl_schrift.Size = New System.Drawing.Size(67, 13)
+        Me.lbl_schrift.TabIndex = 18
+        Me.lbl_schrift.Text = "Schriftgröße:"
+        '
+        'txtboxAbstandsEinheit
+        '
+        Me.txtboxAbstandsEinheit.FormattingEnabled = True
+        Me.txtboxAbstandsEinheit.Items.AddRange(New Object() {"Days", "Weeks", "Months"})
+        Me.txtboxAbstandsEinheit.Location = New System.Drawing.Point(183, 28)
+        Me.txtboxAbstandsEinheit.Name = "txtboxAbstandsEinheit"
+        Me.txtboxAbstandsEinheit.Size = New System.Drawing.Size(83, 21)
+        Me.txtboxAbstandsEinheit.TabIndex = 25
+        Me.txtboxAbstandsEinheit.Text = "Days"
         '
         'TabControl1
         '
@@ -180,6 +180,7 @@ Partial Class frmSettings
         Me.Controls.Add(Me.TabControl1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSettings"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Einstellungen"
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()

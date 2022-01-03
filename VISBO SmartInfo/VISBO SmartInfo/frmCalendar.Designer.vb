@@ -90,6 +90,7 @@ Partial Class frmCalendar
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmCalendar"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Choose date"
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()

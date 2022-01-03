@@ -86,6 +86,7 @@ Partial Class frmSettingsNew
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmSettingsNew"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Settings"
         Me.ResumeLayout(False)
         Me.PerformLayout()

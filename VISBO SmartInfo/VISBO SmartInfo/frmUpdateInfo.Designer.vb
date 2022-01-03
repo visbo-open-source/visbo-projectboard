@@ -77,6 +77,7 @@ Partial Class frmUpdateInfo
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmUpdateInfo"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Update VISBO Smart Slides?"
         Me.TopMost = True
         Me.ResumeLayout(False)

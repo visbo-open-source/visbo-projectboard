@@ -31,44 +31,41 @@ Partial Class frmPassword
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(24, 49)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label1.Location = New System.Drawing.Point(16, 33)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(78, 20)
+        Me.Label1.Size = New System.Drawing.Size(53, 13)
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Passwort:"
         '
         'pwdText
         '
-        Me.pwdText.Location = New System.Drawing.Point(112, 45)
-        Me.pwdText.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.pwdText.Location = New System.Drawing.Point(75, 30)
         Me.pwdText.Name = "pwdText"
         Me.pwdText.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
-        Me.pwdText.Size = New System.Drawing.Size(246, 26)
+        Me.pwdText.Size = New System.Drawing.Size(165, 20)
         Me.pwdText.TabIndex = 1
         '
         'btnOK
         '
-        Me.btnOK.Location = New System.Drawing.Point(148, 108)
-        Me.btnOK.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.btnOK.Location = New System.Drawing.Point(99, 72)
         Me.btnOK.Name = "btnOK"
-        Me.btnOK.Size = New System.Drawing.Size(112, 35)
+        Me.btnOK.Size = New System.Drawing.Size(75, 23)
         Me.btnOK.TabIndex = 2
         Me.btnOK.Text = "OK"
         Me.btnOK.UseVisualStyleBackColor = True
         '
         'frmPassword
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(144.0!, 144.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(392, 162)
+        Me.ClientSize = New System.Drawing.Size(261, 108)
         Me.Controls.Add(Me.btnOK)
         Me.Controls.Add(Me.pwdText)
         Me.Controls.Add(Me.Label1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.Name = "frmPassword"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Passwort eingeben"
         Me.ResumeLayout(False)
         Me.PerformLayout()

@@ -123,6 +123,7 @@ Partial Class frmPPTTimeMachine
         Me.Controls.Add(Me.btnFastForward)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmPPTTimeMachine"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "VISBO Time Machine"
         Me.TopMost = True
         Me.ResumeLayout(False)
