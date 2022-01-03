@@ -141,7 +141,7 @@ Public Class clsProjekt
                 '_Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
                 '(_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
                 'value = False Then
-                If _vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
                 (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Or
                 value = False Then
                     _movable = value

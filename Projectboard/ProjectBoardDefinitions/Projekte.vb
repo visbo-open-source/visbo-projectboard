@@ -26648,6 +26648,37 @@ Public Module Projekte
 
     End Sub
 
+    Public Function getParentShape(ByVal shape As Excel.Shape) As Excel.Shape
+        Dim tmpValue As Integer = -1
+        Dim result As Excel.Shape = shape
+
+        With shape
+
+            If CBool(.HasChart) Then
+                ' do nothing
+            Else
+
+                Try
+                    If .AlternativeText.Length > 0 Then
+                        ' if projectname has been selected ..
+                        If .AlternativeText = "(Projektname)" Then
+                            Dim parentShape As Excel.Shape = CType(.ParentGroup, Excel.Shape)
+                            If parentShape.AlternativeText.Length > 0 Then
+                                If IsNumeric(parentShape.AlternativeText) Then
+                                    result = parentShape
+                                End If
+                            End If
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            End If
+        End With
+
+        getParentShape = result
+    End Function
     ''' <summary>
     ''' bestimmt die Art des Shapes, ob es ein Projekt, Phasen, Meilenstein, Status oder
     ''' Dependency Shape ist 

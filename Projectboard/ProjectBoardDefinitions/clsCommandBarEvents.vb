@@ -59,7 +59,7 @@ Public Class clsCommandBarEvents
                 ' in selCollection kommen jetzt alle Shapes, die Projekte sind ... 
                 For i = 1 To awinSelection.Count
                     ' es dürfen nur solche in die Collection aufgenommen werden, die schon existiert haben; also wenn shpelement.id = hproj.shpuid 
-                    shpelement = awinSelection.Item(i)
+                    shpelement = getParentShape(awinSelection.Item(i))
 
 
                     With shpelement
@@ -129,8 +129,9 @@ Public Class clsCommandBarEvents
 
 
                 For six = 1 To anzahlShapes
-
-                    shpelement = awinSelection.Item(six)
+                    ' falls richtig selektiert wurde, kein Problem
+                    ' falls projektname selektiert wurde  
+                    shpelement = getParentShape(awinSelection.Item(six))
                     shapeType = kindOfShape(shpelement)
 
                     ' Änderung 5.11: prüfung auf hasChart ist notwendig, um zusammengesetztes Projekt-Shape von Chart zu unterscheiden ...
@@ -140,7 +141,6 @@ Public Class clsCommandBarEvents
 
 
                         SID = shpelement.ID.ToString
-
 
                         laengeInMon = CInt(shpelement.Width / boxWidth)
 

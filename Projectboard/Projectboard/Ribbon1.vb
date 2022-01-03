@@ -661,12 +661,6 @@ Imports System.Web
                             ' WaitCursor einschalten ...
                             Cursor.Current = Cursors.WaitCursor
 
-                            If clearBoard Then
-                                ' es muss schon unterschieden werden, ob nur von Session geladen werden soll 
-                                AlleProjekte.Clear(updateCurrentConstellation:=True)
-                                projectConstellations.clearLoadedPortfolios()
-                            End If
-
                             ' liste, welche Portfolios und Portfolio-Varianten geladen werden sollen, wird erstellt
                             constellationsChecked = New SortedList(Of String, String)
 
@@ -696,6 +690,12 @@ Imports System.Web
                                     End If
                                 End If
                             Next
+
+                            If clearBoard And constellationsChecked.Count > 0 Then
+                                ' es muss schon unterschieden werden, ob nur von Session geladen werden soll 
+                                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                                projectConstellations.clearLoadedPortfolios()
+                            End If
 
                             If deleteFromDB Then
                                 For Each pvName As KeyValuePair(Of String, String) In constellationsChecked
@@ -5604,7 +5604,7 @@ Imports System.Web
                                 'If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or
                                 '    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And
                                 '     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
-                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or hproj.vpStatus = VProjectStatus(PTVPStati.proposed) Or
                                     (hproj.variantName <> "" And Not hproj.vpStatus = VProjectStatus(PTVPStati.stopped) And
                                      Not hproj.vpStatus = VProjectStatus(PTVPStati.finished)) Then
 

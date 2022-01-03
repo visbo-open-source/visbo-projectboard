@@ -3847,7 +3847,7 @@ Public Module awinGeneralModules
 
                     ' This function (ReSt-Call) delivers all projects of this constellation
                     Dim projList As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Value.constellationName, kvp.Value.vpID, kvp.Value.variantName, err, storedAtOrBefore)
-                    AlleProjekte.liste = projList
+                    'AlleProjekte.liste = projList
 
                     curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                     If Not IsNothing(curSummaryProjVorgabe) Then
