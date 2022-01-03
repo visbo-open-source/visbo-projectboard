@@ -6715,7 +6715,11 @@ Public Module Projekte
     Public Sub updateExcelChartOfProject(ByVal scInfo As clsSmartPPTChartInfo, ByVal chtobj As Excel.ChartObject,
                                          ByVal changeScale As Boolean, Optional ByVal calledFromMassEdit As Boolean = False)
 
+        Dim restrictedToPhaseID As String = ""
 
+        If calledFromMassEdit And Not elemIDIstMeilenstein(visboZustaende.currentElemID) And Not awinSettings.considerProjectTotals Then
+            restrictedToPhaseID = visboZustaende.currentElemID
+        End If
 
         ' Ende , wenn es kein hproj gibt 
         If IsNothing(scInfo) Then
@@ -6804,7 +6808,7 @@ Public Module Projekte
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
                                        Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe,
-                                       invoiceDatenreihe, formerInvoiceDatenreihe, errMsg)
+                                       invoiceDatenreihe, formerInvoiceDatenreihe, errMsg, restrictedToPhaseNameID:=restrictedToPhaseID)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -6826,7 +6830,9 @@ Public Module Projekte
 
         Dim startRedGreen As Integer = 0
         Dim lengthRedGreen As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen, calledFromMassEdit)
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen,
+                                                 calledFromMassEdit:=calledFromMassEdit,
+                                                 restrictedToPhaseNameID:=restrictedToPhaseID)
 
 
         With CType(chtobj.Chart, Excel.Chart)

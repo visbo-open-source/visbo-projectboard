@@ -1366,6 +1366,7 @@ Public Class Tabelle2
                             Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                         End If
                         ' tk 18.1.20
+
                         Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
                         'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
@@ -1643,7 +1644,10 @@ Public Class Tabelle2
         Dim oldRCName As String = ""
         Dim oldRCNameID As String = ""
 
+        Dim oldElemID As String = visboZustaende.currentElemID
+
         Dim changeBecauseRCNameChanged As Boolean = False
+        Dim changeBecausePhaseNameIDChanged As Boolean = False
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
             If Target.Cells.Count > 1 Then
@@ -1653,6 +1657,15 @@ Public Class Tabelle2
 
             rcName = CStr(meWS.Cells(Target.Row, columnRC).value)
             rcNameID = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(Target.Row, columnRC), meWS.Cells(Target.Row, columnRC + 1)), Excel.Range))
+
+
+            ' um welche Phase handelt es sich ? 
+            Try
+                visboZustaende.currentElemID = getPhaseNameIDfromExcelCell(CType(meWS.Cells(Target.Row, columnRC - 1), Excel.Range))
+                changeBecausePhaseNameIDChanged = (oldElemID <> visboZustaende.currentElemID)
+            Catch ex As Exception
+
+            End Try
 
             If visboZustaende.oldRow > 0 Then
                 oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
@@ -1748,7 +1761,7 @@ Public Class Tabelle2
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
 
-            If pNameChanged Or changeBecauseRCNameChanged Then
+            If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
 
                 Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
@@ -1773,17 +1786,6 @@ Public Class Tabelle2
 
             End If
 
-
-            ' tk 29.10. alt - nur rcname
-            'If Not IsNothing(rcName) Then
-            '    If oldRCName <> rcName Then
-            '        If rcName <> "" And Not alreadyDone Then
-            '            selectedProjekte.Clear(False)
-            '            selectedProjekte.Add(.currentProject, False)
-            '            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
-            '        End If
-            '    End If
-            'End If
 
         End With
 

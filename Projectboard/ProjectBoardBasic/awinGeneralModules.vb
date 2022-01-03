@@ -7670,6 +7670,7 @@ Public Module awinGeneralModules
                                   Optional ByVal calledFromMassEdit As Boolean = False,
                                   Optional ByVal currentRCName As String = "")
 
+
         ' Validieren ...
         If IsNothing(currentRCName) Then
             currentRCName = ""
@@ -7981,7 +7982,7 @@ Public Module awinGeneralModules
 
                                             ' Ende tk neu 18.1.20
 
-                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit:=calledFromMassEdit)
 
                                         Case PTprdk.KostenBalken2
                                             Dim vglProj As clsProjekt = Nothing
@@ -8100,7 +8101,7 @@ Public Module awinGeneralModules
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
-                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit:=calledFromMassEdit)
 
                                         Case PTprdk.PersonalBalken
                                             Dim vglProj As clsProjekt = Nothing
@@ -8202,7 +8203,7 @@ Public Module awinGeneralModules
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
-                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit:=calledFromMassEdit)
 
                                         Case PTprdk.PersonalBalken2
                                             Dim vglProj As clsProjekt = Nothing
@@ -8299,12 +8300,7 @@ Public Module awinGeneralModules
 
                                             End If
 
-                                            ' Ende tk neu 18.1.20
-
-                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
-                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
-                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit:=calledFromMassEdit)
 
                                         Case PTprdk.PersonalPie
 

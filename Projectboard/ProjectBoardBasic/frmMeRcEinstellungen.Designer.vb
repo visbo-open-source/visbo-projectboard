@@ -29,6 +29,7 @@ Partial Class frmMeRcEinstellungen
         Me.VersionDatePicker = New System.Windows.Forms.DateTimePicker()
         Me.ok_Btn = New System.Windows.Forms.Button()
         Me.cancel_btn = New System.Windows.Forms.Button()
+        Me.chkbx_compareProjectTotals = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'chkbx_showHeader
@@ -45,7 +46,7 @@ Partial Class frmMeRcEinstellungen
         'chkbx_compareWithVersion
         '
         Me.chkbx_compareWithVersion.AutoSize = True
-        Me.chkbx_compareWithVersion.Location = New System.Drawing.Point(22, 56)
+        Me.chkbx_compareWithVersion.Location = New System.Drawing.Point(22, 50)
         Me.chkbx_compareWithVersion.Name = "chkbx_compareWithVersion"
         Me.chkbx_compareWithVersion.Size = New System.Drawing.Size(132, 17)
         Me.chkbx_compareWithVersion.TabIndex = 1
@@ -55,7 +56,7 @@ Partial Class frmMeRcEinstellungen
         'chkbx_allowOvertime
         '
         Me.chkbx_allowOvertime.AutoSize = True
-        Me.chkbx_allowOvertime.Location = New System.Drawing.Point(22, 97)
+        Me.chkbx_allowOvertime.Location = New System.Drawing.Point(22, 110)
         Me.chkbx_allowOvertime.Name = "chkbx_allowOvertime"
         Me.chkbx_allowOvertime.Size = New System.Drawing.Size(135, 17)
         Me.chkbx_allowOvertime.TabIndex = 2
@@ -65,7 +66,7 @@ Partial Class frmMeRcEinstellungen
         'chkbx_noAutoDistribution
         '
         Me.chkbx_noAutoDistribution.AutoSize = True
-        Me.chkbx_noAutoDistribution.Location = New System.Drawing.Point(22, 138)
+        Me.chkbx_noAutoDistribution.Location = New System.Drawing.Point(22, 140)
         Me.chkbx_noAutoDistribution.Name = "chkbx_noAutoDistribution"
         Me.chkbx_noAutoDistribution.Size = New System.Drawing.Size(194, 17)
         Me.chkbx_noAutoDistribution.TabIndex = 3
@@ -74,7 +75,7 @@ Partial Class frmMeRcEinstellungen
         '
         'VersionDatePicker
         '
-        Me.VersionDatePicker.Location = New System.Drawing.Point(178, 55)
+        Me.VersionDatePicker.Location = New System.Drawing.Point(178, 48)
         Me.VersionDatePicker.Name = "VersionDatePicker"
         Me.VersionDatePicker.Size = New System.Drawing.Size(200, 20)
         Me.VersionDatePicker.TabIndex = 4
@@ -99,11 +100,23 @@ Partial Class frmMeRcEinstellungen
         Me.cancel_btn.Text = "Abbruch"
         Me.cancel_btn.UseVisualStyleBackColor = True
         '
+        'chkbx_compareProjectTotals
+        '
+        Me.chkbx_compareProjectTotals.AutoSize = True
+        Me.chkbx_compareProjectTotals.Location = New System.Drawing.Point(22, 80)
+        Me.chkbx_compareProjectTotals.Name = "chkbx_compareProjectTotals"
+        Me.chkbx_compareProjectTotals.Size = New System.Drawing.Size(155, 17)
+        Me.chkbx_compareProjectTotals.TabIndex = 7
+        Me.chkbx_compareProjectTotals.Text = "Vergleich auf Projekt-Basis "
+        Me.chkbx_compareProjectTotals.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText
+        Me.chkbx_compareProjectTotals.UseVisualStyleBackColor = True
+        '
         'frmMeRcEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(406, 223)
+        Me.Controls.Add(Me.chkbx_compareProjectTotals)
         Me.Controls.Add(Me.cancel_btn)
         Me.Controls.Add(Me.ok_Btn)
         Me.Controls.Add(Me.VersionDatePicker)
@@ -124,4 +137,5 @@ Partial Class frmMeRcEinstellungen
     Private WithEvents chkbx_showHeader As Windows.Forms.CheckBox
     Friend WithEvents ok_Btn As Windows.Forms.Button
     Friend WithEvents cancel_btn As Windows.Forms.Button
+    Friend WithEvents chkbx_compareProjectTotals As Windows.Forms.CheckBox
 End Class

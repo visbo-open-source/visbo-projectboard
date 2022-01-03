@@ -310,6 +310,10 @@ Public Class clsawinSettings
     ' automatisch neuberechnet werden 
     Public Property noNewCalculation As Boolean
 
+    ' tk 3.1.22 distinguis whether in MassEdit Soll-Ist Verglichs-Chart 
+    ' values should be compared on project base or phase base 
+    Public Property considerProjectTotals As Boolean
+
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
     Public Property actualDataMonth As Date
 
@@ -335,6 +339,10 @@ Public Class clsawinSettings
 
         ' tk added 25.12.21
         _noNewCalculation = False
+
+        ' tk added 3.1.22 , to distinguish between total Project and Phase values comparison
+        ' applies only to massEdit: Soll-Ist Vergleich 
+        _considerProjectTotals = False
 
         _autoSetActualDataDate = False
         _actualDataMonth = Date.MinValue

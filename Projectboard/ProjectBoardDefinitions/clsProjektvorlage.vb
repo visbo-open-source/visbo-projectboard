@@ -2723,11 +2723,13 @@
     ''' </summary>
     ''' <param name="roleID"></param>
     ''' <param name="inclSubRoles"></param>
+    ''' <param name="phaseNameID">optional, wenn angegeben dann werden nur die Ressourcen-Bedarfe für diese Phase berechnet </param>
     ''' <returns></returns>
     Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
                                                     Optional ByVal outPutInEuro As Boolean = False,
-                                                    Optional ByVal considerAllOtherNeedsOfRolesHavingTheseSkills As Boolean = False) As Double()
+                                                    Optional ByVal considerAllOtherNeedsOfRolesHavingTheseSkills As Boolean = False,
+                                                    Optional ByVal phaseNameID As String = "") As Double()
         Get
             Dim roleValues() As Double
 
@@ -2856,24 +2858,6 @@
                         listOfRoleIDs.Add(roleUID, 1)
                     End If
 
-                    ' tk 28.10 jetzt nicht mehr notwendig 
-                    ' now narrow Role-List down to all roles beeing parent to a person with that skill or being such a person
-                    'Dim delList As New List(Of Integer)
-                    'For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
-                    '    If Not RoleDefinitions.roleHasSkill(kvp.Key, skillUID) Then
-                    '        Try
-                    '            delList.Add(kvp.Key)
-                    '        Catch ex As Exception
-
-                    '        End Try
-
-                    '    End If
-                    'Next
-
-                    'For Each tmpRoleID As Integer In delList
-                    '    listOfRoleIDs.Remove(tmpRoleID)
-                    'Next
-
 
                     ' jetzt bestimme die Liste mit den Skills 
                     Dim curSkilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillUID)
@@ -2900,31 +2884,6 @@
                 ' limit to all roleUIDs having the skill, but calculate alle resource needs for given roleIDs
                 If listOfSkillIDs.Count > 0 And considerAllOtherNeedsOfRolesHavingTheseSkills And inclSubRoles Then
 
-                    ' tk das hier ist nicht nötig , die Role-List enthält alle relevanten IDs 
-                    'Dim delList As New List(Of Integer)
-                    'For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
-                    '    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
-                    '    If Not tmpRole.isCombinedRole Then
-                    '        Dim found As Boolean = False
-                    '        Dim ix As Integer = listOfSkillIDs.Count
-                    '        Do While ix <= listOfSkillIDs.Count And Not found
-                    '            found = tmpRole.getSkillIDs.ContainsKey(listOfSkillIDs.ElementAt(ix - 1).Key)
-                    '            ix = ix + 1
-                    '        Loop
-
-                    '        If Not found Then
-                    '            delList.Add(kvp.Key)
-                    '        End If
-                    '    Else
-                    '        delList.Add(kvp.Key)
-                    '    End If
-                    'Next
-
-                    '' jetzt die Liste bereinigen, so dass sie nur noch Rollen enthält, die die angegebene Skill haben ... 
-                    'For Each tmpRoleID As Integer In delList
-                    '    listOfRoleIDs.Remove(tmpRoleID)
-                    'Next
-
                     ' jetzt für die weitere Verarbeitung die Liste von Skills löschen
                     ' damit werden alle RoleIDs, die eine dieser Skills haben berücksichtigt, aber es werden alle Ressourcenbedarfe gerechnet 
                     For Each kvp As KeyValuePair(Of Integer, Double) In listOfSkillIDs
@@ -2936,50 +2895,57 @@
 
                 ' jetzt Loop über alle Phasen  
                 For Each cPhase As clsPhase In AllPhases
-                    Dim nrRoles As Integer = cPhase.countRoles
 
-                    phasenStart = cPhase.relStart - 1
+                    ' either calculate project needs or calculate phase needs only 
+                    Dim weitermachen As Boolean = (phaseNameID = cPhase.nameID) Or (phaseNameID = "")
 
-                    For ir As Integer = 1 To nrRoles
-                        Dim curRole As clsRolle = cPhase.getRole(ir)
-                        Dim relevant As Boolean = False
+                    If weitermachen Then
+                        Dim nrRoles As Integer = cPhase.countRoles
 
-                        If listOfRoleIDs.Count > 0 And listOfSkillIDs.Count = 0 Then
-                            If considerAllOtherNeedsOfRolesHavingTheseSkills And curRole.teamID > 0 Then
-                                relevant = listOfRoleIDs.ContainsKey(curRole.uid) And Not doNotConsiderSkillIDs.ContainsKey(curRole.teamID)
-                            Else
-                                relevant = listOfRoleIDs.ContainsKey(curRole.uid)
-                            End If
+                        phasenStart = cPhase.relStart - 1
 
+                        For ir As Integer = 1 To nrRoles
+                            Dim curRole As clsRolle = cPhase.getRole(ir)
+                            Dim relevant As Boolean = False
 
-                        ElseIf listOfRoleIDs.Count = 0 And listOfSkillIDs.Count > 0 Then
-                            relevant = listOfSkillIDs.ContainsKey(curRole.teamID)
-
-                        ElseIf listOfRoleIDs.Count > 0 And listOfSkillIDs.Count > 0 Then
-                            relevant = listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID)
-                        ElseIf calculateAll Then
-                            relevant = True
-                        End If
-
-                        If relevant Then
-
-                            Dim tagessatz As Double = 1.0
-                            If outPutInEuro Then
-                                tagessatz = curRole.tagessatzIntern
-                            End If
-
-                            tempArray = curRole.Xwerte
-
-                            For i = phasenStart To phasenStart + tempArray.Length - 1
-                                If outPutInEuro Then
-                                    roleValues(i) = roleValues(i) + tempArray(i - phasenStart) * tagessatz / 1000
+                            If listOfRoleIDs.Count > 0 And listOfSkillIDs.Count = 0 Then
+                                If considerAllOtherNeedsOfRolesHavingTheseSkills And curRole.teamID > 0 Then
+                                    relevant = listOfRoleIDs.ContainsKey(curRole.uid) And Not doNotConsiderSkillIDs.ContainsKey(curRole.teamID)
                                 Else
-                                    roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                    relevant = listOfRoleIDs.ContainsKey(curRole.uid)
                                 End If
 
-                            Next i
-                        End If
-                    Next
+
+                            ElseIf listOfRoleIDs.Count = 0 And listOfSkillIDs.Count > 0 Then
+                                relevant = listOfSkillIDs.ContainsKey(curRole.teamID)
+
+                            ElseIf listOfRoleIDs.Count > 0 And listOfSkillIDs.Count > 0 Then
+                                relevant = listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID)
+                            ElseIf calculateAll Then
+                                relevant = True
+                            End If
+
+                            If relevant Then
+
+                                Dim tagessatz As Double = 1.0
+                                If outPutInEuro Then
+                                    tagessatz = curRole.tagessatzIntern
+                                End If
+
+                                tempArray = curRole.Xwerte
+
+                                For i = phasenStart To phasenStart + tempArray.Length - 1
+                                    If outPutInEuro Then
+                                        roleValues(i) = roleValues(i) + tempArray(i - phasenStart) * tagessatz / 1000
+                                    Else
+                                        roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                    End If
+
+                                Next i
+                            End If
+                        Next
+                    End If
+
                 Next
                 getRessourcenBedarf = roleValues
 
