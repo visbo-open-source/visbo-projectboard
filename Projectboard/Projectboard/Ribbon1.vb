@@ -9050,6 +9050,130 @@ Imports System.Web
 
     End Sub
 
+    ''' <summary>
+    ''' update projects with information provided in tagetik files  
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTUpdateProjectsWithConfig(control As IRibbonControl)
+
+        Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectsFile As String = ""
+        Dim lastrow As Integer = 0
+        Dim outputString As String = ""
+
+        Dim listofArchivAllg As New List(Of String)
+        Dim outPutCollection As New Collection
+
+        Dim outputLine As String = ""
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
+
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+        Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectUpdates.xlsx"
+
+        ' check here whether it is about updating projects or whether it is about to create new projects 
+
+        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkProjectUpdateConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+        If allesOK Then
+
+            Dim getProjConfigImport As New frmSelectImportFiles
+
+            Dim returnValue As DialogResult
+
+
+            Call projektTafelInit()
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            getProjConfigImport.menueAswhl = PTImpExp.projectWithConfig
+            getProjConfigImport.importFileNames = projectsFile
+            returnValue = getProjConfigImport.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                Dim ok As Boolean = False
+                Dim importDate As Date = Date.Now
+                'Dim importDate As Date = "31.10.2013"
+                ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+                Dim listofFiles As Collection
+                listofFiles = getProjConfigImport.selImportFiles
+
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear(False)
+                ImportBaselineProjekte.Clear(False)
+
+                '' Cursor auf HourGlass setzen
+                Cursor.Current = Cursors.WaitCursor
+
+                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+                listofArchivAllg = readProjectsAllg(listofFiles, projectConfig, outPutCollection, ptImportTypen.telairTagetikUpdate)
+
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
+
+
+                Dim allOK As Boolean = False
+                Try
+                    allOK = upDatesEintragen(ImportProjekte, ImportBaselineProjekte, outPutCollection)
+
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error at Method updatesEintragen: " & vbLf & ex.Message)
+                    Else
+                        Call MsgBox("Fehler bei Methode updatesEintragen: " & vbLf & ex.Message)
+                    End If
+
+                End Try
+
+                ImportProjekte.Clear(updateCurrentConstellation:=False)
+                ImportBaselineProjekte.Clear(updateCurrentConstellation:=False)
+
+                '' Cursor auf Default setzen
+                Cursor.Current = Cursors.Default
+
+            End If
+
+        End If
+
+
+        outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+        outPutCollection.Add(outputString)
+
+        If outPutCollection.Count > 0 Then
+            If awinSettings.englishLanguage Then
+                Call showOutPut(outPutCollection, "Update Projects", "please check the notifications ...")
+            Else
+                Call showOutPut(outPutCollection, "Update Projekte", "folgende Probleme sind aufgetaucht")
+            End If
+        End If
+
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+
     Public Sub PTImportJIRAProjects(control As IRibbonControl)
 
         Dim JIRAProjectsConfig As New SortedList(Of String, clsConfigProjectsImport)
