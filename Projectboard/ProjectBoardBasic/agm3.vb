@@ -498,6 +498,201 @@ Public Module agm3
     End Function
 
     ''' <summary>
+    ''' checks whether or not config file is valid and projectfile does apply to it 
+    ''' </summary>
+    ''' <param name="configFile"></param>
+    ''' <param name="ProjectsFile"></param>
+    ''' <param name="ProjectsConfigs"></param>
+    ''' <param name="lastrow"></param>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function checkProjectUpdateConfig(configFile As String,
+                                      ByRef ProjectsFile As String,
+                                      ByRef ProjectsConfigs As SortedList(Of String, clsConfigProjectsImport),
+                                      ByRef lastrow As Integer,
+                                      ByRef outputCollection As Collection) As Boolean
+
+
+
+        Dim configLine As New clsConfigProjectsImport
+        Dim currentDirectoryName As String = requirementsOrdner
+        Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
+        Dim outputLine As String
+
+        Dim anzOldMsginOutput As Integer = outputCollection.Count
+
+        ''
+        '' Config-file wird geöffnet
+        ' Filename ggf. mit Directory erweitern
+        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(configFile) Then
+
+            Try
+                configWB = appInstance.Workbooks.Open(configFile)
+
+                Try
+
+                    If appInstance.Worksheets.Count > 0 Then
+
+                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                        Dim titleCol As Integer,
+                            IdentCol As Integer,
+                            InputFileCol As Integer,
+                            TypCol As Integer,
+                            DatenCol As Integer,
+                            TabUCol As Integer, TabNCol As Integer,
+                            SUCol As Integer, SNCol As Integer,
+                            ZUCol As Integer, ZNCol As Integer,
+                            ObjCol As Integer,
+                            InhaltCol As Integer
+
+                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschiedenen Configurationselemente
+
+                        titleCol = searcharea.Find("Titel").Column
+                        IdentCol = searcharea.Find("Identifier").Column
+                        InputFileCol = searcharea.Find("InputFile").Column
+                        TypCol = searcharea.Find("Typ").Column
+                        DatenCol = searcharea.Find("Datenbereich").Column
+                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
+                        TabUCol = searcharea.Find("Tabellen-Name").Column
+                        SNCol = searcharea.Find("Spalten-Nummer").Column
+                        SUCol = searcharea.Find("Spaltenüberschrift").Column
+                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
+                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
+
+                        ObjCol = searcharea.Find("Objekt-Typ").Column
+                        InhaltCol = searcharea.Find("Inhalt").Column
+
+                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
+
+                        If ok Then
+                            With currentWS
+                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
+
+                                For i = 6 To lastrow
+
+                                    configLine = New clsConfigProjectsImport
+
+                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
+
+                                    Select Case Titel
+                                        Case "DateiName"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.ProjectsFile = CStr(.Cells(i, InputFileCol).value)
+                                            ProjectsFile = configLine.ProjectsFile
+
+                                        Case Else
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.sheet = CInt(.Cells(i, TabNCol).value)
+                                            configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
+                                            If configLine.cellrange Then
+                                                Dim colrange As String = CStr(.Cells(i, SNCol).value)
+                                                Dim hstr() As String = Split(colrange, ":")
+                                                If hstr.Length = 2 Then
+                                                    configLine.column.von = CInt(hstr(0))
+                                                    configLine.column.bis = CInt(hstr(1))
+                                                ElseIf hstr.Length = 1 Then
+                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
+                                                Else
+                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                End If
+                                            Else
+                                                configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                configLine.column.bis = CInt(.Cells(i, SNCol).value)
+                                            End If
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+
+                                            If configLine.cellrange Then
+                                                Dim colrange As String = CStr(.Cells(i, ZNCol).value)
+                                                Dim hstr() As String = Split(colrange, ":")
+                                                If hstr.Length = 2 Then
+                                                    configLine.row.von = CInt(hstr(0))
+                                                    configLine.row.bis = CInt(hstr(1))
+                                                ElseIf hstr.Length = 1 Then
+                                                    configLine.row.von = CInt(.Cells(i, ZNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, ZNCol).value)
+                                                Else
+                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                End If
+                                            Else
+                                                configLine.row.von = CInt(.Cells(i, ZNCol).value)
+                                                configLine.row.bis = CInt(.Cells(i, ZNCol).value)
+                                            End If
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.objType = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                    End Select
+
+                                    If ProjectsConfigs.ContainsKey(configLine.Titel) Then
+                                        ProjectsConfigs.Remove(configLine.Titel)
+                                    End If
+
+                                    ProjectsConfigs.Add(configLine.Titel, configLine)
+
+                                Next
+
+                            End With
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputLine = "The structure of the configFile doesn't match!  -  " & configFile
+                            Else
+                                outputLine = "Der Aufbau der Konfigurationsdatei ist nicht passend  -  " & configFile
+                            End If
+                            outputCollection.Add(outputLine)
+                        End If
+
+                    End If
+
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        outputLine = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                    Else
+                        outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
+                                    vbCrLf & " es fand kein Import statt "
+                    End If
+                    outputCollection.Add(outputLine)
+                End Try
+
+                ' configCapaImport - Konfigurationsfile schließen
+                configWB.Close(SaveChanges:=False)
+
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    outputLine = "The configuration-file " & configFile & "  to update the projects couldn't be opened."
+                    Call MsgBox(outputLine)
+
+                Else
+                    outputLine = "Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
+                                vbCrLf & " Die Projekte können somit nicht importiert werden"
+                    Call MsgBox(outputLine)
+
+                End If
+                outputCollection.Add(outputLine)
+            End Try
+        Else
+            If awinSettings.englishLanguage Then
+                outputLine = "The configuration-file doen't exist!  -  " & configFile
+            Else
+                outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
+            End If
+            outputCollection.Add(outputLine)
+        End If
+
+        checkProjectUpdateConfig = (ProjectsConfigs.Count > 0) And (outputCollection.Count = anzOldMsginOutput)
+
+    End Function
+
+    ''' <summary>
     ''' überprüft, ob die Voraussetzungen für das Einlesen der Projekte. 
     ''' </summary>
     ''' <param name="configFile"></param>
@@ -3524,11 +3719,14 @@ Public Module agm3
             Call logger(ptErrLevel.logError, msgTxt, "", anzFehler)
         End If
 
-        If result Then
-            readProjectsAllg = listOfArchivFiles
-        Else
-            readProjectsAllg = New List(Of String)
-        End If
+        ' all which are successfully read will be in listOfArchivfiles 
+        ' all other stay in import with config folder 
+        readProjectsAllg = listOfArchivFiles
+        'If result Then
+        '    readProjectsAllg = listOfArchivFiles
+        'Else
+        '    readProjectsAllg = New List(Of String)
+        'End If
 
     End Function
 
@@ -5523,6 +5721,169 @@ Public Module agm3
 
         readProjectsWithConfig = result
     End Function
+
+    ''' <summary>
+    ''' used for Import ActualData : BaselineVersions = Nothing 
+    ''' and Update with Tagetik projects : BaselineVersions need to have same number than PlanningVersions
+    ''' can be performed by both OA, PL and PMO
+    ''' </summary>
+    ''' <param name="PlanningVersions"></param>
+    ''' <param name="BaselineVersions"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Public Function upDatesEintragen(ByVal PlanningVersions As clsProjekteAlle,
+                                     ByVal BaselineVersions As clsProjekteAlle,
+                                     ByRef meldungen As Collection) As Boolean
+        Dim result As Boolean = True
+        Dim outputLine As String = ""
+        Dim planningVersion As clsProjekt = Nothing
+        Dim baselineVersion As clsProjekt = Nothing
+        Dim err As New clsErrorCodeMsg
+
+        Dim today As Date = Date.Now
+
+        ' remember User Role 
+        Dim saveUserRole As ptCustomUserRoles = myCustomUserRole.customUserRole
+
+        If IsNothing(BaselineVersions) Then
+            ' Actual Data Import 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
+                Try
+                    planningVersion = kvp.Value
+                    Dim mProj As clsProjekt = Nothing
+                    ' Store Planning Version 
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = "planning saved: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logInfo, outputLine, "updatesEintragen", anzFehler)
+                        Else
+                            outputLine = "Planung gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logInfo, outputLine, "updatesEintragen", anzFehler)
+                        End If
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputLine = "planning Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                        Else
+                            outputLine = "Planung Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+        Else
+            ' Forecast / Baseline Import 
+            ' first Check
+            If PlanningVersions.Count = BaselineVersions.Count Then
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In PlanningVersions.liste
+                    Try
+                        planningVersion = kvp.Value
+                        Dim pName As String = kvp.Value.name
+                        Dim baselineKey As String = calcProjektKey(pName, ptVariantFixNames.pfv.ToString)
+                        baselineVersion = BaselineVersions.getProject(baselineKey)
+
+                        If Not IsNothing(baselineVersion) Then
+                            ' Store Planning Version 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                            Dim mProj As clsProjekt = Nothing
+                            planningVersion.timeStamp = today
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(planningVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "planning saved: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logInfo, outputLine, "updatesEintragen", anzFehler)
+                                Else
+                                    outputLine = "Planung gespeichert: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logInfo, outputLine, "updatesEintragen", anzFehler)
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "planning Store Failed: " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                                Else
+                                    outputLine = "Planung Speichern Fehlgeschlagen! " & planningVersion.name & ", " & planningVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                                End If
+                            End If
+
+                            ' Store Baseline Version 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                            mProj = Nothing
+                            baselineVersion.timeStamp = today
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(baselineVersion, dbUsername, mProj, err, attrToStore:=False) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Baseline saved: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logInfo, outputLine, "updatesEintragen", anzFehler)
+                                Else
+                                    outputLine = "Baseline gespeichert: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logInfo, outputLine, "updatesEintragen", anzFehler)
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "Baseline Store Failed: " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                                Else
+                                    outputLine = "Baseline Speichern Fehlgeschlagen! " & baselineVersion.name & ", " & baselineVersion.variantName
+                                    meldungen.Add(outputLine)
+                                    Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                                End If
+                            End If
+
+                        Else
+                            outputLine = "there is no baseline version ... skipped ...  " & kvp.Value.name
+                            meldungen.Add(outputLine)
+                            Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                        End If
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputLine = "unexpected failure - not stored: " & planningVersion.name
+                            Call logger(ptErrLevel.logError, outputLine & ex.Message, "updatesEintragen", anzFehler)
+                            meldungen.Add(outputLine)
+                        Else
+                            outputLine = "unerwarteter Fehler - nicht gespeichert: " & planningVersion.name
+                            Call logger(ptErrLevel.logError, outputLine & ex.Message, "updatesEintragen", anzFehler)
+                            meldungen.Add(outputLine)
+                        End If
+                    End Try
+
+                Next
+
+
+
+            Else
+                outputLine = "Nr of planning and baseline versions different: " & PlanningVersions.Count & ", " & BaselineVersions.Count
+                meldungen.Add(outputLine)
+                Call logger(ptErrLevel.logError, outputLine, "updatesEintragen", anzFehler)
+                result = False
+            End If
+
+
+        End If
+
+        ' restore User Role 
+        myCustomUserRole.customUserRole = saveUserRole
+
+        upDatesEintragen = result
+    End Function
+
 
     Public Function readProjectsJIRA(ByVal listOfProjectFiles As Collection,
                                      ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
@@ -7757,7 +8118,7 @@ Public Module agm3
 
                                 Else
                                     Dim tmpstr() As String = dateiName.Split(New Char() {CChar(".")}, 2)
-                                    projNumber = tmpstr(0)
+                                    projNumber = tmpstr(0).Trim
                                 End If
 
                                 hproj = getProjektFromSessionOrDB("", "", AlleProjekte, Date.Now, kdNr:=projNumber)
@@ -7983,11 +8344,11 @@ Public Module agm3
             ImportBaselineProjekte.Add(baseline, updateCurrentConstellation:=False)
 
             If awinSettings.englishLanguage Then
-                outputline = hproj.name & " updated! "
+                outputline = hproj.name & " updated in session! "
                 Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
 
             Else
-                outputline = hproj.name & " aktualisiert! "
+                outputline = hproj.name & " in Session aktualisiert! "
                 Call logger(ptErrLevel.logInfo, outputline, "updateProjectsWithConfig", anzFehler)
             End If
             result = True

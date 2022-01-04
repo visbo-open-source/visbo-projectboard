@@ -161,7 +161,7 @@
             Dim columnOfEntryDate As Integer = getColumnOfDate(entryDate)
             Dim columnOfExitDate As Integer = getColumnOfDate(exitDate)
 
-            result = columnOfEntryDate <= showRangeRight And columnOfExitDate >= showRangeLeft
+            result = columnOfEntryDate <= showRangeRight And columnOfExitDate > showRangeLeft
         End If
 
         isActiveRole = result
@@ -180,7 +180,7 @@
             Dim columnOfEntryDate As Integer = getColumnOfDate(entryDate)
             Dim columnOfExitDate As Integer = getColumnOfDate(exitDate)
 
-            result = columnOfEntryDate <= toDateCol And columnOfExitDate >= fromDateCol
+            result = columnOfEntryDate <= toDateCol And columnOfExitDate > fromDateCol
         End If
 
         isActiveRole = result

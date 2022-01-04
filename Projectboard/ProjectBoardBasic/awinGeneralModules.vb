@@ -1208,6 +1208,7 @@ Public Module awinGeneralModules
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
+
                         formerProj = awinReadProjectFromDatabase(kvp.Value.kundenNummer, searchPName, searchVName, Date.Now)
                     End If
                 Else
