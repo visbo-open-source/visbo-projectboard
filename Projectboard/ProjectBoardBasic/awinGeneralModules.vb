@@ -3338,7 +3338,7 @@ Public Module awinGeneralModules
         Dim boardwasEmpty As Boolean = (ShowProjekte.Count = 0)
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim startOfFreeRows As Integer = projectboardShapes.getMaxZeile
-        Dim zeilenOffset As Integer = 0
+
 
         ' prüfen, ob diese Constellation auch existiert ..
         If IsNothing(activeConstellation) Then
@@ -3351,7 +3351,7 @@ Public Module awinGeneralModules
             currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
         End If
 
-
+        Dim i As Integer = 0
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
@@ -3363,8 +3363,11 @@ Public Module awinGeneralModules
                     Dim vName As String = ptVariantFixNames.pfv.ToString
                     realKey = calcProjektKey(pName, vName)
                 End If
-
+                If i = 1 Then
+                    startOfFreeRows = startOfFreeRows + 1
+                End If
                 Call putItemOnVisualBoard(realKey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+                i = i + 1
             Catch ex As Exception
                 Exit For
             End Try
@@ -3970,7 +3973,8 @@ Public Module awinGeneralModules
                 If clearSession Or sessionWasEmpty Or
                     clearBoard Or boardWasEmpty Then
                     'ur: 2019-07-08: notwendig um die vpid zu retten
-                    currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy(False)
+                    currentSessionConstellation.vpID = constellationsToShow.Liste.ElementAt(0).Value.vpID
+                    'currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy(False)
                     currentConstellationPvName = calcPortfolioKey(constellationsToShow.Liste.ElementAt(0).Value)
                 Else
                     currentConstellationPvName = calcLastSessionScenarioName()
