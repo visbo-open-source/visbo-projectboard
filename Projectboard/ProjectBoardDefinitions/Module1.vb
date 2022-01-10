@@ -9785,6 +9785,7 @@ Public Module Module1
     Public Sub getFrmPosition(ByVal frmTyp As PTfrm, ByRef myTop As Integer, ByRef myLeft As Integer)
 
         Try
+            'Dim a As Integer = 0
             'myTop = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.top))
             'myLeft = CInt(20 + frmCoord(PTfrm.basis, PTpinfo.left))
 

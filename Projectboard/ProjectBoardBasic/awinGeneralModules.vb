@@ -3848,10 +3848,15 @@ Public Module awinGeneralModules
                     If onlySessionLoad And Not awinSettings.loadPFV Then
                         variantName = ""
                     End If
+                    Dim projList As New SortedList(Of String, clsProjekt)
+                    Try
+                        ' This function (ReSt-Call) delivers all projects of this constellation
+                        projList = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Value.constellationName, kvp.Value.vpID, kvp.Value.variantName, err, storedAtOrBefore)
+                        'AlleProjekte.liste = projList
+                    Catch ex As Exception
+                        logger(ptErrLevel.logWarning, "showConstellations", kvp.Value.constellationName & ": " & ex.Message)
+                    End Try
 
-                    ' This function (ReSt-Call) delivers all projects of this constellation
-                    Dim projList As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Value.constellationName, kvp.Value.vpID, kvp.Value.variantName, err, storedAtOrBefore)
-                    'AlleProjekte.liste = projList
 
                     curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                     If Not IsNothing(curSummaryProjVorgabe) Then
