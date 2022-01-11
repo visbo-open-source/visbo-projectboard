@@ -91,7 +91,7 @@ Public Class frmEinstellungen
                 loadPFV.Text = "load baseline(s as planning version"
             End If
             chkboxPropAnpass.Text = "adjust ressource needs proportionally"
-            chkbxAutoCalc.Text = "automatically distribute resource-/cost needs over time"
+            chkbxAutoCalc.Text = "automatically distribute values over time"
             chkbxPhasesAnteilig.Text = "use monthly overlap percentage in phase bottleneck diagrams"
             chkboxAmpel.Text = "show traffic lights"
             chkbxInvoices.Text = "Edit Invoices & Penalties"
@@ -109,7 +109,7 @@ Public Class frmEinstellungen
                 loadPFV.Text = "Baseline laden und als Planungs-Version zeigen"
             End If
             chkboxPropAnpass.Text = "Ressourcen Bedarfe proportional anpassen"
-            chkbxAutoCalc.Text = "Ressoucen- & Kostenbedarfe autom. über die Zeit verteilen"
+            chkbxAutoCalc.Text = "Werte autom. über die Zeit verteilen"
             chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
             chkboxAmpel.Text = "Ampel anzeigen"
             chkbxInvoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"

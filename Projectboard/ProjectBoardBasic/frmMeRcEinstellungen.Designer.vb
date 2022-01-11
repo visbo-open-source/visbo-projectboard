@@ -69,9 +69,9 @@ Partial Class frmMeRcEinstellungen
         Me.chkbx_AutoDistribution.AutoSize = True
         Me.chkbx_AutoDistribution.Location = New System.Drawing.Point(22, 140)
         Me.chkbx_AutoDistribution.Name = "chkbx_AutoDistribution"
-        Me.chkbx_AutoDistribution.Size = New System.Drawing.Size(165, 17)
+        Me.chkbx_AutoDistribution.Size = New System.Drawing.Size(133, 17)
         Me.chkbx_AutoDistribution.TabIndex = 3
-        Me.chkbx_AutoDistribution.Text = "autom Ressourcen-Verteilung"
+        Me.chkbx_AutoDistribution.Text = "Werte autom. verteilen"
         Me.chkbx_AutoDistribution.UseVisualStyleBackColor = True
         '
         'VersionDatePicker
