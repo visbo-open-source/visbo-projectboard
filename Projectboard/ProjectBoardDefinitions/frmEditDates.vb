@@ -32,7 +32,7 @@
             btn_Cancel.Text = "Cancel"
             btn_OK.Text = "OK"
             chkbx_adjustChilds.Text = "autom. adjust childs"
-            chkbxAutoDistr.Text = "autom. adjust ress. & cost"
+            chkbxAutoDistr.Text = "auto distribution of values"
             If IsMilestone Then
                 Text = "Edit Milestone Date"
             Else
@@ -91,5 +91,7 @@
         End If
     End Sub
 
+    Private Sub chkbxAutoDistr_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxAutoDistr.CheckedChanged
 
+    End Sub
 End Class

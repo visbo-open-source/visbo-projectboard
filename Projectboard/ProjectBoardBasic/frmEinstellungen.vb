@@ -108,8 +108,8 @@ Public Class frmEinstellungen
             Else
                 loadPFV.Text = "Baseline laden und als Planungs-Version zeigen"
             End If
-            chkboxPropAnpass.Text = "Ressourcen Bedarfe adjust ressource needs proportionally"
-            chkbxAutoCalc.Text = "Ressoucen- & Kostenbedarfe autom.  über die Zeit verteilen"
+            chkboxPropAnpass.Text = "Ressourcen Bedarfe proportional anpassen"
+            chkbxAutoCalc.Text = "Ressoucen- & Kostenbedarfe autom. über die Zeit verteilen"
             chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
             chkboxAmpel.Text = "Ampel anzeigen"
             chkbxInvoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"

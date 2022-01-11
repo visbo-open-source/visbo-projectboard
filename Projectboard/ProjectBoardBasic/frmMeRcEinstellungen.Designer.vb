@@ -22,10 +22,11 @@ Partial Class frmMeRcEinstellungen
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMeRcEinstellungen))
         Me.chkbx_showHeader = New System.Windows.Forms.CheckBox()
         Me.chkbx_compareWithVersion = New System.Windows.Forms.CheckBox()
         Me.chkbx_allowOvertime = New System.Windows.Forms.CheckBox()
-        Me.chkbx_noAutoDistribution = New System.Windows.Forms.CheckBox()
+        Me.chkbx_AutoDistribution = New System.Windows.Forms.CheckBox()
         Me.VersionDatePicker = New System.Windows.Forms.DateTimePicker()
         Me.ok_Btn = New System.Windows.Forms.Button()
         Me.cancel_btn = New System.Windows.Forms.Button()
@@ -63,15 +64,15 @@ Partial Class frmMeRcEinstellungen
         Me.chkbx_allowOvertime.Text = "Überbuchung erlauben"
         Me.chkbx_allowOvertime.UseVisualStyleBackColor = True
         '
-        'chkbx_noAutoDistribution
+        'chkbx_AutoDistribution
         '
-        Me.chkbx_noAutoDistribution.AutoSize = True
-        Me.chkbx_noAutoDistribution.Location = New System.Drawing.Point(22, 140)
-        Me.chkbx_noAutoDistribution.Name = "chkbx_noAutoDistribution"
-        Me.chkbx_noAutoDistribution.Size = New System.Drawing.Size(194, 17)
-        Me.chkbx_noAutoDistribution.TabIndex = 3
-        Me.chkbx_noAutoDistribution.Text = "keine autom Ressourcen-Verteilung"
-        Me.chkbx_noAutoDistribution.UseVisualStyleBackColor = True
+        Me.chkbx_AutoDistribution.AutoSize = True
+        Me.chkbx_AutoDistribution.Location = New System.Drawing.Point(22, 140)
+        Me.chkbx_AutoDistribution.Name = "chkbx_AutoDistribution"
+        Me.chkbx_AutoDistribution.Size = New System.Drawing.Size(165, 17)
+        Me.chkbx_AutoDistribution.TabIndex = 3
+        Me.chkbx_AutoDistribution.Text = "autom Ressourcen-Verteilung"
+        Me.chkbx_AutoDistribution.UseVisualStyleBackColor = True
         '
         'VersionDatePicker
         '
@@ -120,10 +121,11 @@ Partial Class frmMeRcEinstellungen
         Me.Controls.Add(Me.cancel_btn)
         Me.Controls.Add(Me.ok_Btn)
         Me.Controls.Add(Me.VersionDatePicker)
-        Me.Controls.Add(Me.chkbx_noAutoDistribution)
+        Me.Controls.Add(Me.chkbx_AutoDistribution)
         Me.Controls.Add(Me.chkbx_allowOvertime)
         Me.Controls.Add(Me.chkbx_compareWithVersion)
         Me.Controls.Add(Me.chkbx_showHeader)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmMeRcEinstellungen"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Einstellungen"
@@ -133,7 +135,7 @@ Partial Class frmMeRcEinstellungen
     End Sub
     Friend WithEvents chkbx_compareWithVersion As Windows.Forms.CheckBox
     Friend WithEvents chkbx_allowOvertime As Windows.Forms.CheckBox
-    Friend WithEvents chkbx_noAutoDistribution As Windows.Forms.CheckBox
+    Friend WithEvents chkbx_AutoDistribution As Windows.Forms.CheckBox
     Friend WithEvents VersionDatePicker As Windows.Forms.DateTimePicker
     Private WithEvents chkbx_showHeader As Windows.Forms.CheckBox
     Friend WithEvents ok_Btn As Windows.Forms.Button

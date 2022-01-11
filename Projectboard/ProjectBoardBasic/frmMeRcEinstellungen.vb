@@ -32,7 +32,7 @@ Public Class frmMeRcEinstellungen
 
         chkbx_compareWithVersion.Checked = awinSettings.meCompareVsLastPlan
         chkbx_compareProjectTotals.Checked = awinSettings.considerProjectTotals
-        chkbx_noAutoDistribution.Checked = awinSettings.noNewCalculation
+        chkbx_AutoDistribution.Checked = Not awinSettings.noNewCalculation
 
     End Sub
     Private Sub languageSettings()
@@ -44,7 +44,7 @@ Public Class frmMeRcEinstellungen
             chkbx_compareWithVersion.Text = "compare with version from"
             chkbx_compareProjectTotals.Text = "compare project totals"
             chkbx_allowOvertime.Text = "allow Overtime"
-            chkbx_noAutoDistribution.Text = "no auto distribution of resources"
+            chkbx_AutoDistribution.Text = "auto distribution of values"
             cancel_btn.Text = "Cancel"
 
         End If
@@ -85,7 +85,7 @@ Public Class frmMeRcEinstellungen
             awinSettings.considerProjectTotals = chkbx_compareProjectTotals.Checked
             awinSettings.meDateForLastPlan = VersionDatePicker.Value
 
-            awinSettings.noNewCalculation = chkbx_noAutoDistribution.Checked
+            awinSettings.noNewCalculation = Not chkbx_AutoDistribution.Checked
         Catch ex As Exception
 
         End Try

@@ -22,6 +22,7 @@ Partial Class frmEditDates
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmEditDates))
         Me.startdatePicker = New System.Windows.Forms.DateTimePicker()
         Me.enddatePicker = New System.Windows.Forms.DateTimePicker()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -119,7 +120,9 @@ Partial Class frmEditDates
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.enddatePicker)
         Me.Controls.Add(Me.startdatePicker)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmEditDates"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "edit Dates"
         Me.TopMost = True
         Me.ResumeLayout(False)
