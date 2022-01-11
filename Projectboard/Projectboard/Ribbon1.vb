@@ -6464,7 +6464,7 @@ Imports System.Web
                         Dim clearBoard As Boolean = True
                         Dim clearSession As Boolean = False
                         If constellationsToDo.Count > 0 Then
-                            Call showConstellations(constellationsToDo, clearBoard, clearSession, Date.Now)
+                            Call showConstellations(constellationsToDo, clearBoard, clearSession, Date.Now, onlySessionLoad:=True)
                         End If
 
                         ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
