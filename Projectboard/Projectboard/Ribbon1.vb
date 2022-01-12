@@ -8975,8 +8975,11 @@ Imports System.Web
 
                 Dim importOK As Boolean = True
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-                If telairImportConfigOK And projectsFile = projectConfig("DateiName").ProjectsFile Then
-                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                If telairImportConfigOK Then
+                    If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                        listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                    End If
+
                 ElseIf telairCostAssertionImportConfigOK Then
                     listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
                     If listofArchivAllg.Count = 0 Then importOK = False
