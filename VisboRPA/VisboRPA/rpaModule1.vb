@@ -7,12 +7,21 @@ Imports DBAccLayer
 Imports WebServerAcc
 Imports System.Security.Principal
 
-
+Imports System.Diagnostics
 Module rpaModule1
+
+
+    Public watchFolder As FileSystemWatcher
+    Public txt_folderactivity As String = ""
 
     Public myActivePortfolio As String = ""
     Public inputvalues As clsRPASetting = Nothing
 
+    Public rpaPath As String = My.Settings.rpaPath
+    Public swPath As String = My.Settings.swPath
+
+
+    Public watchDialog As New Form1
 
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
@@ -20,13 +29,10 @@ Module rpaModule1
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
 
-        Dim nonStop As Boolean = True
+
         Dim errMsgCode As New clsErrorCodeMsg
         Dim msgTxt As String = ""
         Dim result As Boolean = False
-
-        Dim rpaPath As String = My.Settings.rpaPath
-        Dim swPath As String = My.Settings.swPath
 
         Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
         Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
@@ -54,12 +60,13 @@ Module rpaModule1
             Console.WriteLine(msgTxt)
 
             ' break the RPA - Service
-            nonStop = False
+            Exit Sub
         End If
 
 
 
         Try
+
             Dim anzFiles As Integer = 0
 
             '' FileNamen für logging zusammenbauen
@@ -102,8 +109,110 @@ Module rpaModule1
             Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
 
             visboClient = "VISBO RPA / "
+        Catch ex As Exception
+            Call MsgBox("Error")
+        End Try
 
-            ' 
+        watchDialog.ShowDialog()
+
+
+
+
+
+            ' Stop watching the folder
+            watchFolder.EnableRaisingEvents = False
+
+
+
+    End Sub
+
+
+    Public Sub importAll()
+
+
+        Dim nonStop As Boolean = True
+        Dim errMsgCode As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+        Dim result As Boolean = False
+
+
+        Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+        Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
+        Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
+        Dim collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
+        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
+        Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
+        Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
+        Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
+
+        ''Dim myActivePortfolio As String = ""
+        ''Dim inputvalues As clsRPASetting = Nothing
+
+        '' Read the Setting-file of RPA
+        'If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+        '    Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+        '    inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+        '    ' is there a activePortfolio
+        '    myActivePortfolio = inputvalues.activePortfolio
+        'Else
+        '    ' Exit ! 
+        '    ' read all files, categorize and verify them  
+        '    msgTxt = "Exit - there is no File " & settingJsonFile
+        '    Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
+        '    Console.WriteLine(msgTxt)
+
+        '    ' break the RPA - Service
+        '    nonStop = False
+        'End If
+
+
+
+        'Try
+        '    Dim anzFiles As Integer = 0
+
+        '    '' FileNamen für logging zusammenbauen
+        '    logfileNamePath = createLogfileName(rpaFolder, "")
+
+        Dim listToProcess As New SortedList(Of String, Integer)
+        Dim listToProcess2 As New SortedList(Of String, Integer)
+        Dim listActualDataFiles As New SortedList(Of String, Integer)
+
+        '    '    If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+        '    '        Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+        '    '        Dim inputvalues As clsRPASetting = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+
+        '    '        ' is there a activePortfolio
+        '    '        myActivePortfolio = inputvalues.activePortfolio
+
+        '    ' now check whether or not the folder are existings , if not create them 
+        '    If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(successFolder)
+        '    End If
+
+        '    If Not My.Computer.FileSystem.DirectoryExists(failureFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(failureFolder)
+        '    End If
+
+        '    If Not My.Computer.FileSystem.DirectoryExists(collectFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(collectFolder)
+        '    End If
+
+        '    If Not My.Computer.FileSystem.DirectoryExists(logfileFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(logfileFolder)
+        '    End If
+
+        '    If Not My.Computer.FileSystem.DirectoryExists(unknownFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(unknownFolder)
+        '    End If
+
+        '    ' read all files, categorize and verify them  
+        '    msgTxt = "Starting ..."
+        '    Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+
+        '    visboClient = "VISBO RPA / "
+
+        ' 
+        Try
             ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
             nonStop = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
 
@@ -414,10 +523,10 @@ Module rpaModule1
             ' now store User Login Data
             My.Settings.userNamePWD = awinSettings.userNamePWD
 
-                ' speichern 
-                My.Settings.Save()
+            ' speichern 
+            My.Settings.Save()
 
-                '' now release all writeProtections ...
+            '' now release all writeProtections ...
             'Dim errMsgCode As New clsErrorCodeMsg
             'If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, errMsgCode) Then
             '    If awinSettings.visboDebug Then
@@ -437,8 +546,44 @@ Module rpaModule1
         End Try
 
 
+    End Sub
+    Public Sub logchange(ByVal source As Object, ByVal e As _
+                        System.IO.FileSystemEventArgs)
+        If e.ChangeType = IO.WatcherChangeTypes.Changed Then
+            txt_folderactivity &= "File " & e.FullPath &
+                             " has been modified" & vbCrLf
+
+            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
+
+        End If
+        If e.ChangeType = IO.WatcherChangeTypes.Created Then
+            txt_folderactivity &= "File " & e.FullPath &
+                              " has been created" & vbCrLf
+
+            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
+
+        End If
+        If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
+            txt_folderactivity &= "File " & e.FullPath &
+                             " has been deleted" & vbCrLf
+
+            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
+
+        End If
+    End Sub
+
+
+    Public Sub logrename(ByVal source As Object, ByVal e As _
+                            System.IO.RenamedEventArgs)
+        txt_folderactivity &= "File" & e.OldName &
+                 " has been renamed to " & e.Name & vbCrLf
+
+
+        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
 
     End Sub
+
+
 
     Private Sub emptyRPASession()
         ImportProjekte.Clear()
