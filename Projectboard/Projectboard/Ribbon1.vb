@@ -293,6 +293,7 @@ Imports System.Web
                             cvName = constellationsToDo.Liste.First.Value.variantName
                         End If
                         ' now the projects are drawn
+                        Call sortCurrentConst(cName, cvName)
                         Call showConstellations(constellationsToDo, clearBoard, clearSession, Date.Now, showSummaryProject:=False, onlySessionLoad:=(control.Id = loadfromSession))
                     End If
 
@@ -901,9 +902,9 @@ Imports System.Web
                                 If boardWasEmpty Then
                                     If ShowProjekte.Count > 0 Then
 
-                                        If cName <> "" Then
-                                            Call sortCurrentConst(cName, cvName)
-                                        End If
+                                        'If cName <> "" Then
+                                        Call sortCurrentConst(cName, cvName)
+                                        'End If
 
                                         Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
                                         If clearBoard Then
