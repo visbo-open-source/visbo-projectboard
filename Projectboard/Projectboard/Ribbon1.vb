@@ -8904,6 +8904,8 @@ Imports System.Web
     End Sub
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
 
+
+
         Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
         Dim projectCostAssertConfig As New SortedList(Of String, clsConfigProjectsImport)
         Dim projectsFile As String = ""
@@ -8917,6 +8919,10 @@ Imports System.Web
 
         Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
 
+        Dim telairImportConfigOK As Boolean = False
+        Dim telairCostAssertionImportConfigOK As Boolean = False
+        Dim instartImportConfigOK As Boolean = False
+
         ' Konfigurationsdatei lesen und Validierung durchführen
 
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
@@ -8925,13 +8931,22 @@ Imports System.Web
         Dim configCostAssertionImport As String = awinPath & configfilesOrdner & "configCostAssertionImport.xlsx"
 
         ' check here which Configuration file is given:
+        Select Case control.Id
+            Case "PT4G1B9"                ' create projects tagetik/calculation
+                ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+                telairImportConfigOK = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+                If Not telairImportConfigOK Then
+                    instartImportConfigOK = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
+                End If
+            Case "PT4G1B20"               ' cost assertion sheet
+                telairCostAssertionImportConfigOK = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
+
+
+        End Select
         ' Instart: a lot of Files or 
         ' Telair, normally just one file 
 
-        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-        Dim telairImportConfigOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
-        Dim telairCostAssertionImportConfigOK As Boolean = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
-        Dim instartImportConfigOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
         If telairImportConfigOK Or instartImportConfigOK Or telairCostAssertionImportConfigOK Then
 
@@ -8980,12 +8995,19 @@ Imports System.Web
                     If projectsFile = projectConfig("DateiName").ProjectsFile Then
                         listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
                     End If
+                End If
 
-                ElseIf telairCostAssertionImportConfigOK Then
-                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
-                    If listofArchivAllg.Count = 0 Then importOK = False
-                ElseIf instartImportConfigOK Then
-                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                If telairCostAssertionImportConfigOK Then
+                    If projectsFile = projectCostAssertConfig("DateiName").ProjectsFile Then
+                        listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
+                        If listofArchivAllg.Count = 0 Then importOK = False
+                    End If
+                End If
+
+                If instartImportConfigOK Then
+                    If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                        listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                    End If
                 End If
 
 
