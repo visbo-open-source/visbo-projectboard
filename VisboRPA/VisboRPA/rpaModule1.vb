@@ -11,9 +11,6 @@ Imports System.Diagnostics
 Module rpaModule1
 
 
-    Public watchFolder As FileSystemWatcher
-    Public txt_folderactivity As String = ""
-
     Public myActivePortfolio As String = ""
     Public inputvalues As clsRPASetting = Nothing
 
@@ -21,7 +18,7 @@ Module rpaModule1
     Public swPath As String = My.Settings.swPath
 
 
-    Public watchDialog As New Form1
+    Public watchDialog As New VisboRPAStart
 
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
@@ -114,14 +111,6 @@ Module rpaModule1
         End Try
 
         watchDialog.ShowDialog()
-
-
-
-
-
-            ' Stop watching the folder
-            watchFolder.EnableRaisingEvents = False
-
 
 
     End Sub
@@ -547,41 +536,9 @@ Module rpaModule1
 
 
     End Sub
-    Public Sub logchange(ByVal source As Object, ByVal e As _
-                        System.IO.FileSystemEventArgs)
-        If e.ChangeType = IO.WatcherChangeTypes.Changed Then
-            txt_folderactivity &= "File " & e.FullPath &
-                             " has been modified" & vbCrLf
-
-            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
-
-        End If
-        If e.ChangeType = IO.WatcherChangeTypes.Created Then
-            txt_folderactivity &= "File " & e.FullPath &
-                              " has been created" & vbCrLf
-
-            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
-
-        End If
-        If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
-            txt_folderactivity &= "File " & e.FullPath &
-                             " has been deleted" & vbCrLf
-
-            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
-
-        End If
-    End Sub
 
 
-    Public Sub logrename(ByVal source As Object, ByVal e As _
-                            System.IO.RenamedEventArgs)
-        txt_folderactivity &= "File" & e.OldName &
-                 " has been renamed to " & e.Name & vbCrLf
 
-
-        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", txt_folderactivity)
-
-    End Sub
 
 
 

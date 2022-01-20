@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class Form1
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
+Partial Class VisboRPAStart
     Inherits System.Windows.Forms.Form
 
     'Das Formular überschreibt den Löschvorgang, um die Komponentenliste zu bereinigen.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,10 +20,12 @@ Partial Class Form1
     'Hinweis: Die folgende Prozedur ist für den Windows Form-Designer erforderlich.
     'Das Bearbeiten ist mit dem Windows Form-Designer möglich.  
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.btn_start = New System.Windows.Forms.Button()
         Me.btn_stop = New System.Windows.Forms.Button()
+        Me.watchFolder = New System.IO.FileSystemWatcher()
+        CType(Me.watchFolder, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'btn_start
@@ -44,19 +46,27 @@ Partial Class Form1
         Me.btn_stop.Text = "Stop"
         Me.btn_stop.UseVisualStyleBackColor = True
         '
-        'Form1
+        'watchFolder
+        '
+        Me.watchFolder.EnableRaisingEvents = True
+        Me.watchFolder.Path = "C:\VISBO\VISBO Config Data"
+        Me.watchFolder.SynchronizingObject = Me
+        '
+        'VisboRPAStart
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(800, 450)
         Me.Controls.Add(Me.btn_stop)
         Me.Controls.Add(Me.btn_start)
-        Me.Name = "Form1"
-        Me.Text = "Form1"
+        Me.Name = "VisboRPAStart"
+        Me.Text = "VISBO Robotic Process automation"
+        CType(Me.watchFolder, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
 
     Friend WithEvents btn_start As Windows.Forms.Button
     Friend WithEvents btn_stop As Windows.Forms.Button
+    Friend WithEvents watchFolder As IO.FileSystemWatcher
 End Class
