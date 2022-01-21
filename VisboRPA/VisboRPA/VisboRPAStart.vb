@@ -95,11 +95,23 @@ Public Class VisboRPAStart
         Dim rpaCategory As New PTRpa
         Dim result As Boolean = False
 
+        ' Completion-File delivered?
+        completedOK = LCase(fullFileName).Contains(LCase("Timesheet_completed"))
+        If completedOK Then
+            'Einlesen der TimeSheets - Telair
+            ' nachsehen ob collect vollständig
+            myName = My.Computer.FileSystem.GetName(fullFileName)
+            result = processVisboActualData2(myName, myActivePortfolio, collectFolder, Date.Now())
+
+        End If
+
+
         If My.Computer.FileSystem.FileExists(fullFileName) And Not fullFileName.Contains("~$") Then
             'FileExtension ansehen
             Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
             Select Case fileExt
                 Case ".xlsx"
+
                     myName = My.Computer.FileSystem.GetName(fullFileName)
 
                     ' Bestimme den Import-Typ der zu importierenden Daten

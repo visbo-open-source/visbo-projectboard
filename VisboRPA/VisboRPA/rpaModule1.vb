@@ -20,6 +20,7 @@ Module rpaModule1
 
     Public errMsgCode As New clsErrorCodeMsg
     Public msgTxt As String = ""
+    Public completedOK As Boolean = False
     Public result As Boolean = False
 
     Public rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
@@ -584,10 +585,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboActualData2)
 
-                    ' Completion-File delivered?
-                    Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
-                    Dim completedOK As Boolean = (completionFiles.Count > 0)
-
+                    logfileNamePath = createLogfileName(rpaFolder)
 
                     'Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
                     ' in collectFolder verschieben
@@ -595,7 +593,7 @@ Module rpaModule1
                     My.Computer.FileSystem.MoveFile(fname, newDestination, True)
                     Call logger(ptErrLevel.logInfo, "collect: ", myName)
                     ' nachsehen ob collect vollständig
-                    If completionFiles.Count > 0 Then
+                    If completedOK Then
                         allOk = processVisboActualData2(fname, myActivePortfolio, collectFolder, importDate)
                     End If
 
@@ -620,6 +618,37 @@ Module rpaModule1
                 currentWB.Close(SaveChanges:=True)
             End If
 
+
+            If Not rpaCat = PTRpa.visboActualData2 Then
+
+                If allOk Then
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "success: ", myName)
+                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                    'Console.WriteLine(myName & ": successful ...")
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+
+
+                Else
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logError, "failed: ", myName)
+                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                & myName & ": with errors ..." & vbCrLf _
+                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
+                End If
+
+            End If
+
         Catch ex As Exception
 
             If awinSettings.englishLanguage Then
@@ -632,9 +661,7 @@ Module rpaModule1
 
         importOneProject = allOk
 
-        'If Not IsNothing(currentWB) Then
-        '    currentWB.Close(SaveChanges:=True)
-        'End If
+
     End Function
 
 
@@ -3158,11 +3185,12 @@ Module rpaModule1
     End Function
 
 
-    Private Function processVisboActualData2(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+    Public Function processVisboActualData2(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
-
+        logfileNamePath = createLogfileName(rpaFolder, myName)
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData2.ToString, myName)
+
 
         Dim weitermachen As Boolean = False
         Dim outPutCollection As New Collection
@@ -3597,7 +3625,7 @@ Module rpaModule1
 
                             End If
                             Dim istDatenVName As String = ptVariantFixNames.acd.ToString
-                                Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
                             ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
                             ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
