@@ -49,6 +49,7 @@ Partial Class VisboRPAStart
         'watchFolder
         '
         Me.watchFolder.EnableRaisingEvents = True
+        Me.watchFolder.NotifyFilter = System.IO.NotifyFilters.FileName
         Me.watchFolder.Path = "C:\VISBO\VISBO Config Data"
         Me.watchFolder.SynchronizingObject = Me
         '

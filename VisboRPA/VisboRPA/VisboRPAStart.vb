@@ -17,6 +17,7 @@ Public Class VisboRPAStart
         'make sure you use OR for each Filter as we need to
         'all of those 
 
+
         'Set this property to true to start watching
         watchFolder.EnableRaisingEvents = True
 
@@ -31,22 +32,115 @@ Public Class VisboRPAStart
     End Sub
 
     Private Sub watchFolder_Changed(sender As Object, e As IO.FileSystemEventArgs) Handles watchFolder.Changed
+
         Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Changed")
+        ''code here for newly changed file Or directory
+
+        logfileNamePath = createLogfileName(rpaFolder)
+
+        Call logger(ptErrLevel.logInfo, "WatchFolder_changed", "File '" & e.FullPath & "' was changed at: " & Date.Now().ToLongDateString)
+
+        Dim fullFileName As String = e.FullPath
+        Dim myName As String = ""
+        Dim rpaCategory As New PTRpa
+        Dim result As Boolean = False
+
+        'FileExtension ansehen
+        Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
+        Select Case fileExt
+            Case ".xlsx"
+                myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                ' Bestimme den Import-Typ der zu importierenden Daten
+                rpaCategory = bestimmeRPACategory(fullFileName)
+
+                If rpaCategory = PTRpa.visboUnknown Then
+                    ' move file to unknown Folder ... 
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                Else
+                    result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                    If result Then
+                        Call logger(ptErrLevel.logInfo, "WatchFolder_changed", "File '" & e.FullPath & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                    End If
+                End If
+            Case ".mpp"
+
+                myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                ' Import Typ ist Microsoft Project File
+                rpaCategory = PTRpa.visboMPP
+
+                ' Import wird durchgeführt
+                result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                If result Then
+                    Call logger(ptErrLevel.logInfo, "WatchFolder_changed", "File '" & e.FullPath & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                End If
+            Case Else
+
+        End Select
     End Sub
 
     Private Sub watchFolder_Created(sender As Object, e As IO.FileSystemEventArgs) Handles watchFolder.Created
         Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Created")
+        ''code here for newly changed file Or directory
+
+        logfileNamePath = createLogfileName(rpaFolder)
+
+        Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & e.FullPath & "' was created at: " & Date.Now().ToLongDateString)
+
+        Dim fullFileName As String = e.FullPath
+        Dim myName As String = ""
+        Dim rpaCategory As New PTRpa
+        Dim result As Boolean = False
+
+        'FileExtension ansehen
+        Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
+        Select Case fileExt
+            Case ".xlsx"
+                myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                ' Bestimme den Import-Typ der zu importierenden Daten
+                rpaCategory = bestimmeRPACategory(fullFileName)
+
+                If rpaCategory = PTRpa.visboUnknown Then
+                    ' move file to unknown Folder ... 
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                Else
+                    result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                    If result Then
+                        Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & e.FullPath & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                    End If
+                End If
+            Case ".mpp"
+
+                myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                ' Import Typ ist Microsoft Project File
+                rpaCategory = PTRpa.visboMPP
+
+                ' Import wird durchgeführt
+                result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                If result Then
+                    Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & e.FullPath & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                End If
+            Case Else
+
+        End Select
     End Sub
 
     Private Sub watchFolder_Deleted(sender As Object, e As IO.FileSystemEventArgs) Handles watchFolder.Deleted
+
         Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Deleted")
+        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was deleted at: " & Date.Now().ToLongDateString)
     End Sub
 
     Private Sub watchFolder_Renamed(sender As Object, e As IO.RenamedEventArgs) Handles watchFolder.Renamed
         Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Renamed")
+        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was renamed at: " & Date.Now().ToLongDateString)
     End Sub
 
-    Private Sub FileSystemWatcher1_Changed(sender As Object, e As IO.FileSystemEventArgs)
-
-    End Sub
 End Class
