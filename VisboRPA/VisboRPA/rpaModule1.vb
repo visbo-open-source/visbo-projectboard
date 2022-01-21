@@ -7,12 +7,31 @@ Imports DBAccLayer
 Imports WebServerAcc
 Imports System.Security.Principal
 
-
+Imports System.Diagnostics
 Module rpaModule1
+
 
     Public myActivePortfolio As String = ""
     Public inputvalues As clsRPASetting = Nothing
 
+    Public rpaPath As String = My.Settings.rpaPath
+    Public swPath As String = My.Settings.swPath
+
+
+    Public errMsgCode As New clsErrorCodeMsg
+    Public msgTxt As String = ""
+    Public result As Boolean = False
+
+    Public rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+    Public successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
+    Public failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
+    Public collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
+    Public logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
+    Public unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
+    Public settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
+    Public settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
+
+    Public watchDialog As New VisboRPAStart
 
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
@@ -20,25 +39,13 @@ Module rpaModule1
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
 
-        Dim nonStop As Boolean = True
-        Dim errMsgCode As New clsErrorCodeMsg
-        Dim msgTxt As String = ""
-        Dim result As Boolean = False
+        ' Parameter für die Excel Instance festlegen
+        appInstance = New xlns.Application
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        appInstance.Visible = False
+        appInstance.DisplayAlerts = False
 
-        Dim rpaPath As String = My.Settings.rpaPath
-        Dim swPath As String = My.Settings.swPath
-
-        Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
-        Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
-        Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
-        Dim collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
-        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
-        Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
-        Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
-        Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
-
-        'Dim myActivePortfolio As String = ""
-        'Dim inputvalues As clsRPASetting = Nothing
 
         ' Read the Setting-file of RPA
         If My.Computer.FileSystem.FileExists(settingJsonFile) Then
@@ -54,27 +61,15 @@ Module rpaModule1
             Console.WriteLine(msgTxt)
 
             ' break the RPA - Service
-            nonStop = False
+            Exit Sub
         End If
 
-
-
         Try
+
             Dim anzFiles As Integer = 0
 
             '' FileNamen für logging zusammenbauen
             logfileNamePath = createLogfileName(rpaFolder, "")
-
-            Dim listToProcess As New SortedList(Of String, Integer)
-            Dim listToProcess2 As New SortedList(Of String, Integer)
-            Dim listActualDataFiles As New SortedList(Of String, Integer)
-
-            '    If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-            '        Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-            '        Dim inputvalues As clsRPASetting = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-
-            '        ' is there a activePortfolio
-            '        myActivePortfolio = inputvalues.activePortfolio
 
             ' now check whether or not the folder are existings , if not create them 
             If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
@@ -97,13 +92,97 @@ Module rpaModule1
                 My.Computer.FileSystem.CreateDirectory(unknownFolder)
             End If
 
-            ' read all files, categorize and verify them  
-            msgTxt = "Starting ..."
-            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
 
-            visboClient = "VISBO RPA / "
+            Dim startup As Boolean = False
 
-            ' 
+            ' Read the Setting-file of RPA
+            If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+                Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+                inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+                ' is there a activePortfolio
+                myActivePortfolio = inputvalues.activePortfolio
+
+                ' read all files, categorize and verify them  
+                msgTxt = "Starting ..."
+                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+
+                visboClient = "VISBO RPA / "
+                ' 
+                ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
+                startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
+
+            Else
+                startup = False
+                ' Exit ! 
+                ' read all files, categorize and verify them  
+                msgTxt = "Exit - there is no File " & settingJsonFile
+                Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
+                Console.WriteLine(msgTxt)
+
+                ' break the RPA - Service
+
+            End If
+
+            If startup Then
+                ' Sendet eine Email an den User
+                errMsgCode = New clsErrorCodeMsg
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
+                If Not result Then
+                    Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
+                End If
+
+            Else
+                msgTxt = "wrong settings - exited without performing jobs ...."
+                'Call MsgBox(msgTxt)
+                Console.WriteLine(msgTxt)
+                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+                errMsgCode = New clsErrorCodeMsg
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
+                If Not result Then
+                    Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
+                End If
+
+            End If
+
+            watchDialog.ShowDialog()
+
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "VISBO Robotic Process Automation", ex.Message)
+        End Try
+
+
+    End Sub
+
+
+    Public Sub importAll()
+
+
+        Dim nonStop As Boolean = True
+        Dim errMsgCode As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+        Dim result As Boolean = False
+
+
+        Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+        Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
+        Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
+        Dim collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
+        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
+        Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
+        Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
+        Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
+
+
+
+        Dim listToProcess As New SortedList(Of String, Integer)
+        Dim listToProcess2 As New SortedList(Of String, Integer)
+        Dim listActualDataFiles As New SortedList(Of String, Integer)
+
+
+
+        ' 
+        Try
             ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
             nonStop = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
 
@@ -262,8 +341,8 @@ Module rpaModule1
                                 And Not kvp.Value = PTRpa.visboActualData1 _
                                 And Not kvp.Value = PTRpa.visboActualData2 Then
 
-                                appInstance.DisplayAlerts = False
-                                currentWB = appInstance.Workbooks.Open(kvp.Key)
+                                Module1.appInstance.DisplayAlerts = False
+                                currentWB = Module1.appInstance.Workbooks.Open(kvp.Key)
                             End If
 
                             logfileNamePath = createLogfileName(rpaFolder, myName)
@@ -414,10 +493,10 @@ Module rpaModule1
             ' now store User Login Data
             My.Settings.userNamePWD = awinSettings.userNamePWD
 
-                ' speichern 
-                My.Settings.Save()
+            ' speichern 
+            My.Settings.Save()
 
-                '' now release all writeProtections ...
+            '' now release all writeProtections ...
             'Dim errMsgCode As New clsErrorCodeMsg
             'If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, errMsgCode) Then
             '    If awinSettings.visboDebug Then
@@ -437,8 +516,129 @@ Module rpaModule1
         End Try
 
 
-
     End Sub
+
+
+
+    Public Function importOneProject(ByVal fname As String, ByVal rpaCat As PTRpa, ByVal importDate As Date) As Boolean
+
+
+        Dim myName As String = My.Computer.FileSystem.GetName(fname)
+        Dim currentWB As xlns.Workbook = Nothing
+        Dim allOk As Boolean = False
+
+        Try
+
+            If Not rpaCat = PTRpa.visboMPP _
+                                And Not rpaCat = PTRpa.visboActualData1 _
+                                And Not rpaCat = PTRpa.visboActualData2 Then
+
+                appInstance.DisplayAlerts = False
+                currentWB = appInstance.Workbooks.Open(fname)
+            End If
+
+            logfileNamePath = createLogfileName(rpaFolder, myName)
+            Select Case rpaCat
+                Case CInt(PTRpa.visboProjectList)
+
+                    allOk = processProjectList(myName, myActivePortfolio)
+
+                Case CInt(PTRpa.visboFindProjectStart)
+
+                    allOk = processFindProjectStart(myName, myActivePortfolio)
+
+                Case CInt(PTRpa.visboMPP)
+
+                    allOk = processMppFile(fname, importDate)
+
+                Case CInt(PTRpa.visboProject)
+
+                    allOk = processVisboBrief(myName, importDate)
+
+                Case CInt(PTRpa.visboJira)
+
+                    allOk = processVisboJira(fname, importDate)
+
+                Case CInt(PTRpa.visboDefaultCapacity)
+                    allOk = True
+
+                Case CInt(PTRpa.visboInitialOrga)
+
+                    allOk = processInitialOrga(myName)
+
+                Case CInt(PTRpa.visboRoundtripOrga)
+
+                    allOk = processRoundTripOrga(myName)
+
+                Case CInt(PTRpa.visboModifierCapacities)
+
+                    allOk = True
+
+                Case CInt(PTRpa.visboExternalContracts)
+
+                    allOk = True
+
+                Case CInt(PTRpa.visboActualData1)
+
+                    allOk = processVisboActualData1(fname, importDate)
+
+                Case CInt(PTRpa.visboActualData2)
+
+                    ' Completion-File delivered?
+                    Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
+                    Dim completedOK As Boolean = (completionFiles.Count > 0)
+
+
+                    'Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
+                    ' in collectFolder verschieben
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "collect: ", myName)
+                    ' nachsehen ob collect vollständig
+                    If completionFiles.Count > 0 Then
+                        allOk = processVisboActualData2(fname, myActivePortfolio, collectFolder, importDate)
+                    End If
+
+                Case Else
+
+            End Select
+
+            ' Sendet eine Email an den User
+
+            'Dim result_sendEmail As Boolean = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("files abgearbeitet", errMsgCode)
+
+            If Not (rpaCat = PTRpa.visboMPP Or
+                                        rpaCat = PTRpa.visboJira Or
+                                        rpaCat = PTRpa.visboActualData1 Or
+                                        rpaCat = PTRpa.visboActualData2) Then
+
+                If allOk Then
+                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
+                Else
+                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
+                End If
+                currentWB.Close(SaveChanges:=True)
+            End If
+
+        Catch ex As Exception
+
+            If awinSettings.englishLanguage Then
+                msgTxt = "Error importing: "
+            Else
+                msgTxt = "Fehler beim Import von: "
+            End If
+            Call logger(ptErrLevel.logsevereError, msgTxt, myName & "/" & rpaCat.ToString)
+        End Try
+
+        importOneProject = allOk
+
+        'If Not IsNothing(currentWB) Then
+        '    currentWB.Close(SaveChanges:=True)
+        'End If
+    End Function
+
+
+
 
     Private Sub emptyRPASession()
         ImportProjekte.Clear()
@@ -520,7 +720,7 @@ Module rpaModule1
         Dim result As Boolean = False
 
         ' ggf hier noch die appInstance setzen ... 
-        appInstance = New xlns.Application
+        Module1.appInstance = New xlns.Application
 
         Try
 
@@ -1053,7 +1253,7 @@ Module rpaModule1
 
     End Function
 
-    Private Function bestimmeRPACategory(ByVal fileName As String) As PTRpa
+    Public Function bestimmeRPACategory(ByVal fileName As String) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
 
         ' Open fileName 
@@ -1062,10 +1262,10 @@ Module rpaModule1
             If My.Computer.FileSystem.FileExists(fileName) Then
 
                 Try
-                    appInstance.DisplayAlerts = False
-                    Dim currentWB As xlns.Workbook = appInstance.Workbooks.Open(fileName, UpdateLinks:=0)
+                    Module1.appInstance.DisplayAlerts = False
+                    Dim currentWB As xlns.Workbook = Module1.appInstance.Workbooks.Open(fileName, UpdateLinks:=0)
                     currentWB.Final = False
-                    appInstance.DisplayAlerts = True
+                    Module1.appInstance.DisplayAlerts = True
 
                     Try
                         ' Check auf Project Batch-List
@@ -1467,7 +1667,7 @@ Module rpaModule1
         result(1) = 1.0
 
         Try
-            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+            Dim currentWB As xlns.Workbook = CType(Module1.appInstance.ActiveWorkbook,
                                                             Global.Microsoft.Office.Interop.Excel.Workbook)
 
             Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -1681,7 +1881,7 @@ Module rpaModule1
 
 
         Try
-            Dim activeWSListe As xlns.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet,
+            Dim activeWSListe As xlns.Worksheet = CType(Module1.appInstance.ActiveWorkbook.ActiveSheet,
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             With activeWSListe
@@ -1729,6 +1929,9 @@ Module rpaModule1
         'read Project Brief and put it into ImportProjekte
         Try
             Dim hproj As clsProjekt = Nothing
+
+            Dim wsGeneralInformation As xlns.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Stammdaten"),
+                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             ' read the file and import into hproj
             Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
@@ -2131,205 +2334,211 @@ Module rpaModule1
             For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
 
                 Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
-                Dim stdDuration As Integer = hproj.dauerInDays
-                Dim myDuration As Integer = stdDuration
-                Dim minDuration As Integer = CInt(stdDuration * 0.7)
+
+                If Not IsNothing(hproj) Then
+
+                    Dim stdDuration As Integer = hproj.dauerInDays
+                    Dim myDuration As Integer = stdDuration
+                    Dim minDuration As Integer = CInt(stdDuration * 0.7)
 
 
 
-                Dim storeRequired As Boolean = False
+                    Dim storeRequired As Boolean = False
 
-                Dim newStartDate As Date
-                Dim newEndDate As Date
-                Dim key As String = calcProjektKey(hproj)
+                    Dim newStartDate As Date
+                    Dim newEndDate As Date
+                    Dim key As String = calcProjektKey(hproj)
 
-                If getColumnOfDate(hproj.startDate) < showRangeLeft Then
+                    If getColumnOfDate(hproj.startDate) < showRangeLeft Then
 
-                    ' create variant if not already done
-                    If hproj.variantName <> "arb" Then
-                        hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
-                        ' bring that into AlleProjekte
-                        key = calcProjektKey(hproj)
-                        deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
+                            ' bring that into AlleProjekte
+                            key = calcProjektKey(hproj)
+                            deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
 
-                        newStartDate = hproj.startDate.AddDays(deltaInDays)
-                        newEndDate = hproj.endeDate.AddDays(deltaInDays)
+                            newStartDate = hproj.startDate.AddDays(deltaInDays)
+                            newEndDate = hproj.endeDate.AddDays(deltaInDays)
 
-                        Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+                            Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
 
-                        If Not IsNothing(tmpProj) Then
-                            hproj = tmpProj
-                            storeRequired = True
-                        Else
-                            msgTxt = "project could be moved"
+                            If Not IsNothing(tmpProj) Then
+                                hproj = tmpProj
+                                storeRequired = True
+                            Else
+                                msgTxt = "project could be moved"
+                            End If
+
                         End If
 
                     End If
 
-                End If
+
+                    ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.AddAnyway(hproj)
+
+                    ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
+                    skillList.Clear()
+                    Dim skillIDs As Collection = hproj.getSkillNameIds
+
+                    For Each si As String In skillIDs
+                        If Not skillList.Contains(si) Then
+                            skillList.Add(si)
+                        End If
+                    Next
+
+                    ' now define showrangeLeft and showrangeRight from hproj 
+                    showRangeLeft = getColumnOfDate(hproj.startDate)
+                    showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                    Dim sumIterations As Integer = 0
+                    Dim endIterations As Integer = 0
+                    Dim durationIterations As Integer = 0
+
+                    If overutilizationFound Then
+
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
+
+                            key = calcProjektKey(hproj)
+                            AlleProjekte.Add(hproj)
+                        End If
+
+                        deltaInDays = 7
+                        Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
+                        Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
+
+                        Dim rememberStartDate As Date = hproj.startDate
+                        Dim rememberEndDate As Date = hproj.endeDate
+
+                        Try
+                            Dim tmpProj As clsProjekt = Nothing
+                            Do While overutilizationFound And endIterations <= maxEndIterations
+                                ' move project by deltaIndays
+
+                                newStartDate = rememberStartDate.AddDays(deltaInDays)
+
+                                Do While overutilizationFound And durationIterations <= maxDurationIterations
+
+                                    newEndDate = rememberEndDate
+                                    tmpProj = moveProject(hproj, newStartDate, newEndDate)
 
 
-                ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
-                AlleProjekte.Add(hproj)
-                ShowProjekte.AddAnyway(hproj)
+                                    If Not IsNothing(tmpProj) Then
 
-                ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
-                skillList.Clear()
-                Dim skillIDs As Collection = hproj.getSkillNameIds
+                                        hproj = tmpProj
 
-                For Each si As String In skillIDs
-                    If Not skillList.Contains(si) Then
-                        skillList.Add(si)
-                    End If
-                Next
+                                        ' now replace in AlleProjekte, ShowProjekte 
+                                        AlleProjekte.Add(tmpProj)
+                                        ShowProjekte.AddAnyway(tmpProj)
 
-                ' now define showrangeLeft and showrangeRight from hproj 
-                showRangeLeft = getColumnOfDate(hproj.startDate)
-                showRangeRight = getColumnOfDate(hproj.endeDate)
+                                        ' now define showrangeLeft and showrangeRight from hproj 
+                                        showRangeLeft = getColumnOfDate(hproj.startDate)
+                                        showRangeRight = getColumnOfDate(hproj.endeDate)
 
-                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-                Dim sumIterations As Integer = 0
-                Dim endIterations As Integer = 0
-                Dim durationIterations As Integer = 0
+                                        Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                        Console.WriteLine(infomsg)
+                                        Dim myMessages As New Collection
+                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
-                If overutilizationFound Then
+                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
 
-                    ' create variant if not already done
-                    If hproj.variantName <> "arb" Then
-                        hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
+                                        If overutilizationFound Then
+                                            durationIterations = durationIterations + 1
+                                        End If
 
-                        key = calcProjektKey(hproj)
-                        AlleProjekte.Add(hproj)
-                    End If
-
-                    deltaInDays = 7
-                    Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
-                    Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
-
-                    Dim rememberStartDate As Date = hproj.startDate
-                    Dim rememberEndDate As Date = hproj.endeDate
-
-                    Try
-                        Dim tmpProj As clsProjekt = Nothing
-                        Do While overutilizationFound And endIterations <= maxEndIterations
-                            ' move project by deltaIndays
-
-                            newStartDate = rememberStartDate.AddDays(deltaInDays)
-
-                            Do While overutilizationFound And durationIterations <= maxDurationIterations
-
-                                newEndDate = rememberEndDate
-                                tmpProj = moveProject(hproj, newStartDate, newEndDate)
-
-
-                                If Not IsNothing(tmpProj) Then
-
-                                    hproj = tmpProj
-
-                                    ' now replace in AlleProjekte, ShowProjekte 
-                                    AlleProjekte.Add(tmpProj)
-                                    ShowProjekte.AddAnyway(tmpProj)
-
-                                    ' now define showrangeLeft and showrangeRight from hproj 
-                                    showRangeLeft = getColumnOfDate(hproj.startDate)
-                                    showRangeRight = getColumnOfDate(hproj.endeDate)
-
-                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                    Console.WriteLine(infomsg)
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-
-                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-
-                                    If overutilizationFound Then
-                                        durationIterations = durationIterations + 1
+                                    Else
+                                        ' Error occurred 
+                                        Throw New ArgumentException("tmpProj is Nothing")
                                     End If
 
-                                Else
-                                    ' Error occurred 
-                                    Throw New ArgumentException("tmpProj is Nothing")
+                                    newStartDate = newStartDate.AddDays(deltaInDays)
+                                Loop
+
+                                If overutilizationFound Then
+
+                                    rememberStartDate = rememberStartDate.AddDays(deltaInDays)
+                                    rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+
+                                    tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+
+                                        hproj = tmpProj
+
+                                        ' now replace in AlleProjekte, ShowProjekte 
+                                        AlleProjekte.Add(tmpProj)
+                                        ShowProjekte.AddAnyway(tmpProj)
+
+                                        ' now define showrangeLeft and showrangeRight from hproj 
+                                        showRangeLeft = getColumnOfDate(hproj.startDate)
+                                        showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                                        Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                        Console.WriteLine(infomsg)
+                                        Dim myMessages As New Collection
+                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+
+                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+
+                                        If overutilizationFound Then
+                                            endIterations = endIterations + 1
+                                        End If
+
+                                    Else
+                                        ' Error occurred 
+                                        Throw New ArgumentException("tmpProj is Nothing")
+                                    End If
                                 End If
 
-                                newStartDate = newStartDate.AddDays(deltaInDays)
+
                             Loop
 
-                            If overutilizationFound Then
+                        Catch ex As Exception
+                            Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
+                            Dim myMessages As New Collection
+                            Call logger(ptErrLevel.logError, infomsg, myMessages)
+                            overutilizationFound = True
+                        End Try
 
-                                rememberStartDate = rememberStartDate.AddDays(deltaInDays)
-                                rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+                        If Not overutilizationFound Then
+                            ' it is already in there ... but now needed to be stored
+                            storeRequired = True
+                        Else
+                            ' take it out again , because there was no solution
+                            AlleProjekte.Remove(key)
+                            ShowProjekte.Remove(hproj.name)
+                        End If
 
-                                tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+                    Else
+                        ' all ok, just continue
+                    End If
 
-                                If Not IsNothing(tmpProj) Then
-
-                                    hproj = tmpProj
-
-                                    ' now replace in AlleProjekte, ShowProjekte 
-                                    AlleProjekte.Add(tmpProj)
-                                    ShowProjekte.AddAnyway(tmpProj)
-
-                                    ' now define showrangeLeft and showrangeRight from hproj 
-                                    showRangeLeft = getColumnOfDate(hproj.startDate)
-                                    showRangeRight = getColumnOfDate(hproj.endeDate)
-
-                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                    Console.WriteLine(infomsg)
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-
-                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-
-                                    If overutilizationFound Then
-                                        endIterations = endIterations + 1
-                                    End If
-
-                                Else
-                                    ' Error occurred 
-                                    Throw New ArgumentException("tmpProj is Nothing")
-                                End If
-                            End If
-
-
-                        Loop
-
-                    Catch ex As Exception
-                        Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
+                    If storeRequired Then
                         Dim myMessages As New Collection
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        overutilizationFound = True
-                    End Try
-
-                    If Not overutilizationFound Then
-                        ' it is already in there ... but now needed to be stored
-                        storeRequired = True
+                        If storeSingleProjectToDB(hproj, myMessages) Then
+                            Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                            'Console.WriteLine(infomsg)
+                        Else
+                            ' take it out again , because there was no solution
+                            ShowProjekte.Remove(hproj.name)
+                            Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logError, infomsg, myMessages)
+                            'Console.WriteLine(infomsg)
+                        End If
                     Else
-                        ' take it out again , because there was no solution
-                        AlleProjekte.Remove(key)
-                        ShowProjekte.Remove(hproj.name)
-                    End If
-
-                Else
-                    ' all ok, just continue
-                End If
-
-                If storeRequired Then
-                    Dim myMessages As New Collection
-                    If storeSingleProjectToDB(hproj, myMessages) Then
-                        Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                        Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
+                        Dim myMessages As New Collection
                         Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
-                    Else
-                        ' take it out again , because there was no solution
-                        ShowProjekte.Remove(hproj.name)
-                        Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
                     End If
                 Else
-                    Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
-                    Dim myMessages As New Collection
-                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    Console.WriteLine(infomsg)
+                    Call logger(ptErrLevel.logInfo, "processProjectListWithActivePortfolio", "project '" & rankingPair.Value & "' does not exist so far")
                 End If
 
             Next
