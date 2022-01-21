@@ -2334,205 +2334,211 @@ Module rpaModule1
             For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
 
                 Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
-                Dim stdDuration As Integer = hproj.dauerInDays
-                Dim myDuration As Integer = stdDuration
-                Dim minDuration As Integer = CInt(stdDuration * 0.7)
+
+                If Not IsNothing(hproj) Then
+
+                    Dim stdDuration As Integer = hproj.dauerInDays
+                    Dim myDuration As Integer = stdDuration
+                    Dim minDuration As Integer = CInt(stdDuration * 0.7)
 
 
 
-                Dim storeRequired As Boolean = False
+                    Dim storeRequired As Boolean = False
 
-                Dim newStartDate As Date
-                Dim newEndDate As Date
-                Dim key As String = calcProjektKey(hproj)
+                    Dim newStartDate As Date
+                    Dim newEndDate As Date
+                    Dim key As String = calcProjektKey(hproj)
 
-                If getColumnOfDate(hproj.startDate) < showRangeLeft Then
+                    If getColumnOfDate(hproj.startDate) < showRangeLeft Then
 
-                    ' create variant if not already done
-                    If hproj.variantName <> "arb" Then
-                        hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
-                        ' bring that into AlleProjekte
-                        key = calcProjektKey(hproj)
-                        deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
+                            ' bring that into AlleProjekte
+                            key = calcProjektKey(hproj)
+                            deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
 
-                        newStartDate = hproj.startDate.AddDays(deltaInDays)
-                        newEndDate = hproj.endeDate.AddDays(deltaInDays)
+                            newStartDate = hproj.startDate.AddDays(deltaInDays)
+                            newEndDate = hproj.endeDate.AddDays(deltaInDays)
 
-                        Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+                            Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
 
-                        If Not IsNothing(tmpProj) Then
-                            hproj = tmpProj
-                            storeRequired = True
-                        Else
-                            msgTxt = "project could be moved"
+                            If Not IsNothing(tmpProj) Then
+                                hproj = tmpProj
+                                storeRequired = True
+                            Else
+                                msgTxt = "project could be moved"
+                            End If
+
                         End If
 
                     End If
 
-                End If
+
+                    ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.AddAnyway(hproj)
+
+                    ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
+                    skillList.Clear()
+                    Dim skillIDs As Collection = hproj.getSkillNameIds
+
+                    For Each si As String In skillIDs
+                        If Not skillList.Contains(si) Then
+                            skillList.Add(si)
+                        End If
+                    Next
+
+                    ' now define showrangeLeft and showrangeRight from hproj 
+                    showRangeLeft = getColumnOfDate(hproj.startDate)
+                    showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                    Dim sumIterations As Integer = 0
+                    Dim endIterations As Integer = 0
+                    Dim durationIterations As Integer = 0
+
+                    If overutilizationFound Then
+
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
+
+                            key = calcProjektKey(hproj)
+                            AlleProjekte.Add(hproj)
+                        End If
+
+                        deltaInDays = 7
+                        Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
+                        Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
+
+                        Dim rememberStartDate As Date = hproj.startDate
+                        Dim rememberEndDate As Date = hproj.endeDate
+
+                        Try
+                            Dim tmpProj As clsProjekt = Nothing
+                            Do While overutilizationFound And endIterations <= maxEndIterations
+                                ' move project by deltaIndays
+
+                                newStartDate = rememberStartDate.AddDays(deltaInDays)
+
+                                Do While overutilizationFound And durationIterations <= maxDurationIterations
+
+                                    newEndDate = rememberEndDate
+                                    tmpProj = moveProject(hproj, newStartDate, newEndDate)
 
 
-                ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
-                AlleProjekte.Add(hproj)
-                ShowProjekte.AddAnyway(hproj)
+                                    If Not IsNothing(tmpProj) Then
 
-                ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
-                skillList.Clear()
-                Dim skillIDs As Collection = hproj.getSkillNameIds
+                                        hproj = tmpProj
 
-                For Each si As String In skillIDs
-                    If Not skillList.Contains(si) Then
-                        skillList.Add(si)
-                    End If
-                Next
+                                        ' now replace in AlleProjekte, ShowProjekte 
+                                        AlleProjekte.Add(tmpProj)
+                                        ShowProjekte.AddAnyway(tmpProj)
 
-                ' now define showrangeLeft and showrangeRight from hproj 
-                showRangeLeft = getColumnOfDate(hproj.startDate)
-                showRangeRight = getColumnOfDate(hproj.endeDate)
+                                        ' now define showrangeLeft and showrangeRight from hproj 
+                                        showRangeLeft = getColumnOfDate(hproj.startDate)
+                                        showRangeRight = getColumnOfDate(hproj.endeDate)
 
-                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-                Dim sumIterations As Integer = 0
-                Dim endIterations As Integer = 0
-                Dim durationIterations As Integer = 0
+                                        Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                        Console.WriteLine(infomsg)
+                                        Dim myMessages As New Collection
+                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
-                If overutilizationFound Then
+                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
 
-                    ' create variant if not already done
-                    If hproj.variantName <> "arb" Then
-                        hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
+                                        If overutilizationFound Then
+                                            durationIterations = durationIterations + 1
+                                        End If
 
-                        key = calcProjektKey(hproj)
-                        AlleProjekte.Add(hproj)
-                    End If
-
-                    deltaInDays = 7
-                    Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
-                    Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
-
-                    Dim rememberStartDate As Date = hproj.startDate
-                    Dim rememberEndDate As Date = hproj.endeDate
-
-                    Try
-                        Dim tmpProj As clsProjekt = Nothing
-                        Do While overutilizationFound And endIterations <= maxEndIterations
-                            ' move project by deltaIndays
-
-                            newStartDate = rememberStartDate.AddDays(deltaInDays)
-
-                            Do While overutilizationFound And durationIterations <= maxDurationIterations
-
-                                newEndDate = rememberEndDate
-                                tmpProj = moveProject(hproj, newStartDate, newEndDate)
-
-
-                                If Not IsNothing(tmpProj) Then
-
-                                    hproj = tmpProj
-
-                                    ' now replace in AlleProjekte, ShowProjekte 
-                                    AlleProjekte.Add(tmpProj)
-                                    ShowProjekte.AddAnyway(tmpProj)
-
-                                    ' now define showrangeLeft and showrangeRight from hproj 
-                                    showRangeLeft = getColumnOfDate(hproj.startDate)
-                                    showRangeRight = getColumnOfDate(hproj.endeDate)
-
-                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                    Console.WriteLine(infomsg)
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-
-                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-
-                                    If overutilizationFound Then
-                                        durationIterations = durationIterations + 1
+                                    Else
+                                        ' Error occurred 
+                                        Throw New ArgumentException("tmpProj is Nothing")
                                     End If
 
-                                Else
-                                    ' Error occurred 
-                                    Throw New ArgumentException("tmpProj is Nothing")
+                                    newStartDate = newStartDate.AddDays(deltaInDays)
+                                Loop
+
+                                If overutilizationFound Then
+
+                                    rememberStartDate = rememberStartDate.AddDays(deltaInDays)
+                                    rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+
+                                    tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+
+                                        hproj = tmpProj
+
+                                        ' now replace in AlleProjekte, ShowProjekte 
+                                        AlleProjekte.Add(tmpProj)
+                                        ShowProjekte.AddAnyway(tmpProj)
+
+                                        ' now define showrangeLeft and showrangeRight from hproj 
+                                        showRangeLeft = getColumnOfDate(hproj.startDate)
+                                        showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                                        Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                        Console.WriteLine(infomsg)
+                                        Dim myMessages As New Collection
+                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+
+                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+
+                                        If overutilizationFound Then
+                                            endIterations = endIterations + 1
+                                        End If
+
+                                    Else
+                                        ' Error occurred 
+                                        Throw New ArgumentException("tmpProj is Nothing")
+                                    End If
                                 End If
 
-                                newStartDate = newStartDate.AddDays(deltaInDays)
+
                             Loop
 
-                            If overutilizationFound Then
+                        Catch ex As Exception
+                            Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
+                            Dim myMessages As New Collection
+                            Call logger(ptErrLevel.logError, infomsg, myMessages)
+                            overutilizationFound = True
+                        End Try
 
-                                rememberStartDate = rememberStartDate.AddDays(deltaInDays)
-                                rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+                        If Not overutilizationFound Then
+                            ' it is already in there ... but now needed to be stored
+                            storeRequired = True
+                        Else
+                            ' take it out again , because there was no solution
+                            AlleProjekte.Remove(key)
+                            ShowProjekte.Remove(hproj.name)
+                        End If
 
-                                tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+                    Else
+                        ' all ok, just continue
+                    End If
 
-                                If Not IsNothing(tmpProj) Then
-
-                                    hproj = tmpProj
-
-                                    ' now replace in AlleProjekte, ShowProjekte 
-                                    AlleProjekte.Add(tmpProj)
-                                    ShowProjekte.AddAnyway(tmpProj)
-
-                                    ' now define showrangeLeft and showrangeRight from hproj 
-                                    showRangeLeft = getColumnOfDate(hproj.startDate)
-                                    showRangeRight = getColumnOfDate(hproj.endeDate)
-
-                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                    Console.WriteLine(infomsg)
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-
-                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-
-                                    If overutilizationFound Then
-                                        endIterations = endIterations + 1
-                                    End If
-
-                                Else
-                                    ' Error occurred 
-                                    Throw New ArgumentException("tmpProj is Nothing")
-                                End If
-                            End If
-
-
-                        Loop
-
-                    Catch ex As Exception
-                        Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
+                    If storeRequired Then
                         Dim myMessages As New Collection
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        overutilizationFound = True
-                    End Try
-
-                    If Not overutilizationFound Then
-                        ' it is already in there ... but now needed to be stored
-                        storeRequired = True
+                        If storeSingleProjectToDB(hproj, myMessages) Then
+                            Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                            'Console.WriteLine(infomsg)
+                        Else
+                            ' take it out again , because there was no solution
+                            ShowProjekte.Remove(hproj.name)
+                            Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logError, infomsg, myMessages)
+                            'Console.WriteLine(infomsg)
+                        End If
                     Else
-                        ' take it out again , because there was no solution
-                        AlleProjekte.Remove(key)
-                        ShowProjekte.Remove(hproj.name)
-                    End If
-
-                Else
-                    ' all ok, just continue
-                End If
-
-                If storeRequired Then
-                    Dim myMessages As New Collection
-                    If storeSingleProjectToDB(hproj, myMessages) Then
-                        Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                        Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
+                        Dim myMessages As New Collection
                         Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
-                    Else
-                        ' take it out again , because there was no solution
-                        ShowProjekte.Remove(hproj.name)
-                        Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
                     End If
                 Else
-                    Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
-                    Dim myMessages As New Collection
-                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    Console.WriteLine(infomsg)
+                    Call logger(ptErrLevel.logInfo, "processProjectListWithActivePortfolio", "project '" & rankingPair.Value & "' does not exist so far")
                 End If
 
             Next
