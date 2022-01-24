@@ -22,6 +22,7 @@ Partial Class VisboRPAStart
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(VisboRPAStart))
         Me.btn_start = New System.Windows.Forms.Button()
         Me.btn_stop = New System.Windows.Forms.Button()
         Me.watchFolder = New System.IO.FileSystemWatcher()
@@ -30,7 +31,7 @@ Partial Class VisboRPAStart
         '
         'btn_start
         '
-        Me.btn_start.Location = New System.Drawing.Point(27, 32)
+        Me.btn_start.Location = New System.Drawing.Point(12, 32)
         Me.btn_start.Name = "btn_start"
         Me.btn_start.Size = New System.Drawing.Size(75, 23)
         Me.btn_start.TabIndex = 0
@@ -39,7 +40,7 @@ Partial Class VisboRPAStart
         '
         'btn_stop
         '
-        Me.btn_stop.Location = New System.Drawing.Point(27, 74)
+        Me.btn_stop.Location = New System.Drawing.Point(93, 32)
         Me.btn_stop.Name = "btn_stop"
         Me.btn_stop.Size = New System.Drawing.Size(75, 23)
         Me.btn_stop.TabIndex = 1
@@ -57,11 +58,14 @@ Partial Class VisboRPAStart
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(800, 450)
+        Me.ClientSize = New System.Drawing.Size(187, 62)
         Me.Controls.Add(Me.btn_stop)
         Me.Controls.Add(Me.btn_start)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "VisboRPAStart"
-        Me.Text = "VISBO Robotic Process automation"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.WindowsDefaultBounds
+        Me.Text = "VISBO RPA"
+        Me.WindowState = System.Windows.Forms.FormWindowState.Minimized
         CType(Me.watchFolder, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 

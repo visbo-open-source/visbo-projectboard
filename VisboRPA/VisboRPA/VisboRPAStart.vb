@@ -4,8 +4,7 @@ Imports ProjectBoardDefinitions
 Imports ProjectboardReports
 Imports DBAccLayer
 Imports Microsoft.Office.Interop.Excel
-
-
+Imports System.ComponentModel
 
 Public Class VisboRPAStart
     Private Sub btn_start_Click(sender As Object, e As EventArgs) Handles btn_start.Click
@@ -28,6 +27,14 @@ Public Class VisboRPAStart
 
         'Set this property to true to start watching
         watchFolder.EnableRaisingEvents = False
+
+
+        ' now store User Login Data
+        My.Settings.userNamePWD = awinSettings.userNamePWD
+
+        ' speichern 
+        My.Settings.Save()
+
 
     End Sub
 
@@ -152,13 +159,35 @@ Public Class VisboRPAStart
 
     Private Sub watchFolder_Deleted(sender As Object, e As IO.FileSystemEventArgs) Handles watchFolder.Deleted
 
-        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Deleted")
-        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was deleted at: " & Date.Now().ToLongDateString)
+        'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Deleted")
+        'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was deleted at: " & Date.Now().ToLongDateString)
     End Sub
 
     Private Sub watchFolder_Renamed(sender As Object, e As IO.RenamedEventArgs) Handles watchFolder.Renamed
-        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Renamed")
-        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was renamed at: " & Date.Now().ToLongDateString)
+        'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Renamed")
+        'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was renamed at: " & Date.Now().ToLongDateString)
     End Sub
 
+    Private Sub VisboRPAStart_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        'this is the path we want to monitor
+        watchFolder.Path = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+
+        'Add a list of Filter we want to specify
+        'make sure you use OR for each Filter as we need to
+        'all of those 
+
+
+        'Set this property to true to start watching
+        watchFolder.EnableRaisingEvents = True
+    End Sub
+
+    Private Sub VisboRPAStart_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
+
+        ' now store User Login Data
+        My.Settings.userNamePWD = awinSettings.userNamePWD
+
+        ' speichern 
+        My.Settings.Save()
+
+    End Sub
 End Class

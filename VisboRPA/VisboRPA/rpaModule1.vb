@@ -1,4 +1,5 @@
 ﻿Imports xlns = Microsoft.Office.Interop.Excel
+
 Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports Newtonsoft.Json
@@ -561,7 +562,8 @@ Module rpaModule1
                     allOk = processVisboJira(fname, importDate)
 
                 Case CInt(PTRpa.visboDefaultCapacity)
-                    allOk = True
+
+                    allOk = processVisboUrlaubsplaner(fname, importDate)
 
                 Case CInt(PTRpa.visboInitialOrga)
 
@@ -604,19 +606,27 @@ Module rpaModule1
             ' Sendet eine Email an den User
 
             'Dim result_sendEmail As Boolean = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("files abgearbeitet", errMsgCode)
-
-            If Not (rpaCat = PTRpa.visboMPP Or
+            Try
+                If Not (rpaCat = PTRpa.visboMPP Or
                                         rpaCat = PTRpa.visboJira Or
                                         rpaCat = PTRpa.visboActualData1 Or
                                         rpaCat = PTRpa.visboActualData2) Then
 
-                If allOk Then
-                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
-                Else
-                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
+                    If allOk Then
+                        If IsNothing(currentWB) Then
+                            ' workbook bereits wieder geschlossen
+                            appInstance.DisplayAlerts = False
+                            currentWB = appInstance.Workbooks.Open(fname)
+                        End If
+                        CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
+                    Else
+                        CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
+                    End If
+                    currentWB.Close(SaveChanges:=True)
                 End If
-                currentWB.Close(SaveChanges:=True)
-            End If
+            Catch ex As Exception
+
+            End Try
 
 
             If Not rpaCat = PTRpa.visboActualData2 Then
@@ -1328,6 +1338,9 @@ Module rpaModule1
                         ' Check auf VISBO Project Template  
 
                         ' Check auf Urlaubskalender 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkUrlaubsplaner(currentWB)
+                        End If
 
                         ' Check auf Modifier Kapazitäten
 
@@ -1336,9 +1349,9 @@ Module rpaModule1
                             result = checkExtRahmenvertr(currentWB)
                         End If
 
-                        ' Check auf Instart eGecko Urlaube ... 
+                        ' Check auf Instart eGecko Urlaube ...(Instart) 
 
-                        ' Check auf Zeuss Kapazitäten
+                        ' Check auf Zeuss Kapazitäten... (Telair)
 
                         ' Check auf Ist-Daten 
                         If result = PTRpa.visboUnknown Then
@@ -1643,6 +1656,48 @@ Module rpaModule1
 
         checkExtRahmenvertr = result
     End Function
+
+
+    ''' <summary>
+    ''' checks whether or not it is a VISBO Urlaubskalender 
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkUrlaubsplaner(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim possibleTableNames() As String = {"1.Halbjahr", "2.Halbjahr"}
+        Dim verifiedStructure As Boolean = False
+        Try
+
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+                Next
+            End If
+
+            If found Then
+                result = PTRpa.visboDefaultCapacity
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkUrlaubsplaner = result
+    End Function
+
 
     Private Function checkVCOrganisation(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
@@ -3093,6 +3148,124 @@ Module rpaModule1
         End Try
 
         processVisboJira = allOk
+
+    End Function
+
+
+    Private Function processVisboUrlaubsplaner(ByVal myName As String, ByVal importDate As Date) As Boolean
+
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivUrlaub As New List(Of String)
+        Dim listofArchivConfig As New List(Of String)
+        Dim result As Boolean = False
+        Dim outputCollection As New Collection
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+
+                Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & myName, "processVisboUrlaubsplaner", anzFehler)
+                result = readAvailabilityOfRole(myName, outputCollection)
+                If result Then
+                    ' hier: merken der erfolgreich importierten KapaFiles
+                    listofArchivUrlaub.Add(myName)
+                    Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & myName, outputCollection)
+                Else
+                    Call logger(ptErrLevel.logError, "Einlesen Verfügbarkeiten " & myName, outputCollection)
+                End If
+
+                '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
+                'listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
+
+                If listofArchivUrlaub.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles Then
+
+                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                                                                                CStr(settingTypes(ptSettingTypes.organisation)),
+                                                                                orgaName,
+                                                                                changedOrga.validFrom,
+                                                                                err)
+
+                            If result = True Then
+
+                                Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "processUrlaubsplaner: ", -1)
+
+                                '' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database..." & vbCrLf & err.errorMsg, "processUrlaubsplaner: ", -1)
+                            End If
+
+                        Else
+                            Call logger(ptErrLevel.logError, "Error when writing Organisation to Database...- wrong user" & vbCrLf & myCustomUserRole.customUserRole, "processUrlaubsplaner: ", -1)
+                            'Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                            result = False
+                        End If
+
+                    Else
+                        Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
+                    End If
+                Else
+                    result = False
+                    If outputCollection.Count > 0 Then
+                        Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "there do not exists any 'Urlaubsplaner*'!")
+                        Else
+                            Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "Es existiert kein 'Urlaubsplaner*.*' !")
+                        End If
+                    End If
+
+                End If
+
+            Else
+                If awinSettings.englishLanguage Then
+                    Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "No valid roles! Please import one first!")
+                Else
+                    Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "Die gültige Organisation beinhaltet keine Rollen! ")
+
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "No valid organization! Please import one first!")
+            Else
+                Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+            Dim errMsg As String
+            If awinSettings.englishLanguage Then
+                errMsg = "Capacities not updated - please first remove the errors in the importfiles ... "
+                outputCollection.Add(errMsg)
+            Else
+                errMsg = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+                outputCollection.Add(errMsg)
+            End If
+            Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
+
+        End If
+        processVisboUrlaubsplaner = result
 
     End Function
 
