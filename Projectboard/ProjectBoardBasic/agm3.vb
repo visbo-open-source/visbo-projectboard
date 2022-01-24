@@ -1634,7 +1634,7 @@ Public Module agm3
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Function readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection) As Boolean
+    Public Function readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection) As Boolean
 
         Dim err As New clsErrorCodeMsg
         Dim old_oPCollectionCount As Integer = oPCollection.Count
@@ -1903,6 +1903,16 @@ Public Module agm3
                                                 anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
 
                                             Next
+
+                                            If visboClient = "VISBO RPA / " Then
+                                                If awinSettings.englishLanguage Then
+                                                    msgtxt = "Role " & rolename & " updated ..."
+                                                Else
+                                                    msgtxt = "Rolle " & rolename & " aktualisiert ..."
+                                                End If
+                                                Call logger(ptErrLevel.logInfo, msgtxt, "readAvailabilityOfRole", anzFehler)
+                                            End If
+
 
                                         Else
 

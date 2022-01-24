@@ -4456,8 +4456,11 @@ Public Module agm2
     Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef mapProj As clsProjekt, ByRef importdate As Date)
 
         Dim prj As MSProject.Application = Nothing
+        Dim pjApp As Object
         If modus = "RPA" Then
-            prj = New MSProject.Application
+            pjApp = CreateObject("MSProject.Application")
+            pjApp.Visible = False
+            'prj = New MSProject.Application
         End If
 
         Dim msproj As MSProject.Project
