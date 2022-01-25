@@ -7285,6 +7285,7 @@ Public Module agm2
         Dim abstandAnfang As Double
         Dim abstandEnde As Double
         Dim lastSpaltenValue As Integer
+        Dim msgtxt As String = ""
 
 
         Dim dauerFaktor As Double = 1.0
@@ -7403,8 +7404,20 @@ Public Module agm2
 
                         If IsNothing(vorlageName) Then
                             CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of the template is missing !"
+                            Else
+                                msgtxt = "Name des Templates fehlt!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         ElseIf vorlageName.Trim.Length = 0 Then
                             CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of the template is missing !"
+                            Else
+                                msgtxt = "Name des Templates fehlt!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         Else
                             If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
 
@@ -7657,6 +7670,12 @@ Public Module agm2
                             Else
                                 'CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
                                 CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Template " & vorlageName & " does not exists !"
+                                Else
+                                    msgtxt = "Template " & vorlageName & " fehlt!"
+                                End If
+                                Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                 ok = False
                             End If
 
@@ -7698,6 +7717,12 @@ Public Module agm2
                                     ok = False
                                     CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                     CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Project: " & pName & " variant: " & variantName & " could not be created !"
+                                    Else
+                                        msgtxt = "Projekt: " & pName & " Variante: " & variantName & " konnte nicht erzeugt werden !"
+                                    End If
+                                    Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                 End If
 
 
@@ -7710,6 +7735,12 @@ Public Module agm2
                                             If ImportProjekte.Containskey(pkey) Then
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
+                                                If awinSettings.englishLanguage Then
+                                                    msgtxt = "Project: " & hproj.name & " variant: " & hproj.variantName & " already read !"
+                                                Else
+                                                    msgtxt = "Projekt: " & hproj.name & " Variante: " & hproj.variantName & " ist bereits eingelesen !"
+                                                End If
+                                                Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                             Else
 
                                                 createdProjects = createdProjects + 1
@@ -7731,6 +7762,8 @@ Public Module agm2
                                         Catch ex As Exception
                                             CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                             CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                            msgtxt = ex.Message
+                                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         End Try
 
                                     End If
@@ -7757,7 +7790,8 @@ Public Module agm2
         Catch ex As Exception
 
             Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
-
+            msgtxt = "Fehler in Portfolio-Datei" & ex.Message
+            Call logger(ptErrLevel.logError, "awinImportProjektInventur", msgtxt)
         End Try
 
         readProjects = geleseneProjekte

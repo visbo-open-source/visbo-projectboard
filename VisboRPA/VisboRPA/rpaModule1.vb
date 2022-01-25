@@ -656,7 +656,32 @@ Module rpaModule1
                                                                                 & myName & ": with errors ..." & vbCrLf _
                                                                                 & "Look for more details in the Failure-Folder", errMsgCode)
                 End If
+            Else
+                If allOk Then
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "success: ", myName)
+                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                    'Console.WriteLine(myName & ": successful ...")
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
 
+
+                Else
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logError, "failed: ", myName)
+                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                & myName & ": with errors ..." & vbCrLf _
+                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
+                End If
             End If
 
         Catch ex As Exception
@@ -3953,8 +3978,20 @@ Module rpaModule1
 
                 Else
                     For Each errImp As String In listOfErrorImportFilesAllg
+                        Dim errImpName As String = My.Computer.FileSystem.GetName(errImp)
+                        Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, errImpName)
+                        My.Computer.FileSystem.MoveFile(errImp, newDestination, True)
+                        Call logger(ptErrLevel.logError, "failed: ", errImp)
+                        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                        Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                        My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
                     Next
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                    & myName & ": with errors ..." & vbCrLf _
+                                                                                    & "Look for more details in the Failure-Folder", errMsgCode)
                     ' Fehler erfolgt
                     ' Dateien müssen in failure-Directory verschoben werden
                     Call MsgBox("TODO")
@@ -3969,7 +4006,7 @@ Module rpaModule1
                     outPutline = "Es gibt keine Datei zum Importieren von Istdaten"
                 End If
 
-                Call logger(ptErrLevel.logWarning, outPutline, "PTImportIstdaten", anzFehler)
+                Call logger(ptErrLevel.logWarning, outPutline, "processVisboActualData2", anzFehler)
 
             End If
 
@@ -3980,7 +4017,7 @@ Module rpaModule1
             Else
                 outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
             End If
-            Call logger(ptErrLevel.logError, outPutline, "PTImportIstdaten", anzFehler)
+            Call logger(ptErrLevel.logError, outPutline, "processVisboActualData2", anzFehler)
 
             allOk = allOk And False
 
