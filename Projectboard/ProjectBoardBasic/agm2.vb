@@ -7364,11 +7364,23 @@ Public Module agm2
                     If IsNothing(pName) Then
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Name of project is missing !"
+                        Else
+                            msgtxt = "Projekt-Name fehlt ..!"
+                        End If
+                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                     ElseIf pName.Length < 2 Then
 
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of project has to have at least two characters and it should be unique... !"
+                            Else
+                                msgtxt = "Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         Catch ex As Exception
 
                         End Try
@@ -7377,6 +7389,12 @@ Public Module agm2
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of project shound not have #, (, ), and newLine ... !"
+                            Else
+                                msgtxt = "Projekt-Name darf keine #, (, ), Zeilenumbrüche enthalten ..!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         Catch ex As Exception
 
                         End Try
@@ -7489,29 +7507,59 @@ Public Module agm2
                                     capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(capacityNeeded, True) Then
                                         Throw New ArgumentException("ungültige Kapa-Angabe")
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Capa-Input is not valid ... !"
+                                        Else
+                                            msgtxt = "ungültige Kapa-Angabe..!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                     End If
 
                                     lastSpaltenValue = spalte + 9
                                     externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(externCostInput, False) Then
                                         Throw New ArgumentException("ungültige Kosten-Angabe")
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Input of needs is not valid ... !"
+                                        Else
+                                            msgtxt = "ungültige Kosten-Angabe ..!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                     End If
 
                                     ' Konsistenzprüfung ...
                                     ' es darf nicht sein, dass Budget und externe Kosten berechnet werden sollen ...
                                     If budget = -999 And externCostInput = "filltobudget" Then
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "There are not enough input - to calculate the budget and the external needs is not possible !"
+                                        Else
+                                            msgtxt = "unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         Throw New ArgumentException("unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden")
                                     End If
 
                                     lastSpaltenValue = spalte + 10
                                     risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If risk < 0 Or risk > 10.0 Then
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Metric Risk should be between [0 and 10] !"
+                                        Else
+                                            msgtxt = "Kennzahl Risiko muss zwischen [0 und 10] liegen!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         Throw New ArgumentException("Kennzahl Risiko muss zwischen [0 und 10] liegen")
                                     End If
 
                                     lastSpaltenValue = spalte + 11
                                     sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If sfit < 0 Or sfit > 10.0 Then
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Metric Strategic Fit should be between [0 and 10] !"
+                                        Else
+                                            msgtxt = "Kennzahl Strategie muss zwischen [0 und 10] liegen!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         Throw New ArgumentException("Kennzahl Strategie muss zwischen [0 und 10] liegen")
                                     End If
 
@@ -7530,6 +7578,12 @@ Public Module agm2
                                         End While
 
                                         If Not found Then
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "unknown business unit !"
+                                            Else
+                                                msgtxt = "Business Unit unbekannt ..!"
+                                            End If
+                                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                             Throw New ArgumentException("Business Unit unbekannt ..")
                                         End If
                                     End If
@@ -7595,11 +7649,23 @@ Public Module agm2
                                             ok = True
                                         Else
                                             CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "StartDate is before the start of calendar... !"
+                                            Else
+                                                msgtxt = "Start liegt vor Kalender-Start  ..!"
+                                            End If
+                                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                             ok = False
                                         End If
 
                                     Else
                                         CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "StartDate and EndDate are not valid... !"
+                                        Else
+                                            msgtxt = "ungültiges Start- und Ende-Datum ..!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         ok = False
                                     End If
 
@@ -7609,6 +7675,8 @@ Public Module agm2
                                     'Call MsgBox(ex.Message)
                                     CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                     CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+
+                                    Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & ex.Message)
                                 End Try
 
                                 ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
