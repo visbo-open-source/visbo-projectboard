@@ -109,7 +109,7 @@ Public Class VisboRPAStart
             ' nachsehen ob collect vollständig
             myName = My.Computer.FileSystem.GetName(fullFileName)
             result = processVisboActualData2(myName, myActivePortfolio, collectFolder, Date.Now())
-
+            ' TODO: löschen des Timesheet-compl
         End If
 
 

@@ -48,30 +48,30 @@ Module rpaModule1
         appInstance.Visible = False
         appInstance.DisplayAlerts = False
 
+        ' FileNamen für logging zusammenbauen
+        logfileNamePath = createLogfileName(rpaFolder, "")
 
-        ' Read the Setting-file of RPA
-        If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-            Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-            inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-            ' is there a activePortfolio
-            myActivePortfolio = inputvalues.activePortfolio
-        Else
-            ' Exit ! 
-            ' read all files, categorize and verify them  
-            msgTxt = "Exit - there is no File " & settingJsonFile
-            Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-            Console.WriteLine(msgTxt)
+        '' Read the Setting-file of RPA
+        'If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+        '    Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+        '    inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+        '    ' is there a activePortfolio
+        '    myActivePortfolio = inputvalues.activePortfolio
+        '    configfilesOrdner = inputvalues.VisboConfigFiles
+        'Else
+        '    ' Exit ! 
+        '    ' read all files, categorize and verify them  
+        '    msgTxt = "Exit - there is no File " & settingJsonFile
+        '    Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
+        '    Console.WriteLine(msgTxt)
 
-            ' break the RPA - Service
-            Exit Sub
-        End If
+        '    ' break the RPA - Service
+        '    Exit Sub
+        'End If
 
         Try
 
             Dim anzFiles As Integer = 0
-
-            '' FileNamen für logging zusammenbauen
-            logfileNamePath = createLogfileName(rpaFolder, "")
 
             ' now check whether or not the folder are existings , if not create them 
             If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
@@ -103,6 +103,7 @@ Module rpaModule1
                 inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
                 ' is there a activePortfolio
                 myActivePortfolio = inputvalues.activePortfolio
+                configfilesOrdner = inputvalues.VisboConfigFiles
 
                 ' read all files, categorize and verify them  
                 msgTxt = "Starting ..."
@@ -612,17 +613,17 @@ Module rpaModule1
                                         rpaCat = PTRpa.visboActualData1 Or
                                         rpaCat = PTRpa.visboActualData2) Then
 
-                    If allOk Then
-                        If IsNothing(currentWB) Then
-                            ' workbook bereits wieder geschlossen
-                            appInstance.DisplayAlerts = False
-                            currentWB = appInstance.Workbooks.Open(fname)
-                        End If
-                        CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
-                    Else
-                        CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
-                    End If
-                    currentWB.Close(SaveChanges:=True)
+                    'If allOk Then
+                    '    If IsNothing(currentWB) Then
+                    '        ' workbook bereits wieder geschlossen
+                    '        appInstance.DisplayAlerts = False
+                    '        currentWB = appInstance.Workbooks.Open(fname)
+                    '    End If
+                    '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
+                    'Else
+                    '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
+                    'End If
+                    currentWB.Close(SaveChanges:=False)
                 End If
             Catch ex As Exception
 
@@ -3221,7 +3222,7 @@ Module rpaModule1
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles Then
+                        If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or visboClient = "VISBO RPA / " Then
 
                             result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
                                                                                 CStr(settingTypes(ptSettingTypes.organisation)),
@@ -3241,7 +3242,7 @@ Module rpaModule1
                             End If
 
                         Else
-                            Call logger(ptErrLevel.logError, "Error when writing Organisation to Database...- wrong user" & vbCrLf & myCustomUserRole.customUserRole, "processUrlaubsplaner: ", -1)
+                            Call logger(ptErrLevel.logError, "Error when writing Organisation to Database...- wrong customUserRole" & vbCrLf & myCustomUserRole.customUserRole, "processUrlaubsplaner: ", -1)
                             'Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                             result = False
                         End If
