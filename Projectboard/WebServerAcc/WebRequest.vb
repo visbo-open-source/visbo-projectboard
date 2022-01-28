@@ -2216,6 +2216,7 @@ Public Class Request
 
 
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, "retrieveOneConstellationFromDB", portfolioName & ":" & ex.Message)
             Throw New ArgumentException(ex.Message)
         End Try
 

@@ -39,7 +39,7 @@ Public Module agm3
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+        configFile = My.Computer.FileSystem.CombinePath(configfilesOrdner, configFile)
 
         ' öffnen des Files 
         If My.Computer.FileSystem.FileExists(configFile) Then
@@ -316,7 +316,7 @@ Public Module agm3
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+        configFile = My.Computer.FileSystem.CombinePath(configfilesOrdner, configFile)
 
         ' öffnen des Files 
         If My.Computer.FileSystem.FileExists(configFile) Then
@@ -526,7 +526,7 @@ Public Module agm3
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+        configFile = My.Computer.FileSystem.CombinePath(configfilesOrdner, configFile)
 
         ' öffnen des Files 
         If My.Computer.FileSystem.FileExists(configFile) Then
@@ -716,7 +716,7 @@ Public Module agm3
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+        configFile = My.Computer.FileSystem.CombinePath(configfilesOrdner, configFile)
 
         ' öffnen des Files 
         If My.Computer.FileSystem.FileExists(configFile) Then
@@ -915,7 +915,7 @@ Public Module agm3
         ''
         '' Config-file wird geöffnet
         ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+        configFile = My.Computer.FileSystem.CombinePath(configfilesOrdner, configFile)
 
         ' öffnen des Files 
         If My.Computer.FileSystem.FileExists(configFile) Then

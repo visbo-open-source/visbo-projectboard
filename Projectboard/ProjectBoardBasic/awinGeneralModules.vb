@@ -4378,14 +4378,15 @@ Public Module awinGeneralModules
                         outPutCollection.Add(outputLine)
                     End If
                 Else
-                    If awinSettings.englishLanguage Then
-                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
-                        outPutCollection.Add(outputLine)
-                    Else
-                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
-                        outPutCollection.Add(outputLine)
+                    If Not visboClient.Contains("RPA") Then
+                        If awinSettings.englishLanguage Then
+                            outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
+                            outPutCollection.Add(outputLine)
+                        Else
+                            outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
+                            outPutCollection.Add(outputLine)
+                        End If
                     End If
-
                 End If
             Catch ex As Exception
                 If awinSettings.englishLanguage Then

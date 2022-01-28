@@ -1593,6 +1593,7 @@ Public Class Request
                                 End If
 
                             Case Else ' all others
+                                Call logger(ptErrLevel.logError, "retrieveOneConstellateion", portfolioName & " : " & err.errorMsg)
                                 Throw New ArgumentException(err.errorMsg)
                         End Select
 
@@ -1607,8 +1608,8 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
-            Throw New ArgumentException("retrieveOneConstellationFromDB: " & ex.Message)
+            result = Nothing
+            'Throw New ArgumentException("retrieveOneConstellationFromDB: " & ex.Message)
         End Try
 
         retrieveOneConstellationFromDB = result

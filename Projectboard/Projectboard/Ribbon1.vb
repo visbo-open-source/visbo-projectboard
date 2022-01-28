@@ -7422,8 +7422,9 @@ Imports System.Web
                             If awinSettings.englishLanguage Then
                                 txtMsg = referenzPortfolioName & ": Portfolio does not exist - Cancelled ..."
                             End If
-
-                            Call MsgBox(txtMsg)
+                            If Not visboClient.Contains("RPA") Then
+                                Call MsgBox(txtMsg)
+                            End If
 
                             ''Call logfileSchliessen()
 
