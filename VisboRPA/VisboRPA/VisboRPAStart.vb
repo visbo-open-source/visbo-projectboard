@@ -110,6 +110,31 @@ Public Class VisboRPAStart
             myName = My.Computer.FileSystem.GetName(fullFileName)
             result = processVisboActualData2(myName, myActivePortfolio, collectFolder, Date.Now())
             ' TODO: löschen des Timesheet-compl
+            If result Then
+                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                My.Computer.FileSystem.MoveFile(myName, newDestination, True)
+                Call logger(ptErrLevel.logInfo, "success: ", myName)
+                'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+                'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                'Console.WriteLine(myName & ": successful ...")
+                errMsgCode = New clsErrorCodeMsg
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+            Else
+                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                If My.Computer.FileSystem.FileExists(fullFileName) Then
+                    My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Call logger(ptErrLevel.logError, "failed: ", fullFileName)
+                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                & myName & ": with errors ..." & vbCrLf _
+                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
+                End If
+            End If
         End If
 
 

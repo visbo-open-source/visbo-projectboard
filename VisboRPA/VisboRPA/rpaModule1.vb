@@ -104,6 +104,7 @@ Module rpaModule1
                 ' is there a activePortfolio
                 myActivePortfolio = inputvalues.activePortfolio
                 configfilesOrdner = inputvalues.VisboConfigFiles
+                configfilesOrdner = configfilesOrdner.Replace("\\", "\")
 
                 ' read all files, categorize and verify them  
                 msgTxt = "Starting ..."
@@ -632,57 +633,64 @@ Module rpaModule1
 
             If Not rpaCat = PTRpa.visboActualData2 Then
 
-                If allOk Then
-                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                    Call logger(ptErrLevel.logInfo, "success: ", myName)
-                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                    'Console.WriteLine(myName & ": successful ...")
-                    errMsgCode = New clsErrorCodeMsg
-                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+                Call processResult(fname, allOk)
+
+                'If allOk Then
+                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                '    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                '    Call logger(ptErrLevel.logInfo, "success: ", myName)
+                '    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                '    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+                '    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                '    'Console.WriteLine(myName & ": successful ...")
+                '    errMsgCode = New clsErrorCodeMsg
+                '    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
 
 
-                Else
-                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                    Call logger(ptErrLevel.logError, "failed: ", myName)
-                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                'Else
+                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                '    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                '    Call logger(ptErrLevel.logError, "failed: ", myName)
+                '    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                '    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                '    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
-                    errMsgCode = New clsErrorCodeMsg
-                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                & myName & ": with errors ..." & vbCrLf _
-                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
-                End If
+                '    errMsgCode = New clsErrorCodeMsg
+                '    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                '                                                                & myName & ": with errors ..." & vbCrLf _
+                '                                                                & "Look for more details in the Failure-Folder", errMsgCode)
+                'End If
             Else
-                If allOk Then
-                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                    Call logger(ptErrLevel.logInfo, "success: ", myName)
-                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                    'Console.WriteLine(myName & ": successful ...")
-                    errMsgCode = New clsErrorCodeMsg
-                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+
+                Call processResult(fname, allOk)
+                'If allOk Then
+                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                '    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                '    Call logger(ptErrLevel.logInfo, "success: ", myName)
+                '    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                '    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+                '    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                '    'Console.WriteLine(myName & ": successful ...")
+                '    errMsgCode = New clsErrorCodeMsg
+                '    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
 
 
-                Else
-                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                    Call logger(ptErrLevel.logError, "failed: ", myName)
-                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                'Else
+                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                '    If My.Computer.FileSystem.FileExists(fname) Then
+                '        My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                '        Call logger(ptErrLevel.logError, "failed: ", myName)
+                '        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                '        Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                '        My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
-                    errMsgCode = New clsErrorCodeMsg
-                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                & myName & ": with errors ..." & vbCrLf _
-                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
-                End If
+                '        errMsgCode = New clsErrorCodeMsg
+                '        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                '                                                                    & myName & ": with errors ..." & vbCrLf _
+                '                                                                    & "Look for more details in the Failure-Folder", errMsgCode)
+                '    End If
+
+                'End If
             End If
 
         Catch ex As Exception
@@ -741,8 +749,6 @@ Module rpaModule1
 
                     myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
 
-
-
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                         ok = ok And True
                         Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
@@ -754,6 +760,12 @@ Module rpaModule1
                     End If
 
                 Else
+                    ' hproj in alleProjekte schieben, damit writeProtection gecheckt werden kann.
+                    If Not AlleProjekte.Containskey(calcProjektKey(kvp.Value)) Then
+                        ' necessary because store ruft writeProtections für AllePRojekte Projekte auf 
+                        AlleProjekte.Add(kvp.Value, False)
+                    End If
+
                     myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
@@ -1325,10 +1337,10 @@ Module rpaModule1
             If My.Computer.FileSystem.FileExists(fileName) Then
 
                 Try
-                    Module1.appInstance.DisplayAlerts = False
+                    appInstance.DisplayAlerts = False
                     Dim currentWB As xlns.Workbook = Module1.appInstance.Workbooks.Open(fileName, UpdateLinks:=0)
                     currentWB.Final = False
-                    Module1.appInstance.DisplayAlerts = True
+                    appInstance.DisplayAlerts = True
 
                     Try
                         ' Check auf Project Batch-List
@@ -2217,8 +2229,6 @@ Module rpaModule1
                 End If
             Next
 
-
-
             allOk = awinImportProjektInventur(readProjects, createdProjects)
             If allOk Then
                 Call logger(ptErrLevel.logInfo, "Project List imported: " & myName, readProjects & " read; " & createdProjects & " created")
@@ -3033,7 +3043,7 @@ Module rpaModule1
             ' Konfigurationsdatei lesen und Validierung durchführen
 
             ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-            Dim configOrgaImport As String = awinPath & configfilesOrdner & "configOrgaImport.xlsx"
+            Dim configOrgaImport As String = configfilesOrdner & "configOrgaImport.xlsx"
             Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
             Dim lastrow As Integer = 0
 
@@ -3448,7 +3458,7 @@ Module rpaModule1
         ' Konfigurations-Dateien lesen 
         ' ===========================================================
         ' Konfigurationsdatei lesen und Validierung durchführen
-        Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+        Dim configActualDataImport As String = configfilesOrdner & "configActualDataImport.xlsx"
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
         ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
@@ -4014,9 +4024,9 @@ Module rpaModule1
         Else
             ' Fehlermeldung für Konfigurationsfile nicht vorhanden
             If awinSettings.englishLanguage Then
-                outPutline = "Error: either no configuration file found or worng definitions !"
+                outPutline = "Error: either no configuration file found or worng definitions ! " & configActualDataImport
             Else
-                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
+                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen ! " & configActualDataImport
             End If
             Call logger(ptErrLevel.logError, outPutline, "processVisboActualData2", anzFehler)
 
@@ -4027,301 +4037,50 @@ Module rpaModule1
         processVisboActualData2 = allOk
 
     End Function
+    ''' <summary>
+    ''' Gibt das jeweilige Ergebnis weiter fürs logfile und schiebt die jeweilige Datei in die entsprechenden Folder
+    ''' </summary>
+    ''' <param name="fullfileName"></param>
+    ''' <param name="allOK"></param>
+    Public Sub processResult(ByVal fullfileName As String, ByVal allOK As Boolean)
+
+        Dim myName As String = My.Computer.FileSystem.GetName(fullfileName)
+        If allOK Then
+            Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+            My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
+            Call logger(ptErrLevel.logInfo, "success: ", myName)
+            'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+            'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
+            'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+            'Console.WriteLine(myName & ": successful ...")
+            errMsgCode = New clsErrorCodeMsg
+            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+        Else
+            Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+            If My.Computer.FileSystem.FileExists(fullfileName) Then
+                My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
+                Call logger(ptErrLevel.logError, "failed: ", fullfileName)
+                Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+
+                errMsgCode = New clsErrorCodeMsg
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                            & myName & ": with errors ..." & vbCrLf _
+                                                                            & "Look for more details in the Failure-Folder", errMsgCode)
+            End If
+        End If
+
+        If Not result Then
+            If awinSettings.englishLanguage Then
+                msgTxt = "Sending an Email to report the result failed !"
+            Else
+                msgTxt = "Beim Senden einer Email, um das Ergebnis zu melden, ging schief !"
+            End If
+            Call logger(ptErrLevel.logError, "processResult", msgTxt)
+        End If
+    End Sub
 
 
-    ''''' <summary>
-    ''''' composition of the FileName of the different Logfiles for the RPA Import as well
-    ''''' </summary>
-    ''''' <param name="rpaFolder"></param>
-    ''''' <param name="rpaImportfile"></param>
-    ''''' <returns></returns>
-    ''Public Function createLogfileName(Optional ByVal rpaFolder As String = "", Optional ByVal rpaImportfile As String = "") As String
-    ''    ' FileNamen zusammenbauen
-    ''    Dim logfileOrdner As String = "logfiles"
-
-
-    ''    If IsNothing(awinPath) Then
-    ''        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''    End If
-    ''    Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-
-    ''    ' write logfiles in rpaFolder, if RPA was started
-    ''    If Not IsNothing(rpaFolder) And rpaFolder <> "" Then
-    ''        logfilePath = My.Computer.FileSystem.CombinePath(rpaFolder, logfileOrdner)
-    ''    End If
-
-    ''    Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''    Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''    ' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''    If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''    End If
-    ''    createLogfileName = logfileNamePath
-    ''End Function
-
-    ''''' <summary>
-    '''''  schreibt in das logfile mit Errorlevel
-    ''''' </summary>
-    ''''' <param name="errLevel"></param>
-    ''''' <param name="text"></param>
-    ''''' <param name="addOn"></param>
-    ''''' <param name="anzFehler"></param>
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByVal anzFehler As Long)
-
-    ''    Try
-    ''        Dim strMeld As String
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
-
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-
-    ''        '' write logfiles in rpaFolder, if RPA was started
-    ''        'If Not IsNothing(rpaFolder) Then
-    ''        '    logfilePath = rpaFolder
-    ''        'End If
-
-    ''        'Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-
-
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-
-    ''    Catch ex As Exception
-    ''        If awinSettings.englishLanguage Then
-    ''            Call MsgBox("ERROR while Writing to logfile" & ex.Message)
-    ''        Else
-    ''            Call MsgBox("Fehler beim Schreiben ins logfile" & ex.Message)
-    ''        End If
-
-    ''    End Try
-
-
-    ''End Sub
-
-
-
-    ''''' <summary>
-    ''''' schreibt die Inhalte der Collection als String in das Logfile
-    ''''' </summary>
-    ''''' <param name="meldungen"></param>
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal meldungen As Collection)
-
-    ''    Try
-    ''        Dim anzZeilen As Integer = meldungen.Count
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        'logfileNamePath = createLogfileName(rpaFolder, rpaImportfile)
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-
-    ''        For i As Integer = 1 To anzZeilen
-
-    ''            Dim text As String = CStr(meldungen.Item(i))
-    ''            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
-    ''            logf.writeline(strMeld)
-
-    ''        Next
-    ''        logf.close()
-    ''    Catch ex As Exception
-
-    ''    End Try
-    ''End Sub
-
-    ''''' <summary>
-    ''''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
-    ''''' </summary>
-    ''''' <param name="text"></param>
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String)
-
-    ''    Try
-    ''        Dim anzSpalten As Integer = text.Length
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-
-    ''        ' Meldungstext zusammensetzen aus dem text-array
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
-    ''        For i As Integer = 0 To anzSpalten - 1
-    ''            strMeld = strMeld & logTrennz & CStr(text(i))
-    ''        Next
-
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-    ''    Catch ex As Exception
-
-    ''    End Try
-
-    ''End Sub
-
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String, ByVal values() As Double)
-
-
-    ''    Try
-    ''        Dim anzSpalten As Integer = text.Length
-    ''        Dim anzSpaltenValues As Integer = values.Length
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-
-    ''        ' Meldungstext zusammensetzen aus dem text-array
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
-    ''        For i As Integer = 0 To anzSpalten - 1
-    ''            strMeld = strMeld & logTrennz & CStr(text(i))
-    ''        Next
-    ''        For k As Integer = 0 To anzSpaltenValues - 1
-    ''            strMeld = strMeld & logTrennz & Format(values(k), "#,##0.##")
-    ''        Next
-
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-    ''    Catch ex As Exception
-
-    ''    End Try
-
-    ''End Sub
-
-
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal strLog As String)
-    ''    Try
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        ' Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-    ''    Catch ex As Exception
-
-    ''    End Try
-    ''End Sub
 
 End Module
