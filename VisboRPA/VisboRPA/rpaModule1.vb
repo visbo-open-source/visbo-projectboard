@@ -2049,14 +2049,24 @@ Module rpaModule1
         'read Project Brief and put it into ImportProjekte
         Try
             Dim hproj As clsProjekt = Nothing
+            Dim vproj As clsProjektvorlage = Nothing
 
             Dim wsGeneralInformation As xlns.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Stammdaten"),
                     Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             ' read the file and import into hproj
+
+            ' ist hier eine Projektvorlage zu importieren?
+            Dim isTemplate As Boolean = LCase(myName).Contains("template")
+
             Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
 
+            If isTemplate And Not IsNothing(hproj) Then
+                hproj.projectType = ptPRPFType.projectTemplate
+            End If
+
             allOK = Not IsNothing(hproj)
+
             If allOK Then
                 Try
                     Dim keyStr As String = calcProjektKey(hproj)
