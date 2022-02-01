@@ -41,6 +41,12 @@ Module rpaModule1
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
 
+        ' check if the VisboRPA is already running
+        If IsProcessRunning("VisboRPA.exe") Then
+            Call MsgBox("VisboRPA is already running")
+            Exit Sub
+        End If
+
         ' Parameter für die Excel Instance festlegen
         appInstance = New xlns.Application
         appInstance.EnableEvents = False
@@ -48,116 +54,120 @@ Module rpaModule1
         appInstance.Visible = False
         appInstance.DisplayAlerts = False
 
+        watchDialog.ShowDialog()
+
+        ''rpaFolder = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+        'successFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
+        'failureFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
+        'collectFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
+        'logfileFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
+        'unknownFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
+        'settingsFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
+        'settingJsonFile = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
+
+
+
         ' FileNamen für logging zusammenbauen
         logfileNamePath = createLogfileName(rpaFolder, "")
 
-        '' Read the Setting-file of RPA
-        'If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-        '    Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-        '    inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-        '    ' is there a activePortfolio
-        '    myActivePortfolio = inputvalues.activePortfolio
-        '    configfilesOrdner = inputvalues.VisboConfigFiles
-        'Else
-        '    ' Exit ! 
-        '    ' read all files, categorize and verify them  
-        '    msgTxt = "Exit - there is no File " & settingJsonFile
-        '    Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-        '    Console.WriteLine(msgTxt)
-
-        '    ' break the RPA - Service
-        '    Exit Sub
-        'End If
-
-        Try
-
-            Dim anzFiles As Integer = 0
-
-            ' now check whether or not the folder are existings , if not create them 
-            If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
-                My.Computer.FileSystem.CreateDirectory(successFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(failureFolder) Then
-                My.Computer.FileSystem.CreateDirectory(failureFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(collectFolder) Then
-                My.Computer.FileSystem.CreateDirectory(collectFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(logfileFolder) Then
-                My.Computer.FileSystem.CreateDirectory(logfileFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(unknownFolder) Then
-                My.Computer.FileSystem.CreateDirectory(unknownFolder)
-            End If
 
 
-            Dim startup As Boolean = False
+        'Try
 
-            ' Read the Setting-file of RPA
-            If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-                Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-                inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-                ' is there a activePortfolio
-                myActivePortfolio = inputvalues.activePortfolio
-                configfilesOrdner = inputvalues.VisboConfigFiles
-                configfilesOrdner = configfilesOrdner.Replace("\\", "\")
+        '    Dim anzFiles As Integer = 0
 
-                ' read all files, categorize and verify them  
-                msgTxt = "Starting ..."
-                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+        '    ' now check whether or not the folder are existings , if not create them 
+        '    If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(successFolder)
+        '    End If
 
-                visboClient = "VISBO RPA / "
-                ' 
-                ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
-                startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
+        '    If Not My.Computer.FileSystem.DirectoryExists(failureFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(failureFolder)
+        '    End If
 
-            Else
-                startup = False
-                ' Exit ! 
-                ' read all files, categorize and verify them  
-                msgTxt = "Exit - there is no File " & settingJsonFile
-                Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-                Console.WriteLine(msgTxt)
+        '    If Not My.Computer.FileSystem.DirectoryExists(collectFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(collectFolder)
+        '    End If
 
-                ' break the RPA - Service
+        '    If Not My.Computer.FileSystem.DirectoryExists(logfileFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(logfileFolder)
+        '    End If
 
-            End If
-
-            If startup Then
-                ' Sendet eine Email an den User
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
-                If Not result Then
-                    Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
-                End If
-
-            Else
-                msgTxt = "wrong settings - exited without performing jobs ...."
-                'Call MsgBox(msgTxt)
-                Console.WriteLine(msgTxt)
-                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
-                If Not result Then
-                    Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
-                End If
-
-            End If
-
-            watchDialog.ShowDialog()
+        '    If Not My.Computer.FileSystem.DirectoryExists(unknownFolder) Then
+        '        My.Computer.FileSystem.CreateDirectory(unknownFolder)
+        '    End If
 
 
-        Catch ex As Exception
-            Call logger(ptErrLevel.logError, "VISBO Robotic Process Automation", ex.Message)
-        End Try
+        '    Dim startup As Boolean = False
+
+        '    ' Read the Setting-file of RPA
+        '    If My.Computer.FileSystem.FileExists(settingJsonFile) Then
+        '        Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
+        '        inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+        '        ' is there a activePortfolio
+        '        myActivePortfolio = inputvalues.activePortfolio
+        '        configfilesOrdner = inputvalues.VisboConfigFiles
+        '        configfilesOrdner = configfilesOrdner.Replace("\\", "\")
+
+        '        ' read all files, categorize and verify them  
+        '        msgTxt = "Starting ..."
+        '        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+
+        '        visboClient = "VISBO RPA / "
+        '        ' 
+        '        ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
+        '        startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
+
+        '    Else
+        '        startup = False
+        '        ' Exit ! 
+        '        ' read all files, categorize and verify them  
+        '        msgTxt = "Exit - there is no File " & settingJsonFile
+        '        Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
+        '        Console.WriteLine(msgTxt)
+
+        '        ' break the RPA - Service
+
+        '    End If
+
+        '    If startup Then
+        '        ' Sendet eine Email an den User
+        '        errMsgCode = New clsErrorCodeMsg
+        '        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
+        '        If Not result Then
+        '            Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
+        '        End If
+
+        '    Else
+        '        msgTxt = "wrong settings - exited without performing jobs ...."
+        '        'Call MsgBox(msgTxt)
+        '        Console.WriteLine(msgTxt)
+        '        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+        '        errMsgCode = New clsErrorCodeMsg
+        '        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
+        '        If Not result Then
+        '            Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
+        '        End If
+
+        '    End If
+
+        '    'watchDialog.ShowDialog()
+
+
+        'Catch ex As Exception
+        '    Call logger(ptErrLevel.logError, "VISBO Robotic Process Automation", ex.Message)
+        'End Try
 
 
     End Sub
+    Public Function IsProcessRunning(process As String)
+        Dim objList As Object
 
+        objList = GetObject("winmgmts:") _
+        .ExecQuery("select * from win32_process where name='" & process & "'")
+
+        IsProcessRunning = objList.Count > 1
+    End Function
 
     Public Sub importAll()
 
@@ -774,7 +784,7 @@ Module rpaModule1
                         Console.WriteLine("project updated: " & kvp.Value.getShapeText)
                     Else
                         ok = ok And False
-                        Call logger(ptErrLevel.logInfo, "project update failed: ", outputCollection)
+                        Call logger(ptErrLevel.logError, "project update failed: ", outputCollection)
                         Console.WriteLine("!! ... project update failed: " & kvp.Value.getShapeText)
                     End If
 
@@ -790,12 +800,12 @@ Module rpaModule1
 
         storeImportProjekte = ok
     End Function
-    Private Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String) As Boolean
+    Public Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String) As Boolean
 
         Dim result As Boolean = False
 
         ' ggf hier noch die appInstance setzen ... 
-        Module1.appInstance = New xlns.Application
+        appInstance = New xlns.Application
 
         Try
 

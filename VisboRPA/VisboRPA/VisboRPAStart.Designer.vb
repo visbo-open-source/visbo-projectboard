@@ -23,29 +23,17 @@ Partial Class VisboRPAStart
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(VisboRPAStart))
-        Me.btn_start = New System.Windows.Forms.Button()
-        Me.btn_stop = New System.Windows.Forms.Button()
         Me.watchFolder = New System.IO.FileSystemWatcher()
+        Me.FolderBrowserDialog1 = New System.Windows.Forms.FolderBrowserDialog()
+        Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.ueberschrift = New System.Windows.Forms.Label()
+        Me.btn_stop = New System.Windows.Forms.Button()
+        Me.btn_start = New System.Windows.Forms.Button()
+        Me.durchsuchen = New System.Windows.Forms.Button()
+        Me.rpaDir = New System.Windows.Forms.TextBox()
         CType(Me.watchFolder, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
-        '
-        'btn_start
-        '
-        Me.btn_start.Location = New System.Drawing.Point(12, 32)
-        Me.btn_start.Name = "btn_start"
-        Me.btn_start.Size = New System.Drawing.Size(75, 23)
-        Me.btn_start.TabIndex = 0
-        Me.btn_start.Text = "Start"
-        Me.btn_start.UseVisualStyleBackColor = True
-        '
-        'btn_stop
-        '
-        Me.btn_stop.Location = New System.Drawing.Point(93, 32)
-        Me.btn_stop.Name = "btn_stop"
-        Me.btn_stop.Size = New System.Drawing.Size(75, 23)
-        Me.btn_stop.TabIndex = 1
-        Me.btn_stop.Text = "Stop"
-        Me.btn_stop.UseVisualStyleBackColor = True
         '
         'watchFolder
         '
@@ -54,24 +42,91 @@ Partial Class VisboRPAStart
         Me.watchFolder.Path = "C:\VISBO\VISBO Config Data"
         Me.watchFolder.SynchronizingObject = Me
         '
+        'Panel1
+        '
+        Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.rpaDir)
+        Me.Panel1.Controls.Add(Me.durchsuchen)
+        Me.Panel1.Controls.Add(Me.ueberschrift)
+        Me.Panel1.Controls.Add(Me.btn_stop)
+        Me.Panel1.Controls.Add(Me.btn_start)
+        Me.Panel1.Location = New System.Drawing.Point(0, 0)
+        Me.Panel1.Name = "Panel1"
+        Me.Panel1.Size = New System.Drawing.Size(669, 152)
+        Me.Panel1.TabIndex = 0
+        '
+        'ueberschrift
+        '
+        Me.ueberschrift.AutoSize = True
+        Me.ueberschrift.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ueberschrift.Location = New System.Drawing.Point(27, 29)
+        Me.ueberschrift.Name = "ueberschrift"
+        Me.ueberschrift.Size = New System.Drawing.Size(354, 20)
+        Me.ueberschrift.TabIndex = 7
+        Me.ueberschrift.Text = "Folder der zu Importierenden Dateien auswählen"
+        '
+        'btn_stop
+        '
+        Me.btn_stop.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btn_stop.Location = New System.Drawing.Point(567, 100)
+        Me.btn_stop.Name = "btn_stop"
+        Me.btn_stop.Size = New System.Drawing.Size(75, 23)
+        Me.btn_stop.TabIndex = 5
+        Me.btn_stop.Text = "Stop"
+        Me.btn_stop.UseVisualStyleBackColor = True
+        '
+        'btn_start
+        '
+        Me.btn_start.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.btn_start.Location = New System.Drawing.Point(31, 100)
+        Me.btn_start.Name = "btn_start"
+        Me.btn_start.Size = New System.Drawing.Size(75, 23)
+        Me.btn_start.TabIndex = 4
+        Me.btn_start.Text = "Start"
+        Me.btn_start.UseVisualStyleBackColor = True
+        '
+        'durchsuchen
+        '
+        Me.durchsuchen.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.durchsuchen.Location = New System.Drawing.Point(505, 59)
+        Me.durchsuchen.Name = "durchsuchen"
+        Me.durchsuchen.Size = New System.Drawing.Size(137, 23)
+        Me.durchsuchen.TabIndex = 8
+        Me.durchsuchen.Text = "Durchsuchen"
+        Me.durchsuchen.UseVisualStyleBackColor = True
+        '
+        'rpaDir
+        '
+        Me.rpaDir.Location = New System.Drawing.Point(31, 62)
+        Me.rpaDir.Name = "rpaDir"
+        Me.rpaDir.ReadOnly = True
+        Me.rpaDir.Size = New System.Drawing.Size(468, 20)
+        Me.rpaDir.TabIndex = 9
+        '
         'VisboRPAStart
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(187, 62)
-        Me.Controls.Add(Me.btn_stop)
-        Me.Controls.Add(Me.btn_start)
+        Me.ClientSize = New System.Drawing.Size(662, 154)
+        Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "VisboRPAStart"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.WindowsDefaultBounds
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "VISBO RPA"
-        Me.WindowState = System.Windows.Forms.FormWindowState.Minimized
         CType(Me.watchFolder, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.Panel1.ResumeLayout(False)
+        Me.Panel1.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
-
-    Friend WithEvents btn_start As Windows.Forms.Button
-    Friend WithEvents btn_stop As Windows.Forms.Button
     Friend WithEvents watchFolder As IO.FileSystemWatcher
+    Friend WithEvents FolderBrowserDialog1 As Windows.Forms.FolderBrowserDialog
+    Friend WithEvents Panel1 As Windows.Forms.Panel
+    Friend WithEvents ueberschrift As Windows.Forms.Label
+    Friend WithEvents btn_stop As Windows.Forms.Button
+    Friend WithEvents btn_start As Windows.Forms.Button
+    Friend WithEvents durchsuchen As Windows.Forms.Button
+    Friend WithEvents rpaDir As Windows.Forms.TextBox
 End Class
