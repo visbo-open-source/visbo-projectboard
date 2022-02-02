@@ -24,14 +24,14 @@ Module rpaModule1
     Public completedOK As Boolean = False
     Public result As Boolean = False
 
-    Public rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
-    Public successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
-    Public failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
-    Public collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
-    Public logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
-    Public unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
-    Public settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
-    Public settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
+    Public rpaFolder As String
+    Public successFolder As String
+    Public failureFolder As String
+    Public collectFolder As String
+    Public logfileFolder As String
+    Public unknownFolder As String
+    Public settingsFolder As String
+    Public settingJsonFile As String
 
     Public watchDialog As New VisboRPAStart
 
@@ -40,6 +40,8 @@ Module rpaModule1
         ' in most cases new project and portfolio versions will be written 
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
+
+        visboClient = "VISBO RPA /"
 
         ' check if the VisboRPA is already running
         If IsProcessRunning("VisboRPA.exe") Then
@@ -54,109 +56,13 @@ Module rpaModule1
         appInstance.Visible = False
         appInstance.DisplayAlerts = False
 
-        watchDialog.ShowDialog()
-
-        ''rpaFolder = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
-        'successFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
-        'failureFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
-        'collectFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
-        'logfileFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
-        'unknownFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
-        'settingsFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
-        'settingJsonFile = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
-
-
 
         ' FileNamen für logging zusammenbauen
         logfileNamePath = createLogfileName(rpaFolder, "")
 
 
-
-        'Try
-
-        '    Dim anzFiles As Integer = 0
-
-        '    ' now check whether or not the folder are existings , if not create them 
-        '    If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
-        '        My.Computer.FileSystem.CreateDirectory(successFolder)
-        '    End If
-
-        '    If Not My.Computer.FileSystem.DirectoryExists(failureFolder) Then
-        '        My.Computer.FileSystem.CreateDirectory(failureFolder)
-        '    End If
-
-        '    If Not My.Computer.FileSystem.DirectoryExists(collectFolder) Then
-        '        My.Computer.FileSystem.CreateDirectory(collectFolder)
-        '    End If
-
-        '    If Not My.Computer.FileSystem.DirectoryExists(logfileFolder) Then
-        '        My.Computer.FileSystem.CreateDirectory(logfileFolder)
-        '    End If
-
-        '    If Not My.Computer.FileSystem.DirectoryExists(unknownFolder) Then
-        '        My.Computer.FileSystem.CreateDirectory(unknownFolder)
-        '    End If
-
-
-        '    Dim startup As Boolean = False
-
-        '    ' Read the Setting-file of RPA
-        '    If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-        '        Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-        '        inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-        '        ' is there a activePortfolio
-        '        myActivePortfolio = inputvalues.activePortfolio
-        '        configfilesOrdner = inputvalues.VisboConfigFiles
-        '        configfilesOrdner = configfilesOrdner.Replace("\\", "\")
-
-        '        ' read all files, categorize and verify them  
-        '        msgTxt = "Starting ..."
-        '        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-
-        '        visboClient = "VISBO RPA / "
-        '        ' 
-        '        ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
-        '        startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
-
-        '    Else
-        '        startup = False
-        '        ' Exit ! 
-        '        ' read all files, categorize and verify them  
-        '        msgTxt = "Exit - there is no File " & settingJsonFile
-        '        Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-        '        Console.WriteLine(msgTxt)
-
-        '        ' break the RPA - Service
-
-        '    End If
-
-        '    If startup Then
-        '        ' Sendet eine Email an den User
-        '        errMsgCode = New clsErrorCodeMsg
-        '        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
-        '        If Not result Then
-        '            Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
-        '        End If
-
-        '    Else
-        '        msgTxt = "wrong settings - exited without performing jobs ...."
-        '        'Call MsgBox(msgTxt)
-        '        Console.WriteLine(msgTxt)
-        '        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-        '        errMsgCode = New clsErrorCodeMsg
-        '        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
-        '        If Not result Then
-        '            Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
-        '        End If
-
-        '    End If
-
-        '    'watchDialog.ShowDialog()
-
-
-        'Catch ex As Exception
-        '    Call logger(ptErrLevel.logError, "VISBO Robotic Process Automation", ex.Message)
-        'End Try
+        ' hierin wird der eigentliche Import erledigt
+        watchDialog.ShowDialog()
 
 
     End Sub
@@ -168,370 +74,6 @@ Module rpaModule1
 
         IsProcessRunning = objList.Count > 1
     End Function
-
-    Public Sub importAll()
-
-
-        Dim nonStop As Boolean = True
-        Dim errMsgCode As New clsErrorCodeMsg
-        Dim msgTxt As String = ""
-        Dim result As Boolean = False
-
-
-        Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
-        Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
-        Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
-        Dim collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
-        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
-        Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
-        Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
-        Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
-
-
-
-        Dim listToProcess As New SortedList(Of String, Integer)
-        Dim listToProcess2 As New SortedList(Of String, Integer)
-        Dim listActualDataFiles As New SortedList(Of String, Integer)
-
-
-
-        ' 
-        Try
-            ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
-            nonStop = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
-
-
-            If nonStop Then
-                ' Sendet eine Email an den User
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
-
-            Else
-                msgTxt = "wrong settings - exited without performing jobs ...."
-                'Call MsgBox(msgTxt)
-                Console.WriteLine(msgTxt)
-                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
-
-                ' Stoppt den Service aufgrund von ungültigen Settings
-                nonStop = False
-            End If
-
-
-
-            ' never ending loop for importing the different files - RPA
-            Do While nonStop
-
-                Dim myName As String = ""
-                Dim rpaCategory As New PTRpa
-                listToProcess = New SortedList(Of String, Integer)
-                listToProcess2 = New SortedList(Of String, Integer)
-
-
-                Try
-
-                    ' Completion-File delivered?
-                    Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
-                    Dim completedOK As Boolean = (completionFiles.Count > 0)
-
-
-                    ' read all Excel based files 
-                    Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
-
-
-
-                    For Each fullFileName As String In listOfImportfiles
-
-                        myName = My.Computer.FileSystem.GetName(fullFileName)
-
-                        ' Bestimme den Import-Typ der zu importierenden Daten
-                        rpaCategory = bestimmeRPACategory(fullFileName)
-
-                        If rpaCategory = PTRpa.visboUnknown Then
-                            ' move file to unknown Folder ... 
-                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
-                        Else
-
-                            If Not listToProcess.ContainsKey(myName) Then
-                                listToProcess.Add(fullFileName, CInt(rpaCategory))
-                            End If
-                        End If
-
-                    Next
-
-                    ' read all Microsoft Project Files 
-                    listOfImportfiles = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
-                    For Each fullFileName As String In listOfImportfiles
-
-                        myName = My.Computer.FileSystem.GetName(fullFileName)
-                        rpaCategory = PTRpa.visboMPP
-
-                        If Not listToProcess.ContainsKey(myName) Then
-                            listToProcess.Add(fullFileName, CInt(rpaCategory))
-                        End If
-
-                    Next
-
-                    listOfImportfiles = Nothing
-
-                    ImportProjekte.Clear()
-                    Dim importOrganisations As New clsOrganisations
-                    Dim importCustomization As New clsCustomization
-                    Dim importAppearances As New clsAppearances
-                    Dim importDate As Date = Date.Now()
-                    Dim allOk As Boolean = False
-
-
-                    If completedOK Then
-
-                        logfileNamePath = createLogfileName(rpaFolder, myActivePortfolio)
-
-                        ' that means, all timesheets are in the RPA folder
-                        For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
-
-                            'collect the Timesheets for actualData in one separate list and dir 'collect'
-                            If kvp.Value = PTRpa.visboActualData2 Then
-                                myName = My.Computer.FileSystem.GetName(kvp.Key)
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logInfo, "collect: ", myName)
-                                listActualDataFiles.Add(newDestination, kvp.Value)
-                            Else
-                                ' all other files to import
-                                listToProcess2.Add(kvp.Key, kvp.Value)
-                            End If
-                        Next
-
-                        listToProcess = listToProcess2
-
-                        ' import actualData like Timesheets from collectFolder
-                        allOk = processVisboActualData2("Timesheets", myActivePortfolio, collectFolder, importDate)
-
-                        For Each kvp As KeyValuePair(Of String, Integer) In listActualDataFiles
-                            myName = My.Computer.FileSystem.GetName(kvp.Key)
-                            If allOk Then
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logInfo, "success: ", myName)
-                                Console.WriteLine(myName & ": successful ...")
-                                errMsgCode = New clsErrorCodeMsg
-                                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
-                            Else
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logError, "failed: ", myName)
-                                Console.WriteLine(myName & ": with errors ...")
-
-                                errMsgCode = New clsErrorCodeMsg
-                                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                            & myName & ": with errors ..." & vbCrLf _
-                                                                                            & "Look for more details in the Failure-Folder", errMsgCode)
-
-                            End If
-
-                        Next
-
-                        ' logfile in entsprechenden folder verschieben
-                        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                        If Not allOk Then
-                            Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                            My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                        End If
-
-                    End If
-
-                    For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
-
-                        myName = My.Computer.FileSystem.GetName(kvp.Key)
-                        Dim currentWB As xlns.Workbook = Nothing
-
-
-                        Try
-
-                            If Not kvp.Value = PTRpa.visboMPP _
-                                And Not kvp.Value = PTRpa.visboActualData1 _
-                                And Not kvp.Value = PTRpa.visboActualData2 Then
-
-                                Module1.appInstance.DisplayAlerts = False
-                                currentWB = Module1.appInstance.Workbooks.Open(kvp.Key)
-                            End If
-
-                            logfileNamePath = createLogfileName(rpaFolder, myName)
-                            Select Case kvp.Value
-                                Case CInt(PTRpa.visboProjectList)
-
-                                    allOk = processProjectList(myName, myActivePortfolio)
-
-                                Case CInt(PTRpa.visboFindProjectStart)
-
-                                    allOk = processFindProjectStart(myName, myActivePortfolio)
-
-                                Case CInt(PTRpa.visboMPP)
-
-                                    allOk = processMppFile(kvp.Key, importDate)
-
-                                Case CInt(PTRpa.visboProject)
-
-                                    allOk = processVisboBrief(myName, importDate)
-
-                                Case CInt(PTRpa.visboJira)
-
-                                    allOk = processVisboJira(kvp.Key, importDate)
-
-                                Case CInt(PTRpa.visboDefaultCapacity)
-                                    allOk = True
-
-                                Case CInt(PTRpa.visboInitialOrga)
-
-                                    allOk = processInitialOrga(myName)
-
-                                Case CInt(PTRpa.visboRoundtripOrga)
-
-                                    allOk = processRoundTripOrga(myName)
-
-                                Case CInt(PTRpa.visboModifierCapacities)
-
-                                    allOk = True
-
-                                Case CInt(PTRpa.visboExternalContracts)
-
-                                    allOk = True
-
-                                Case CInt(PTRpa.visboActualData1)
-
-                                    allOk = processVisboActualData1(kvp.Key, importDate)
-
-                                Case CInt(PTRpa.visboActualData2)
-
-                                    'Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
-                                    ' in collectFolder verschieben
-                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
-                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                    Call logger(ptErrLevel.logInfo, "collect: ", myName)
-                                    ' nachsehen ob collect vollständig
-                                    If completionFiles.Count > 0 Then
-                                        allOk = processVisboActualData2(kvp.Key, myActivePortfolio, collectFolder, importDate)
-                                    End If
-
-
-                                Case Else
-
-                            End Select
-
-                            ' Sendet eine Email an den User
-
-                            'Dim result_sendEmail As Boolean = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("files abgearbeitet", errMsgCode)
-
-                            If Not (kvp.Value = PTRpa.visboMPP Or
-                                        kvp.Value = PTRpa.visboJira Or
-                                        kvp.Value = PTRpa.visboActualData1 Or
-                                        kvp.Value = PTRpa.visboActualData2) Then
-
-                                If allOk Then
-                                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
-                                Else
-                                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
-                                End If
-                                currentWB.Close(SaveChanges:=True)
-                            End If
-
-                            'If Not IsNothing(currentWB) Then
-                            '    currentWB.Close(SaveChanges:=True)
-                            'End If
-
-                            If Not kvp.Value = PTRpa.visboActualData2 Then
-
-                                If allOk Then
-                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                    Call logger(ptErrLevel.logInfo, "success: ", myName)
-                                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-                                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                                    Console.WriteLine(myName & ": successful ...")
-                                    errMsgCode = New clsErrorCodeMsg
-                                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
-
-
-                                Else
-                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                    Call logger(ptErrLevel.logError, "failed: ", myName)
-                                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-
-                                    errMsgCode = New clsErrorCodeMsg
-                                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                                & myName & ": with errors ..." & vbCrLf _
-                                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
-                                End If
-
-                            End If
-
-
-
-                        Catch ex As Exception
-                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                            My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                            Call logger(ptErrLevel.logError, "failed: ", ex.Message)
-                            If Not kvp.Value = PTRpa.visboMPP Then
-                                currentWB.Close(SaveChanges:=True)
-                            End If
-                            Console.WriteLine(myName & ": failed ...")
-                        End Try
-
-                    Next
-
-                    Console.WriteLine("looking for next jobs!")
-                    'msgTxt = "looking for next jobs!"
-                    'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-
-                Catch ex As Exception
-
-                    If awinSettings.englishLanguage Then
-                        msgTxt = "Error importing: "
-                    Else
-                        msgTxt = "Fehler beim Import von: "
-                    End If
-                    Call logger(ptErrLevel.logsevereError, msgTxt, myName & "/" & rpaCategory.ToString)
-                End Try
-
-            Loop
-
-
-
-            ' now store User Login Data
-            My.Settings.userNamePWD = awinSettings.userNamePWD
-
-            ' speichern 
-            My.Settings.Save()
-
-            '' now release all writeProtections ...
-            'Dim errMsgCode As New clsErrorCodeMsg
-            'If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, errMsgCode) Then
-            '    If awinSettings.visboDebug Then
-            '        Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
-            '    End If
-            'Else
-            '    msgTxt = "Write Protections could not be released ! Please do so in Web-UI ..."
-            '    Call logger(ptErrLevel.logError, "VISBO Robotic Process automation End", msgTxt)
-            '    Console.WriteLine(msgTxt)
-            'End If
-
-
-        Catch ex As Exception
-            msgTxt = "Exit - Failure in rpa Main: " & ex.Message
-            Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-            Console.WriteLine(msgTxt)
-        End Try
-
-
-    End Sub
-
 
 
     Public Function importOneProject(ByVal fname As String, ByVal rpaCat As PTRpa, ByVal importDate As Date) As Boolean
@@ -616,8 +158,8 @@ Module rpaModule1
             End Select
 
             ' Sendet eine Email an den User
-
             'Dim result_sendEmail As Boolean = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("files abgearbeitet", errMsgCode)
+
             Try
                 If Not (rpaCat = PTRpa.visboMPP Or
                                         rpaCat = PTRpa.visboJira Or
@@ -820,10 +362,22 @@ Module rpaModule1
                 awinSettings.userNamePWD = My.Settings.userNamePWD
 
                 awinSettings.visboServer = True
-
                 ' returns false if anything goes wrong .. 
                 result = rpaSetTypen()
 
+            ElseIf readawinSettings(swPath) Then
+                result = True
+                ' independent of what is given in projectboardConfig.xml
+                awinSettings.databaseName = mongoName
+                awinSettings.databaseURL = url
+                ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+                awinSettings.rememberUserPwd = True
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+
+                awinSettings.visboServer = True
+
+                ' returns false if anything goes wrong .. 
+                result = rpaSetTypen()
             End If
 
 
@@ -931,64 +485,7 @@ Module rpaModule1
 
             End Try
 
-            ' ------------------
-            ' tk 10.10.21
-            ' normally not necessary
 
-            'importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
-            'importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
-            'importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
-            'importOrdnerNames(PTImpExp.batchlists) = awinPath & "Import\Batch Projektlisten"
-            'importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\Modulare Szenarien"
-            'importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\AddOn Regeln"
-            'importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
-            'importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\MassEdit"
-            'importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
-            'importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
-            'importOrdnerNames(PTImpExp.Orga) = awinPath & "Import\Organisation"
-            'importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "Import\CustomUserRoles"
-            'importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
-            'importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
-            'importOrdnerNames(PTImpExp.projectWithConfig) = awinPath & "Import\Projects With Config"
-            'importOrdnerNames(PTImpExp.rpa) = awinPath & "Import\RPA"
-
-            'exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
-            'exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
-            'exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
-            'exportOrdnerNames(PTImpExp.batchlists) = awinPath & "Export\Scenario Definitions"
-            'exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\Modulare Szenarien"
-            'exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\MassEdit"
-            'exportOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Export\Scenario Definitions"
-
-            '' jetzt werden die Directories alle angelegt, sofern Sie nicht schon existieren ... 
-            'For di As Integer = 0 To importOrdnerNames.Length - 1
-            '    Try
-
-            '        If Not IsNothing(importOrdnerNames(di)) Then
-            '            My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
-            '        Else
-            '            importOrdnerNames(di) = "-"
-            '        End If
-
-            '    Catch ex As Exception
-
-            '    End Try
-            'Next
-
-            'For di As Integer = 0 To exportOrdnerNames.Length - 1
-            '    Try
-            '        If Not IsNothing(exportOrdnerNames(di)) Then
-            '            My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
-            '        Else
-            '            exportOrdnerNames(di) = "-"
-            '        End If
-
-            '    Catch ex As Exception
-
-            '    End Try
-            'Next
-            ' end changes tl 10.10.21
-            ' --------------------------------------------------------
 
             StartofCalendar = StartofCalendar.Date
 
@@ -1004,12 +501,12 @@ Module rpaModule1
             DiagrammTypen(9) = "Cash-Flow"
 
 
-            Try
-                repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
-                Call setLanguageMessages()
-            Catch ex As Exception
+            'Try
+            '    repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+            '    Call setLanguageMessages()
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
             autoSzenarioNamen(0) = "before Optimization"
             autoSzenarioNamen(1) = "1. Optimum"
@@ -1337,6 +834,8 @@ Module rpaModule1
         rpaSetTypen = result
 
     End Function
+
+
 
     Public Function bestimmeRPACategory(ByVal fileName As String) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
@@ -3063,7 +2562,7 @@ Module rpaModule1
             ' Konfigurationsdatei lesen und Validierung durchführen
 
             ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-            Dim configOrgaImport As String = configfilesOrdner & "configOrgaImport.xlsx"
+            Dim configOrgaImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configOrgaImport.xlsx")
             Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
             Dim lastrow As Integer = 0
 
@@ -3161,7 +2660,7 @@ Module rpaModule1
             ' Konfigurationsdatei lesen und Validierung durchführen
 
             ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-            Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
+            Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
             Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
@@ -3177,6 +2676,7 @@ Module rpaModule1
                     ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
 
                     Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
                         Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -3478,7 +2978,7 @@ Module rpaModule1
         ' Konfigurations-Dateien lesen 
         ' ===========================================================
         ' Konfigurationsdatei lesen und Validierung durchführen
-        Dim configActualDataImport As String = configfilesOrdner & "configActualDataImport.xlsx"
+        Dim configActualDataImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configActualDataImport.xlsx")
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
         ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
@@ -4069,10 +3569,8 @@ Module rpaModule1
             Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
             My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
             Call logger(ptErrLevel.logInfo, "success: ", myName)
-            'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-            'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-            'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-            'Console.WriteLine(myName & ": successful ...")
+
+            ' wieder in das normale logfile schreiben
             errMsgCode = New clsErrorCodeMsg
             result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
         Else
@@ -4084,6 +3582,8 @@ Module rpaModule1
                 Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
                 My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
+                ' wieder in das normale logfile schreiben
+                logfileNamePath = createLogfileName(rpaFolder)
                 errMsgCode = New clsErrorCodeMsg
                 result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
                                                                             & myName & ": with errors ..." & vbCrLf _
@@ -4100,7 +3600,5 @@ Module rpaModule1
             Call logger(ptErrLevel.logError, "processResult", msgTxt)
         End If
     End Sub
-
-
 
 End Module

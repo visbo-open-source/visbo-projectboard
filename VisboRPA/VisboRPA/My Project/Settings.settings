@@ -5,7 +5,7 @@
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="rpaPath" Type="System.String" Scope="Application">
+    <Setting Name="rpaPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">c:\VISBO\VISBO Config Data</Value>
     </Setting>
     <Setting Name="swPath" Type="System.String" Scope="User">

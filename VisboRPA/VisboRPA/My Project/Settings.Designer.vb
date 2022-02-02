@@ -66,13 +66,16 @@ Namespace My
             End Set
         End Property
         
-        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("c:\VISBO\VISBO Config Data")>  _
-        Public ReadOnly Property rpaPath() As String
+        Public Property rpaPath() As String
             Get
                 Return CType(Me("rpaPath"),String)
             End Get
+            Set
+                Me("rpaPath") = value
+            End Set
         End Property
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _

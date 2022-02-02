@@ -26,11 +26,12 @@ Partial Class VisboRPAStart
         Me.watchFolder = New System.IO.FileSystemWatcher()
         Me.FolderBrowserDialog1 = New System.Windows.Forms.FolderBrowserDialog()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.rpaDir = New System.Windows.Forms.TextBox()
+        Me.durchsuchen = New System.Windows.Forms.Button()
         Me.ueberschrift = New System.Windows.Forms.Label()
         Me.btn_stop = New System.Windows.Forms.Button()
         Me.btn_start = New System.Windows.Forms.Button()
-        Me.durchsuchen = New System.Windows.Forms.Button()
-        Me.rpaDir = New System.Windows.Forms.TextBox()
+        Me.statusMessage = New System.Windows.Forms.Label()
         CType(Me.watchFolder, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
@@ -47,6 +48,7 @@ Partial Class VisboRPAStart
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.statusMessage)
         Me.Panel1.Controls.Add(Me.rpaDir)
         Me.Panel1.Controls.Add(Me.durchsuchen)
         Me.Panel1.Controls.Add(Me.ueberschrift)
@@ -54,8 +56,26 @@ Partial Class VisboRPAStart
         Me.Panel1.Controls.Add(Me.btn_start)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(669, 152)
+        Me.Panel1.Size = New System.Drawing.Size(669, 147)
         Me.Panel1.TabIndex = 0
+        '
+        'rpaDir
+        '
+        Me.rpaDir.Location = New System.Drawing.Point(31, 62)
+        Me.rpaDir.Name = "rpaDir"
+        Me.rpaDir.ReadOnly = True
+        Me.rpaDir.Size = New System.Drawing.Size(468, 20)
+        Me.rpaDir.TabIndex = 9
+        '
+        'durchsuchen
+        '
+        Me.durchsuchen.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.durchsuchen.Location = New System.Drawing.Point(505, 59)
+        Me.durchsuchen.Name = "durchsuchen"
+        Me.durchsuchen.Size = New System.Drawing.Size(137, 23)
+        Me.durchsuchen.TabIndex = 8
+        Me.durchsuchen.Text = "Durchsuchen"
+        Me.durchsuchen.UseVisualStyleBackColor = True
         '
         'ueberschrift
         '
@@ -70,7 +90,7 @@ Partial Class VisboRPAStart
         'btn_stop
         '
         Me.btn_stop.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btn_stop.Location = New System.Drawing.Point(567, 100)
+        Me.btn_stop.Location = New System.Drawing.Point(567, 95)
         Me.btn_stop.Name = "btn_stop"
         Me.btn_stop.Size = New System.Drawing.Size(75, 23)
         Me.btn_stop.TabIndex = 5
@@ -80,36 +100,27 @@ Partial Class VisboRPAStart
         'btn_start
         '
         Me.btn_start.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.btn_start.Location = New System.Drawing.Point(31, 100)
+        Me.btn_start.Location = New System.Drawing.Point(31, 95)
         Me.btn_start.Name = "btn_start"
         Me.btn_start.Size = New System.Drawing.Size(75, 23)
         Me.btn_start.TabIndex = 4
         Me.btn_start.Text = "Start"
         Me.btn_start.UseVisualStyleBackColor = True
         '
-        'durchsuchen
+        'statusMessage
         '
-        Me.durchsuchen.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.durchsuchen.Location = New System.Drawing.Point(505, 59)
-        Me.durchsuchen.Name = "durchsuchen"
-        Me.durchsuchen.Size = New System.Drawing.Size(137, 23)
-        Me.durchsuchen.TabIndex = 8
-        Me.durchsuchen.Text = "Durchsuchen"
-        Me.durchsuchen.UseVisualStyleBackColor = True
-        '
-        'rpaDir
-        '
-        Me.rpaDir.Location = New System.Drawing.Point(31, 62)
-        Me.rpaDir.Name = "rpaDir"
-        Me.rpaDir.ReadOnly = True
-        Me.rpaDir.Size = New System.Drawing.Size(468, 20)
-        Me.rpaDir.TabIndex = 9
+        Me.statusMessage.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.statusMessage.AutoSize = True
+        Me.statusMessage.Location = New System.Drawing.Point(28, 130)
+        Me.statusMessage.Name = "statusMessage"
+        Me.statusMessage.Size = New System.Drawing.Size(0, 13)
+        Me.statusMessage.TabIndex = 10
         '
         'VisboRPAStart
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(662, 154)
+        Me.ClientSize = New System.Drawing.Size(662, 149)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "VisboRPAStart"
@@ -129,4 +140,5 @@ Partial Class VisboRPAStart
     Friend WithEvents btn_start As Windows.Forms.Button
     Friend WithEvents durchsuchen As Windows.Forms.Button
     Friend WithEvents rpaDir As Windows.Forms.TextBox
+    Friend WithEvents statusMessage As Windows.Forms.Label
 End Class
