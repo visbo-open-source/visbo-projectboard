@@ -205,13 +205,22 @@ Public Class VisboRPAStart
 
     Private Sub btn_start_Click(sender As Object, e As EventArgs) Handles btn_start.Click
 
-        'this is the path we want to monitor
-        watchFolder.Path = rpaFolder
+        If Not IsNothing(rpaDir.Text) Then
+            rpaFolder = rpaDir.Text
+        End If
 
-        'Set this property to true to start watching
-        watchFolder.EnableRaisingEvents = True
+        If My.Computer.FileSystem.DirectoryExists(rpaFolder) Then
+                'this is the path we want to monitor
+                watchFolder.Path = rpaFolder
 
-        Call startWatching(rpaFolder)
+                'Set this property to true to start watching
+                watchFolder.EnableRaisingEvents = True
+
+            Call startWatching(rpaFolder)
+        Else
+            statusMessage.Text = "Please choose the RPA-Folder !"
+        End If
+
     End Sub
 
     Private Sub btn_stop_Click(sender As Object, e As EventArgs) Handles btn_stop.Click
