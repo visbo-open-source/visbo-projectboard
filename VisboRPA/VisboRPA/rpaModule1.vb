@@ -130,10 +130,13 @@ Module rpaModule1
                 Case CInt(PTRpa.visboModifierCapacities)
 
                     allOk = True
+                    Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
 
                 Case CInt(PTRpa.visboExternalContracts)
 
                     allOk = True
+                    Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
+
 
                 Case CInt(PTRpa.visboActualData1)
 
@@ -153,7 +156,36 @@ Module rpaModule1
                         allOk = processVisboActualData2(fname, myActivePortfolio, collectFolder, importDate)
                     End If
 
+                Case CInt(PTRpa.visboActualData3)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import of actual data ???", " do not exist so far !")
+
+                Case CInt(PTRpa.visboNewTagetik)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import new Projects of Tagetik", " not yet integrated !")
+
+                Case CInt(PTRpa.visboUpdateTagetik)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
+
+                Case CInt(PTRpa.visboEGeckoCapacity)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
+
+                Case CInt(PTRpa.visboInstartProposal)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Calc-Sheet of Instart", " not yet integrated !")
+
+                Case CInt(PTRpa.visboProposal)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet Telair", " not yet integrated !")
+
+                Case CInt(PTRpa.visboZeussCapacity)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities Telair", " not yet integrated !")
+
                 Case Else
+                    Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
 
             End Select
 
@@ -182,67 +214,11 @@ Module rpaModule1
 
             End Try
 
-
+            ' here the logfiles and the importfiles will be moved to a folder depending on the result of the import
             If Not rpaCat = PTRpa.visboActualData2 Then
-
                 Call processResult(fname, allOk)
-
-                'If allOk Then
-                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                '    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                '    Call logger(ptErrLevel.logInfo, "success: ", myName)
-                '    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                '    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-                '    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                '    'Console.WriteLine(myName & ": successful ...")
-                '    errMsgCode = New clsErrorCodeMsg
-                '    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
-
-
-                'Else
-                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                '    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                '    Call logger(ptErrLevel.logError, "failed: ", myName)
-                '    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                '    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                '    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-
-                '    errMsgCode = New clsErrorCodeMsg
-                '    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                '                                                                & myName & ": with errors ..." & vbCrLf _
-                '                                                                & "Look for more details in the Failure-Folder", errMsgCode)
-                'End If
             Else
-
                 Call processResult(fname, allOk)
-                'If allOk Then
-                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                '    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                '    Call logger(ptErrLevel.logInfo, "success: ", myName)
-                '    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                '    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-                '    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                '    'Console.WriteLine(myName & ": successful ...")
-                '    errMsgCode = New clsErrorCodeMsg
-                '    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
-
-
-                'Else
-                '    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                '    If My.Computer.FileSystem.FileExists(fname) Then
-                '        My.Computer.FileSystem.MoveFile(fname, newDestination, True)
-                '        Call logger(ptErrLevel.logError, "failed: ", myName)
-                '        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                '        Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                '        My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-
-                '        errMsgCode = New clsErrorCodeMsg
-                '        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                '                                                                    & myName & ": with errors ..." & vbCrLf _
-                '                                                                    & "Look for more details in the Failure-Folder", errMsgCode)
-                '    End If
-
-                'End If
             End If
 
         Catch ex As Exception
