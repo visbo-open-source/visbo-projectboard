@@ -483,7 +483,7 @@ Public Module agm3
             End Try
         Else
             If awinSettings.englishLanguage Then
-                outputLine = "The configuration-file doen't exist!  -  " & configFile
+                outputLine = "The configuration-file doesn't exist!  -  " & configFile
             Else
                 outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
             End If
@@ -681,7 +681,7 @@ Public Module agm3
             End Try
         Else
             If awinSettings.englishLanguage Then
-                outputLine = "The configuration-file doen't exist!  -  " & configFile
+                outputLine = "The configuration-file doesn't exist!  -  " & configFile
             Else
                 outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
             End If
@@ -1083,7 +1083,13 @@ Public Module agm3
                 orgaImportConfigs.Clear()
                 Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
             End Try
-
+        Else
+            If awinSettings.englishLanguage Then
+                outputLine = "The configuration-file doesn't exist!  -  " & configFile
+            Else
+                outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
+            End If
+            outputCollection.Add(outputLine)
         End If
 
         checkOrgaImportConfig = (orgaImportConfigs.Count > 0)
