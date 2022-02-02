@@ -1335,7 +1335,19 @@ Public Class Tabelle2
 
                 ElseIf Target.Columns.Count > 1 Then
 
+                    If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
+                        rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
+                        isRole = RoleDefinitions.containsName(rcName)
+                    End If
+
                     If isRole Or isCost Then
+
+                        If isRole Then
+                            rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+                        ElseIf isCost Then
+                            rcNameID = rcName
+                        End If
+
                         Call updateDataValuesInProject(Target, isRole, rcName, rcNameID, pName, phaseNameID,
                                                                 auslastungChanged, summenChanged, kostenChanged, roleCostNames)
                     End If

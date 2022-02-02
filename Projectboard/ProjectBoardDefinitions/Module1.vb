@@ -8171,18 +8171,24 @@ Public Module Module1
     ''' <param name="header"></param>
     ''' <param name="explanation"></param>
     ''' <remarks></remarks>
-    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String)
-        If outPutCollection.Count > 0 Then
+    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String, Optional ByVal logType As Integer = ptErrLevel.logInfo)
 
-            Dim outputFormular As New frmOutputWindow
-            With outputFormular
-                .Text = header
-                .lblOutput.Text = explanation
-                .textCollection = outPutCollection
-                .ShowDialog()
-            End With
+        If visboClient.Contains("RPA") Then
+            Call logger(logType, header, outPutCollection)
+        Else
+            If outPutCollection.Count > 0 Then
 
+                Dim outputFormular As New frmOutputWindow
+                With outputFormular
+                    .Text = header
+                    .lblOutput.Text = explanation
+                    .textCollection = outPutCollection
+                    .ShowDialog()
+                End With
+
+            End If
         End If
+
     End Sub
 
 
