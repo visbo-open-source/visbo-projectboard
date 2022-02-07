@@ -6784,6 +6784,7 @@ Public Module agm3
                                                     oneNextTask.projectName = Nothing
                                                 End If
                                             End If
+                                            oneNextTask.projectName = oneNextTask.projectName.Trim
                                         End With
                                     Catch ex As Exception
                                         ' Fehler bei ProjectName

@@ -25728,6 +25728,12 @@ Public Module agm2
         readInterneAnwesenheitslistenAllg = listOfArchivFiles
 
     End Function
+    ''' <summary>
+    ''' zeuss-Datei wegen Arbeitsverteilung eines Monats checken
+    ''' </summary>
+    ''' <param name="kapaConfig"></param>
+    ''' <param name="listOfFiles"></param>
+    ''' <returns></returns>
     Public Function createReferenzListe(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport), ByVal listOfFiles As ObjectModel.ReadOnlyCollection(Of String)) As SortedList(Of String, String)
         ' the beginning and the end of the calendar in the capafile an the actualData are different
 
@@ -25830,7 +25836,7 @@ Public Module agm2
     End Function
 
     ''' <summary>
-    ''' verschiebt die Dateien von listOfFiles in den Folder 'folder\archiv'
+    ''' verschiebt die Dateien von der Liste "listOfFiles" in den Folder '...\archiv'
     ''' </summary>
     ''' <param name="listOfFiles"></param>
     ''' <param name="folder"></param>

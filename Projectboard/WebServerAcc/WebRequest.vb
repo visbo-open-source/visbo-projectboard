@@ -313,6 +313,8 @@ Public Class Request
         Dim result As Boolean = False
 
         Try
+            projectname = projectname.Trim
+
             If storedAtorBefore <= Date.MinValue Then
                 storedAtorBefore = DateTime.Now.AddDays(1).ToUniversalTime()
             Else
@@ -6036,6 +6038,7 @@ Public Class Request
                         End If
                     End If
                 End If
+                serverUriString = serverUriString & "&groupBy=type"
 
             End If
 
