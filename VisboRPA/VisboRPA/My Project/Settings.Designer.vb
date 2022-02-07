@@ -68,7 +68,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("c:\VISBO\VISBO Config Data")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data")>  _
         Public Property rpaPath() As String
             Get
                 Return CType(Me("rpaPath"),String)

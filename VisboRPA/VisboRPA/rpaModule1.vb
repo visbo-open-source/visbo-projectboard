@@ -12,15 +12,14 @@ Imports System.Diagnostics
 Module rpaModule1
 
 
-    Public myActivePortfolio As String = ""
-    Public inputvalues As clsRPASetting = Nothing
+    Public myActivePortfolio As String
+    Public inputvalues As clsRPASetting
 
-    Public rpaPath As String = My.Settings.rpaPath
-    Public swPath As String = My.Settings.swPath
+    Public rpaPath As String
+    Public swPath As String
 
-
-    Public errMsgCode As New clsErrorCodeMsg
-    Public msgTxt As String = ""
+    Public errMsgCode As clsErrorCodeMsg
+    Public msgTxt As String
     Public completedOK As Boolean = False
     Public result As Boolean = False
 
@@ -33,13 +32,14 @@ Module rpaModule1
     Public settingsFolder As String
     Public settingJsonFile As String
 
-    Public watchDialog As New VisboRPAStart
+    Public watchDialog As VisboRPAStart
 
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
         ' in most cases new project and portfolio versions will be written 
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
+        Dim defaultPath = "c:\VISBO\VISBO Config Data"
 
         visboClient = "VISBO RPA /"
 
@@ -56,6 +56,23 @@ Module rpaModule1
         appInstance.Visible = False
         appInstance.DisplayAlerts = False
 
+        'rpaPath not yet defined, therefore the defaultPath is used
+        If rpaPath = "" Then
+            rpaPath = defaultPath
+        End If
+
+        ' create DefaultDirectories if they are not exist 
+        If Not My.Computer.FileSystem.DirectoryExists(rpaPath) Then
+            My.Computer.FileSystem.CreateDirectory(rpaPath)
+        End If
+
+        rpaFolder = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+        If Not My.Computer.FileSystem.DirectoryExists(rpaFolder) Then
+            My.Computer.FileSystem.CreateDirectory(rpaFolder)
+        End If
+
+        ' create Formula for Input of other RPA-Folder
+        watchDialog = New VisboRPAStart
 
         ' FileNamen für logging zusammenbauen
         logfileNamePath = createLogfileName(rpaFolder, "")
@@ -194,7 +211,6 @@ Module rpaModule1
 
             Try
                 If Not (rpaCat = PTRpa.visboMPP Or
-                                        rpaCat = PTRpa.visboJira Or
                                         rpaCat = PTRpa.visboActualData1 Or
                                         rpaCat = PTRpa.visboActualData2) Then
 
@@ -318,7 +334,7 @@ Module rpaModule1
 
         storeImportProjekte = ok
     End Function
-    Public Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String) As Boolean
+    Public Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String, ByVal proxy As String) As Boolean
 
         Dim result As Boolean = False
 
@@ -327,12 +343,13 @@ Module rpaModule1
 
         Try
 
-            If readawinSettings(path) Then
+            'If readawinSettings(path) Then
 
-                result = True
+            result = True
                 ' independent of what is given in projectboardConfig.xml
                 awinSettings.databaseName = mongoName
                 awinSettings.databaseURL = url
+                awinSettings.proxyURL = proxy
                 ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
                 awinSettings.rememberUserPwd = True
                 awinSettings.userNamePWD = My.Settings.userNamePWD
@@ -341,20 +358,21 @@ Module rpaModule1
                 ' returns false if anything goes wrong .. 
                 result = rpaSetTypen()
 
-            ElseIf readawinSettings(swPath) Then
-                result = True
-                ' independent of what is given in projectboardConfig.xml
-                awinSettings.databaseName = mongoName
-                awinSettings.databaseURL = url
-                ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
-                awinSettings.rememberUserPwd = True
-                awinSettings.userNamePWD = My.Settings.userNamePWD
+            'ElseIf readawinSettings(swPath) Then
+            '    result = True
+            '    ' independent of what is given in projectboardConfig.xml
+            '    awinSettings.databaseName = mongoName
+            '    awinSettings.databaseURL = url
+            '    awinSettings.proxyURL = proxy
+            '    ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            '    awinSettings.rememberUserPwd = True
+            '    awinSettings.userNamePWD = My.Settings.userNamePWD
 
-                awinSettings.visboServer = True
+            '    awinSettings.visboServer = True
 
-                ' returns false if anything goes wrong .. 
-                result = rpaSetTypen()
-            End If
+            '    ' returns false if anything goes wrong .. 
+            '    result = rpaSetTypen()
+            'End If
 
 
         Catch ex As Exception
@@ -454,27 +472,28 @@ Module rpaModule1
 
             ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
 
-            reportOrdnerName = awinPath & "Reports\"
-            Try
-                My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
-            Catch ex As Exception
+            'reportOrdnerName = awinPath & "Reports\"
+            'Try
+            '    My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
 
 
             StartofCalendar = StartofCalendar.Date
 
-            DiagrammTypen(0) = "Phase"
-            DiagrammTypen(1) = "Rolle"
-            DiagrammTypen(2) = "Kostenart"
-            DiagrammTypen(3) = "Portfolio"
-            DiagrammTypen(4) = "Ergebnis"
-            DiagrammTypen(5) = "Meilenstein"
-            DiagrammTypen(6) = "Meilenstein Trendanalyse"
-            DiagrammTypen(7) = "Phasen-Kategorie"
-            DiagrammTypen(8) = "Meilenstein-Kategorie"
-            DiagrammTypen(9) = "Cash-Flow"
+            'ur:07.02.2022 auskommentiert
+            'DiagrammTypen(0) = "Phase"
+            'DiagrammTypen(1) = "Rolle"
+            'DiagrammTypen(2) = "Kostenart"
+            'DiagrammTypen(3) = "Portfolio"
+            'DiagrammTypen(4) = "Ergebnis"
+            'DiagrammTypen(5) = "Meilenstein"
+            'DiagrammTypen(6) = "Meilenstein Trendanalyse"
+            'DiagrammTypen(7) = "Phasen-Kategorie"
+            'DiagrammTypen(8) = "Meilenstein-Kategorie"
+            'DiagrammTypen(9) = "Cash-Flow"
 
 
             'Try
@@ -484,38 +503,42 @@ Module rpaModule1
 
             'End Try
 
-            autoSzenarioNamen(0) = "before Optimization"
-            autoSzenarioNamen(1) = "1. Optimum"
-            autoSzenarioNamen(2) = "2. Optimum"
-            autoSzenarioNamen(3) = "3. Optimum"
 
-            '
-            ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
-            ' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
-            arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
-            arrWsNames(2) = "Vorlage" ' depr
-            ' arrWsNames(3) = 
-            arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
-            arrWsNames(4) = "Einstellungen"                ' in Customization File 
-            ' arrWsNames(5) = 
-            arrWsNames(ptTables.meRC) = "meRC"                          ' Edit Ressourcen
-            arrWsNames(6) = "meTE"                          ' Edit Termine
-            arrWsNames(7) = "Darstellungsklassen"           ' wird in awinsettypen hinter MPT kopiert; nimmt für die Laufzeit die Darstellungsklassen auf 
-            arrWsNames(8) = "Phasen-Mappings"               ' in Customization
-            arrWsNames(9) = "meAT"                          ' Edit Attribute 
-            arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
-            ' arrWsNames(11) = 
-            arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
-            arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
-            arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
-            arrWsNames(14) = "Objekte" ' depr
-            arrWsNames(15) = "missing Definitions"          ' in Customization File 
+            'ur:07.02.2022 auskommentiert ---
+            'autoSzenarioNamen(0) = "before Optimization"
+            'autoSzenarioNamen(1) = "1. Optimum"
+            'autoSzenarioNamen(2) = "2. Optimum"
+            'autoSzenarioNamen(3) = "3. Optimum"
+
+            ''
+            '' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
+            '' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
+            'arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
+            'arrWsNames(2) = "Vorlage" ' depr
+            '' arrWsNames(3) = 
+            'arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
+            'arrWsNames(4) = "Einstellungen"                ' in Customization File 
+            '' arrWsNames(5) = 
+            'arrWsNames(ptTables.meRC) = "meRC"                          ' Edit Ressourcen
+            'arrWsNames(6) = "meTE"                          ' Edit Termine
+            'arrWsNames(7) = "Darstellungsklassen"           ' wird in awinsettypen hinter MPT kopiert; nimmt für die Laufzeit die Darstellungsklassen auf 
+            'arrWsNames(8) = "Phasen-Mappings"               ' in Customization
+            'arrWsNames(9) = "meAT"                          ' Edit Attribute 
+            'arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
+            '' arrWsNames(11) = 
+            'arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
+            'arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
+            'arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
+            'arrWsNames(14) = "Objekte" ' depr
+            'arrWsNames(15) = "missing Definitions"          ' in Customization File 
 
 
-            awinSettings.applyFilter = False
+            'awinSettings.applyFilter = False
 
-            showRangeLeft = 0
-            showRangeRight = 0
+            'showRangeLeft = 0
+            'showRangeRight = 0
+            'ur:07.02.2022 auskommentiert ---
+
 
             ' always needs to be database / VISBO Server access 
             noDB = False
@@ -770,33 +793,35 @@ Module rpaModule1
                     Projektvorlagen.Add(projVorlage)
                 Next
             End If
+            'ur:07.02.2022 auskommentiert ---
+            'If awinSettings.englishLanguage Then
+            '    windowNames(PTwindows.mpt) = "VISBO Multiproject-Board"
+            '    windowNames(PTwindows.massEdit) = "edit projects: "
+            '    windowNames(PTwindows.meChart) = "project and portfolio Charts: "
+            '    windowNames(PTwindows.mptpf) = "Portfolio Charts: "
+            '    windowNames(PTwindows.mptpr) = "Project Charts"
+            'Else
+            '    windowNames(PTwindows.mpt) = "VISBO Multiprojekt-Tafel"
+            '    windowNames(PTwindows.massEdit) = "Projekte editieren: "
+            '    windowNames(PTwindows.meChart) = "Projekt und Portfolio Charts: "
+            '    windowNames(PTwindows.mptpf) = "Portfolio Charts: "
+            '    windowNames(PTwindows.mptpr) = "Projekt Charts"
+            'End If
 
-            If awinSettings.englishLanguage Then
-                windowNames(PTwindows.mpt) = "VISBO Multiproject-Board"
-                windowNames(PTwindows.massEdit) = "edit projects: "
-                windowNames(PTwindows.meChart) = "project and portfolio Charts: "
-                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
-                windowNames(PTwindows.mptpr) = "Project Charts"
-            Else
-                windowNames(PTwindows.mpt) = "VISBO Multiprojekt-Tafel"
-                windowNames(PTwindows.massEdit) = "Projekte editieren: "
-                windowNames(PTwindows.meChart) = "Projekt und Portfolio Charts: "
-                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
-                windowNames(PTwindows.mptpr) = "Projekt Charts"
-            End If
 
+            'projectboardViews(PTview.mpt) = Nothing
+            'projectboardViews(PTview.mptpr) = Nothing
+            'projectboardViews(PTview.mptprpf) = Nothing
+            'projectboardViews(PTview.meOnly) = Nothing
+            'projectboardViews(PTview.meChart) = Nothing
 
-            projectboardViews(PTview.mpt) = Nothing
-            projectboardViews(PTview.mptpr) = Nothing
-            projectboardViews(PTview.mptprpf) = Nothing
-            projectboardViews(PTview.meOnly) = Nothing
-            projectboardViews(PTview.meChart) = Nothing
+            'projectboardWindows(PTwindows.mpt) = Nothing
+            'projectboardWindows(PTwindows.mptpr) = Nothing
+            'projectboardWindows(PTwindows.mptpf) = Nothing
+            'projectboardWindows(PTwindows.massEdit) = Nothing
+            'projectboardWindows(PTwindows.meChart) = Nothing
+            'ur:07.02.2022 auskommentiert ---
 
-            projectboardWindows(PTwindows.mpt) = Nothing
-            projectboardWindows(PTwindows.mptpr) = Nothing
-            projectboardWindows(PTwindows.mptpf) = Nothing
-            projectboardWindows(PTwindows.massEdit) = Nothing
-            projectboardWindows(PTwindows.meChart) = Nothing
 
             result = True
 

@@ -236,7 +236,7 @@ Public Class VisboRPAStart
         My.Settings.userNamePWD = ""
 
         'now cancel RPAFolder
-        My.Settings.rpaPath = ""
+        My.Settings.rpaPath = rpaFolder
 
         ' speichern 
         My.Settings.Save()
@@ -316,6 +316,7 @@ Public Class VisboRPAStart
                 configfilesOrdner = inputvalues.VisboConfigFiles
                 configfilesOrdner = configfilesOrdner.Replace("\\", "\")
 
+
                 ' read all files, categorize and verify them  
                 msgTxt = "Starting with ..."
                 Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
@@ -325,7 +326,7 @@ Public Class VisboRPAStart
                 visboClient = "VISBO RPA / "
                 ' 
                 ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
-                startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, settingsFolder)
+                startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, settingsFolder, inputvalues.proxyURL)
 
             Else
                 startup = False
@@ -340,6 +341,9 @@ Public Class VisboRPAStart
 
             If startup Then
 
+                Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", inputvalues.proxyURL)
+                Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", inputvalues.VisboUrl)
+                Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", inputvalues.VisboCenter)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: active Portfolio", myActivePortfolio)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: Config Files Folder", configfilesOrdner)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: RPA Folder", rpaFolder)
