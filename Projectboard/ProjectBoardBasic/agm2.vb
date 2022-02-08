@@ -26034,16 +26034,26 @@ Public Module agm2
     Function createTemplateOfProject(ByVal hproj As clsProjekt) As clsProjektvorlage
 
         Dim projVorlage As New clsProjektvorlage
-        projVorlage.VorlagenName = hproj.name
-        projVorlage.Schrift = hproj.Schrift
-        projVorlage.Schriftfarbe = hproj.Schriftfarbe
-        ' tk farbe is now defined via business Unit
-        ' projVorlage.farbe = hproj.farbe
-        projVorlage.earliestStart = -6
-        projVorlage.latestStart = 6
-        projVorlage.Erloes = hproj.Erloes
-        projVorlage.AllPhases = hproj.AllPhases
-        projVorlage.hierarchy = hproj.hierarchy
+
+        Try
+            If Not IsNothing(hproj) Then
+                projVorlage.VorlagenName = hproj.name
+                projVorlage.Schrift = hproj.Schrift
+                projVorlage.Schriftfarbe = hproj.Schriftfarbe
+                ' tk farbe is now defined via business Unit
+                ' projVorlage.farbe = hproj.farbe
+                projVorlage.earliestStart = -6
+                projVorlage.latestStart = 6
+                projVorlage.Erloes = hproj.Erloes
+                projVorlage.AllPhases = hproj.AllPhases
+                projVorlage.hierarchy = hproj.hierarchy
+            Else
+                Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined")
+            End If
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined")
+        End Try
 
         createTemplateOfProject = projVorlage
     End Function
