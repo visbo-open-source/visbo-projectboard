@@ -262,7 +262,52 @@ Module rpaModule1
         AlleProjektSummaries.Clear(False)
     End Sub
 
+    Private Function readProjectTemplates() As Boolean
 
+        Dim result As Boolean = True
+        Dim err As New clsErrorCodeMsg
+
+        ' lesen der templates des akt. VC
+        Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
+
+        If err.errorCode = 200 Then
+
+            Dim projVorlage As clsProjektvorlage
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
+
+                projVorlage = createTemplateOfProject(kvp.Value)
+                If Not IsNothing(projVorlage) Then
+                    ' hiermit wird die _Dauer gesetzt
+                    Dim vorlagenDauer = projVorlage.dauerInDays
+
+                    'projVorlage = New clsProjektvorlage
+                    'projVorlage.VorlagenName = kvp.Value.name
+                    'projVorlage.Schrift = kvp.Value.Schrift
+                    'projVorlage.Schriftfarbe = kvp.Value.Schriftfarbe
+                    'projVorlage.farbe = kvp.Value.farbe
+                    'projVorlage.earliestStart = -6
+                    'projVorlage.latestStart = 6
+                    'projVorlage.Erloes = kvp.Value.Erloes
+                    'projVorlage.AllPhases = kvp.Value.AllPhases
+                    'projVorlage.hierarchy = kvp.Value.hierarchy
+                    ''hprojTemp = projVorlage
+
+                    ''projVorlage.copyFrom(kvp.Value)
+                    Projektvorlagen.Add(projVorlage)
+
+                Else
+                    Call logger(ptErrLevel.logError, "readProjectTemplates", "Creating a project template fromm project " & kvp.Value.name & " crashed")
+                    result = False
+                End If
+
+            Next
+        Else
+            Call logger(ptErrLevel.logError, "readProjectTemplates", "Getting project templates from Server finished with error: " & err.errorMsg)
+            result = False
+        End If
+        readProjectTemplates = result
+
+    End Function
 
     ''' <summary>
     ''' stores all projects in ImportProjekte, then clears ImportProjekte
@@ -1748,6 +1793,9 @@ Module rpaModule1
                     aggregationList.Add(tmpStrID)
                 End If
             Next
+
+            Dim ok As Boolean = readProjectTemplates()
+            Dim anzTemplates As Integer = Projektvorlagen.Count
 
             allOk = awinImportProjektInventur(readProjects, createdProjects)
             If allOk Then
