@@ -39,9 +39,20 @@ Module rpaModule1
         ' in most cases new project and portfolio versions will be written 
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
-        Dim defaultPath = "c:\VISBO\VISBO Config Data"
 
+        ' name des aktuell laufenden Clients
         visboClient = "VISBO RPA /"
+
+        awinSettings.visboServer = True
+        awinSettings.userNamePWD = My.Settings.userNamePWD
+        rpaPath = My.Settings.rpaPath
+
+        Dim defaultPath = "C:\VISBO\VISBO Config Data\RPA"
+
+        'Init the ReSt-Server/database Access
+        If IsNothing(databaseAcc) Then
+            databaseAcc = New DBAccLayer.Request
+        End If
 
         ' check if the VisboRPA is already running
         If IsProcessRunning("VisboRPA.exe") Then
@@ -66,7 +77,7 @@ Module rpaModule1
             My.Computer.FileSystem.CreateDirectory(rpaPath)
         End If
 
-        rpaFolder = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+        rpaFolder = rpaPath
         If Not My.Computer.FileSystem.DirectoryExists(rpaFolder) Then
             My.Computer.FileSystem.CreateDirectory(rpaFolder)
         End If
@@ -603,11 +614,13 @@ Module rpaModule1
                 If IsNothing(databaseAcc) Then
                     databaseAcc = New DBAccLayer.Request
                 End If
-                Try
-                    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
-                Catch ex As Exception
-                    loginErfolgreich = False
-                End Try
+
+                'ur:08022022: soll mit Default erfragt werden
+                'Try
+                '    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
+                'Catch ex As Exception
+                '    loginErfolgreich = False
+                'End Try
 
 
                 If Not loginErfolgreich Then

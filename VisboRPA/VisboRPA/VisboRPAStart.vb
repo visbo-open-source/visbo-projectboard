@@ -176,9 +176,9 @@ Public Class VisboRPAStart
     Private Sub VisboRPAStart_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         'this is the path we want to monitor
         If rpaPath <> "" Then
-            If My.Computer.FileSystem.DirectoryExists(My.Computer.FileSystem.CombinePath(rpaPath, "RPA")) Then
-                rpaDir.Text = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
-                watchFolder.Path = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
+            If My.Computer.FileSystem.DirectoryExists(rpaPath) Then
+                rpaDir.Text = rpaPath
+                watchFolder.Path = rpaPath
             End If
         End If
 
@@ -192,14 +192,31 @@ Public Class VisboRPAStart
     End Sub
 
     Private Sub VisboRPAStart_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
+        'Set this property to true to start watching
+        watchFolder.EnableRaisingEvents = False
 
+        Call logger(ptErrLevel.logInfo, "VisboRPA", "Process was stopped!")
         ' now store User Login Data
-        'My.Settings.userNamePWD = awinSettings.userNamePWD
+        My.Settings.userNamePWD = awinSettings.userNamePWD
         ' now cancel User Login Data
-        My.Settings.userNamePWD = ""
-
+        'My.Settings.userNamePWD = ""
+        My.Settings.rpaPath = rpaFolder
         ' speichern 
         My.Settings.Save()
+
+        Dim err As New clsErrorCodeMsg
+
+        Dim logoutErfolgreich As Boolean = CType(databaseAcc, DBAccLayer.Request).logout(err)
+
+        If logoutErfolgreich Then
+            If awinSettings.visboDebug Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox(err.errorMsg & vbCrLf & "User don't have access to a VisboCenter any longer!")
+                Else
+                    Call MsgBox(err.errorMsg & vbCrLf & "User hat keinen Zugriff mehr zu einem VisboCenter!")
+                End If
+            End If
+        End If
 
     End Sub
 
@@ -225,23 +242,37 @@ Public Class VisboRPAStart
 
     Private Sub btn_stop_Click(sender As Object, e As EventArgs) Handles btn_stop.Click
 
-        'Set this property to true to start watching
-        watchFolder.EnableRaisingEvents = False
+        ''Set this property to true to start watching
+        'watchFolder.EnableRaisingEvents = False
 
-
-        ' now store User Login Data
+        'Call logger(ptErrLevel.logInfo, "VisboRPA", "Process was stopped!")
+        '' now store User Login Data
         'My.Settings.userNamePWD = awinSettings.userNamePWD
 
-        ' now delete User Login Data
-        My.Settings.userNamePWD = ""
+        '' now delete User Login Data
+        'My.Settings.userNamePWD = ""
 
-        'now cancel RPAFolder
-        My.Settings.rpaPath = rpaFolder
+        ''now cancel RPAFolder
+        'My.Settings.rpaPath = rpaFolder
 
-        ' speichern 
-        My.Settings.Save()
+        '' speichern 
+        'My.Settings.Save()
+        'Dim err As New clsErrorCodeMsg
+
+        'Dim logoutErfolgreich As Boolean = CType(databaseAcc, DBAccLayer.Request).logout(err)
+
+        'If logoutErfolgreich Then
+        '    If awinSettings.visboDebug Then
+        '        If awinSettings.englishLanguage Then
+        '            Call MsgBox(err.errorMsg & vbCrLf & "User don't have access to a VisboCenter any longer!")
+        '        Else
+        '            Call MsgBox(err.errorMsg & vbCrLf & "User hat keinen Zugriff mehr zu einem VisboCenter!")
+        '        End If
+        '    End If
+        'End If
 
         MyBase.Close()
+
 
     End Sub
 
@@ -252,7 +283,6 @@ Public Class VisboRPAStart
             rpaPath = rpaDir.Text
 
             rpaFolder = rpaPath
-
 
             Call startWatching(rpaFolder)
         End If
