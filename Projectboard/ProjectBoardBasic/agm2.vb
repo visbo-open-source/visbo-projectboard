@@ -13952,6 +13952,9 @@ Public Module agm2
                                     validPNameRoleNameIDs.Add(pName, tmpRoleNameListe)
                                 End If
                             Else
+                                outPutLine = "ImportIstdatenStdFormat , Unkown Project: " & pName
+                                outputCollection.Add(outPutLine)
+
                                 ' Call logger
                                 ReDim logArray(5)
                                 logArray(0) = "Unbekanntes Projekt"
@@ -14033,34 +14036,41 @@ Public Module agm2
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
                             Dim pName As String = handledNames(tmpPName)
 
-                            Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
-                            Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+                            ' ur:08022022: eingefügt
+                            'nur wenn das Projekt existiert d.h. in der Liste validPNameRoleNameIDs enthalten ist weitermachen mit den Werten der Rollen
+                            If validPNameRoleNameIDs.ContainsKey(pName) Then
+                                Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
+                                Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
 
-                            Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
+                                Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
 
 
-                            Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
-                            Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
-                            Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
-                            Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
+                                Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
+                                Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                                Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
+                                Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
 
-                            ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
-                            Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
+                                ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
+                                Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
 
-                            Dim weitermachen As Boolean = False
-                            If (curIstPTValue > 0 And curIstEuroValue = 0) Then
-                                ' der Wert ist schon in curIstPtValue 
-                                weitermachen = True
-                            ElseIf curIstPTValue = 0 And curIstEuroValue > 0 And currentRole.tagessatzIntern > 0 Then
-                                curIstPTValue = curIstEuroValue / currentRole.tagessatzIntern
-                                weitermachen = True
+                                Dim weitermachen As Boolean = False
+                                If (curIstPTValue > 0 And curIstEuroValue = 0) Then
+                                    ' der Wert ist schon in curIstPtValue 
+                                    weitermachen = True
+                                ElseIf curIstPTValue = 0 And curIstEuroValue > 0 And currentRole.tagessatzIntern > 0 Then
+                                    curIstPTValue = curIstEuroValue / currentRole.tagessatzIntern
+                                    weitermachen = True
+                                Else
+                                    weitermachen = False
+                                End If
+
+                                If weitermachen Then
+                                    validProjectNames.Item(pName).Item(roleName)(ixPos) = validProjectNames.Item(pName).Item(roleName)(ixPos) + curIstPTValue
+                                End If
                             Else
-                                weitermachen = False
+                                'Projekt pName nicht vorhanden => keine Istdaten eintragen
                             End If
-
-                            If weitermachen Then
-                                validProjectNames.Item(pName).Item(roleName)(ixPos) = validProjectNames.Item(pName).Item(roleName)(ixPos) + curIstPTValue
-                            End If
+                            'ur: 08022022: eingefügt
 
                         Else
                             ' Fehler wurde bereits in Schleife 1 entdeckt und protokolliert 
@@ -14245,7 +14255,7 @@ Public Module agm2
             ReDim logArray(1)
             logArray(0) = "Exception aufgetreten 100457: "
             logArray(1) = ex.Message
-            Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+            Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 

@@ -6476,7 +6476,7 @@ Public Class Request
             Dim vplock As New clsVPLock
             vplock.variantName = variantName
             vplock.email = aktUser.email
-            vplock.expiresAt = DateAdd(DateInterval.Day, 1.0, Date.Now) ' heute + 1 Tag
+            vplock.expiresAt = DateAdd(DateInterval.Hour, 2.0, Date.Now) ' jetzt + 2 Stunde
 
             Dim data As Byte() = serverInputDataJson(vplock, "")
 
