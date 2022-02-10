@@ -3649,7 +3649,7 @@ Module rpaModule1
                 errMsgCode = New clsErrorCodeMsg
                 result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
                                                                             & myName & ": with errors ..." & vbCrLf _
-                                                                            & "Look for more details in the Failure-Folder", errMsgCode)
+                                                                            & "Look for more details in the Failure-Folder: " & failureFolder, errMsgCode)
             End If
         End If
 

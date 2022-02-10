@@ -63,6 +63,7 @@ Public Class VisboRPAStart
     End Sub
 
     Private Sub watchFolder_Created(sender As Object, e As IO.FileSystemEventArgs) Handles watchFolder.Created
+
         'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Created")
         ''code here for newly changed file Or directory
 
@@ -152,8 +153,19 @@ Public Class VisboRPAStart
                     If result Then
                         Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & e.FullPath & "' was imported successfully at: " & Date.Now().ToLongDateString)
                     End If
+
                 Case Else
 
+                    myName = My.Computer.FileSystem.GetName(fullFileName)
+                    rpaCategory = PTRpa.visboUnknown
+                    ' move file to unknown Folder ... 
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                & myName & vbCrLf & " unknown file / category ...", errMsgCode)
             End Select
         Else
             Dim a As String = ""
