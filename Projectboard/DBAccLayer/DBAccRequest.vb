@@ -17,7 +17,7 @@ Imports System.Security.Principal
 Imports System.Net
 Imports System.Text
 Imports WebServerAcc
-Imports MongoDbAccess
+'Imports MongoDbAccess
 Public Class Request
 
     'public serverUriName ="http://visbo.myhome-server.de:3484" 
@@ -76,11 +76,12 @@ Public Class Request
 
             Else  'es wird eine MongoDB direkt adressiert
 
-                Dim access As New MongoDbAccess.Request(databaseURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
-                loginOK = access.createIndicesOnce()
-                If loginOK Then
-                    DBAcc = access
-                End If
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'Dim access As New MongoDbAccess.Request(databaseURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
+                'loginOK = access.createIndicesOnce()
+                'If loginOK Then
+                '    DBAcc = access
+                'End If
             End If
 
         Catch ex As Exception
@@ -169,7 +170,8 @@ Public Class Request
 
             Else 'es wird eine MongoDB direkt adressiert
 
-                result = CType(DBAcc, MongoDbAccess.Request).pingMongoDb()
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).pingMongoDb()
 
             End If
 
@@ -249,7 +251,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
             End If
 
         Catch ex As Exception
@@ -297,7 +301,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                resultCollection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB()
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'resultCollection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB()
             End If
 
         Catch ex As Exception
@@ -347,11 +353,12 @@ Public Class Request
 
             Else 'es wird eine MongoDB direkt adressiert
 
-                Dim interResult As Collection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB(pvName)
-                ' First TimeStamp
-                ergebnisCollection.Add(interResult.Item(0))
-                ' Last TimeStamp
-                ergebnisCollection.Add(interResult.Item(interResult.Count - 1))
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'Dim interResult As Collection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB(pvName)
+                '' First TimeStamp
+                'ergebnisCollection.Add(interResult.Item(0))
+                '' Last TimeStamp
+                'ergebnisCollection.Add(interResult.Item(interResult.Count - 1))
 
             End If
 
@@ -405,7 +412,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                ergebnisCollection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB(pvName)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'ergebnisCollection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB(pvName)
             End If
 
         Catch ex As Exception
@@ -473,7 +482,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectsFromDB(projectname, variantName, zeitraumStart, zeitraumEnde, storedEarliest, storedLatest, onlyLatest)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectsFromDB(projectname, variantName, zeitraumStart, zeitraumEnde, storedEarliest, storedLatest, onlyLatest)
             End If
 
 
@@ -521,7 +532,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
             End If
 
 
@@ -582,7 +595,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore)
             End If
 
         Catch ex As Exception
@@ -690,7 +705,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveOneProjectfromDB(projectname, "", storedAtOrBefore)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveOneProjectfromDB(projectname, "", storedAtOrBefore)
             End If
 
         Catch ex As Exception
@@ -830,7 +847,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).renameProjectsInDB(oldName, newName, userName)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).renameProjectsInDB(oldName, newName, userName)
             End If
 
 
@@ -951,7 +970,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).storeProjectToDB(projekt, userName)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).storeProjectToDB(projekt, userName)
             End If
 
         Catch ex As Exception
@@ -1003,7 +1024,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                resultCollection = CType(DBAcc, MongoDbAccess.Request).retrieveVariantNamesFromDB(projectName)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'resultCollection = CType(DBAcc, MongoDbAccess.Request).retrieveVariantNamesFromDB(projectName)
             End If
 
 
@@ -1064,7 +1087,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore)
             End If
 
         Catch ex As Exception
@@ -1123,7 +1148,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectHistoryFromDB(projectname, variantName, storedEarliest, storedLatest)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectHistoryFromDB(projectname, variantName, storedEarliest, storedLatest)
             End If
 
         Catch ex As Exception
@@ -1177,7 +1204,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
+
+                '' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
             End If
 
         Catch ex As Exception
@@ -1237,7 +1266,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveFirstContractedPFromDB(projectname, variantname)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveFirstContractedPFromDB(projectname, variantname)
             End If
 
         Catch ex As Exception
@@ -1296,7 +1327,9 @@ Public Class Request
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).RetrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).RetrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
             End If
 
         Catch ex As Exception
@@ -1360,7 +1393,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).checkChgPermission(pName, vName, userName, type)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).checkChgPermission(pName, vName, userName, type)
             End If
 
         Catch ex As Exception
@@ -1419,7 +1454,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).getWriteProtection(pName, vName, type)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).getWriteProtection(pName, vName, type)
             End If
 
         Catch ex As Exception
@@ -1477,7 +1514,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).setWriteProtection(wpItem)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).setWriteProtection(wpItem)
             End If
 
         Catch ex As Exception
@@ -1717,7 +1756,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveConstellationsFromDB()
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveConstellationsFromDB()
             End If
 
         Catch ex As Exception
@@ -1820,7 +1861,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).storeConstellationToDB(c)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).storeConstellationToDB(c)
             End If
 
         Catch ex As Exception
@@ -1904,7 +1947,9 @@ Public Class Request
                 result = CType(DBAcc, WebServerAcc.Request).storeFilterToDB(ptFilter, selfilter)
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).storeFilterToDB(ptFilter, selfilter)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).storeFilterToDB(ptFilter, selfilter)
             End If
 
         Catch ex As Exception
@@ -1930,7 +1975,9 @@ Public Class Request
                 result = CType(DBAcc, WebServerAcc.Request).retrieveDependenciesFromDB()
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveDependenciesFromDB()
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveDependenciesFromDB()
             End If
 
         Catch ex As Exception
@@ -1984,7 +2031,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
         Catch ex As Exception
@@ -2036,7 +2085,9 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).cancelWriteProtections(user)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).cancelWriteProtections(user)
             End If
 
         Catch ex As Exception
@@ -2063,7 +2114,9 @@ Public Class Request
                 result = CType(DBAcc, WebServerAcc.Request).retrieveAllFilterFromDB(selfilter)
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveAllFilterFromDB(selfilter)
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveAllFilterFromDB(selfilter)
             End If
 
         Catch ex As Exception
@@ -2088,7 +2141,8 @@ Public Class Request
                 result = CType(DBAcc, WebServerAcc.Request).removeFilterFromDB(filter)
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).removeFilterFromDB(filter)
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).removeFilterFromDB(filter)
             End If
 
         Catch ex As Exception
@@ -2193,7 +2247,8 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(storedAtOrBefore)
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(storedAtOrBefore)
             End If
 
         Catch ex As Exception
@@ -2327,7 +2382,8 @@ Public Class Request
                 result = CType(DBAcc, WebServerAcc.Request).storeDependencyofPToDB(d)
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).storeDependencyofPToDB(d)
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).storeDependencyofPToDB(d)
             End If
 
         Catch ex As Exception
@@ -2386,13 +2442,15 @@ Public Class Request
 
             Else 'es wird eine MongoDB direkt adressiert; ur:2020.12.3nun sollen auch Appearances in DB gespeichert werden
 
-                If type = settingTypes(ptSettingTypes.appearance) Then
-                    result = CType(DBAcc, MongoDbAccess.Request).storeAppearancesToDB(hlist)
-                End If
+                ' ur: 20220210 remove direkt MongoDB-Access
 
-                If type = settingTypes(ptSettingTypes.customization) Then
-                    result = CType(DBAcc, MongoDbAccess.Request).storeCustomizationToDB(hlist)
-                End If
+                'If type = settingTypes(ptSettingTypes.appearance) Then
+                '    result = CType(DBAcc, MongoDbAccess.Request).storeAppearancesToDB(hlist)
+                'End If
+
+                'If type = settingTypes(ptSettingTypes.customization) Then
+                '    result = CType(DBAcc, MongoDbAccess.Request).storeCustomizationToDB(hlist)
+                'End If
 
             End If
 
@@ -2551,9 +2609,10 @@ Public Class Request
 
             Else
                 ' to do for direct MongoAccess
-                result.allRoles = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(timestamp)
-                result.allCosts = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(timestamp)
-                result.validFrom = StartofCalendar
+                '' ur: 20220210 remove direkt MongoDB-Access
+                'result.allRoles = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(timestamp)
+                'result.allCosts = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(timestamp)
+                'result.validFrom = StartofCalendar
 
             End If
 
@@ -2603,10 +2662,11 @@ Public Class Request
 
             Else
                 ' to do for direct MongoAccess
-                result = Nothing
-                err.errorCode = 403
-                err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
-                                vbLf & "und können daher nicht von der DB gelesen werden"
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = Nothing
+                'err.errorCode = 403
+                'err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
+                '                vbLf & "und können daher nicht von der DB gelesen werden"
 
             End If
 
@@ -2665,11 +2725,10 @@ Public Class Request
             Else
                 ' to do for direct MongoAccess
                 ' to do for direct MongoAccess
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveCustomizationFromDB(timestamp)
-                'result = Nothing
-                'err.errorCode = 403
-                'err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
-                '                vbLf & "und können daher nicht von der DB gelesen werden"
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveCustomizationFromDB(timestamp)
+
 
             End If
 
@@ -2725,12 +2784,9 @@ Public Class Request
 
             Else
                 ' to do for direct MongoAccess
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveAppearancesFromDB(timestamp)
 
-                'result = Nothing
-                'err.errorCode = 403
-                'err.errorMsg = "Fehler: Darstellungsklasse sind im Customization-File gespeichert " &
-                '                vbLf & "und können daher nicht von der DB gelesen werden"
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveAppearancesFromDB(timestamp)
 
             End If
 
@@ -2740,6 +2796,11 @@ Public Class Request
 
         retrieveAppearancesFromDB = result
     End Function
+    ''' <summary>
+    ''' holt alle VC's, bei denen der aktuelle User eingeladen ist
+    ''' </summary>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 
         Dim result As New List(Of String)
@@ -2783,6 +2844,15 @@ Public Class Request
     End Function
 
 
+    ''' <summary>
+    ''' holt vom Server die Kosten diese Projektes
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="stored"></param>
+    ''' <param name="userName"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function evaluateCostsOfProject(ByVal projectname As String, ByVal variantName As String,
                                            ByVal stored As DateTime, ByVal userName As String,
                                            ByRef err As clsErrorCodeMsg) As List(Of Double)
@@ -2796,7 +2866,6 @@ Public Class Request
                                                                                variantName,
                                                                                stored,
                                                                                userName, err)
-            Else
                 If result.Count = 0 Then
 
                     Select Case err.errorCode
@@ -2819,6 +2888,8 @@ Public Class Request
                     End Select
 
                 End If
+            Else
+                ' to do if direct MongoDBAccess
             End If
 
         Catch ex As Exception
@@ -2830,6 +2901,13 @@ Public Class Request
     End Function
 
 
+    ''' <summary>
+    ''' setzt da VC um, damit alle weiteren Funktionen auf diese VC wirken
+    ''' </summary>
+    ''' <param name="vcName"></param>
+    ''' <param name="vcID"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function updateActualVC(ByVal vcName As String, ByRef vcID As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
@@ -2874,6 +2952,10 @@ Public Class Request
         updateActualVC = result
 
     End Function
+    ''' <summary>
+    ''' löschen der im Cache gespeicherten Projekte/Versionen
+    ''' </summary>
+    ''' <returns></returns>
     Public Function clearCache()
         Dim result As Boolean = False
         Try
@@ -2884,6 +2966,12 @@ Public Class Request
         clearCache = result
     End Function
 
+    ''' <summary>
+    ''' sending "message" to the actual user
+    ''' </summary>
+    ''' <param name="message"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function sendEmailToUser(ByVal message As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False

@@ -7519,6 +7519,12 @@ Public Class Request
     End Function
 
 
+    ''' <summary>
+    ''' sending an email with "message" to actual User
+    ''' </summary>
+    ''' <param name="message"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function sendEmailToUser(ByVal message As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False

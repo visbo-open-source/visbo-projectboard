@@ -26,7 +26,7 @@
     <PublishUrl>c:\publish\VISBO Projectboard\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>4.3.1.1</ApplicationVersion>
+    <ApplicationVersion>4.3.1.21</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -38,9 +38,9 @@
     <OfficeApplicationDescription />
   </PropertyGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.6">
+    <BootstrapperPackage Include=".NETFramework,Version=v4.7">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.6 %28x86 und x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4.7 %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -158,6 +158,7 @@
     <Import Include="Microsoft.VisualBasic" />
     <Import Include="System" />
     <Import Include="System.Collections.Generic" />
+    <Import Include="System.Drawing" />
     <Import Include="System.Linq" />
     <Import Include="System.Text" />
     <Import Include="System.Windows.Forms" />
@@ -301,10 +302,6 @@
     <ProjectReference Include="..\DBAccLayer\DBAccLayer.vbproj">
       <Project>{68c4cab8-fc59-47b1-bdd7-68aa31fbb63f}</Project>
       <Name>DBAccLayer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
-      <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
-      <Name>MongoDbAccess</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProjectBoardBasic\ProjectBoardBasic.vbproj">
       <Project>{ecdec86c-6f2f-436a-99f5-98c1958cf08b}</Project>

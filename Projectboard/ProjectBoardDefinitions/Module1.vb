@@ -1102,7 +1102,7 @@ Public Module Module1
     '   spanisch
     '
     Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"),
-                                         New CultureInfo("en-US"),
+                                         New CultureInfo("us-US"),
                                          New CultureInfo("fr-FR"),
                                          New CultureInfo("es-ES")}
     ' aktuell verwendete Sprache für reports
