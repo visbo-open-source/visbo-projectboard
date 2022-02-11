@@ -3632,9 +3632,9 @@ Module rpaModule1
             My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
             Call logger(ptErrLevel.logInfo, "success: ", myName)
 
-            ' wieder in das normale logfile schreiben
             errMsgCode = New clsErrorCodeMsg
             result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+
         Else
             Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
             If My.Computer.FileSystem.FileExists(fullfileName) Then
@@ -3644,14 +3644,16 @@ Module rpaModule1
                 Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
                 My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
-                ' wieder in das normale logfile schreiben
-                logfileNamePath = createLogfileName(rpaFolder)
                 errMsgCode = New clsErrorCodeMsg
                 result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
                                                                             & myName & ": with errors ..." & vbCrLf _
                                                                             & "Look for more details in the Failure-Folder: " & failureFolder, errMsgCode)
             End If
         End If
+
+
+        ' wieder in das normale logfile schreiben
+        logfileNamePath = createLogfileName(rpaFolder)
 
         If Not result Then
             If awinSettings.englishLanguage Then
