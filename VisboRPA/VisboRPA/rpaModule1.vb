@@ -13,6 +13,7 @@ Module rpaModule1
 
 
     Public myActivePortfolio As String
+    Public myVC As String
     Public inputvalues As clsRPASetting
 
     Public rpaPath As String
@@ -40,25 +41,49 @@ Module rpaModule1
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
 
+        Dim actDir = My.Computer.FileSystem.CurrentDirectory
+
+        'Call MsgBox("aktuellesDir:" & actDir)
+
         ' name des aktuell laufenden Clients
         visboClient = "VISBO RPA /"
 
-        awinSettings.visboServer = True
-        awinSettings.userNamePWD = My.Settings.userNamePWD
-        rpaPath = My.Settings.rpaPath
-
-        Dim defaultPath = "C:\VISBO\VISBO Config Data\RPA"
-
-        'Init the ReSt-Server/database Access
-        If IsNothing(databaseAcc) Then
-            databaseAcc = New DBAccLayer.Request
-        End If
 
         ' check if the VisboRPA is already running
         If IsProcessRunning("VisboRPA.exe") Then
             Call MsgBox("VisboRPA is already running")
             Exit Sub
         End If
+
+
+        ' Zugriff zu Daten über den VisboServer
+        awinSettings.visboServer = True
+        ' default Plattform
+        awinSettings.databaseURL = My.Settings.VisboURL
+        ' default VisboCenter
+        awinSettings.databaseName = My.Settings.VisboCenter
+        ' user password merken
+        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        ' userName Password verschlüsselt 
+        awinSettings.userNamePWD = My.Settings.userNamePWD
+        ' proxy Server URL
+        awinSettings.proxyURL = My.Settings.proxyURL
+        ' Default Path für RPA
+        rpaPath = My.Settings.rpaPath
+        ' Default Portfolio zu verwenden
+        myActivePortfolio = My.Settings.activePortfolio
+
+        myVC = My.Settings.VisboCenter
+
+        Dim defaultPath = rpaPath
+        'Dim defaultPath = "C:\VISBO\VISBO Config Data\RPA"
+
+
+        'Init the ReSt-Server/database Access - Schnittstelle
+        If IsNothing(databaseAcc) Then
+            databaseAcc = New DBAccLayer.Request
+        End If
+
 
         ' Parameter für die Excel Instance festlegen
         appInstance = New xlns.Application
@@ -85,15 +110,59 @@ Module rpaModule1
         ' create Formula for Input of other RPA-Folder
         watchDialog = New VisboRPAStart
 
-        ' FileNamen für logging zusammenbauen
-        logfileNamePath = createLogfileName(rpaFolder, "")
+        Dim err As New clsErrorCodeMsg
+        noDB = False
+
+        If awinSettings.userNamePWD <> "" Then
+
+            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+
+            dbUsername = visboCrypto.getUserNameFromCipher(awinSettings.userNamePWD)
+            dbPasswort = visboCrypto.getPwdFromCipher(awinSettings.userNamePWD)
 
 
-        ' hierin wird der eigentliche Import erledigt
-        watchDialog.ShowDialog()
+            If IsNothing(awinSettings.VCid) Then
+                awinSettings.VCid = ""
+            End If
+
+            If IsNothing(databaseAcc) Then
+                databaseAcc = New DBAccLayer.Request
+            End If
+
+            'ur:08022022: soll mit Default erfragt werden
+            'Try
+            '    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
+            'Catch ex As Exception
+            '    loginErfolgreich = False
+            'End Try
+
+
+            If Not loginErfolgreich Then
+                loginErfolgreich = logInToMongoDB(True)
+            End If
+
+        Else
+            loginErfolgreich = logInToMongoDB(True)
+        End If
+
+
+        If loginErfolgreich Then
+
+            ' FileNamen für logging zusammenbauen
+            logfileNamePath = createLogfileName(rpaFolder, "")
+
+
+            ' hierin wird der eigentliche Import erledigt
+            watchDialog.ShowDialog()
+        End If
 
 
     End Sub
+    ''' <summary>
+    ''' Check if the process is already running
+    ''' </summary>
+    ''' <param name="process"></param>
+    ''' <returns></returns>
     Public Function IsProcessRunning(process As String)
         Dim objList As Object
 
@@ -104,6 +173,13 @@ Module rpaModule1
     End Function
 
 
+    ''' <summary>
+    ''' Import of file fname, category rpaCat time importDate to the VisboCenter awinSettings.databaseName
+    ''' </summary>
+    ''' <param name="fname"></param>
+    ''' <param name="rpaCat"></param>
+    ''' <param name="importDate"></param>
+    ''' <returns></returns>
     Public Function importOneProject(ByVal fname As String, ByVal rpaCat As PTRpa, ByVal importDate As Date) As Boolean
 
 
@@ -264,8 +340,9 @@ Module rpaModule1
     End Function
 
 
-
-
+    ''' <summary>
+    ''' clear the Session
+    ''' </summary>
     Private Sub emptyRPASession()
         ImportProjekte.Clear()
         ShowProjekte.Clear(False)
@@ -273,6 +350,10 @@ Module rpaModule1
         AlleProjektSummaries.Clear(False)
     End Sub
 
+    ''' <summary>
+    ''' Read the projectTemplates from the actual VisboCenter 
+    ''' </summary>
+    ''' <returns></returns>
     Private Function readProjectTemplates() As Boolean
 
         Dim result As Boolean = True
@@ -291,19 +372,6 @@ Module rpaModule1
                     ' hiermit wird die _Dauer gesetzt
                     Dim vorlagenDauer = projVorlage.dauerInDays
 
-                    'projVorlage = New clsProjektvorlage
-                    'projVorlage.VorlagenName = kvp.Value.name
-                    'projVorlage.Schrift = kvp.Value.Schrift
-                    'projVorlage.Schriftfarbe = kvp.Value.Schriftfarbe
-                    'projVorlage.farbe = kvp.Value.farbe
-                    'projVorlage.earliestStart = -6
-                    'projVorlage.latestStart = 6
-                    'projVorlage.Erloes = kvp.Value.Erloes
-                    'projVorlage.AllPhases = kvp.Value.AllPhases
-                    'projVorlage.hierarchy = kvp.Value.hierarchy
-                    ''hprojTemp = projVorlage
-
-                    ''projVorlage.copyFrom(kvp.Value)
                     Projektvorlagen.Add(projVorlage)
 
                 Else
@@ -390,6 +458,14 @@ Module rpaModule1
 
         storeImportProjekte = ok
     End Function
+    ''' <summary>
+    ''' start of the RPA with VisboCenter , at url, rpaPath and perhaps a proxy-Server
+    ''' </summary>
+    ''' <param name="mongoName"></param>
+    ''' <param name="url"></param>
+    ''' <param name="path"></param>
+    ''' <param name="proxy"></param>
+    ''' <returns></returns>
     Public Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String, ByVal proxy As String) As Boolean
 
         Dim result As Boolean = False
@@ -402,17 +478,17 @@ Module rpaModule1
             'If readawinSettings(path) Then
 
             result = True
-                ' independent of what is given in projectboardConfig.xml
-                awinSettings.databaseName = mongoName
-                awinSettings.databaseURL = url
-                awinSettings.proxyURL = proxy
-                ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
-                awinSettings.rememberUserPwd = True
-                awinSettings.userNamePWD = My.Settings.userNamePWD
+            ' independent of what is given in projectboardConfig.xml
+            awinSettings.databaseName = mongoName
+            awinSettings.databaseURL = url
+            awinSettings.proxyURL = proxy
+            ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            awinSettings.rememberUserPwd = True
+            awinSettings.userNamePWD = My.Settings.userNamePWD
 
-                awinSettings.visboServer = True
-                ' returns false if anything goes wrong .. 
-                result = rpaSetTypen()
+            awinSettings.visboServer = True
+            ' returns false if anything goes wrong .. 
+            result = rpaSetTypen()
 
             'ElseIf readawinSettings(swPath) Then
             '    result = True
@@ -632,46 +708,46 @@ Module rpaModule1
             End If
 
 
-            ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
+            ''' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
 
 
-            If loginErfolgreich Then
+            ''If loginErfolgreich Then
 
-                ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-                Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+            ''    ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+            ''    Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                If listOfVCs.Count = 1 Then
-                    ' alles ok, nimm dieses  VC
-                    If awinSettings.databaseName <> "" Then
-                        If awinSettings.databaseName <> listOfVCs.Item(0).ToUpper Then
-                            Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-                        Else
-                            ' make sure it is exactly the name , consideruing lower and upper case
-                            awinSettings.databaseName = listOfVCs.Item(0)
-                        End If
-                    Else
-                        awinSettings.databaseName = listOfVCs.Item(0)
-                    End If
-                    Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
-                    If Not changeOK Then
-                        Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-                    End If
+            ''    If listOfVCs.Count = 1 Then
+            ''        ' alles ok, nimm dieses  VC
+            ''        If awinSettings.databaseName <> "" Then
+            ''            If awinSettings.databaseName <> listOfVCs.Item(0).ToUpper Then
+            ''                Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
+            ''            Else
+            ''                ' make sure it is exactly the name , consideruing lower and upper case
+            ''                awinSettings.databaseName = listOfVCs.Item(0)
+            ''            End If
+            ''        Else
+            ''            awinSettings.databaseName = listOfVCs.Item(0)
+            ''        End If
+            ''        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
+            ''        If Not changeOK Then
+            ''            Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
+            ''        End If
 
-                ElseIf listOfVCs.Count > 1 Then
-                    ' now choose what is  das gewünschte VC aus
-                    If Not listOfVCs.Contains(awinSettings.databaseName) Then
-                        Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-                    End If
+            ''    ElseIf listOfVCs.Count > 1 Then
+            ''        ' now choose what is  das gewünschte VC aus
+            ''        If Not listOfVCs.Contains(awinSettings.databaseName) Then
+            ''            Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
+            ''        End If
 
-                Else
-                    ' user has no access to any VISBO Center 
-                    Throw New ArgumentException("No access to a VISBO Center ")
-                End If
+            ''    Else
+            ''        ' user has no access to any VISBO Center 
+            ''        Throw New ArgumentException("No access to a VISBO Center ")
+            ''    End If
 
-            Else
-                ' no valid Login
-                Throw New ArgumentException("No valid Login")
-            End If
+            ''Else
+            ''    ' no valid Login
+            ''    Throw New ArgumentException("No valid Login")
+            ''End If
 
             '
             ' Read appearance Definitions

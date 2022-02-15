@@ -68,7 +68,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data\RPA")>  _
         Public Property rpaPath() As String
             Get
                 Return CType(Me("rpaPath"),String)
@@ -87,6 +87,78 @@ Namespace My
             End Get
             Set
                 Me("swPath") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("Test-Ute-VCRPA")>  _
+        Public Property VisboCenter() As String
+            Get
+                Return CType(Me("VisboCenter"),String)
+            End Get
+            Set
+                Me("VisboCenter") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property activePortfolio() As String
+            Get
+                Return CType(Me("activePortfolio"),String)
+            End Get
+            Set
+                Me("activePortfolio") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+        Public Property rememberUserPWD() As Boolean
+            Get
+                Return CType(Me("rememberUserPWD"),Boolean)
+            End Get
+            Set
+                Me("rememberUserPWD") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data\RPA\settings")>  _
+        Public Property VisboConfigFiles() As String
+            Get
+                Return CType(Me("VisboConfigFiles"),String)
+            End Get
+            Set
+                Me("VisboConfigFiles") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("http://localhost:3484")>  _
+        Public Property VisboURL() As String
+            Get
+                Return CType(Me("VisboURL"),String)
+            End Get
+            Set
+                Me("VisboURL") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property proxyURL() As String
+            Get
+                Return CType(Me("proxyURL"),String)
+            End Get
+            Set
+                Me("proxyURL") = value
             End Set
         End Property
     End Class

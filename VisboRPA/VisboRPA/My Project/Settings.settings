@@ -6,10 +6,28 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="rpaPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\VISBO\VISBO Config Data</Value>
+      <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA</Value>
     </Setting>
     <Setting Name="swPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\VISBO\Software</Value>
+    </Setting>
+    <Setting Name="VisboCenter" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Test-Ute-VCRPA</Value>
+    </Setting>
+    <Setting Name="activePortfolio" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="rememberUserPWD" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="VisboConfigFiles" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA\settings</Value>
+    </Setting>
+    <Setting Name="VisboURL" Type="System.String" Scope="User">
+      <Value Profile="(Default)">http://localhost:3484</Value>
+    </Setting>
+    <Setting Name="proxyURL" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

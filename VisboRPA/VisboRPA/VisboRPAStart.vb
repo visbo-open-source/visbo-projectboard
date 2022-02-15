@@ -155,13 +155,18 @@ Public Class VisboRPAStart
                     End If
 
                 Case Else
-
                     myName = My.Computer.FileSystem.GetName(fullFileName)
                     rpaCategory = PTRpa.visboUnknown
                     ' move file to unknown Folder ... 
                     Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-                    My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                    Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+
+                    Try
+                        My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Catch ex As Exception
+                        Call MsgBox("try catch watch.created" & ex.Message)
+                    End Try
+
+                    Call logger(ptErrLevel.logInfo, "unknown file / category: unknown", myName)
 
                     errMsgCode = New clsErrorCodeMsg
                     result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
@@ -176,16 +181,86 @@ Public Class VisboRPAStart
 
     Private Sub watchFolder_Deleted(sender As Object, e As IO.FileSystemEventArgs) Handles watchFolder.Deleted
 
-        'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Deleted")
+        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Deleted")
         'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was deleted at: " & Date.Now().ToLongDateString)
     End Sub
 
     Private Sub watchFolder_Renamed(sender As Object, e As IO.RenamedEventArgs) Handles watchFolder.Renamed
-        'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Renamed")
+        Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "watchFolder_Renamed")
         'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "File '" & e.FullPath & "' was renamed at: " & Date.Now().ToLongDateString)
     End Sub
 
     Private Sub VisboRPAStart_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
+        Dim err As New clsErrorCodeMsg
+
+        If loginErfolgreich Then
+
+            ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+            Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+
+            If listOfVCs.Count = 1 Then
+                ' alles ok, nimm dieses  VC
+                If awinSettings.databaseName <> "" Then
+                    If awinSettings.databaseName <> listOfVCs.Item(0).ToUpper Then
+                        Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
+                    Else
+                        ' make sure it is exactly the name , consideruing lower and upper case
+                        awinSettings.databaseName = listOfVCs.Item(0)
+                    End If
+                Else
+                    awinSettings.databaseName = listOfVCs.Item(0)
+                End If
+                Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
+                If Not changeOK Then
+                    Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
+                Else
+                    myVC = awinSettings.databaseName
+                    VCSelection.Text = myVC
+                End If
+
+            ElseIf listOfVCs.Count > 1 Then
+                VCSelection.Items.Clear()
+                For Each vc In listOfVCs
+                    VCSelection.Items.Add(vc)
+                Next
+                If listOfVCs.Contains(myVC) Then
+                    VCSelection.Text = myVC
+                    awinSettings.databaseName = myVC
+                    Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
+                    If Not changeOK Then
+                        Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
+                    Else
+                        awinSettings.databaseName = myVC
+                        VCSelection.Text = myVC
+                    End If
+                End If
+
+            Else
+                ' user has no access to any VISBO Center 
+                Throw New ArgumentException("No access to a VISBO Center ")
+            End If
+
+        Else
+            ' no valid Login
+            Throw New ArgumentException("No valid Login")
+        End If
+
+        If awinSettings.databaseName <> "" Then
+            ' alle möglichen Portfolios anbieten
+            Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
+            activePortfolioSel.Items.Clear()
+
+            For Each vpf In dbPortfolioNames
+                activePortfolioSel.Items.Add(vpf.Key)
+            Next
+            If dbPortfolioNames.Count = 1 Then
+                activePortfolioSel.Text = dbPortfolioNames.ElementAt(0).Key
+            End If
+        End If
+
+
         'this is the path we want to monitor
         If rpaPath <> "" Then
             If My.Computer.FileSystem.DirectoryExists(rpaPath) Then
@@ -213,6 +288,9 @@ Public Class VisboRPAStart
         ' now cancel User Login Data
         'My.Settings.userNamePWD = ""
         My.Settings.rpaPath = rpaFolder
+        My.Settings.VisboCenter = myVC
+        My.Settings.activePortfolio = myActivePortfolio
+        My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
         ' speichern 
         My.Settings.Save()
 
@@ -310,6 +388,7 @@ Public Class VisboRPAStart
         logfileFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
         unknownFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
         settingsFolder = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
+        configfilesOrdner = settingsFolder
         settingJsonFile = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
 
 
@@ -353,25 +432,69 @@ Public Class VisboRPAStart
             If My.Computer.FileSystem.FileExists(settingJsonFile) Then
                 Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
                 inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-                ' is there a activePortfolio
-                myActivePortfolio = inputvalues.activePortfolio
-                configfilesOrdner = inputvalues.VisboConfigFiles
-                configfilesOrdner = configfilesOrdner.Replace("\\", "\")
+                If Not IsNothing(inputvalues) Then
+                    awinSettings.proxyURL = inputvalues.proxyURL
+                End If
+                ' if there are already definitions from User, take these
+                ' else take the defaults
+                Dim settingConfigfilesOrdner As String = inputvalues.VisboConfigFiles
+                settingConfigfilesOrdner = settingConfigfilesOrdner.Replace("\\", "\")
+
+                If Not IsNothing(settingConfigfilesOrdner) And My.Computer.FileSystem.DirectoryExists(settingConfigfilesOrdner) Then
+                    If configfilesOrdner <> settingConfigfilesOrdner Then
+                        configfilesOrdner = settingConfigfilesOrdner
+                    End If
+                Else
+                    'ConfigFolder is the settingFolder of rpaPath
+                    configfilesOrdner = configfilesOrdner
+                End If
+
+
+                ' if there are already definitions from User, take these
+                ' else take the defaults
+                Dim settingPortfolioName As String = inputvalues.activePortfolio
+
+                If IsNothing(myActivePortfolio) Then
+                    myActivePortfolio = settingPortfolioName
+                Else
+                    myActivePortfolio = myActivePortfolio
+                End If
 
 
                 ' read all files, categorize and verify them  
                 msgTxt = "Starting with ..."
                 Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
 
-
-
                 visboClient = "VISBO RPA / "
                 ' 
                 ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
-                startup = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, settingsFolder, inputvalues.proxyURL)
+                startup = startUpRPA(awinSettings.databaseName, awinSettings.databaseURL, settingsFolder, awinSettings.proxyURL)
 
             Else
-                startup = False
+                ' read all files, categorize and verify them  
+                msgTxt = "Starting with ..."
+                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+
+
+                If Not (IsNothing(awinSettings.databaseName) Or IsNothing(awinSettings.databaseURL) Or IsNothing(settingsFolder)) Then
+                    ' kein file rpa_setting.json vorhanden
+                    msgTxt = "default settings will  be used. For more details have a look at the logfiles ...." & vbCrLf & rpaFolder & "\logfiles"
+                    'Call MsgBox(msgTxt)
+                    ' Console.WriteLine(msgTxt)
+                    Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+
+                    visboClient = "VISBO RPA / "
+                    ' 
+                    ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
+                    startup = startUpRPA(awinSettings.databaseName, awinSettings.databaseURL, settingsFolder, awinSettings.proxyURL)
+                End If
+
+
+            End If
+
+
+            If Not startup Then
+
                 ' Exit ! 
                 ' read all files, categorize and verify them  
                 msgTxt = "Exit - there is no File " & settingJsonFile
@@ -383,48 +506,45 @@ Public Class VisboRPAStart
 
             If startup Then
 
-                Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", inputvalues.proxyURL)
-                Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", inputvalues.VisboUrl)
-                Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", inputvalues.VisboCenter)
+                Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", awinSettings.proxyURL)
+                Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", awinSettings.databaseURL)
+                Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", awinSettings.databaseName)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: active Portfolio", myActivePortfolio)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: Config Files Folder", configfilesOrdner)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: RPA Folder", rpaFolder)
 
+                ' Email soll nicht an den User gesendet werden bei erfolgreichem Start
                 ' Sendet eine Email an den User
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
-                If Not result Then
-                    Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
-                Else
-                    'this is the path we want to monitor
-                    watchFolder.Path = rpaFolder
+                'errMsgCode = New clsErrorCodeMsg
+                'result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
+                'If Not result Then
+                '    Call logger(ptErrLevel.logError, "RPA Service - On Start", errMsgCode.errorMsg)
+                'Else
+                'this is the path we want to monitor
+                watchFolder.Path = rpaFolder
 
-                    'Set this property to true to start watching
-                    watchFolder.EnableRaisingEvents = True
+                'Set this property to true to start watching
+                watchFolder.EnableRaisingEvents = True
 
-                    MyBase.WindowState = FormWindowState.Minimized
+                MyBase.WindowState = FormWindowState.Minimized
 
-                    rpaDir.Text = rpaFolder
-                    My.Settings.rpaPath = My.Computer.FileSystem.GetParentPath(rpaFolder)
+                rpaDir.Text = rpaFolder
+                My.Settings.rpaPath = My.Computer.FileSystem.GetParentPath(rpaFolder)
 
-                    statusMessage.Text = "VisboRPA started successfully..."
+                statusMessage.Text = "VisboRPA started successfully..."
 
-                    ' außer stop, darf kein button aktiv sein
-                    btn_start.Enabled = False
+                ' außer stop, darf kein button aktiv sein
+                btn_start.Enabled = False
                     durchsuchen.Enabled = False
-                End If
+                'End If
 
 
             Else
-                msgTxt = "wrong settings - exited without performing jobs ...."
+                msgTxt = "default settings will  be used. For more details have a look at the logfiles ...." & vbCrLf & rpaFolder
                 Call MsgBox(msgTxt)
                 ' Console.WriteLine(msgTxt)
                 Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-                'errMsgCode = New clsErrorCodeMsg
-                'result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
-                'If Not result Then
-                '    Call logger(ptErrLevel.logError, "RPA Service- On Start", errMsgCode.errorMsg)
-                'End If
+
 
             End If
 
@@ -434,4 +554,37 @@ Public Class VisboRPAStart
         End Try
     End Sub
 
+    Private Sub VCSelection_SelectedIndexChanged(sender As Object, e As EventArgs) Handles VCSelection.SelectedIndexChanged
+        Dim errmsg As New clsErrorCodeMsg
+
+        myVC = VCSelection.Text
+        awinSettings.databaseName = myVC
+        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, errmsg)
+        If Not changeOK Then
+            Call logger(ptErrLevel.logError, "VCSelection", "No access to this VISBO Center ... program ends  ..." & vbCrLf & errmsg.errorMsg)
+        Else
+            awinSettings.databaseName = myVC
+        End If
+
+        ' alle möglichen Portfolios anbieten
+        Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errmsg)
+        activePortfolioSel.Items.Clear()
+        For Each vpf In dbPortfolioNames
+            activePortfolioSel.Items.Add(vpf.Key)
+        Next
+        If dbPortfolioNames.Count = 1 Then
+            activePortfolioSel.Text = dbPortfolioNames.ElementAt(0).Key
+        Else
+            If dbPortfolioNames.ContainsKey(myVC) Then
+                activePortfolioSel.Text = myVC
+            Else
+                activePortfolioSel.Text = ""
+            End If
+        End If
+    End Sub
+
+    Private Sub activePortfolioSel_SelectedIndexChanged(sender As Object, e As EventArgs) Handles activePortfolioSel.SelectedIndexChanged
+        myActivePortfolio = activePortfolioSel.Text
+
+    End Sub
 End Class
