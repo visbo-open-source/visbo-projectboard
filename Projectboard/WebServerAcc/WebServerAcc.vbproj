@@ -78,6 +78,7 @@
     <Compile Include="clsAppearanceWeb.vb" />
     <Compile Include="clsBewertungWeb.vb" />
     <Compile Include="clsCache.vb" />
+    <Compile Include="clsConfigurationWeb.vb" />
     <Compile Include="clsCustomFieldDefinitionsWeb.vb" />
     <Compile Include="clsCustomizationWeb.vb" />
     <Compile Include="clsCustomUserRolesWeb.vb" />
@@ -107,6 +108,7 @@
     <Compile Include="clsWebCostVPv.vb" />
     <Compile Include="clsWebEmail.vb" />
     <Compile Include="clsWebVCSettingAppearance.vb" />
+    <Compile Include="clsWebVCSettingconfiguration.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
     <Compile Include="clsWebVCSettingCustomization.vb" />
     <Compile Include="clsWebVCSettingCustomroles.vb" />

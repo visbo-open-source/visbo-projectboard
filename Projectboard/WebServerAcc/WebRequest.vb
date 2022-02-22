@@ -3548,6 +3548,70 @@ Public Class Request
         retrieveAppearancesFromDB = result
     End Function
 
+
+    Public Function retrieveConfigurationsFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As clsConfigurationWeb
+
+        Dim result As clsConfigurationWeb = Nothing
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.importConfiguration)
+
+        timestamp = timestamp.ToUniversalTime
+
+        Dim webconfiguration As New clsConfigurationWeb
+        Try
+
+            setting = New List(Of clsVCSettingConfiguration)
+            setting = GETOneVCsetting(aktVCid, type, name, timestamp, "", err, refnext)
+
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
+
+                    anzSetting = CType(setting, List(Of clsVCSettingConfiguration)).Count
+
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
+                            result = New clsConfigurationWeb
+                            settingID = CType(setting, List(Of clsVCSettingConfiguration)).ElementAt(0)._id
+                            webconfiguration = CType(setting, List(Of clsVCSettingConfiguration)).ElementAt(0).value
+                            'webconfiguration.copyto(result)
+
+                        Else
+                            ' Fehler: es gibt nur eine Configuration pro name
+
+
+                        End If
+
+                    Else
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
+
+                    End If
+                Else
+                    Call MsgBox(err.errorMsg)
+
+                End If
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveConfigurationsFromDB = webconfiguration
+    End Function
+
     ''' <summary>
     ''' Es werden alle vcName in einer Liste zurückgegeben, auf die der akt. User (akt. Token) Zugriff hat
     ''' </summary>
@@ -5884,16 +5948,16 @@ Public Class Request
 
                 'If name <> "" Or type <> "" Then
                 If ts > Date.MinValue Then
-                        serverUriString = serverUriString & "&refDate=" & timestamp
-                        If refnext Then
-                            serverUriString = serverUriString & "&refNext=" & refnext.ToString
-                        End If
-                    Else
-                        If refnext Then
-                            serverUriString = serverUriString & "&refDate=" & timestamp
-                            serverUriString = serverUriString & "&refNext=" & refnext.ToString
-                        End If
+                    serverUriString = serverUriString & "&refDate=" & timestamp
+                    If refnext Then
+                        serverUriString = serverUriString & "&refNext=" & refnext.ToString
                     End If
+                Else
+                    If refnext Then
+                        serverUriString = serverUriString & "&refDate=" & timestamp
+                        serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                    End If
+                End If
                 'End If
 
             End If
@@ -5998,6 +6062,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.appearance)
                     result = CType(result, clsVCSettingAppearance)
 
+                Case settingTypes(ptSettingTypes.importConfiguration)
+                    result = CType(result, clsVCSettingConfiguration)
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -6075,6 +6142,9 @@ Public Class Request
                         Case settingTypes(ptSettingTypes.appearance)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
                             result = CType(webVCsetting.vcsetting, List(Of clsVCSettingAppearance))
+                        Case settingTypes(ptSettingTypes.importConfiguration)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingconfiguration)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingConfiguration))
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
@@ -6141,6 +6211,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.appearance)
                     setting = CType(setting, clsVCSettingAppearance)
 
+                Case settingTypes(ptSettingTypes.importConfiguration)
+                    setting = CType(setting, clsVCSettingConfiguration)
+
+
 
                 Case Else
                     Call MsgBox("Fehler: settingType = " & type & " íst nicht definiert")
@@ -6179,6 +6253,9 @@ Public Class Request
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
                         Case settingTypes(ptSettingTypes.appearance)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
+                        Case settingTypes(ptSettingTypes.importConfiguration)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingconfiguration)(Antwort)
+
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
@@ -6241,6 +6318,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.appearance)
                     setting = CType(setting, clsVCSettingAppearance)
 
+                Case settingTypes(ptSettingTypes.importConfiguration)
+                    setting = CType(setting, clsVCSettingConfiguration)
+
 
                 Case Else
                     Call MsgBox("settingType = " & type)
@@ -6284,6 +6364,9 @@ Public Class Request
                         Case settingTypes(ptSettingTypes.appearance)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
                             setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingAppearance)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.importConfiguration)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingconfiguration)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingConfiguration)).ElementAt(0)
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select

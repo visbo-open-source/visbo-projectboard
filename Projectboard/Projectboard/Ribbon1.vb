@@ -9221,7 +9221,7 @@ Imports System.Web
         Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+        Dim allesOK As Boolean = checkJIRAProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
 
         If allesOK Then
 

@@ -2738,6 +2738,60 @@ Public Class Request
 
         retrieveCustomizationFromDB = result
     End Function
+
+
+    Public Function retrieveConfigurationsFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As List(Of clsConfigLine)
+
+        Dim result As clsConfigurationWeb = Nothing
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveConfigurationsFromDB(name, timestamp, refnext, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveConfigurationsFromDB(name, timestamp, refnext, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' to do for direct MongoAccess
+                ' to do for direct MongoAccess
+
+
+            End If
+
+        Catch ex As Exception
+            logger(ptErrLevel.logDebug, "retrieveConfigurationsFromDB", "There is something wrong, reading the Configurations: (" & err.errorCode & ") " & err.errorMsg)
+        End Try
+
+        retrieveConfigurationsFromDB = result.configLines
+
+
+    End Function
     ''' <summary>
     ''' holt die Darstellungsklasse des aktuellen VC von der Datenbank
     ''' </summary>

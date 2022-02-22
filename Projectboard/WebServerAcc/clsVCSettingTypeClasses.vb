@@ -87,6 +87,15 @@ Public Class clsVCSettingAppearance
     End Sub
 
 End Class
+Public Class clsVCSettingConfiguration
+    Inherits clsVCSetting
+    Public Property value As clsConfigurationWeb
+
+    Sub New()
+        _value = New clsConfigurationWeb
+    End Sub
+
+End Class
 
 
 

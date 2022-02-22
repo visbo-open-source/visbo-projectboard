@@ -310,7 +310,7 @@ Public Module Module1
         acd = 1 ' ggf später für ActualData 
     End Enum
 
-    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
+    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts", "importConfiguration"}
 
     Public Enum ptSettingTypes
         customfields = 0
@@ -322,6 +322,7 @@ Public Module Module1
         reportprofiles = 6
         ppttemplates = 7
         generalexcelcharts = 8
+        importConfiguration = 9
     End Enum
 
     Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
