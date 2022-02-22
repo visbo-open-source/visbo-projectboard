@@ -24,7 +24,7 @@
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA\settings</Value>
     </Setting>
     <Setting Name="VisboURL" Type="System.String" Scope="User">
-      <Value Profile="(Default)">http://localhost:3484</Value>
+      <Value Profile="(Default)">https://staging.visbo.net/api</Value>
     </Setting>
     <Setting Name="proxyURL" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

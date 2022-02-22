@@ -55,6 +55,8 @@ Module rpaModule1
             Exit Sub
         End If
 
+        ' to reset all settings to the beginning
+        'My.Settings.Reset()
 
         ' Zugriff zu Daten über den VisboServer
         awinSettings.visboServer = True
@@ -63,9 +65,13 @@ Module rpaModule1
         ' default VisboCenter
         awinSettings.databaseName = My.Settings.VisboCenter
         ' user password merken
+        ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
         awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-        ' userName Password verschlüsselt 
-        awinSettings.userNamePWD = My.Settings.userNamePWD
+        If My.Settings.rememberUserPWD Then
+            awinSettings.userNamePWD = My.Settings.userNamePWD
+        Else
+            awinSettings.userNamePWD = ""
+        End If
         ' proxy Server URL
         awinSettings.proxyURL = My.Settings.proxyURL
         ' Default Path für RPA
@@ -110,6 +116,11 @@ Module rpaModule1
         ' create Formula for Input of other RPA-Folder
         watchDialog = New VisboRPAStart
 
+
+        ' FileNamen für logging zusammenbauen
+        logfileNamePath = createLogfileName(rpaFolder, "")
+
+
         Dim err As New clsErrorCodeMsg
         noDB = False
 
@@ -119,7 +130,7 @@ Module rpaModule1
 
             dbUsername = visboCrypto.getUserNameFromCipher(awinSettings.userNamePWD)
             dbPasswort = visboCrypto.getPwdFromCipher(awinSettings.userNamePWD)
-
+            
 
             If IsNothing(awinSettings.VCid) Then
                 awinSettings.VCid = ""
@@ -136,9 +147,11 @@ Module rpaModule1
             '    loginErfolgreich = False
             'End Try
 
-
             If Not loginErfolgreich Then
+
+                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "Login for starting")
                 loginErfolgreich = logInToMongoDB(True)
+
             End If
 
         Else
@@ -154,6 +167,21 @@ Module rpaModule1
 
             ' hierin wird der eigentliche Import erledigt
             watchDialog.ShowDialog()
+        Else
+            ' FileNamen für logging zusammenbauen
+            logfileNamePath = createLogfileName(rpaFolder, "")
+
+            Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", awinSettings.proxyURL)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", awinSettings.databaseURL)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", awinSettings.databaseName)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: active Portfolio", myActivePortfolio)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: RPA Folder", rpaFolder)
+
+            msgTxt = "VISBO Robotic Process automation cancelled: For more details have a look at the logfiles ....  " & rpaFolder & "\logfiles"
+            Call MsgBox(msgTxt)
+            ' Console.WriteLine(msgTxt)
+            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
+            ' Fehlermeldung für login-Error
         End If
 
 
@@ -483,8 +511,8 @@ Module rpaModule1
             awinSettings.databaseURL = url
             awinSettings.proxyURL = proxy
             ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
-            awinSettings.rememberUserPwd = True
-            awinSettings.userNamePWD = My.Settings.userNamePWD
+            'awinSettings.rememberUserPwd = True
+            'awinSettings.userNamePWD = My.Settings.userNamePWD
 
             awinSettings.visboServer = True
             ' returns false if anything goes wrong .. 
@@ -704,50 +732,10 @@ Module rpaModule1
                 End If
 
             Else
-                loginErfolgreich = logInToMongoDB(True)
+                If Not loginErfolgreich Then
+                    loginErfolgreich = logInToMongoDB(True)
+                End If
             End If
-
-
-            ''' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
-
-
-            ''If loginErfolgreich Then
-
-            ''    ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-            ''    Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
-
-            ''    If listOfVCs.Count = 1 Then
-            ''        ' alles ok, nimm dieses  VC
-            ''        If awinSettings.databaseName <> "" Then
-            ''            If awinSettings.databaseName <> listOfVCs.Item(0).ToUpper Then
-            ''                Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-            ''            Else
-            ''                ' make sure it is exactly the name , consideruing lower and upper case
-            ''                awinSettings.databaseName = listOfVCs.Item(0)
-            ''            End If
-            ''        Else
-            ''            awinSettings.databaseName = listOfVCs.Item(0)
-            ''        End If
-            ''        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
-            ''        If Not changeOK Then
-            ''            Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-            ''        End If
-
-            ''    ElseIf listOfVCs.Count > 1 Then
-            ''        ' now choose what is  das gewünschte VC aus
-            ''        If Not listOfVCs.Contains(awinSettings.databaseName) Then
-            ''            Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-            ''        End If
-
-            ''    Else
-            ''        ' user has no access to any VISBO Center 
-            ''        Throw New ArgumentException("No access to a VISBO Center ")
-            ''    End If
-
-            ''Else
-            ''    ' no valid Login
-            ''    Throw New ArgumentException("No valid Login")
-            ''End If
 
             '
             ' Read appearance Definitions
@@ -2699,19 +2687,22 @@ Module rpaModule1
             ' ===========================================================
             ' Konfigurationsdatei lesen und Validierung durchführen
 
+            ' Ur: 21.02.2022: geändert auf configuration Orga im VC als Setting
+
             ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-            Dim configOrgaImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configOrgaImport.xlsx")
+            'Dim configOrgaImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configOrgaImport.xlsx")
+
             Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
             Dim lastrow As Integer = 0
 
-            Call logger(ptErrLevel.logInfo, "start reading configuration: " & PTRpa.visboRoundtripOrga.ToString, configOrgaImport)
+            Call logger(ptErrLevel.logInfo, "start reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga")
 
-            ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
-            ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
-            Dim allesOK As Boolean = checkOrgaImportConfig(configOrgaImport, myName, orgaImportConfig, lastrow, outputCollection)
+            ' check Config-File - zum Einlesen der Oragnistation gemäß Konfiguration
+            ' hier werden Werte für die Konfiguration gelesen aus dem VCSetting "configuration Orga"
+            Dim allesOK As Boolean = checkOrgaImportConfig("configuration Orga", myName, orgaImportConfig, lastrow, outputCollection)
 
             If Not allesOK Then
-                Call logger(ptErrLevel.logError, "error reading configuration: " & PTRpa.visboRoundtripOrga.ToString, configOrgaImport)
+                Call logger(ptErrLevel.logError, "error reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga does not exist")
                 processRoundTripOrga = False
                 Exit Function
             End If
@@ -2801,7 +2792,7 @@ Module rpaModule1
             Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-            Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+            Dim allesOK As Boolean = checkJIRAProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
 
             If allesOK Then
 

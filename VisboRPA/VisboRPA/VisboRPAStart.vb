@@ -235,15 +235,21 @@ Public Class VisboRPAStart
                         awinSettings.databaseName = myVC
                         VCSelection.Text = myVC
                     End If
+                Else
+                    Call logger(ptErrLevel.logInfo, "Load of Formular", "No access to this VISBO Center '" & myVC & "'... ")
+                    awinSettings.databaseName = ""
+                    VCSelection.Text = ""
                 End If
 
             Else
                 ' user has no access to any VISBO Center 
+                Call logger(ptErrLevel.logInfo, "Load of Formular", "User has no access to any VISBO Center ... ")
                 Throw New ArgumentException("No access to a VISBO Center ")
             End If
 
         Else
             ' no valid Login
+            Call logger(ptErrLevel.logInfo, "Load of Formular", "No valid Login ... ")
             Throw New ArgumentException("No valid Login")
         End If
 
@@ -255,14 +261,17 @@ Public Class VisboRPAStart
             For Each vpf In dbPortfolioNames
                 activePortfolioSel.Items.Add(vpf.Key)
             Next
-            If dbPortfolioNames.Count = 1 Then
-                activePortfolioSel.Text = dbPortfolioNames.ElementAt(0).Key
+            If dbPortfolioNames.ContainsKey(myActivePortfolio) Then
+                activePortfolioSel.Text = myActivePortfolio
             End If
-        End If
+            If dbPortfolioNames.Count = 1 Then
+                    activePortfolioSel.Text = dbPortfolioNames.ElementAt(0).Key
+                End If
+            End If
 
 
-        'this is the path we want to monitor
-        If rpaPath <> "" Then
+            'this is the path we want to monitor
+            If rpaPath <> "" Then
             If My.Computer.FileSystem.DirectoryExists(rpaPath) Then
                 rpaDir.Text = rpaPath
                 watchFolder.Path = rpaPath
@@ -283,16 +292,28 @@ Public Class VisboRPAStart
         watchFolder.EnableRaisingEvents = False
 
         Call logger(ptErrLevel.logInfo, "VisboRPA", "Process was stopped!")
-        ' now store User Login Data
-        My.Settings.userNamePWD = awinSettings.userNamePWD
-        ' now cancel User Login Data
-        'My.Settings.userNamePWD = ""
-        My.Settings.rpaPath = rpaFolder
-        My.Settings.VisboCenter = myVC
-        My.Settings.activePortfolio = myActivePortfolio
-        My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
-        ' speichern 
-        My.Settings.Save()
+
+        If loginErfolgreich Then
+
+            My.Settings.rpaPath = rpaFolder
+            My.Settings.VisboCenter = myVC
+            My.Settings.activePortfolio = myActivePortfolio
+
+            My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+            If My.Settings.rememberUserPWD Then
+                My.Settings.userNamePWD = awinSettings.userNamePWD
+            Else
+                'Cancel User Login-Data
+                My.Settings.userNamePWD = ""
+            End If
+
+            ' speichern 
+            My.Settings.Save()
+        Else
+            ' wenn kein erfolgreicher Login stattgefunden hat
+            My.Settings.Reset()
+        End If
+
 
         Dim err As New clsErrorCodeMsg
 
@@ -332,34 +353,6 @@ Public Class VisboRPAStart
 
     Private Sub btn_stop_Click(sender As Object, e As EventArgs) Handles btn_stop.Click
 
-        ''Set this property to true to start watching
-        'watchFolder.EnableRaisingEvents = False
-
-        'Call logger(ptErrLevel.logInfo, "VisboRPA", "Process was stopped!")
-        '' now store User Login Data
-        'My.Settings.userNamePWD = awinSettings.userNamePWD
-
-        '' now delete User Login Data
-        'My.Settings.userNamePWD = ""
-
-        ''now cancel RPAFolder
-        'My.Settings.rpaPath = rpaFolder
-
-        '' speichern 
-        'My.Settings.Save()
-        'Dim err As New clsErrorCodeMsg
-
-        'Dim logoutErfolgreich As Boolean = CType(databaseAcc, DBAccLayer.Request).logout(err)
-
-        'If logoutErfolgreich Then
-        '    If awinSettings.visboDebug Then
-        '        If awinSettings.englishLanguage Then
-        '            Call MsgBox(err.errorMsg & vbCrLf & "User don't have access to a VisboCenter any longer!")
-        '        Else
-        '            Call MsgBox(err.errorMsg & vbCrLf & "User hat keinen Zugriff mehr zu einem VisboCenter!")
-        '        End If
-        '    End If
-        'End If
 
         MyBase.Close()
 
@@ -446,7 +439,7 @@ Public Class VisboRPAStart
                     End If
                 Else
                     'ConfigFolder is the settingFolder of rpaPath
-                    configfilesOrdner = configfilesOrdner
+                    configfilesOrdner = settingsFolder
                 End If
 
 
@@ -497,7 +490,7 @@ Public Class VisboRPAStart
 
                 ' Exit ! 
                 ' read all files, categorize and verify them  
-                msgTxt = "Exit - there is no File " & settingJsonFile
+                msgTxt = "Exit - Error starting the VisboRPA"
                 Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
 
                 ' break the RPA - Service
@@ -528,7 +521,11 @@ Public Class VisboRPAStart
 
                 MyBase.WindowState = FormWindowState.Minimized
 
+                'verwendete Definitionen nochmals eintragen
                 rpaDir.Text = rpaFolder
+                VCSelection.Text = myVC
+                activePortfolioSel.Text = myActivePortfolio
+
                 My.Settings.rpaPath = My.Computer.FileSystem.GetParentPath(rpaFolder)
 
                 statusMessage.Text = "VisboRPA started successfully..."
@@ -564,6 +561,7 @@ Public Class VisboRPAStart
             Call logger(ptErrLevel.logError, "VCSelection", "No access to this VISBO Center ... program ends  ..." & vbCrLf & errmsg.errorMsg)
         Else
             awinSettings.databaseName = myVC
+            VCSelection.Text = myVC
         End If
 
         ' alle möglichen Portfolios anbieten
