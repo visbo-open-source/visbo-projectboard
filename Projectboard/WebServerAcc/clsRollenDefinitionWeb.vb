@@ -461,7 +461,6 @@ Public Class clsRollenDefinitionWeb
 
         End With
     End Sub
-
     '''' <summary>
     '''' true, if both Roledefinitions are identical , except timestamp 
     '''' </summary>
@@ -526,6 +525,9 @@ Public Class clsRollenDefinitionWeb
 
     '    End Get
     'End Property
+
+
+
 
     Public Sub New()
         subRoleIDs = New List(Of clsSubRoleID)

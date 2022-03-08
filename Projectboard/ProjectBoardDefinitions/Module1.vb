@@ -7924,20 +7924,6 @@ Public Module Module1
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
 
-            '' FileNamen zusammenbauen
-            'Dim logfileOrdner As String = "logfiles"
-            'If IsNothing(awinPath) Then
-            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            'End If
-            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            '' Fragen, ob bereits existiert - eventuell nicht nötig
-            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-            'End If
-
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
             For i As Integer = 0 To anzSpalten - 1
@@ -8050,6 +8036,44 @@ Public Module Module1
 
         End Try
     End Sub
+
+
+    Public Function readlogger(ByVal errLevel As Integer) As Collection
+
+        Dim errMessages As New Collection
+        Try
+
+            Dim strMeld As String
+
+            ' tk 15.8. in Order to avoid warning statements in Visual Studio 
+            ' once this is needed in the code, then uncomment it accordingly 
+            'Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+            Const ForReading = 1
+
+            ' logfile-stream 
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForReading, False, 0)
+            Try
+                Do While fs.AtEndOfStream <> True
+
+                    strMeld = CStr(fs.ReadLine)
+                    If strMeld.Contains(errorLevel(ptErrLevel.logError)) Then
+                        errMessages.Add(strMeld)
+                    End If
+                Loop
+                logf.close()
+            Catch ex As Exception
+                logf.close()
+            End Try
+
+        Catch ex As Exception
+
+        End Try
+        readlogger = errMessages
+
+    End Function
     '''' <summary>
     '''' öffnet das LogFile
     '''' </summary>

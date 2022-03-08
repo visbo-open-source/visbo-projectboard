@@ -2822,7 +2822,48 @@ Public Class Request
         retrieveCostsFromDB = result
 
     End Function
+    ''' <summary>
+    ''' save of the capacity of one person one year 
+    ''' </summary>
+    ''' <param name="capa"></param>
+    ''' <param name="allCapas"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
 
+    Public Function storeCapasOfOneOrgaUnitOneYear(ByVal capa As clsCapa, ByVal allCapas As List(Of clsCapa), ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim found As Boolean = False
+        Try
+            For Each capaOfUnit As clsCapa In allCapas
+
+                If capa.roleID = capaOfUnit.roleID Then
+                    found = True
+                    If capa.startOfYear = capaOfUnit.startOfYear.ToLocalTime Then
+                        found = True
+                        capa._id = capaOfUnit._id
+                        result = PUTOneVCCapa(aktVCid, capa, err)
+                        Exit For
+                        'Else
+                        '    result = POSTOneVCCapa(aktVCid, capa, err)
+                    End If
+                    'Else
+                    '    found = False
+                End If
+            Next
+
+            If Not found Then
+                result = POSTOneVCCapa(aktVCid, capa, err)
+            End If
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", ex.Message)
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        storeCapasOfOneOrgaUnitOneYear = result
+
+    End Function
 
     ''' <summary>
     ''' speichert eine VCSetting in der Datenbank; 
@@ -3240,7 +3281,120 @@ Public Class Request
         retrieveCustomUserRoles = result
     End Function
 
+    ''' <summary>
+    ''' reads the timestamped organisations (new 25022022)
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="validfrom"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveTSOrgaFromDB(ByVal name As String,
+                                         ByVal validfrom As Date,
+                                         ByRef err As clsErrorCodeMsg,
+                                         Optional ByVal refnext As Boolean = False,
+                                         Optional ByVal hierarchy As Boolean = False,
+                                         Optional ByVal withCapa As Boolean = True) As clsOrganisation
 
+        Dim result As New clsOrganisation
+        Dim orgaListe As List(Of clsTSOOrganisationWeb) = Nothing
+        Dim orgaID As String = ""
+        Dim anzOrgas As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.organisation)
+
+        'Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveTSOrgaFromDB: ", anzFehler)
+        validfrom = validfrom.ToUniversalTime
+
+        If awinSettings.visboDebug Then
+            Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveTSOrgaFromDB: ", anzFehler)
+        End If
+
+
+        Dim webOrganisation As New clsTSOOrganisationWeb
+        Try
+            If awinSettings.visboDebug Then
+                logger(ptErrLevel.logInfo, "retrieveTSOrgaFromDB", "before reading the  Organisation")
+            End If
+
+            orgaListe = New List(Of clsTSOOrganisationWeb)
+            orgaListe = GETOneTSOrganisation(aktVCid, validfrom, "", err, refnext, hierarchy, withCapa)
+
+            If awinSettings.visboDebug Then
+                logger(ptErrLevel.logInfo, "retrieveTSOrgaFromDB", "after reading the  Organisation: (" & err.errorCode & ")")
+            End If
+
+            If err.errorCode = 200 Then
+                If Not IsNothing(orgaListe) Then
+
+                    anzOrgas = orgaListe.Count
+
+                    If anzOrgas > 0 Then
+                        If anzOrgas = 1 Then
+
+                            orgaID = orgaListe.ElementAt(0)._id
+                            webOrganisation = orgaListe.ElementAt(0)
+
+                            Call logger(ptErrLevel.logInfo, "Number of received Organisations: " & anzOrgas & "| validFrom: " & webOrganisation.timestamp.ToString, "retrieveTSOrgaFromDB: ", anzFehler)
+
+                        Else
+                            ' die Organisation suchen, die am nächsten an validFrom liegt
+                            Dim latestOrga As New clsTSOOrganisationWeb
+                            Dim orgaSettingsListe As List(Of clsTSOOrganisationWeb) = orgaListe
+
+                            For Each orgaSetting As clsTSOOrganisationWeb In orgaSettingsListe
+                                If orgaSetting.timestamp > latestOrga.timestamp Then
+                                    If orgaSetting.timestamp <= validfrom Then
+                                        latestOrga = orgaSetting
+                                    End If
+                                End If
+                            Next
+
+                            webOrganisation = latestOrga
+
+                            Call logger(ptErrLevel.logInfo, "Number of received Organisations: " & anzOrgas & ", latest validFrom: " & webOrganisation.timestamp.ToString, "retrieveTSOrgaFromDB: ", anzFehler)
+
+                        End If
+
+                        webOrganisation.copyTo(result)
+
+                        ' bestimmen der _topLevelNodeIDs
+                        result.allRoles.buildTopNodes()
+
+
+                    Else
+                        Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveTSOrgaFromDB: ", anzFehler)
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        orgaID = ""
+
+                    End If
+                Else
+                    Call logger(ptErrLevel.logError, err.errorMsg, "retrieveTSOrgaFromDB: ", anzFehler)
+                    Call MsgBox(err.errorMsg)
+
+                End If
+            Else
+                Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveTSOrgaFromDB: ", anzFehler)
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                orgaID = ""
+
+            End If
+
+
+        Catch ex As Exception
+
+            Call logger(ptErrLevel.logError, ex.Message, "retrieveTSOrgaFromDB(" & name & "," & validfrom.ToString & "," & refnext & ")", anzFehler)
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        If awinSettings.visboDebug Then
+            Call logger(ptErrLevel.logInfo, "end: ", "retrieveTSOrgaFromDB: ", anzFehler)
+        End If
+
+        retrieveTSOrgaFromDB = result
+    End Function
     ''' <summary>
     ''' liest die komplette Organisation (Kosten und Rollen) aus den VCSettings
     ''' </summary>
@@ -3474,6 +3628,41 @@ Public Class Request
         End Try
         retrieveCustomizationFromDB = result
     End Function
+
+    ''' <summary>
+    ''' read of the capacities of all persons 
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="startOfYear"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+
+    Public Function retrieveCapasFromDB(ByVal roleID As Integer, ByVal startOfYear As Date, ByRef err As clsErrorCodeMsg) As List(Of clsCapa)
+
+        Dim result As New List(Of clsCapa)
+        Try
+            If startOfYear <= Date.MinValue Then
+                startOfYear = StartofCalendar
+            End If
+            Dim firstMonth As Integer = 1
+            Dim firstDay As Integer = 1
+            startOfYear = DateSerial(startOfYear.Year, firstMonth, firstDay)
+            startOfYear = startOfYear
+
+            Dim allCapas As New List(Of clsCapa)
+            ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
+            allCapas = GETallVCCapas(aktVCid, roleID, startOfYear, err)
+            result = allCapas
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "retrieveCapasFromDB", ex.Message)
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrieveCapasFromDB = result
+
+    End Function
+
 
 
 
@@ -5514,6 +5703,207 @@ Public Class Request
         DELETEOneVPf = result
 
     End Function
+    ''' <summary>
+    ''' Holt alle Kostenarten (vccost) zu dem VisboCenter vcid
+    ''' </summary>
+    ''' <param name="vcid">vcid = "": es werden alle Kostenarten vom Visbocenter vcid geholt</param>
+    ''' <returns>Liste der Kostenarten</returns>
+    Private Function GETallVCCapas(ByVal vcid As String, ByVal roleID As Integer, ByVal startOfYear As Date, ByRef err As clsErrorCodeMsg) As List(Of clsCapa)
+
+        Dim result As New List(Of clsCapa)
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+            Dim nextURLTrennzeichen As String = "?"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/capa"
+
+            If Not IsNothing(roleID) Or roleID <> 0 Or startOfYear > Date.MinValue Or Not IsNothing(startOfYear) Then
+
+                If roleID <> 0 And Not IsNothing(roleID) Then
+                    serverUriString = serverUriString & nextURLTrennzeichen & "roleID=" & roleID
+                    nextURLTrennzeichen = "&"
+                Else
+                    If startOfYear > Date.MinValue And Not IsNothing(startOfYear) Then
+                        serverUriString = serverUriString & nextURLTrennzeichen & "startOfYear=" & DateTimeToISODate(startOfYear)
+                        nextURLTrennzeichen = "&"
+                    End If
+                End If
+
+                If startOfYear > Date.MinValue And Not IsNothing(startOfYear) Then
+                    serverUriString = serverUriString & nextURLTrennzeichen & "startOfYear=" & DateTimeToISODate(startOfYear)
+                End If
+
+            End If
+
+            Dim serverUri As New Uri(serverUriString)
+
+            Call logger(ptErrLevel.logInfo, "GETallVCCapas", "ReST Server request GET: " & serverUriString)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As String
+            Dim webVCCapaantwort As clsWebCapa = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCCapaantwort = JsonConvert.DeserializeObject(Of clsWebCapa)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+
+                result = webVCCapaantwort.capacity
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallVCCapas", errcode, errmsg & " : " & webVCCapaantwort.message)
+                Call logger(ptErrLevel.logError, "GETallVCCapas: " & serverUriString, errmsg & " : " & webVCCapaantwort.message)
+            End If
+
+            err.errorCode = errcode
+            err.errorMsg = "GETallVCCapas" & " : " & errmsg & " : " & webVCCapaantwort.message
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETallVCCapas = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' creates a new capa for an organization unit 'roleID' for one calendar year 'startOfYear'
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="capa"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function POSTOneVCCapa(ByVal vcid As String, ByVal capa As clsCapa, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/capa"
+
+            Call logger(ptErrLevel.logInfo, "POSTOneVCcapa", "ReST Server request POST: " & serverUriString)
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(capa, "")
+
+
+            Dim Antwort As String
+            Dim webVCcapaantwort As clsWebCapa = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCcapaantwort = JsonConvert.DeserializeObject(Of clsWebCapa)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVCcapa", errcode, errmsg & " : " & webVCcapaantwort.message)
+                Call logger(ptErrLevel.logError, "POSTOneVCcapa: " & serverUriString, errmsg & " : " & webVCcapaantwort.message)
+            End If
+
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVCcapa" & " : " & errmsg & " : " & webVCcapaantwort.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        POSTOneVCCapa = result
+
+    End Function
+
+
+
+    ''' <summary>
+    ''' Updates the capaPerMonth For a specific roleID And calendar year
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="capa"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function PUTOneVCCapa(ByVal vcid As String, ByVal capa As clsCapa, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/capa/" & capa._id
+
+            Call logger(ptErrLevel.logInfo, "PUTOneVCcapa", "ReST Server request PUT: " & serverUriString)
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(capa, "")
+
+
+            Dim Antwort As String
+            Dim webVCcapaantwort As clsWebCapa = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCcapaantwort = JsonConvert.DeserializeObject(Of clsWebCapa)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("PUTOneVCCapa", errcode, errmsg & " : " & webVCcapaantwort.message)
+                Call logger(ptErrLevel.logError, "PUTOneVCCapa: " & serverUriString, errmsg & " : " & webVCcapaantwort.message)
+            End If
+
+            err.errorCode = errcode
+            err.errorMsg = "PUTOneVCCapa" & " : " & errmsg & " : " & webVCcapaantwort.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        PUTOneVCCapa = result
+
+    End Function
+
 
     ''' <summary>
     ''' Holt alle Rollen (vcrole) zu dem VisboCenter vcid
@@ -6397,6 +6787,114 @@ Public Class Request
         PUTOneVCsetting = result
 
     End Function
+
+
+    ''' <summary>
+    ''' read an time stamped Organisation - TSO
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="userId"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function GETOneTSOrganisation(ByVal vcid As String,
+                                     ByVal ts As Date,
+                                     ByVal userId As String,
+                                     ByRef err As clsErrorCodeMsg,
+                                     Optional ByVal refnext As Boolean = False,
+                                     Optional ByVal hierarchy As Boolean = False,
+                                     Optional ByVal withCapa As Boolean = True) As List(Of clsTSOOrganisationWeb)
+
+        Dim result As List(Of clsTSOOrganisationWeb) = Nothing
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As clsWebVCTSOrganisation = Nothing
+
+        Try
+            Dim timestamp As String = DateTimeToISODate(ts)
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/organisation"
+
+            If ts > Date.MinValue Then
+                serverUriString = serverUriString & "?"
+
+                serverUriString = serverUriString & "&refDate=" & timestamp
+                If refnext Then
+                    serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                End If
+            Else
+                If refnext Then
+                    serverUriString = serverUriString & "&refDate=" & timestamp
+                    serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                End If
+            End If
+            If hierarchy Then
+                serverUriString = serverUriString & "&hierarchy=1"
+            End If
+            If withCapa Then
+                serverUriString = serverUriString & "&withCapa=1"
+            End If
+
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim serverUri As New Uri(serverUriString)
+            If awinSettings.visboDebug Then
+                Call logger(ptErrLevel.logInfo, "GETOneTSOrganistion", "before reading the organisation : (" & err.errorCode & ")")
+            End If
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                If errcode = 200 Then
+                    Call logger(ptErrLevel.logInfo, errmsg, "GETOneTSOrganistion: ", anzFehler)
+
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCTSOrganisation)(Antwort)
+                    result = CType(webVCsetting.organisation, List(Of clsTSOOrganisationWeb))
+
+                    If awinSettings.visboDebug Then
+                        Call logger(ptErrLevel.logInfo, "Result of: " & result.Count, "GETOneTSOrganistion: ", anzFehler)
+                    End If
+
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                End If
+
+            End Using
+
+            If errcode = 200 Then
+                'nothing to do
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETOneTSOrganistion", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "GETOneTSOrganistion" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "GETOneTSOrganistion: ", anzFehler)
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETOneTSOrganisation = result
+
+    End Function
+
 
 
     ''' <summary>

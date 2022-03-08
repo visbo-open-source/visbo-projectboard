@@ -1,18 +1,21 @@
 ﻿Imports ProjectBoardDefinitions
-Public Class clsOrganisationWeb
-
-    Private _allRoles As List(Of clsRollenDefinitionWeb)
+Public Class clsTSOOrganisationWeb
+    Public Property _id As String
+    Public Property vcid As String
+    Public Property name As String
+    Public Property timestamp As Date
+    Private _allRoles As List(Of clsTSORoleDefinitionWeb)
     Private _allCosts As List(Of clsKostenartDefinitionWeb)
-    Private _validFrom As Date
+    Private _allUnits As List(Of clsOrgaUnitsWeb)
 
     ' tk ergänzt am 17.5 , um die Orga effizienter speichern zu können 
     'Private _OrgaStartOfCalendar As Date
 
-    Public Property allRoles As List(Of clsRollenDefinitionWeb)
+    Public Property allRoles As List(Of clsTSORoleDefinitionWeb)
         Get
             allRoles = _allRoles
         End Get
-        Set(value As List(Of clsRollenDefinitionWeb))
+        Set(value As List(Of clsTSORoleDefinitionWeb))
             If Not IsNothing(value) Then
                 _allRoles = value
             End If
@@ -30,31 +33,20 @@ Public Class clsOrganisationWeb
         End Set
     End Property
 
-    Public Property validFrom As Date
+    Public Property allUnits As List(Of clsOrgaUnitsWeb)
         Get
-            validFrom = _validFrom
+            allUnits = _allUnits
         End Get
-        Set(value As Date)
+        Set(value As List(Of clsOrgaUnitsWeb))
             If Not IsNothing(value) Then
-                _validFrom = value
+                _allUnits = value
             End If
         End Set
     End Property
 
-    'Public Property OrgaStartOfCalendar As Date
-    '    Get
-    '        OrgaStartOfCalendar = _OrgaStartOfCalendar
-    '    End Get
-    '    Set(value As Date)
-    '        If Not IsNothing(value) Then
-    '            _OrgaStartOfCalendar = value
-    '        End If
-    '    End Set
-    'End Property
-
     Public ReadOnly Property count As Integer
         Get
-            count = _allRoles.Count + _allCosts.Count
+            count = _allCosts.Count + _allRoles.Count
         End Get
     End Property
 
@@ -63,14 +55,14 @@ Public Class clsOrganisationWeb
 
         With orgaDef
 
-            Me.validFrom = .validFrom.ToUniversalTime
+            Me.timestamp = .validFrom.ToUniversalTime
             'Me.OrgaStartOfCalendar = StartofCalendar
 
             If .allRoles.Count >= 1 Then
                 For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In .allRoles.liste
 
                     Dim rd As New clsRollenDefinition
-                    Dim rdweb As New clsRollenDefinitionWeb
+                    Dim rdweb As New clsTSORoleDefinitionWeb
                     rd = kvp.Value
                     rdweb.copyFrom(rd)
                     Me.allRoles.Add(rdweb)
@@ -88,8 +80,6 @@ Public Class clsOrganisationWeb
                 Next
             End If
 
-
-
         End With
     End Sub
 
@@ -97,11 +87,11 @@ Public Class clsOrganisationWeb
 
         With orgaDef
 
-            .validFrom = Me.validFrom.ToLocalTime
+            .validFrom = Me.timestamp.ToLocalTime
 
 
             If Me.allRoles.Count >= 1 Then
-                For Each rdweb As clsRollenDefinitionWeb In Me.allRoles
+                For Each rdweb As clsTSORoleDefinitionWeb In Me.allRoles
                     Dim rd As New clsRollenDefinition
                     'rdweb.copyTo(rd, OrgaStartOfCalendar)
                     rdweb.copyTo(rd)
@@ -117,17 +107,16 @@ Public Class clsOrganisationWeb
                 Next
             End If
 
-
-
         End With
     End Sub
 
     Public Sub New()
-        _allRoles = New List(Of clsRollenDefinitionWeb)
+        _id = ""
+        _vcid = ""
+        _name = "organisation"
+        _allRoles = New List(Of clsTSORoleDefinitionWeb)
         _allCosts = New List(Of clsKostenartDefinitionWeb)
-        _validFrom = Date.Now.Date
-
-
+        _allUnits = New List(Of clsOrgaUnitsWeb)
+        _timestamp = Date.Now.Date
     End Sub
-
 End Class

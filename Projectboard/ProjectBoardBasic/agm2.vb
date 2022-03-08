@@ -7114,7 +7114,7 @@ Public Module agm2
                     Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
 
                     If outputCollection.Count > 0 Then
-                        showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "")
+                        showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "", ptErrLevel.logError)
                     End If
 
                 Catch ex As Exception
@@ -26431,6 +26431,145 @@ Public Module agm2
         End Try
 
         ISODateToDateTime = newDate
+    End Function
+
+
+    Public Function transformCapa(ByVal roleDef As clsRollenDefinition) As List(Of clsCapa)
+
+        Dim newCapas As New List(Of clsCapa)
+        Dim newCapaYear As New clsCapa
+        With roleDef
+
+            Dim dbKapa() As Double = Nothing
+            ' damit wird festgelegt, ab wo im kapazitaet240 Array die dbKApa Werte zu platzieren sind ...
+            Dim startOfNonStandardValues As Date = Date.MinValue
+
+            ' jetzt die SubRoles übernehmen 
+            If .getSubRoleCount >= 1 Then
+                'For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
+                '    Dim sr As New clsSubRoleID
+                '    sr.key = kvp.Key
+                '    'sr.value = kvp.Value.ToString
+                '    sr.value = kvp.Value
+                '    Me.subRoleIDs.Add(sr)
+                'Next
+
+            Else
+                ' das kann nur bei Blättern der Fall sein, alle übergeordneten Orga-Units, also solche die Kinder haben, bekommen ihre Kapa aus den "Blättern"
+                ' nachsehen, ob es irgendwelche Non-Default Kapa Werte gibt 
+                Dim anzahlMonate As Integer = roleDef.kapazitaet.Length - 1
+
+
+                Dim startingIndex As Integer = -1
+                Dim endingIndex As Integer = anzahlMonate + 1
+
+                For i As Integer = 1 To anzahlMonate
+                    If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                        startingIndex = i
+                        Exit For
+                    End If
+                Next
+
+                If startingIndex = -1 Then
+                    ' alle Kapa-Werte sind Standard 
+                    ' das heisst man kann es bei den Voreinstellungen lassen 
+                    ' 
+                    dbKapa = Nothing
+                    startOfNonStandardValues = Date.MinValue
+
+                Else
+                    ' startingIndex kann jetzt nur Werte zwischen 1 und 240 haben ..
+                    startOfNonStandardValues = StartofCalendar.AddMonths(startingIndex - 1)
+
+                    endingIndex = anzahlMonate
+
+                    For i As Integer = anzahlMonate To startingIndex Step -1
+                        If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                            endingIndex = i
+                            Exit For
+                        End If
+                    Next
+
+
+                    Dim hstartOfYear As Date = startOfNonStandardValues
+
+                    Dim firstMonth As Integer = hstartOfYear.Month
+                    Dim firstDay As Integer = hstartOfYear.Day
+                    hstartOfYear = DateSerial(hstartOfYear.Year, 1, 1)
+                    hstartOfYear = hstartOfYear
+
+                    Dim modEnd As Integer = 0
+                    Dim modStart As Integer = 0
+
+                    ' calc count of years
+
+                    Dim quotEnd As Integer = Math.DivRem(endingIndex, 12, modEnd)
+                    Dim quotStart As Integer = Math.DivRem(startingIndex, 12, modStart)
+                    Dim anzYears As Integer = quotEnd - quotStart
+                    Dim modulo As Integer = 0
+                    Dim resultY As Integer = Math.DivRem(endingIndex - startingIndex + 1, 12, modulo)
+
+
+                    ' fill the year-Arrays
+
+                    For iY As Integer = 0 To anzYears - 1
+                        newCapaYear = New clsCapa
+                        newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + iY, 1, 1)
+                        newCapaYear.roleID = roleDef.UID
+                        For iM As Integer = 0 To 11
+                            newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(startingIndex - (modStart - 1) + iM))
+                        Next
+                        newCapas.Add(newCapaYear)
+                        startingIndex = startingIndex + 12
+                    Next
+
+                    '' transform first year
+                    'For iM = 0 To firstMonth - 2
+                    '    newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
+                    'Next
+                    'For iM = firstMonth - 1 To Math.Min(11, anzahlMonate)
+                    '    newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(iM - firstMonth + startingIndex - 1))
+                    '    todos = todos - 1
+                    'Next
+                    'anzahlMonate = anzahlMonate - todos
+                    'If anzahlMonate < 11 And todos = 0 Then
+                    '    For k As Integer = anzahlMonate To 11
+                    '        newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
+                    '    Next
+                    'End If
+                    'newCapas.Add(newCapaYear)
+
+
+
+                    '' transform next year
+                    'While todos > 0
+                    '    newCapaYear = New clsCapa
+                    '    newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + 1, 1, 1)
+
+                    '    For j = 0 To Math.Min(11, anzahlMonate)
+                    '        newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(iM + j - firstMonth + startingIndex - 1))
+                    '        todos = todos - 1
+                    '    Next
+                    '    anzahlMonate = anzahlMonate - todos
+                    '    If anzahlMonate < 11 And todos = 0 Then
+                    '        For k As Integer = anzahlMonate To 11
+                    '            newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
+                    '        Next
+                    '    End If
+                    '    newCapas.Add(newCapaYear)
+                    'End While
+
+                End If
+
+            End If
+
+            'startOfCal = startOfNonStandardValues.ToUniversalTime
+
+
+        End With
+
+        transformCapa = newCapas
+
     End Function
 
 End Module

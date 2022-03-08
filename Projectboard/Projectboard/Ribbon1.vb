@@ -8142,19 +8142,49 @@ Imports System.Web
                         ' keine Fehler aufgetreten ... 
                         ' jetzt wird die Orga als Setting weggespeichert ... 
                         Dim err As New clsErrorCodeMsg
-                        Dim result As Boolean = False
+                        Dim result As Boolean = True
+                        Dim resultSum As Boolean = True
+                        Dim capas As List(Of clsCapa) = Nothing
+
+                        Dim capasOfOneRole As List(Of clsCapa) = Nothing
+                        Dim orga As clsOrganisation = Nothing
+
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
 
-                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
-                                                                                CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                                orgaName,
-                                                                                changedOrga.validFrom,
-                                                                                err)
+                            capas = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
 
-                            If result = True Then
+
+                            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
+
+                                Dim roledef As clsRollenDefinition = kvp.Value
+                                If Not roledef.isSummaryRole Then
+                                    capasOfOneRole = transformCapa(roledef)
+                                    For Each capa As clsCapa In capasOfOneRole
+                                        result = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, capas, err)
+                                        If result Then
+                                            Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
+                                        Else
+                                            Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful")
+                                        End If
+                                        resultSum = resultSum And result
+                                    Next
+                                End If
+                            Next
+
+
+                            '' here TODO: Split the orga - information and the capacity-Information
+
+                            'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                            '                                                     CStr(settingTypes(ptSettingTypes.organisation)),
+                            '                                                    orgaName,
+                            '                                                    changedOrga.validFrom,
+                            '                                                    err)
+
+                            If resultSum = True Then
                                 Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                                 Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
 
@@ -8166,8 +8196,8 @@ Imports System.Web
                                 Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
 
                             Else
-                                Call MsgBox("Error when writing Organisation to Database:" & vbCrLf & err.errorMsg)
-                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                Call MsgBox("Error when writing Capacities to Database:" & vbCrLf & err.errorMsg)
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
                             End If
 
                         Else

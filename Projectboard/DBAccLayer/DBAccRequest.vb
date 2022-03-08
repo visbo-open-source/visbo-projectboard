@@ -2394,6 +2394,68 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' save of the capacity of one person one year 
+    ''' </summary>
+    ''' <param name="capa">Capacity of one person of the year "startOfYear"</param>
+    ''' <param name="allCapas">capacities of all persons of all years</param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+
+    Public Function storeCapasOfOneOrgaUnitOneYear(ByVal capa As clsCapa, ByVal allCapas As List(Of clsCapa), ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeCapasOfOneOrgaUnitOneYear(capa, allCapas, err)
+
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeCapasOfOneOrgaUnitOneYear(capa, allCapas, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert; ur:2020.12.3nun sollen auch Appearances in DB gespeichert werden
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+
+                'If type = settingTypes(ptSettingTypes.appearance) Then
+                '    result = CType(DBAcc, MongoDbAccess.Request).storeAppearancesToDB(hlist)
+                'End If
+
+                'If type = settingTypes(ptSettingTypes.customization) Then
+                '    result = CType(DBAcc, MongoDbAccess.Request).storeCustomizationToDB(hlist)
+                'End If
+
+            End If
+
+        Catch ex As Exception
+
+            'Call MsgBox("storeVCSettingsToDB: " & ex.Message)
+        End Try
+        storeCapasOfOneOrgaUnitOneYear = result
+
+    End Function
 
     ''' <summary>
     ''' speichert VC Settings in DB 
@@ -2570,6 +2632,64 @@ Public Class Request
         End Try
         retrieveCustomUserRoles = result
     End Function
+
+    Public Function retrieveTSOrgaFromDB(ByVal name As String,
+                                         ByVal validfrom As Date,
+                                         ByRef err As clsErrorCodeMsg,
+                                         Optional ByVal refnext As Boolean = False,
+                                         Optional ByVal hierarchy As Boolean = False,
+                                         Optional ByVal withCapa As Boolean = True) As clsOrganisation
+
+        Dim result As New clsOrganisation
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveTSOrgaFromDB("", validfrom, err, refnext, hierarchy, withCapa)
+
+                    If Not IsNothing(result) Then
+                        If result.count <= 0 Then
+
+                            Select Case err.errorCode
+
+                                Case 200 ' success
+                                     ' nothing to do
+
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveTSOrgaFromDB("", validfrom, err, refnext, hierarchy, withCapa)
+                                    End If
+
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
+
+                        End If
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' to do for direct MongoAccess
+                '' ur: 20220210 remove direkt MongoDB-Access
+                'result.allRoles = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(timestamp)
+                'result.allCosts = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(timestamp)
+                'result.validFrom = StartofCalendar
+
+            End If
+
+        Catch ex As Exception
+            logger(ptErrLevel.logError, "retrieveTSOrgaFromDB", "There is something wrong, reading the organisation: (" & err.errorCode & ") " & err.errorMsg)
+        End Try
+
+        retrieveTSOrgaFromDB = result
+
+    End Function
+
+
     Public Function retrieveOrganisationFromDB(ByVal name As String,
                                           ByVal timestamp As Date,
                                           ByVal refnext As Boolean,
@@ -2738,6 +2858,67 @@ Public Class Request
 
         retrieveCustomizationFromDB = result
     End Function
+
+    ''' <summary>
+    ''' read of the capacities of all persons 
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="startOfYear"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+
+
+    Public Function retrieveCapasFromDB(ByVal roleID As Integer, ByVal startOfYear As Date, ByRef err As clsErrorCodeMsg) As List(Of clsCapa)
+
+        Dim result As List(Of clsCapa) = Nothing
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCapasFromDB(roleID, startOfYear, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCapasFromDB(roleID, startOfYear, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' to do for direct MongoAccess
+                ' to do for direct MongoAccess
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'result = CType(DBAcc, MongoDbAccess.Request).retrieveCustomizationFromDB(timestamp)
+
+
+            End If
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logDebug, "retrieveCapasFromDB", "There is something wrong, reading the capas of all persons in this visbo center: (" & err.errorCode & ") " & err.errorMsg)
+        End Try
+
+        retrieveCapasFromDB = result
+    End Function
+
 
 
     Public Function retrieveConfigurationsFromDB(ByVal name As String,

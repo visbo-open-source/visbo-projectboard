@@ -1310,7 +1310,7 @@ Public Module agm3
         'configFile = My.Computer.FileSystem.CombinePath(configfilesOrdner, configFile)
 
         ' öffnen des Files 
-        If Not IsNothing(configuration) Then
+        If Not IsNothing(configuration) And configuration.count > 0 Then
             lastrow = configuration.Count
             Try
                 For i = 0 To lastrow - 1
@@ -1432,9 +1432,9 @@ Public Module agm3
             End Try
         Else
             If awinSettings.englishLanguage Then
-                outputLine = "The configuration-JIRA Setting doesn't exist!  -  " & configName
+                outputLine = "The configuration-JIRA as a VCSetting doesn't exist!  -  " & configName
             Else
-                outputLine = "Die Konfiguration-JIRA Setting existiert nicht!  -  " & configName
+                outputLine = "Die Konfiguration-JIRA als Setting existiert nicht!  -  " & configName
             End If
             outputCollection.Add(outputLine)
         End If
@@ -2281,9 +2281,9 @@ Public Module agm3
                                         Else
 
                                             If awinSettings.englishLanguage Then
-                                                msgtxt = "Role " & rolename & " not defined ..."
+                                                msgtxt = "Role " & rolename & " is not defined ..."
                                             Else
-                                                msgtxt = "Rolle " & rolename & " nicht definiert ..."
+                                                msgtxt = "Rolle " & rolename & " ist nicht definiert ..."
                                             End If
                                             If Not oPCollection.Contains(msgtxt) Then
                                                 oPCollection.Add(msgtxt, msgtxt)
@@ -2325,6 +2325,9 @@ Public Module agm3
                         End If
 
                     Next index
+
+                    ' here, the importing is finished, the capacity-arrays have to be stored 
+
 
 
                 Catch ex2 As Exception
