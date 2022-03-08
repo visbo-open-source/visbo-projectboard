@@ -21,6 +21,8 @@ Module rpaModule1
 
     Public errMsgCode As clsErrorCodeMsg
     Public msgTxt As String
+    Public errMessages As Collection
+
     Public completedOK As Boolean = False
     Public result As Boolean = False
 
@@ -173,6 +175,7 @@ Module rpaModule1
 
             Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", awinSettings.proxyURL)
             Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", awinSettings.databaseURL)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: User", dbUsername)
             Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", awinSettings.databaseName)
             Call logger(ptErrLevel.logInfo, "VisboRPA: active Portfolio", myActivePortfolio)
             Call logger(ptErrLevel.logInfo, "VisboRPA: RPA Folder", rpaFolder)
@@ -215,6 +218,8 @@ Module rpaModule1
         Dim currentWB As xlns.Workbook = Nothing
         Dim allOk As Boolean = False
 
+        errMessages = New Collection
+
         Try
 
             If Not rpaCat = PTRpa.visboMPP _
@@ -241,7 +246,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboProject)
 
-                    allOk = processVisboBrief(myName, importDate)
+                    allOk = processVisboBrief(myName, importDate, errMessages)
 
                 Case CInt(PTRpa.visboJira)
 
@@ -249,7 +254,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboDefaultCapacity)
 
-                    allOk = processVisboUrlaubsplaner(fname, importDate)
+                    allOk = processVisboUrlaubsplaner(fname, importDate, errMessages)
 
                 Case CInt(PTRpa.visboInitialOrga)
 
@@ -347,9 +352,9 @@ Module rpaModule1
 
             ' here the logfiles and the importfiles will be moved to a folder depending on the result of the import
             If Not rpaCat = PTRpa.visboActualData2 Then
-                Call processResult(fname, allOk)
+                Call processResult(fname, allOk, errMessages)
             Else
-                Call processResult(fname, allOk)
+                Call processResult(fname, allOk, errMessages)
             End If
 
         Catch ex As Exception
@@ -740,9 +745,11 @@ Module rpaModule1
             '
             ' Read appearance Definitions
             appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
-            If IsNothing(appearanceDefinitions.liste) Then
+            If IsNothing(appearanceDefinitions.liste) Or appearanceDefinitions.liste.Count > 0 Then
                 ' user has no access to any VISBO Center 
-                Throw New ArgumentException("No appearance Definitions in VISBO")
+                msgTxt = "No appearance Definitions in VISBO"
+                Call logger(ptErrLevel.logInfo, "rpaSetTypen", "")
+                'Throw New ArgumentException(msgTxt)
             End If
 
             '
@@ -850,7 +857,9 @@ Module rpaModule1
                     repCult = menuCult
                 End Try
             Else
-                Throw New ArgumentException("No customization in VISBO")
+                msgTxt = "No customization in VISBO"
+                Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+                'Throw New ArgumentException(msgTxt)
             End If
 
             '
@@ -875,10 +884,14 @@ Module rpaModule1
                     End If
 
                 Else
-                    Throw New ArgumentException("No organisation in VISBO")
+                    msgTxt = "No organisation in VISBO"
+                    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+                    'Throw New ArgumentException("msgTxt")
                 End If
             Else
-                Throw New ArgumentException("No organisation in VISBO")
+                msgTxt = "No organisation in VISBO"
+                Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+                'Throw New ArgumentException("msgTxt")
             End If
 
             '
@@ -1673,7 +1686,7 @@ Module rpaModule1
         getRanking = rankingList
     End Function
 
-    Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date) As Boolean
+    Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim allOK As Boolean = False
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
@@ -2814,7 +2827,9 @@ Module rpaModule1
                     End If
 
                 End Try
-
+            Else
+                Call logger(ptErrLevel.logError, "processVisboJira", outPutCollection)
+                allOk = False
             End If
 
             ' store Projects
@@ -2837,7 +2852,7 @@ Module rpaModule1
     End Function
 
 
-    Private Function processVisboUrlaubsplaner(ByVal myName As String, ByVal importDate As Date) As Boolean
+    Private Function processVisboUrlaubsplaner(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim outPutline As String = ""
         Dim lastrow As Integer = 0
@@ -2847,6 +2862,11 @@ Module rpaModule1
         Dim outputCollection As New Collection
 
         Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        ' Timer
+        Dim sw As clsStopWatch
+        sw = New clsStopWatch
+        sw.StartTimer()
 
         If Not IsNothing(changedOrga) Then
 
@@ -2883,29 +2903,43 @@ Module rpaModule1
 
                         If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or visboClient = "VISBO RPA / " Then
 
-                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
-                                                                                CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                                orgaName,
-                                                                                changedOrga.validFrom,
-                                                                                err)
+                            Dim resultOne As Boolean = True
+                            Dim capasOfOneRole As List(Of clsCapa)
+
+                            Dim orga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
+
+                            Dim capas As List(Of clsCapa) = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
+
+                            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
+
+                                Dim roledef As clsRollenDefinition = kvp.Value
+                                If Not roledef.isSummaryRole Then
+                                    capasOfOneRole = transformCapa(roledef)
+                                    For Each capa As clsCapa In capasOfOneRole
+                                        resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, capas, err)
+                                        If resultOne Then
+                                            Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
+                                        Else
+                                            Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful")
+                                        End If
+                                        result = result And resultOne
+                                    Next
+                                End If
+                            Next
 
                             If result = True Then
-
                                 Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "processUrlaubsplaner: ", -1)
-
-                                '' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                                'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-
                             Else
-                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database..." & vbCrLf & err.errorMsg, "processUrlaubsplaner: ", -1)
+                                msgTxt = "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg
+                                Call logger(ptErrLevel.logError, msgTxt, "processUrlaubsplaner: ", -1)
+                                outputCollection.Add(msgTxt)
                             End If
-
                         Else
-                            Call logger(ptErrLevel.logError, "Error when writing Organisation to Database...- wrong customUserRole" & vbCrLf & myCustomUserRole.customUserRole, "processUrlaubsplaner: ", -1)
-                            'Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                            msgTxt = "Error when writing Capacities to Database...- wrong customUserRole" & vbCrLf & myCustomUserRole.customUserRole
+                            Call logger(ptErrLevel.logError, msgTxt, "processUrlaubsplaner: ", -1)
+                            outputCollection.Add(msgTxt)
                             result = False
                         End If
-
                     Else
                         Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
                     End If
@@ -2915,30 +2949,36 @@ Module rpaModule1
                         Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
                     Else
                         If awinSettings.englishLanguage Then
-                            Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "there do not exists any 'Urlaubsplaner*'!")
+                            msgTxt = "there do not exists any 'Urlaubsplaner*'!"
                         Else
-                            Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "Es existiert kein 'Urlaubsplaner*.*' !")
+                            msgTxt = "Es existiert kein 'Urlaubsplaner*.*' !"
                         End If
+                        Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", msgTxt)
+                        outputCollection.Add(msgTxt)
                     End If
 
                 End If
 
             Else
                 If awinSettings.englishLanguage Then
-                    Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "No valid roles! Please import one first!")
+                    msgTxt = "No valid roles! Please import one first!"
                 Else
-                    Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "Die gültige Organisation beinhaltet keine Rollen! ")
-
+                    msgTxt = "Die gültige Organisation beinhaltet keine Rollen! "
                 End If
+                Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", msgTxt)
+                outputCollection.Add(msgTxt)
             End If
 
         Else
 
             If awinSettings.englishLanguage Then
-                Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "No valid organization! Please import one first!")
+                msgTxt = "No valid organization! Please import one first!"
             Else
-                Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+                msgTxt = "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren"
             End If
+            outputCollection.Add(msgTxt)
+
+
             Dim errMsg As String
             If awinSettings.englishLanguage Then
                 errMsg = "Capacities not updated - please first remove the errors in the importfiles ... "
@@ -2950,6 +2990,11 @@ Module rpaModule1
             Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
 
         End If
+
+
+        Dim ti As Long = sw.EndTimer()
+        errMessages = outputCollection
+
         processVisboUrlaubsplaner = result
 
     End Function
@@ -3691,7 +3736,7 @@ Module rpaModule1
     ''' </summary>
     ''' <param name="fullfileName"></param>
     ''' <param name="allOK"></param>
-    Public Sub processResult(ByVal fullfileName As String, ByVal allOK As Boolean)
+    Public Sub processResult(ByVal fullfileName As String, ByVal allOK As Boolean, ByVal meldungen As Collection)
 
         Dim myName As String = My.Computer.FileSystem.GetName(fullfileName)
         If allOK Then
@@ -3707,14 +3752,33 @@ Module rpaModule1
             If My.Computer.FileSystem.FileExists(fullfileName) Then
                 My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
                 Call logger(ptErrLevel.logError, "failed: ", fullfileName)
+
+                Dim errMessages As Collection = readlogger(ptErrLevel.logError)
+
                 Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
                 Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
                 My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
+                Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
+
+                For i As Integer = 1 To meldungen.Count
+                    Dim text As String = CStr(meldungen.Item(i))
+                    mailMessage = mailMessage & text & vbCrLf
+                Next
+
+                For i As Integer = 1 To errMessages.Count
+                    Dim text As String = CStr(errMessages.Item(i))
+                    mailMessage = mailMessage & text & vbCrLf
+                Next
+
+
                 errMsgCode = New clsErrorCodeMsg
+                'result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                '                                                            & myName & ": with errors ..." & vbCrLf _
+                '                                                            & "Look for more details in the Failure-Folder: " & failureFolder, errMsgCode)
                 result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
                                                                             & myName & ": with errors ..." & vbCrLf _
-                                                                            & "Look for more details in the Failure-Folder: " & failureFolder, errMsgCode)
+                                                                            & mailMessage, errMsgCode)
             End If
         End If
 

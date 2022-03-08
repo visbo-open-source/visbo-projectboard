@@ -92,7 +92,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("Test-Ute-VCRPA")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
         Public Property VisboCenter() As String
             Get
                 Return CType(Me("VisboCenter"),String)
@@ -140,7 +140,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("https://staging.visbo.net/api")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("https://dev.visbo.net/api")>  _
         Public Property VisboURL() As String
             Get
                 Return CType(Me("VisboURL"),String)

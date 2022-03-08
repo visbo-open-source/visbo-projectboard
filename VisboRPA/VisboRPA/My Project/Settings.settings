@@ -12,7 +12,7 @@
       <Value Profile="(Default)">C:\VISBO\Software</Value>
     </Setting>
     <Setting Name="VisboCenter" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Test-Ute-VCRPA</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="activePortfolio" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
@@ -24,7 +24,7 @@
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA\settings</Value>
     </Setting>
     <Setting Name="VisboURL" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://staging.visbo.net/api</Value>
+      <Value Profile="(Default)">https://dev.visbo.net/api</Value>
     </Setting>
     <Setting Name="proxyURL" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

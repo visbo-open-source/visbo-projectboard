@@ -501,6 +501,7 @@ Public Class VisboRPAStart
 
                 Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", awinSettings.proxyURL)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", awinSettings.databaseURL)
+                Call logger(ptErrLevel.logInfo, "VisboRPA: User", dbUsername)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", awinSettings.databaseName)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: active Portfolio", myActivePortfolio)
                 Call logger(ptErrLevel.logInfo, "VisboRPA: Config Files Folder", configfilesOrdner)
