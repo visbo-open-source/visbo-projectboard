@@ -28,8 +28,8 @@
     <ProductName>VisboRPA</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
     <MinimumRequiredVersion>1.0.0.10</MinimumRequiredVersion>
-    <ApplicationRevision>4</ApplicationRevision>
-    <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.1.1.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -70,7 +70,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>C53411A4CA5E97AFA1DD99D65CE7532B6055E08B</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -141,7 +141,9 @@
     <Compile Include="VisboRPAStart.Designer.vb">
       <DependentUpon>VisboRPAStart.vb</DependentUpon>
     </Compile>
-    <Compile Include="VisboRPAStart.vb" />
+    <Compile Include="VisboRPAStart.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="rpaModule1.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

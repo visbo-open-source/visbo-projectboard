@@ -35,6 +35,11 @@ Module rpaModule1
     Public settingsFolder As String
     Public settingJsonFile As String
 
+    Public lastReadingCustomization As Date = Date.MinValue
+    Public lastReadingOrganisation As Date = Date.MinValue
+    Public lastReadingCustomFields As Date = Date.MinValue
+    Public lastReadingProjectTemplates As Date = Date.MinValue
+
     Public watchDialog As VisboRPAStart
 
     Public Sub Main()
@@ -387,9 +392,9 @@ Module rpaModule1
     ''' Read the projectTemplates from the actual VisboCenter 
     ''' </summary>
     ''' <returns></returns>
-    Private Function readProjectTemplates() As Boolean
+    Private Function readProjectTemplates() As Date
 
-        Dim result As Boolean = True
+        Dim result As Date = Date.MinValue
         Dim err As New clsErrorCodeMsg
 
         ' lesen der templates des akt. VC
@@ -409,18 +414,196 @@ Module rpaModule1
 
                 Else
                     Call logger(ptErrLevel.logError, "readProjectTemplates", "Creating a project template fromm project " & kvp.Value.name & " crashed")
-                    result = False
+                    result = Date.MinValue
                 End If
-
             Next
+            If projectTemplates.liste.Count > 0 Then
+                If projectTemplates.liste.Count = Projektvorlagen.Count Then
+                    result = Date.Now
+                End If
+            Else
+                Call logger(ptErrLevel.logError, "readProjectTemplates", "No project templates in this VC: " & myVC)
+                result = Date.MinValue
+            End If
+
         Else
             Call logger(ptErrLevel.logError, "readProjectTemplates", "Getting project templates from Server finished with error: " & err.errorMsg)
-            result = False
+            result = Date.MinValue
         End If
+
         readProjectTemplates = result
 
     End Function
+    ''' <summary>
+    ''' reading the VCSetting "customization" if stored in the actual VC
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function readCustomizations() As Date
 
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+        '
+        ' Read Customizations 
+        Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+
+        If Not IsNothing(customizations) Then
+
+            StartofCalendar = customizations.kalenderStart
+            Call logger(ptErrLevel.logInfo, "readCustomizations", " StartOfCalendar: " & StartofCalendar.ToString)
+
+            businessUnitDefinitions = customizations.businessUnitDefinitions
+
+            PhaseDefinitions = customizations.phaseDefinitions
+
+            MilestoneDefinitions = customizations.milestoneDefinitions
+
+            showtimezone_color = customizations.showtimezone_color
+            noshowtimezone_color = customizations.noshowtimezone_color
+            calendarFontColor = customizations.calendarFontColor
+            nrOfDaysMonth = customizations.nrOfDaysMonth
+            farbeInternOP = customizations.farbeInternOP
+            farbeExterne = customizations.farbeExterne
+            iProjektFarbe = customizations.iProjektFarbe
+            iWertFarbe = customizations.iWertFarbe
+            vergleichsfarbe0 = customizations.vergleichsfarbe0
+            vergleichsfarbe1 = customizations.vergleichsfarbe1
+
+            awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+            awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+            awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+            awinSettings.AmpelGruen = customizations.AmpelGruen
+
+            awinSettings.AmpelGelb = customizations.AmpelGelb
+            awinSettings.AmpelRot = customizations.AmpelRot
+            awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+            awinSettings.glowColor = customizations.glowColor
+
+            awinSettings.timeSpanColor = customizations.timeSpanColor
+            awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+
+            awinSettings.gridLineColor = customizations.gridLineColor
+
+            awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
+
+            awinSettings.onePersonOneRole = customizations.onePersonOneRole
+            awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+            awinSettings.actualDataMonth = customizations.actualDataMonth
+            ergebnisfarbe1 = customizations.ergebnisfarbe1
+            ergebnisfarbe2 = customizations.ergebnisfarbe2
+            weightStrategicFit = customizations.weightStrategicFit
+            awinSettings.kalenderStart = customizations.kalenderStart
+            awinSettings.zeitEinheit = customizations.zeitEinheit
+            awinSettings.kapaEinheit = customizations.kapaEinheit
+            awinSettings.offsetEinheit = customizations.offsetEinheit
+            awinSettings.EinzelRessExport = customizations.EinzelRessExport
+            awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+            awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+            awinSettings.spaltenbreite = customizations.spaltenbreite
+            awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+            awinSettings.propAnpassRess = customizations.propAnpassRess
+            awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+            awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+            awinSettings.fullProtocol = customizations.fullProtocol
+            awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+            awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+            awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+            awinSettings.importUnknownNames = customizations.importUnknownNames
+            awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+            awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+            awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+            awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+            awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+            awinSettings.importTyp = customizations.importTyp
+
+            awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+            awinSettings.englishLanguage = customizations.englishLanguage
+
+            awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+            awinSettings.considerRiskFee = customizations.considerRiskFee
+
+            StartofCalendar = awinSettings.kalenderStart
+
+            historicDate = StartofCalendar
+            Try
+                If awinSettings.englishLanguage Then
+                    menuCult = ReportLang(PTSprache.englisch)
+                    repCult = menuCult
+                    awinSettings.kapaEinheit = "PD"
+                Else
+                    awinSettings.kapaEinheit = "PT"
+                    menuCult = ReportLang(PTSprache.deutsch)
+                    repCult = menuCult
+                End If
+            Catch ex As Exception
+                awinSettings.englishLanguage = False
+                awinSettings.kapaEinheit = "PT"
+                menuCult = ReportLang(PTSprache.deutsch)
+                repCult = menuCult
+            End Try
+            result = Date.Now
+        Else
+            msgTxt = "No customization in VISBO"
+            Call logger(ptErrLevel.logError, "readCustomizations", msgTxt)
+            result = Date.MinValue
+        End If
+        readCustomizations = result
+    End Function
+
+    ''' <summary>
+    ''' gets the newest Organisation from now
+    ''' </summary>
+    ''' <returns>date of last reading</returns>
+    Public Function readOrganisations() As Date
+
+
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+
+        'Read Organisation
+        Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, Err)
+
+        If Not IsNothing(currentOrga) Then
+            If currentOrga.count > 0 Then
+
+                If currentOrga.count > 0 Then
+                    validOrganisations.addOrga(currentOrga)
+                End If
+
+                CostDefinitions = currentOrga.allCosts
+                RoleDefinitions = currentOrga.allRoles
+
+                Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                    ' do nothing, leave it as is 
+                Else
+                    awinSettings.ActualdataOrgaUnits = tmpActDataString
+                End If
+                result = Date.Now
+
+            Else
+                msgTxt = "No organisation in VISBO"
+                Call logger(ptErrLevel.logError, "readOrganisations", msgTxt)
+                result = Date.MinValue
+
+            End If
+        Else
+            msgTxt = "No organisation in VISBO"
+            Call logger(ptErrLevel.logError, "readOrganisations", msgTxt)
+            result = Date.MinValue
+
+        End If
+
+        readOrganisations = result
+
+    End Function
     ''' <summary>
     ''' stores all projects in ImportProjekte, then clears ImportProjekte
     ''' returns true, if all went ok
@@ -634,18 +817,6 @@ Module rpaModule1
 
             End If
 
-
-            ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
-
-            'reportOrdnerName = awinPath & "Reports\"
-            'Try
-            '    My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
-            'Catch ex As Exception
-
-            'End Try
-
-
-
             StartofCalendar = StartofCalendar.Date
 
             'ur:07.02.2022 auskommentiert
@@ -724,14 +895,6 @@ Module rpaModule1
                     databaseAcc = New DBAccLayer.Request
                 End If
 
-                'ur:08022022: soll mit Default erfragt werden
-                'Try
-                '    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
-                'Catch ex As Exception
-                '    loginErfolgreich = False
-                'End Try
-
-
                 If Not loginErfolgreich Then
                     loginErfolgreich = logInToMongoDB(True)
                 End If
@@ -742,157 +905,164 @@ Module rpaModule1
                 End If
             End If
 
-            '
-            ' Read appearance Definitions
-            appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
-            If IsNothing(appearanceDefinitions.liste) Or appearanceDefinitions.liste.Count > 0 Then
-                ' user has no access to any VISBO Center 
-                msgTxt = "No appearance Definitions in VISBO"
-                Call logger(ptErrLevel.logInfo, "rpaSetTypen", "")
-                'Throw New ArgumentException(msgTxt)
-            End If
+            ''ûr: 10032022: not needed for RPA
+            '' Read appearance Definitions
+            'appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+            'If IsNothing(appearanceDefinitions.liste) Or appearanceDefinitions.liste.Count > 0 Then
+            '    ' user has no access to any VISBO Center 
+            '    msgTxt = "No appearance Definitions in VISBO"
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", "")
+            '    'Throw New ArgumentException(msgTxt)
+            'End If
 
-            '
-            ' Read Customizations 
-            Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+            ''
+            '' Read Customizations 
+            lastReadingCustomization = readCustomizations()
 
-            If Not IsNothing(customizations) Then
-                StartofCalendar = customizations.kalenderStart
-                Call logger(ptErrLevel.logInfo, "rpaSetTypen", " StartOfCalendar: " & StartofCalendar.ToString)
+            'Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
 
-                businessUnitDefinitions = customizations.businessUnitDefinitions
+            'If Not IsNothing(customizations) Then
+            '    StartofCalendar = customizations.kalenderStart
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", " StartOfCalendar: " & StartofCalendar.ToString)
 
-                PhaseDefinitions = customizations.phaseDefinitions
+            '    businessUnitDefinitions = customizations.businessUnitDefinitions
 
-                MilestoneDefinitions = customizations.milestoneDefinitions
+            '    PhaseDefinitions = customizations.phaseDefinitions
 
-                showtimezone_color = customizations.showtimezone_color
-                noshowtimezone_color = customizations.noshowtimezone_color
-                calendarFontColor = customizations.calendarFontColor
-                nrOfDaysMonth = customizations.nrOfDaysMonth
-                farbeInternOP = customizations.farbeInternOP
-                farbeExterne = customizations.farbeExterne
-                iProjektFarbe = customizations.iProjektFarbe
-                iWertFarbe = customizations.iWertFarbe
-                vergleichsfarbe0 = customizations.vergleichsfarbe0
-                vergleichsfarbe1 = customizations.vergleichsfarbe1
+            '    MilestoneDefinitions = customizations.milestoneDefinitions
 
-                awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
-                awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
-                awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
-                awinSettings.AmpelGruen = customizations.AmpelGruen
+            '    showtimezone_color = customizations.showtimezone_color
+            '    noshowtimezone_color = customizations.noshowtimezone_color
+            '    calendarFontColor = customizations.calendarFontColor
+            '    nrOfDaysMonth = customizations.nrOfDaysMonth
+            '    farbeInternOP = customizations.farbeInternOP
+            '    farbeExterne = customizations.farbeExterne
+            '    iProjektFarbe = customizations.iProjektFarbe
+            '    iWertFarbe = customizations.iWertFarbe
+            '    vergleichsfarbe0 = customizations.vergleichsfarbe0
+            '    vergleichsfarbe1 = customizations.vergleichsfarbe1
 
-                awinSettings.AmpelGelb = customizations.AmpelGelb
-                awinSettings.AmpelRot = customizations.AmpelRot
-                awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
-                awinSettings.glowColor = customizations.glowColor
+            '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+            '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+            '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+            '    awinSettings.AmpelGruen = customizations.AmpelGruen
 
-                awinSettings.timeSpanColor = customizations.timeSpanColor
-                awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+            '    awinSettings.AmpelGelb = customizations.AmpelGelb
+            '    awinSettings.AmpelRot = customizations.AmpelRot
+            '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+            '    awinSettings.glowColor = customizations.glowColor
 
-                awinSettings.gridLineColor = customizations.gridLineColor
+            '    awinSettings.timeSpanColor = customizations.timeSpanColor
+            '    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
 
-                awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+            '    awinSettings.gridLineColor = customizations.gridLineColor
 
-                awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
 
-                awinSettings.onePersonOneRole = customizations.onePersonOneRole
-                awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+            '    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            '    awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
 
-                awinSettings.actualDataMonth = customizations.actualDataMonth
-                ergebnisfarbe1 = customizations.ergebnisfarbe1
-                ergebnisfarbe2 = customizations.ergebnisfarbe2
-                weightStrategicFit = customizations.weightStrategicFit
-                awinSettings.kalenderStart = customizations.kalenderStart
-                awinSettings.zeitEinheit = customizations.zeitEinheit
-                awinSettings.kapaEinheit = customizations.kapaEinheit
-                awinSettings.offsetEinheit = customizations.offsetEinheit
-                awinSettings.EinzelRessExport = customizations.EinzelRessExport
-                awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
-                awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
-                awinSettings.spaltenbreite = customizations.spaltenbreite
-                awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
-                awinSettings.propAnpassRess = customizations.propAnpassRess
-                awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+            '    awinSettings.onePersonOneRole = customizations.onePersonOneRole
+            '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
-                awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
-                awinSettings.fullProtocol = customizations.fullProtocol
-                awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
-                awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
-                awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
-                awinSettings.importUnknownNames = customizations.importUnknownNames
-                awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+            '    awinSettings.actualDataMonth = customizations.actualDataMonth
+            '    ergebnisfarbe1 = customizations.ergebnisfarbe1
+            '    ergebnisfarbe2 = customizations.ergebnisfarbe2
+            '    weightStrategicFit = customizations.weightStrategicFit
+            '    awinSettings.kalenderStart = customizations.kalenderStart
+            '    awinSettings.zeitEinheit = customizations.zeitEinheit
+            '    awinSettings.kapaEinheit = customizations.kapaEinheit
+            '    awinSettings.offsetEinheit = customizations.offsetEinheit
+            '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+            '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+            '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+            '    awinSettings.spaltenbreite = customizations.spaltenbreite
+            '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+            '    awinSettings.propAnpassRess = customizations.propAnpassRess
+            '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
 
-                awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
-                awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
-                awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
-                awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+            '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+            '    awinSettings.fullProtocol = customizations.fullProtocol
+            '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+            '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+            '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+            '    awinSettings.importUnknownNames = customizations.importUnknownNames
+            '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
 
-                awinSettings.importTyp = customizations.importTyp
+            '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+            '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+            '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+            '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
 
-                awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+            '    awinSettings.importTyp = customizations.importTyp
 
-                awinSettings.englishLanguage = customizations.englishLanguage
+            '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
 
-                awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
-                awinSettings.considerRiskFee = customizations.considerRiskFee
+            '    awinSettings.englishLanguage = customizations.englishLanguage
 
-                StartofCalendar = awinSettings.kalenderStart
+            '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+            '    awinSettings.considerRiskFee = customizations.considerRiskFee
 
-                historicDate = StartofCalendar
-                Try
-                    If awinSettings.englishLanguage Then
-                        menuCult = ReportLang(PTSprache.englisch)
-                        repCult = menuCult
-                        awinSettings.kapaEinheit = "PD"
-                    Else
-                        awinSettings.kapaEinheit = "PT"
-                        menuCult = ReportLang(PTSprache.deutsch)
-                        repCult = menuCult
-                    End If
-                Catch ex As Exception
-                    awinSettings.englishLanguage = False
-                    awinSettings.kapaEinheit = "PT"
-                    menuCult = ReportLang(PTSprache.deutsch)
-                    repCult = menuCult
-                End Try
-            Else
-                msgTxt = "No customization in VISBO"
-                Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
-                'Throw New ArgumentException(msgTxt)
-            End If
+            '    StartofCalendar = awinSettings.kalenderStart
+
+            '    historicDate = StartofCalendar
+            '    Try
+            '        If awinSettings.englishLanguage Then
+            '            menuCult = ReportLang(PTSprache.englisch)
+            '            repCult = menuCult
+            '            awinSettings.kapaEinheit = "PD"
+            '        Else
+            '            awinSettings.kapaEinheit = "PT"
+            '            menuCult = ReportLang(PTSprache.deutsch)
+            '            repCult = menuCult
+            '        End If
+            '    Catch ex As Exception
+            '        awinSettings.englishLanguage = False
+            '        awinSettings.kapaEinheit = "PT"
+            '        menuCult = ReportLang(PTSprache.deutsch)
+            '        repCult = menuCult
+            '    End Try
+            'Else
+            '    msgTxt = "No customization in VISBO"
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+            '    'Throw New ArgumentException(msgTxt)
+            'End If
 
             '
             ' now read Organisation 
-            Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+            ''
+            '' Read Customizations 
+            lastReadingOrganisation = readOrganisations()
 
-            If Not IsNothing(currentOrga) Then
-                If currentOrga.count > 0 Then
+            'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    If currentOrga.count > 0 Then
-                        validOrganisations.addOrga(currentOrga)
-                    End If
+            'If Not IsNothing(currentOrga) Then
+            '    If currentOrga.count > 0 Then
 
-                    CostDefinitions = currentOrga.allCosts
-                    RoleDefinitions = currentOrga.allRoles
+            '        If currentOrga.count > 0 Then
+            '            validOrganisations.addOrga(currentOrga)
+            '        End If
 
-                    Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
-                    If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
-                        ' do nothing, leave it as is 
-                    Else
-                        awinSettings.ActualdataOrgaUnits = tmpActDataString
-                    End If
+            '        CostDefinitions = currentOrga.allCosts
+            '        RoleDefinitions = currentOrga.allRoles
 
-                Else
-                    msgTxt = "No organisation in VISBO"
-                    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
-                    'Throw New ArgumentException("msgTxt")
-                End If
-            Else
-                msgTxt = "No organisation in VISBO"
-                Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
-                'Throw New ArgumentException("msgTxt")
-            End If
+            '        Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+            '        If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+            '            ' do nothing, leave it as is 
+            '        Else
+            '            awinSettings.ActualdataOrgaUnits = tmpActDataString
+            '        End If
+
+            '    Else
+            '        msgTxt = "No organisation in VISBO"
+            '        Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+            '        'Throw New ArgumentException("msgTxt")
+            '    End If
+            'Else
+            '    msgTxt = "No organisation in VISBO"
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+            '    'Throw New ArgumentException("msgTxt")
+            'End If
 
             '
             ' now read customFieldDefinitions; is allowed to be empty
@@ -915,48 +1085,7 @@ Module rpaModule1
 
             '
             ' now read Vorlagen - maybe Empty
-            Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
-
-            If Not IsNothing(projectTemplates) Then
-                Dim projVorlage As clsProjektvorlage
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
-
-                    projVorlage = createTemplateOfProject(kvp.Value)
-                    ' hiermit wird die _Dauer gesetzt
-                    Dim vorlagenDauer = projVorlage.dauerInDays
-
-                    Projektvorlagen.Add(projVorlage)
-                Next
-            End If
-            'ur:07.02.2022 auskommentiert ---
-            'If awinSettings.englishLanguage Then
-            '    windowNames(PTwindows.mpt) = "VISBO Multiproject-Board"
-            '    windowNames(PTwindows.massEdit) = "edit projects: "
-            '    windowNames(PTwindows.meChart) = "project and portfolio Charts: "
-            '    windowNames(PTwindows.mptpf) = "Portfolio Charts: "
-            '    windowNames(PTwindows.mptpr) = "Project Charts"
-            'Else
-            '    windowNames(PTwindows.mpt) = "VISBO Multiprojekt-Tafel"
-            '    windowNames(PTwindows.massEdit) = "Projekte editieren: "
-            '    windowNames(PTwindows.meChart) = "Projekt und Portfolio Charts: "
-            '    windowNames(PTwindows.mptpf) = "Portfolio Charts: "
-            '    windowNames(PTwindows.mptpr) = "Projekt Charts"
-            'End If
-
-
-            'projectboardViews(PTview.mpt) = Nothing
-            'projectboardViews(PTview.mptpr) = Nothing
-            'projectboardViews(PTview.mptprpf) = Nothing
-            'projectboardViews(PTview.meOnly) = Nothing
-            'projectboardViews(PTview.meChart) = Nothing
-
-            'projectboardWindows(PTwindows.mpt) = Nothing
-            'projectboardWindows(PTwindows.mptpr) = Nothing
-            'projectboardWindows(PTwindows.mptpf) = Nothing
-            'projectboardWindows(PTwindows.massEdit) = Nothing
-            'projectboardWindows(PTwindows.meChart) = Nothing
-            'ur:07.02.2022 auskommentiert ---
-
+            lastReadingProjectTemplates = readProjectTemplates()
 
             result = True
 
@@ -1689,7 +1818,17 @@ Module rpaModule1
     Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim allOK As Boolean = False
+        Dim aktDateTime As Date = Date.Now
+
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
+
+        If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+            lastReadingProjectTemplates = readProjectTemplates()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
 
         'read Project Brief and put it into ImportProjekte
         Try
@@ -1858,6 +1997,12 @@ Module rpaModule1
     Private Function processProjectList(ByVal myName As String, ByVal myActivePortfolio As String) As Boolean
 
         Dim allOk As Boolean = False
+        Dim aktDateTime As Date = Date.Now
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
         Try
             Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
@@ -1884,7 +2029,9 @@ Module rpaModule1
                 End If
             Next
 
-            Dim ok As Boolean = readProjectTemplates()
+            If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+                lastReadingProjectTemplates = readProjectTemplates()
+            End If
             Dim anzTemplates As Integer = Projektvorlagen.Count
 
             allOk = awinImportProjektInventur(readProjects, createdProjects)
@@ -2660,11 +2807,15 @@ Module rpaModule1
                 Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                 ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                        CStr(settingTypes(ptSettingTypes.organisation)),
-                                                        orgaName,
-                                                        importedOrga.validFrom,
-                                                        err)
+                'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                '                                        CStr(settingTypes(ptSettingTypes.organisation)),
+                '                                        orgaName,
+                '                                        importedOrga.validFrom,
+                '                                        err)
+                result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
+                                                                                  orgaName,
+                                                                                  importedOrga.validFrom,
+                                                                                  err)
 
                 If result = True Then
                     allOK = True
@@ -2780,8 +2931,14 @@ Module rpaModule1
     Private Function processVisboJira(ByVal myName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
         'read File with Jira-Projects and put it into ImportProjekte
         Try
@@ -2860,6 +3017,12 @@ Module rpaModule1
         Dim listofArchivConfig As New List(Of String)
         Dim result As Boolean = False
         Dim outputCollection As New Collection
+        Dim aktDateTime As Date = Date.Now
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
         Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
 
@@ -3008,6 +3171,15 @@ Module rpaModule1
     Private Function processVisboActualData1(ByVal myName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+            lastReadingCustomization = readCustomizations()
+        End If
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
 
@@ -3739,13 +3911,33 @@ Module rpaModule1
     Public Sub processResult(ByVal fullfileName As String, ByVal allOK As Boolean, ByVal meldungen As Collection)
 
         Dim myName As String = My.Computer.FileSystem.GetName(fullfileName)
+
+        ' reading messages of logfile
+        Dim errMessages As Collection = readlogger(ptErrLevel.logError)
+
+        Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
+
+        For i As Integer = 1 To meldungen.Count
+            Dim text As String = CStr(meldungen.Item(i))
+            mailMessage = mailMessage & text & vbCrLf
+        Next
+
+        For i As Integer = 1 To errMessages.Count
+            Dim text As String = CStr(errMessages.Item(i))
+            mailMessage = mailMessage & text & vbCrLf
+        Next
+
+        'nur dann ist fehlerfrei importiert
+        allOK = allOK And meldungen.Count < 1 And errMessages.Count < 1
+
         If allOK Then
             Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
             My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
             Call logger(ptErrLevel.logInfo, "success: ", myName)
 
             errMsgCode = New clsErrorCodeMsg
-            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ..." & vbCrLf _
+                                                                            & mailMessage, errMsgCode)
 
         Else
             Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
@@ -3753,23 +3945,23 @@ Module rpaModule1
                 My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
                 Call logger(ptErrLevel.logError, "failed: ", fullfileName)
 
-                Dim errMessages As Collection = readlogger(ptErrLevel.logError)
+                'Dim errMessages As Collection = readlogger(ptErrLevel.logError)
 
                 Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
                 Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
                 My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
-                Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
+                'Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
 
-                For i As Integer = 1 To meldungen.Count
-                    Dim text As String = CStr(meldungen.Item(i))
-                    mailMessage = mailMessage & text & vbCrLf
-                Next
+                'For i As Integer = 1 To meldungen.Count
+                '    Dim text As String = CStr(meldungen.Item(i))
+                '    mailMessage = mailMessage & text & vbCrLf
+                'Next
 
-                For i As Integer = 1 To errMessages.Count
-                    Dim text As String = CStr(errMessages.Item(i))
-                    mailMessage = mailMessage & text & vbCrLf
-                Next
+                'For i As Integer = 1 To errMessages.Count
+                '    Dim text As String = CStr(errMessages.Item(i))
+                '    mailMessage = mailMessage & text & vbCrLf
+                'Next
 
 
                 errMsgCode = New clsErrorCodeMsg
