@@ -36,6 +36,7 @@ Public Class clsCustomizationWeb
     Private _onePersonOneRole As Boolean
 
     Private _allianzIstDatenReferate As String
+    Private _isActualDataRelevant As String
     Private _autoSetActualDataDate As Boolean
     Private _actualDataMonth As Date
 
@@ -375,6 +376,16 @@ Public Class clsCustomizationWeb
         Set(value As String)
             If Not IsNothing(value) Then
                 _allianzIstDatenReferate = value
+            End If
+        End Set
+    End Property
+    Public Property isActualDataRelevant As String
+        Get
+            isActualDataRelevant = _isActualDataRelevant
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _isActualDataRelevant = value
             End If
         End Set
     End Property
@@ -809,6 +820,7 @@ Public Class clsCustomizationWeb
 
             .onePersonOneRole = Me.onePersonOneRole
             .allianzIstDatenReferate = Me.allianzIstDatenReferate
+            .isActualDataRelevant = Me.isActualDataRelevant
 
             .autoSetActualDataDate = Me.autoSetActualDataDate
 
@@ -898,6 +910,7 @@ Public Class clsCustomizationWeb
 
             Me.onePersonOneRole = .onePersonOneRole
             Me.allianzIstDatenReferate = .allianzIstDatenReferate
+            Me.isActualDataRelevant = .isActualDataRelevant
 
             Me.autoSetActualDataDate = .autoSetActualDataDate
 
@@ -977,6 +990,7 @@ Public Class clsCustomizationWeb
         _onePersonOneRole = False
 
         allianzIstDatenReferate = ""
+        isActualDataRelevant = ""
         autoSetActualDataDate = False
         actualDataMonth = Date.MinValue
 
