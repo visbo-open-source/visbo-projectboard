@@ -2456,6 +2456,62 @@ Public Class Request
         storeCapasOfOneOrgaUnitOneYear = result
 
     End Function
+    ''' <summary>
+    ''' saving an new TSO organisation
+    ''' </summary>
+    ''' <param name="tsoOrganisation"></param>
+    ''' <param name="name"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function storeTSOOrganisationToDB(ByVal tsoOrganisation As clsOrganisation,
+                                        ByVal name As String,
+                                        ByVal ts As DateTime,
+                                        ByRef err As clsErrorCodeMsg) As Boolean
+        Dim result As Boolean = False
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeTSOOrganisationToDB(tsoOrganisation, name, ts, err)
+
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeTSOOrganisationToDB(tsoOrganisation, name, ts, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert; ur:2020.12.3nun sollen auch Appearances in DB gespeichert werden
+
+
+            End If
+
+        Catch ex As Exception
+
+            'Call MsgBox("storeVCSettingsToDB: " & ex.Message)
+        End Try
+        storeTSOOrganisationToDB = result
+
+    End Function
+
 
     ''' <summary>
     ''' speichert VC Settings in DB 

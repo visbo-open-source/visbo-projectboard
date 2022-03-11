@@ -7055,11 +7055,15 @@ Imports System.Web
 
                     ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
-                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                                                    CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                                    orgaName,
-                                                                                    importedOrga.validFrom,
-                                                                                    err)
+                        'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                        '                                                            CStr(settingTypes(ptSettingTypes.organisation)),
+                        '                                                            orgaName,
+                        '                                                            importedOrga.validFrom,
+                        '                                                            err)
+                        result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
+                                                                                  orgaName,
+                                                                                  importedOrga.validFrom,
+                                                                                  err)
 
                     Else
                         result = True

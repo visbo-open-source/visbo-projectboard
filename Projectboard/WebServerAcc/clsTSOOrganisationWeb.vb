@@ -6,7 +6,7 @@ Public Class clsTSOOrganisationWeb
     Public Property timestamp As Date
     Private _allRoles As List(Of clsTSORoleDefinitionWeb)
     Private _allCosts As List(Of clsKostenartDefinitionWeb)
-    Private _allUnits As List(Of clsOrgaUnitsWeb)
+    'Private _allUnits As List(Of clsAllUnitsDefinitionWeb)
 
     ' tk ergänzt am 17.5 , um die Orga effizienter speichern zu können 
     'Private _OrgaStartOfCalendar As Date
@@ -33,16 +33,16 @@ Public Class clsTSOOrganisationWeb
         End Set
     End Property
 
-    Public Property allUnits As List(Of clsOrgaUnitsWeb)
-        Get
-            allUnits = _allUnits
-        End Get
-        Set(value As List(Of clsOrgaUnitsWeb))
-            If Not IsNothing(value) Then
-                _allUnits = value
-            End If
-        End Set
-    End Property
+    'Public Property allUnits As List(Of clsAllUnitsDefinitionWeb)
+    '    Get
+    '        allUnits = _allUnits
+    '    End Get
+    '    Set(value As List(Of clsAllUnitsDefinitionWeb))
+    '        If Not IsNothing(value) Then
+    '            _allUnits = value
+    '        End If
+    '    End Set
+    'End Property
 
     Public ReadOnly Property count As Integer
         Get
@@ -116,7 +116,7 @@ Public Class clsTSOOrganisationWeb
         _name = "organisation"
         _allRoles = New List(Of clsTSORoleDefinitionWeb)
         _allCosts = New List(Of clsKostenartDefinitionWeb)
-        _allUnits = New List(Of clsOrgaUnitsWeb)
+        '_allUnits = New List(Of clsAllUnitsDefinitionWeb)
         _timestamp = Date.Now.Date
     End Sub
 End Class

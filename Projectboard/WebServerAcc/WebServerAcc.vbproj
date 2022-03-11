@@ -87,7 +87,7 @@
     <Compile Include="clsHierarchyWeb.vb" />
     <Compile Include="clsHryNodeWeb.vb" />
     <Compile Include="clsKostenartDefinitionWeb.vb" />
-    <Compile Include="clsOrgaUnitsWeb.vb" />
+    <Compile Include="clsAllUnitsDefinitionWeb.vb" />
     <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
