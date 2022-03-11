@@ -2838,7 +2838,7 @@ Public Class Request
             For Each capaOfUnit As clsCapa In allCapas
 
                 If capa.roleID = capaOfUnit.roleID Then
-                    found = True
+                    'found = True
                     If capa.startOfYear = capaOfUnit.startOfYear.ToLocalTime Then
                         found = True
                         capa._id = capaOfUnit._id

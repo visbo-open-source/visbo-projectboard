@@ -2807,15 +2807,15 @@ Module rpaModule1
                 Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                 ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                '                                        CStr(settingTypes(ptSettingTypes.organisation)),
-                '                                        orgaName,
-                '                                        importedOrga.validFrom,
-                '                                        err)
-                result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
-                                                                                  orgaName,
-                                                                                  importedOrga.validFrom,
-                                                                                  err)
+                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                                                        CStr(settingTypes(ptSettingTypes.organisation)),
+                                                        orgaName,
+                                                        importedOrga.validFrom,
+                                                        err)
+                'result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
+                '                                                                  orgaName,
+                '                                                                  importedOrga.validFrom,
+                '                                                                  err)
 
                 If result = True Then
                     allOK = True
