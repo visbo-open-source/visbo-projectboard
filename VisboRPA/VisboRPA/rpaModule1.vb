@@ -266,7 +266,7 @@ Module rpaModule1
                     allOk = processInitialOrga(myName)
 
                 Case CInt(PTRpa.visboRoundtripOrga)
-
+                    ' this will no longer be support -> error message
                     allOk = processRoundTripOrga(myName)
 
                 Case CInt(PTRpa.visboModifierCapacities)
@@ -1740,6 +1740,68 @@ Module rpaModule1
     End Function
 
     ''' <summary>
+    ''' checks whether or not a file is a Instart Proposal - CalcSheet
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkInstartProposal(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Tabelle1"
+
+        Try
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+                Try
+                    verifiedStructure = ersteZeile.Cells(1, 1).value.trim = "Vorgangstyp" And
+                        CStr(ersteZeile.Cells(1, 2).value).Trim = "Schlüssel" And
+                        CStr(ersteZeile.Cells(1, 3).value).Trim = "Zusammenfassung" And
+                        CStr(ersteZeile.Cells(1, 4).value).Trim = "Zugewiesene Person" And
+                        CStr(ersteZeile.Cells(1, 5).value).Trim = "Autor" And
+                        CStr(ersteZeile.Cells(1, 6).value).Trim = "Priorität" And
+                        CStr(ersteZeile.Cells(1, 7).value).Trim = "Status" And
+                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Lösung") And
+                        CStr(ersteZeile.Cells(1, 9).value).Trim.StartsWith("Erstellt") And
+                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Story Point-Schätzung") And
+                        CStr(ersteZeile.Cells(1, 11).value).Trim.Contains("Aktualisiert") And
+                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Fälligkeitsdatum" And
+                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Fortschritt" And
+                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Erledigt" And
+                        CStr(ersteZeile.Cells(1, 15).value).Trim.Contains("Übergeordnet") And
+                        ersteZeile.Cells(1, 16).value.trim = "Verknüpfte Vorgänge" And
+                        ersteZeile.Cells(1, 17).value.trim = "Area" And
+                        ersteZeile.Cells(1, 18).value.trim = "Sprint.name" And
+                        ersteZeile.Cells(1, 19).value.trim = "Sprint.startDate" And
+                        ersteZeile.Cells(1, 20).value.trim = "Sprint.endDate" And
+                        ersteZeile.Cells(1, 21).value.trim = "Sprint.completeDate" And
+                        ersteZeile.Cells(1, 22).value.trim = "Sprint.goal" And
+                        ersteZeile.Cells(1, 23).value.trim = "Start date" And
+                        ersteZeile.Cells(1, 24).value.trim = "Rank" And
+                        ersteZeile.Cells(1, 25).value.trim = "Projekt"
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboJira
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkJiraProjects = result
+    End Function
+    ''' <summary>
     ''' returns the sequence of the project-names 
     ''' there is only one project-variant per ranking allowed
     ''' </summary>
@@ -2807,15 +2869,15 @@ Module rpaModule1
                 Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                 ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                        CStr(settingTypes(ptSettingTypes.organisation)),
-                                                        orgaName,
-                                                        importedOrga.validFrom,
-                                                        err)
-                'result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
-                '                                                                  orgaName,
-                '                                                                  importedOrga.validFrom,
-                '                                                                  err)
+                'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                '                                        CStr(settingTypes(ptSettingTypes.organisation)),
+                '                                        orgaName,
+                '                                        importedOrga.validFrom,
+                '                                        err)
+                result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
+                                                                                  orgaName,
+                                                                                  importedOrga.validFrom,
+                                                                                  err)
 
                 If result = True Then
                     allOK = True
@@ -2844,84 +2906,88 @@ Module rpaModule1
         Dim msgTxt As String = ""
         'Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
         Dim outputCollection As New Collection
-        Try
+        'Try
 
-            Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboRoundtripOrga.ToString, myName)
+        '    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboRoundtripOrga.ToString, myName)
 
-            ' ===========================================================
-            ' Konfigurationsdatei lesen und Validierung durchführen
+        '    ' ===========================================================
+        '    ' Konfigurationsdatei lesen und Validierung durchführen
 
-            ' Ur: 21.02.2022: geändert auf configuration Orga im VC als Setting
+        '    ' Ur: 21.02.2022: geändert auf configuration Orga im VC als Setting
 
-            ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-            'Dim configOrgaImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configOrgaImport.xlsx")
+        '    ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
+        '    'Dim configOrgaImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configOrgaImport.xlsx")
 
-            Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
-            Dim lastrow As Integer = 0
+        '    Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
+        '    Dim lastrow As Integer = 0
 
-            Call logger(ptErrLevel.logInfo, "start reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga")
+        '    Call logger(ptErrLevel.logInfo, "start reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga")
 
-            ' check Config-File - zum Einlesen der Oragnistation gemäß Konfiguration
-            ' hier werden Werte für die Konfiguration gelesen aus dem VCSetting "configuration Orga"
-            Dim allesOK As Boolean = checkOrgaImportConfig("configuration Orga", myName, orgaImportConfig, lastrow, outputCollection)
+        '    ' check Config-File - zum Einlesen der Oragnistation gemäß Konfiguration
+        '    ' hier werden Werte für die Konfiguration gelesen aus dem VCSetting "configuration Orga"
+        '    Dim allesOK As Boolean = checkOrgaImportConfig("configuration Orga", myName, orgaImportConfig, lastrow, outputCollection)
 
-            If Not allesOK Then
-                Call logger(ptErrLevel.logError, "error reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga does not exist")
-                processRoundTripOrga = False
-                Exit Function
-            End If
+        '    If Not allesOK Then
+        '        Call logger(ptErrLevel.logError, "error reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga does not exist")
+        '        processRoundTripOrga = False
+        '        Exit Function
+        '    End If
 
-            Try
+        '    Try
 
-                ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
-                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
+        '        ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
+        '        Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
 
 
-                If outputCollection.Count > 0 Then
-                    Dim errmsg As String = vbLf & " .. Exit .. Organisation not imported  "
-                    outputCollection.Add(errmsg)
+        '        If outputCollection.Count > 0 Then
+        '            Dim errmsg As String = vbLf & " .. Exit .. Organisation not imported  "
+        '            outputCollection.Add(errmsg)
 
-                    Call logger(ptErrLevel.logError, "RPA Error Importing Organisation ", outputCollection)
+        '            Call logger(ptErrLevel.logError, "RPA Error Importing Organisation ", outputCollection)
 
-                ElseIf importedOrga.count > 0 Then
+        '        ElseIf importedOrga.count > 0 Then
 
-                    ' TopNodes und OrgaTeamChilds bauen 
-                    Call importedOrga.allRoles.buildTopNodes()
+        '            ' TopNodes und OrgaTeamChilds bauen 
+        '            Call importedOrga.allRoles.buildTopNodes()
 
-                    Dim err As New clsErrorCodeMsg
-                    Dim result As Boolean = False
-                    ' ute -> überprüfen bzw. fertigstellen ... 
-                    Dim orgaName As String = ptSettingTypes.organisation.ToString
+        '            Dim err As New clsErrorCodeMsg
+        '            Dim result As Boolean = False
+        '            ' ute -> überprüfen bzw. fertigstellen ... 
+        '            Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                    ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                        CStr(settingTypes(ptSettingTypes.organisation)),
-                                                        orgaName,
-                                                        importedOrga.validFrom,
-                                                        err)
+        '            ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
+        '            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+        '                                                CStr(settingTypes(ptSettingTypes.organisation)),
+        '                                                orgaName,
+        '                                                importedOrga.validFrom,
+        '                                                err)
 
-                    If result = True Then
-                        allOK = True
-                        msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
-                        Console.WriteLine(msgTxt)
-                        Call logger(ptErrLevel.logInfo, PTRpa.visboRoundtripOrga.ToString, msgTxt)
-                    Else
-                        allOK = False
-                        msgTxt = "Storing organisaiton failed "
-                        Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, msgTxt)
-                    End If
-                End If
+        '            If result = True Then
+        '                allOK = True
+        '                msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
+        '                Console.WriteLine(msgTxt)
+        '                Call logger(ptErrLevel.logInfo, PTRpa.visboRoundtripOrga.ToString, msgTxt)
+        '            Else
+        '                allOK = False
+        '                msgTxt = "Storing organisaiton failed "
+        '                Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, msgTxt)
+        '            End If
+        '        End If
 
-                Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboRoundtripOrga.ToString, myName)
-            Catch ex As Exception
-                allOK = False
-            End Try
+        '        Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboRoundtripOrga.ToString, myName)
+        '    Catch ex As Exception
+        '        allOK = False
+        '    End Try
 
-        Catch ex As Exception
-            allOK = False
-            msgTxt = ""
-            Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, ex.Message)
-        End Try
+        'Catch ex As Exception
+        '    allOK = False
+        '    msgTxt = ""
+        '    Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, ex.Message)
+        'End Try
+
+        msgTxt = "This Import will no longer be supported, because you can download the Orga, change it and upload it via WebUI"
+        Call logger(ptErrLevel.logError, "VisboRoundTripOrga", msgTxt)
+        allOK = False
 
         processRoundTripOrga = allOK
 
@@ -2951,6 +3017,8 @@ Module rpaModule1
             Dim dateiName As String = ""
             Dim listofArchivAllg As New List(Of String)
             Dim outPutCollection As New Collection
+            Dim configJIRAProjects As String = ""
+
 
             Dim outputLine As String = ""
 
@@ -2958,8 +3026,9 @@ Module rpaModule1
 
             ' Konfigurationsdatei lesen und Validierung durchführen
 
-            ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-            Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
+            ' wenn es gibt - lesen der Jira und anderer, die durch configCapaImport beschrieben sind
+            ' no longer necessary
+            ' Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
             Dim allesOK As Boolean = checkJIRAProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
@@ -3902,6 +3971,131 @@ Module rpaModule1
 
         processVisboActualData2 = allOk
 
+    End Function
+
+    Public Function processInstartProposal(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim instartImportConfigOK As Boolean = False
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configProposalImport As String = ""
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+            ' wenn es gibt - lesen der Jira und anderer, die durch configCapaImport beschrieben sind
+            ' no longer necessary
+            ' Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            Dim allesOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If allesOK Then
+
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
+                'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
+
+                If allesOK Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Else
+                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        End If
+
+                    End Try
+                Else
+
+                End If
+
+
+            End If
+
+
+            outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+            outPutCollection.Add(outputString)
+
+            If outPutCollection.Count > 0 Then
+                If awinSettings.englishLanguage Then
+                    Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                Else
+                    Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                End If
+            End If
+
+            Try
+                ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+
+                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                Else
+                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                End If
+
+            End Try
+
+            'Else
+            '    Call logger(ptErrLevel.logError, "processInstartProposal", outPutCollection)
+            '    allOk = False
+            'End If
+
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboInstartProposal.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
+        End Try
+
+        processInstartProposal = allOk
     End Function
     ''' <summary>
     ''' Gibt das jeweilige Ergebnis weiter fürs logfile und schiebt die jeweilige Datei in die entsprechenden Folder
