@@ -59,39 +59,39 @@ Public Class clsOrganisationWeb
     End Property
 
 
-    Public Sub copyFrom(ByVal orgaDef As clsOrganisation)
+    'Public Sub copyFrom(ByVal orgaDef As clsOrganisation)
 
-        With orgaDef
+    '    With orgaDef
 
-            Me.validFrom = .validFrom.ToUniversalTime
-            'Me.OrgaStartOfCalendar = StartofCalendar
+    '        Me.validFrom = .validFrom.ToUniversalTime
+    '        'Me.OrgaStartOfCalendar = StartofCalendar
 
-            If .allRoles.Count >= 1 Then
-                For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In .allRoles.liste
+    '        If .allRoles.Count >= 1 Then
+    '            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In .allRoles.liste
 
-                    Dim rd As New clsRollenDefinition
-                    Dim rdweb As New clsRollenDefinitionWeb
-                    rd = kvp.Value
-                    rdweb.copyFrom(rd)
-                    Me.allRoles.Add(rdweb)
-                Next
-            End If
+    '                Dim rd As New clsRollenDefinition
+    '                Dim rdweb As New clsRollenDefinitionWeb
+    '                rd = kvp.Value
+    '                rdweb.copyFrom(rd)
+    '                Me.allRoles.Add(rdweb)
+    '            Next
+    '        End If
 
-            If .allCosts.Count >= 1 Then
-                For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In .allCosts.liste
+    '        If .allCosts.Count >= 1 Then
+    '            For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In .allCosts.liste
 
-                    Dim kad As New clsKostenartDefinition
-                    Dim kadweb As New clsKostenartDefinitionWeb
-                    kad = kvp.Value
-                    kadweb.copyFrom(kad)
-                    Me.allCosts.Add(kadweb)
-                Next
-            End If
+    '                Dim kad As New clsKostenartDefinition
+    '                Dim kadweb As New clsKostenartDefinitionWeb
+    '                kad = kvp.Value
+    '                kadweb.copyFrom(kad)
+    '                Me.allCosts.Add(kadweb)
+    '            Next
+    '        End If
 
 
 
-        End With
-    End Sub
+    '    End With
+    'End Sub
 
     Public Sub copyTo(ByRef orgaDef As clsOrganisation)
 

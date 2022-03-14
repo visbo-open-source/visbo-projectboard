@@ -46,6 +46,8 @@ Public Class clsRollenDefinitionWeb
     ' war vorher : Public Sub copyTo(ByRef roleDef As clsRollenDefinition, ByVal orgaStartOfCalendar As Date)
     Public Sub copyTo(ByRef roleDef As clsRollenDefinition)
 
+        Dim entryColOfDate As Integer = 0
+        Dim exitColOfDate As Integer = 0
 
         If subRoleIDs.Count >= 1 Then
             ' wegen Mongo müssen die Keys in String Format sein ... 
@@ -107,8 +109,20 @@ Public Class clsRollenDefinitionWeb
         roleDef.aliases = Me.aliases
         roleDef.defaultDayCapa = Me.defaultDayCapa
         roleDef.employeeNr = Me.employeeNr
+
         roleDef.entryDate = Me.entryDate.ToLocalTime
+        If roleDef.entryDate <= Date.MinValue Then
+            entryColOfDate = 1
+        Else
+            entryColOfDate = getColumnOfDate(roleDef.entryDate)
+        End If
+
         roleDef.exitDate = Me.exitDate.ToLocalTime
+        If roleDef.exitDate >= DateAndTime.DateSerial(2200, 12, 31) Then
+            exitColOfDate = 241
+        Else
+            exitColOfDate = Math.Min(roleDef.kapazitaet.Length, getColumnOfDate(roleDef.exitDate))
+        End If
 
 
         ' tk 23.11.18 
@@ -128,7 +142,8 @@ Public Class clsRollenDefinitionWeb
 
         ' neu ur: 08.07.2021
         roleDef.isAggregationRole = Me.isAggregationRole
-        roleDef.isActDataRelevant = Me.isActDataRelevant
+        ' raus ur: 08.03.2022
+        'roleDef.isActDataRelevant = Me.isActDataRelevant
         roleDef.isSummaryRole = Me.isSummaryRole
 
         ' jetzt die Übernahme der Kapazitäten 
@@ -149,7 +164,13 @@ Public Class clsRollenDefinitionWeb
 
 
             ' ' vorbesetzen mit dem Default Wert
-            For i As Integer = 1 To lenSession - 1
+            ' ur: 14.03.2022: changed because of exitDate 
+            'For i As Integer = 1 To lenSession - 1
+            '    roleDef.kapazitaet(i) = roleDef.defaultKapa
+            'Next
+
+            ' ' vorbesetzen mit dem Default Wert
+            For i As Integer = entryColOfDate To exitColOfDate - 1
                 roleDef.kapazitaet(i) = roleDef.defaultKapa
             Next
 
@@ -165,14 +186,22 @@ Public Class clsRollenDefinitionWeb
 
 
                 If startingIndex > 0 Then
-                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
-                        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
+
+                    ' ur: Änderung durch TSO Orga und separate Capa-Collection
+                    'For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                    'roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
+                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex)
                     Next
                 Else ' ur:2020-11-20 - wenn später der startofcalendar im customization verschoben wurde
                     startingIndex = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar) + 1
-                    For i As Integer = 1 To nrWebCapaValues - startingIndex
-                        roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
-                    Next
+
+                    ' ur: Änderung durch TSO Orga und separate Capa-Collection
+                    'For i As Integer = 1 To nrWebCapaValues - startingIndex
+                    'roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
+                    For i As Integer = 0 To nrWebCapaValues - startingIndex
+                            roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex)
+                        Next
                 End If
 
             End If

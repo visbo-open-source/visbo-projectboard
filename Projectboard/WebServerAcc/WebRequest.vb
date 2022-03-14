@@ -3121,47 +3121,49 @@ Public Class Request
 
                 Case settingTypes(ptSettingTypes.organisation)
 
-                    Dim listofOrgaWeb As New clsOrganisationWeb
-                    listofOrgaWeb.copyFrom(listofSetting)
+                    'ur:14.03.2022 substituted with StoreTSOOrganisationToDB
 
-                    ' der Unique-Key für customroles besteht aus: name, type
+                    'Dim listofOrgaWeb As New clsOrganisationWeb
+                    'listofOrgaWeb.copyFrom(listofSetting)
 
-                    newsetting = New clsVCSettingOrganisation
-                    CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
+                    '' der Unique-Key für customroles besteht aus: name, type
 
-                    ' validFrom in localTime auf den ersten des Monats setzen
-                    'listofOrgaWeb.validFrom = listofOrgaWeb.validFrom.ToLocalTime
-                    Dim newOrgavalidFrom As Date = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
-                    CType(newsetting, clsVCSettingOrganisation).timestamp = newOrgavalidFrom.ToString("u")
-                    CType(newsetting, clsVCSettingOrganisation).userId = ""
-                    CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
-                    CType(newsetting, clsVCSettingOrganisation).type = type
-                    CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
-                    'CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom.ToUniversalTime
-                    CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom
+                    'newsetting = New clsVCSettingOrganisation
+                    'CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
 
-                    If anzSetting = 1 Then
-                        Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom
-                        'Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom.ToLocalTime
+                    '' validFrom in localTime auf den ersten des Monats setzen
+                    ''listofOrgaWeb.validFrom = listofOrgaWeb.validFrom.ToLocalTime
+                    'Dim newOrgavalidFrom As Date = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
+                    'CType(newsetting, clsVCSettingOrganisation).timestamp = newOrgavalidFrom.ToString("u")
+                    'CType(newsetting, clsVCSettingOrganisation).userId = ""
+                    'CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
+                    'CType(newsetting, clsVCSettingOrganisation).type = type
+                    'CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
+                    ''CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom.ToUniversalTime
+                    'CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom
 
-                        ' Update der Organisation - Setting
-                        If oldvalidFromlocal.Month = newsetting.value.validFrom.Month And
-                            oldvalidFromlocal.Year = newsetting.value.validFrom.Year Then
-                            ' timestamp und validFrom bleibt wie gehabt (gleich der bisherigen Setting Orga)
-                            ' CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp.ToString("u")
-                            CType(newsetting, clsVCSettingOrganisation).timestamp = DateTimeToISODate(oldsetting.timestamp)
-                            CType(newsetting, clsVCSettingOrganisation).value.validFrom = oldsetting.value.validFrom
-                            newsetting._id = settingID
-                            result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
-                        Else
-                            ' Create der Organisation - Setting
-                            result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
-                        End If
+                    'If anzSetting = 1 Then
+                    '    Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom
+                    '    'Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom.ToLocalTime
 
-                    Else
-                        ' Create der Organisation - Setting
-                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
-                    End If
+                    '    ' Update der Organisation - Setting
+                    '    If oldvalidFromlocal.Month = newsetting.value.validFrom.Month And
+                    '        oldvalidFromlocal.Year = newsetting.value.validFrom.Year Then
+                    '        ' timestamp und validFrom bleibt wie gehabt (gleich der bisherigen Setting Orga)
+                    '        ' CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp.ToString("u")
+                    '        CType(newsetting, clsVCSettingOrganisation).timestamp = DateTimeToISODate(oldsetting.timestamp)
+                    '        CType(newsetting, clsVCSettingOrganisation).value.validFrom = oldsetting.value.validFrom
+                    '        newsetting._id = settingID
+                    '        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    '    Else
+                    '        ' Create der Organisation - Setting
+                    '        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    '    End If
+
+                    'Else
+                    '    ' Create der Organisation - Setting
+                    '    result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    'End If
 
 
                 Case settingTypes(ptSettingTypes.customization)
