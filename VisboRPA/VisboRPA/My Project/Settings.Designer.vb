@@ -138,16 +138,13 @@ Namespace My
             End Set
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("https://dev.visbo.net/api")>  _
-        Public Property VisboURL() As String
+        Public ReadOnly Property VisboURL() As String
             Get
                 Return CType(Me("VisboURL"),String)
             End Get
-            Set
-                Me("VisboURL") = value
-            End Set
         End Property
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _

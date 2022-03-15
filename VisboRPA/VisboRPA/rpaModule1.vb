@@ -315,8 +315,8 @@ Module rpaModule1
                     Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
-                    allOk = True
-                    Call logger(ptErrLevel.logError, "Import Calc-Sheet of Instart", " not yet integrated !")
+                    allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet of Instart", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
@@ -1182,7 +1182,9 @@ Module rpaModule1
                         ' Check auf Tagetik update projects 
 
                         ' Check auf Instart Calculation Template 
-
+                        If result = PTRpa.visboUnknown Then
+                            result = checkInstartProposal(currentWB)
+                        End If
                         ' Check auf VISBO Calculation Template 
 
                         currentWB.Close(SaveChanges:=False)
@@ -1747,42 +1749,22 @@ Module rpaModule1
     Private Function checkInstartProposal(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim verifiedStructure As Boolean = False
-        Dim blattName As String = "Tabelle1"
+        Dim blattName As String = "VISBO Summary"
 
         Try
-
             Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
 
             If IsNothing(currentWS) Then
                 result = PTRpa.visboUnknown
             Else
-                Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
                 Try
-                    verifiedStructure = ersteZeile.Cells(1, 1).value.trim = "Vorgangstyp" And
-                        CStr(ersteZeile.Cells(1, 2).value).Trim = "Schlüssel" And
-                        CStr(ersteZeile.Cells(1, 3).value).Trim = "Zusammenfassung" And
-                        CStr(ersteZeile.Cells(1, 4).value).Trim = "Zugewiesene Person" And
-                        CStr(ersteZeile.Cells(1, 5).value).Trim = "Autor" And
-                        CStr(ersteZeile.Cells(1, 6).value).Trim = "Priorität" And
-                        CStr(ersteZeile.Cells(1, 7).value).Trim = "Status" And
-                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Lösung") And
-                        CStr(ersteZeile.Cells(1, 9).value).Trim.StartsWith("Erstellt") And
-                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Story Point-Schätzung") And
-                        CStr(ersteZeile.Cells(1, 11).value).Trim.Contains("Aktualisiert") And
-                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Fälligkeitsdatum" And
-                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Fortschritt" And
-                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Erledigt" And
-                        CStr(ersteZeile.Cells(1, 15).value).Trim.Contains("Übergeordnet") And
-                        ersteZeile.Cells(1, 16).value.trim = "Verknüpfte Vorgänge" And
-                        ersteZeile.Cells(1, 17).value.trim = "Area" And
-                        ersteZeile.Cells(1, 18).value.trim = "Sprint.name" And
-                        ersteZeile.Cells(1, 19).value.trim = "Sprint.startDate" And
-                        ersteZeile.Cells(1, 20).value.trim = "Sprint.endDate" And
-                        ersteZeile.Cells(1, 21).value.trim = "Sprint.completeDate" And
-                        ersteZeile.Cells(1, 22).value.trim = "Sprint.goal" And
-                        ersteZeile.Cells(1, 23).value.trim = "Start date" And
-                        ersteZeile.Cells(1, 24).value.trim = "Rank" And
-                        ersteZeile.Cells(1, 25).value.trim = "Projekt"
+
+                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
+
+                    ' hier muss noch geprüft werden, ob alle timesheets vorhanden, sonst in separates Dir schieben und erst wenn Timesheet-completed - file vorhanden, dann alle einlesen
+
 
                 Catch ex As Exception
                     verifiedStructure = False
@@ -1794,12 +1776,12 @@ Module rpaModule1
         End Try
 
         If verifiedStructure Then
-            result = PTRpa.visboJira
+            result = PTRpa.visboProposal
         Else
             result = PTRpa.visboUnknown
         End If
 
-        checkJiraProjects = result
+        checkInstartProposal = result
     End Function
     ''' <summary>
     ''' returns the sequence of the project-names 
