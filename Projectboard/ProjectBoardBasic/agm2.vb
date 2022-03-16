@@ -21704,7 +21704,9 @@ Public Module agm2
                     ' jetzt werden die ORganisation ausgelesen 
                     ' wenn es keine Organisation gibt , d
 
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
+
+                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
                     If currentOrga.count > 0 Then
 

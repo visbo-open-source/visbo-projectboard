@@ -41,7 +41,7 @@ Public Class clsTSORoleDefinitionWeb
     Public dailyRate As Double
     Public defCapaMonth As Double
     Public defCapaDay As Double
-
+    Public capaPerMonth() As Double
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
     Public startOfCal As Date
@@ -49,6 +49,8 @@ Public Class clsTSORoleDefinitionWeb
     ' war vorher : Public Sub copyTo(ByRef roleDef As clsRollenDefinition, ByVal orgaStartOfCalendar As Date)
     Public Sub copyTo(ByRef roleDef As clsRollenDefinition)
 
+        Dim entryColOfDate As Integer = 0
+        Dim exitColOfDate As Integer = 0
 
         If subRoleIDs.Count >= 1 Then
             ' wegen Mongo müssen die Keys in String Format sein ... 
@@ -115,8 +117,20 @@ Public Class clsTSORoleDefinitionWeb
         'roleDef.defaultDayCapa = Me.defaultDayCapa
         roleDef.defaultDayCapa = Me.defCapaDay
         roleDef.employeeNr = Me.employeeNr
+
         roleDef.entryDate = Me.entryDate.ToLocalTime
+        If roleDef.entryDate <= Date.MinValue Then
+            entryColOfDate = 1
+        Else
+            entryColOfDate = getColumnOfDate(roleDef.entryDate)
+        End If
+
         roleDef.exitDate = Me.exitDate.ToLocalTime
+        If roleDef.exitDate >= DateAndTime.DateSerial(2200, 12, 31) Then
+            exitColOfDate = 241
+        Else
+            exitColOfDate = Math.Min(roleDef.kapazitaet.Length, getColumnOfDate(roleDef.exitDate))
+        End If
 
 
         ' tk 23.11.18 
@@ -147,6 +161,72 @@ Public Class clsTSORoleDefinitionWeb
         ' ur: 25022022  this property will further be in the customization VCSetting in the Server
         'roleDef.isActDataRelevant = Me.isActDataRelevant
         roleDef.isSummaryRole = Me.isSummaryRole
+        Dim kapaArray() As Double = Me.capaPerMonth
+
+        ' jetzt die Übernahme der Kapazitäten 
+        ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
+        ' ebenso Rollen, die nur den Default Wert haben 
+
+        ' hier muss auch nur was gemacht werden, wenn subRoleId.count = 0 
+        If subRoleIDs.Count = 0 Then
+
+            Dim nrWebCapaValues As Integer
+            If Not IsNothing(Me.capaPerMonth) Then
+                nrWebCapaValues = Me.capaPerMonth.Length
+            Else
+                nrWebCapaValues = 0
+            End If
+
+            Dim lenSession As Integer = roleDef.kapazitaet.Length
+
+
+            ' ' vorbesetzen mit dem Default Wert
+            ' ur: 14.03.2022: changed because of exitDate 
+            'For i As Integer = 1 To lenSession - 1
+            '    roleDef.kapazitaet(i) = roleDef.defaultKapa
+            'Next
+
+            ' ' vorbesetzen mit dem Default Wert
+            For i As Integer = entryColOfDate To exitColOfDate - 1
+                roleDef.kapazitaet(i) = roleDef.defaultKapa
+            Next
+
+            ' das muss jetzt nur gemacht werden, wenn es überhaupt vom Default abweichende Werte gibt 
+            ' jetzt die vom Default abweichenden Werte speichern, sofern es welche gibt ... 
+
+            If Not IsNothing(Me.capaPerMonth) Then
+                Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
+
+                If awinSettings.visboDebug Then
+                    logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+                End If
+
+
+                If startingIndex > 0 Then
+
+                    ' ur: Änderung durch TSO Orga und separate Capa-Collection
+                    'For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                    'roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
+                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                        roleDef.kapazitaet(i) = Me.capaPerMonth(i - startingIndex)
+                    Next
+                Else ' ur:2020-11-20 - wenn später der startofcalendar im customization verschoben wurde
+                    startingIndex = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar) + 1
+
+                    ' ur: Änderung durch TSO Orga und separate Capa-Collection
+                    'For i As Integer = 1 To nrWebCapaValues - startingIndex
+                    'roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
+                    For i As Integer = 0 To nrWebCapaValues - startingIndex
+                        roleDef.kapazitaet(i) = Me.capaPerMonth(i + startingIndex)
+                    Next
+                End If
+
+            End If
+
+        Else
+            ' andernfalls beim kapazitaet(240): jeder Wert ist bereits Null, wie es sein soll ...
+        End If
+
 
 
 

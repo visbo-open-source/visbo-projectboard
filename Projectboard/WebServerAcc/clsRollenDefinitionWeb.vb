@@ -187,21 +187,16 @@ Public Class clsRollenDefinitionWeb
 
                 If startingIndex > 0 Then
 
-                    ' ur: Änderung durch TSO Orga und separate Capa-Collection
-                    'For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
-                    'roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
-                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues
-                        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex)
+                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
                     Next
-                Else ' ur:2020-11-20 - wenn später der startofcalendar im customization verschoben wurde
+                Else
+                    ' ur:2020-11-20 - wenn später der startofcalendar im customization verschoben wurde
                     startingIndex = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar) + 1
 
-                    ' ur: Änderung durch TSO Orga und separate Capa-Collection
-                    'For i As Integer = 1 To nrWebCapaValues - startingIndex
-                    'roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
-                    For i As Integer = 0 To nrWebCapaValues - startingIndex
-                            roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex)
-                        Next
+                    For i As Integer = 1 To nrWebCapaValues - startingIndex
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
+                    Next
                 End If
 
             End If
