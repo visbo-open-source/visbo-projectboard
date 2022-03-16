@@ -422,7 +422,7 @@ Module rpaModule1
                     result = Date.Now
                 End If
             Else
-                Call logger(ptErrLevel.logError, "readProjectTemplates", "No project templates in this VC: " & myVC)
+                Call logger(ptErrLevel.logWarning, "readProjectTemplates", "No project templates in this VC: " & myVC)
                 result = Date.MinValue
             End If
 
@@ -568,7 +568,14 @@ Module rpaModule1
         Dim err As New clsErrorCodeMsg
 
         'Read Organisation
-        Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, Err)
+
+
+        ' jetzt werden die ORganisation ausgelesen 
+        ' wenn es keine Organisation gibt , d
+
+        Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
+
+        'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, Err)
 
         If Not IsNothing(currentOrga) Then
             If currentOrga.count > 0 Then
@@ -1866,9 +1873,16 @@ Module rpaModule1
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
 
-        If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
-            lastReadingProjectTemplates = readProjectTemplates()
+        ' ist hier eine Projektvorlage zu importieren?
+        Dim isTemplate As Boolean = LCase(myName).Contains("template")
+
+        ' project brief is not a template, then you need the actual templates
+        If Not isTemplate Then
+            If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+                lastReadingProjectTemplates = readProjectTemplates()
+            End If
         End If
+
         If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
             lastReadingOrganisation = readOrganisations()
         End If
@@ -1884,8 +1898,6 @@ Module rpaModule1
 
             ' read the file and import into hproj
 
-            ' ist hier eine Projektvorlage zu importieren?
-            Dim isTemplate As Boolean = LCase(myName).Contains("template")
 
             Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
 
