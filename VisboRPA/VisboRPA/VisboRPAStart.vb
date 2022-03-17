@@ -533,7 +533,9 @@ Public Class VisboRPAStart
 
                 ' außer stop, darf kein button aktiv sein
                 btn_start.Enabled = False
-                    durchsuchen.Enabled = False
+                durchsuchen.Enabled = False
+                VCSelection.Enabled = False
+                activePortfolioSel.Enabled = False
                 'End If
 
 
