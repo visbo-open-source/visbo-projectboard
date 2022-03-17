@@ -397,6 +397,7 @@ Module rpaModule1
         Dim result As Date = Date.MinValue
         Dim err As New clsErrorCodeMsg
 
+
         ' lesen der templates des akt. VC
         Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
 
@@ -427,7 +428,7 @@ Module rpaModule1
             End If
 
         Else
-            Call logger(ptErrLevel.logError, "readProjectTemplates", "Getting project templates from Server finished with error: " & err.errorMsg)
+            Call logger(ptErrLevel.logWarning, "readProjectTemplates", "Getting project templates from Server finished with warning: " & err.errorMsg)
             result = Date.MinValue
         End If
 
@@ -563,18 +564,14 @@ Module rpaModule1
     ''' <returns>date of last reading</returns>
     Public Function readOrganisations() As Date
 
-
         Dim result As Date = Date.MinValue
         Dim err As New clsErrorCodeMsg
 
         'Read Organisation
 
-
-        ' jetzt werden die ORganisation ausgelesen 
-        ' wenn es keine Organisation gibt , d
-
         Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
 
+        ' ur: old ReSt-Call
         'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, Err)
 
         If Not IsNothing(currentOrga) Then
@@ -1876,16 +1873,19 @@ Module rpaModule1
         ' ist hier eine Projektvorlage zu importieren?
         Dim isTemplate As Boolean = LCase(myName).Contains("template")
 
-        ' project brief is not a template, then you need the actual templates
-        If Not isTemplate Then
-            If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
-                lastReadingProjectTemplates = readProjectTemplates()
-            End If
-        End If
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
-            lastReadingOrganisation = readOrganisations()
-        End If
+        ' project brief is not a template, then you need the actual templates
+
+        'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+        lastReadingProjectTemplates = readProjectTemplates()
+        'End If
+
+
+        'If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        lastReadingOrganisation = readOrganisations()
+        'End If
 
 
         'read Project Brief and put it into ImportProjekte
@@ -2061,6 +2061,7 @@ Module rpaModule1
         End If
 
         Try
+
             Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
 
             Dim overloadAllowedinMonths As Double = 1.05
@@ -2085,9 +2086,9 @@ Module rpaModule1
                 End If
             Next
 
-            If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
-                lastReadingProjectTemplates = readProjectTemplates()
-            End If
+            'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+            lastReadingProjectTemplates = readProjectTemplates()
+            'End If
             Dim anzTemplates As Integer = Projektvorlagen.Count
 
             allOk = awinImportProjektInventur(readProjects, createdProjects)
@@ -2097,49 +2098,6 @@ Module rpaModule1
             Else
                 Call logger(ptErrLevel.logError, "failure in Processing: " & myName, PTRpa.visboProjectList.ToString)
             End If
-
-            If allOk Then
-
-                Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
-
-                For Each si As String In skillIDs
-                    If Not skillList.Contains(si) Then
-                        skillList.Add(si)
-                    End If
-                Next
-
-                Dim doTheInitialJob As Boolean = True
-                Dim dbPortfolioNames As New SortedList(Of String, String)
-
-                ' if Portfolio with active Projects is given and exists:  
-                ' then we probably do have a brownfield
-                If myActivePortfolio <> "" Then
-                    ' load portfolio projects 
-                    ' now store the Portfolio , with name portfolioName
-                    Dim errMsg As New clsErrorCodeMsg
-                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
-                    doTheInitialJob = Not dbPortfolioNames.ContainsKey(myActivePortfolio)
-                End If
-
-                If doTheInitialJob Then
-                    allOk = processProjectListWithoutActivePortfolio(aggregationList,
-                                                                     skillList,
-                                                                     portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
-                Else
-                    ' check whether and how projects are fitting to the already existing Portfolio 
-                    allOk = processProjectListWithActivePortfolio(aggregationList,
-                                                                     skillList,
-                                                                     myActivePortfolio, dbPortfolioNames(myActivePortfolio), portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
-                End If
-
-            Else
-                ' no additional logger necessary - is done in storeImportProjekte
-            End If
-
-
-            ' now empty the complete session  
-            Call emptyRPASession()
-            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProjectList.ToString, myName)
 
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "errors occurred when processing: " & PTRpa.visboProjectList.ToString, myName & ": " & ex.Message)
