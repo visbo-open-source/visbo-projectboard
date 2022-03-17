@@ -5615,6 +5615,7 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Sub awinImportProjectmitHrchy(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
 
+        Dim err As New clsErrorCodeMsg
         Dim zeile As Integer, spalte As Integer
         Dim hproj As New clsProjekt
         Dim ProjektdauerIndays As Integer = 0

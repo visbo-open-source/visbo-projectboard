@@ -1162,6 +1162,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim leadPersonIsRegistered As Boolean = False
 
         'Verwenden Sie den code wie folgt
 
@@ -1246,6 +1247,32 @@ Public Class Request
                     vpid = vpErg.ElementAt(0)._id
                     aktvp = vpErg.ElementAt(0)
                     storedVP = (vpid <> "")
+
+                    ' action to invite the project.leadPerson into the new created project
+
+                    If Not IsNothing(projekt.leadPerson) And projekt.leadPerson <> "" Then
+                        'Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+
+                        Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
+                        ' find visbo Project Admin GroupID
+                        For Each grp In groups
+                            If LCase(grp.name) = LCase("Visbo Project Admin") Then
+                                'invite the projekt.leadPerson to this group
+                                Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
+                                For Each u In newManager
+                                    If LCase(u.email) = LCase(projekt.leadPerson) Then
+                                        aktvp.managerID = u.userId
+                                    End If
+                                Next
+
+                                Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                                If vpList.Count <= 0 Then
+                                    Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                End If
+                            End If
+                        Next
+                    End If
+
 
                     ' VP im Cache ergänzen
                     If VRScache.VPsN.ContainsKey(aktvp.name) Then
@@ -3243,6 +3270,39 @@ Public Class Request
         storeVCsettingsToDB = result
     End Function
 
+    ''' <summary>
+    ''' read of the users of a visbo center
+    ''' </summary>
+    ''' <param name="userEmail"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+
+    Public Function retrieveUsersFromDB(ByVal userEmail As String, ByRef err As clsErrorCodeMsg) As List(Of clsUserReg)
+
+        Dim result As New List(Of clsUserReg)
+        Try
+
+
+            Dim allUsers As New List(Of clsUserReg)
+            ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
+            allUsers = GETallUserOfVC(aktVCid, err)
+
+            For Each pers In allUsers
+                If LCase(pers.email) = LCase(userEmail) Then
+                    result.Add(pers)
+                End If
+            Next
+
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "retrieveUsersFromDB", ex.Message)
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrieveUsersFromDB = result
+
+    End Function
+
     Public Function retrieveAllVCSettingFromDB(ByRef err As clsErrorCodeMsg,
                                                ByRef appearanceResult As SortedList(Of String, clsAppearance),
                                                ByRef customfieldsResult As clsCustomFieldDefinitions,
@@ -4127,7 +4187,9 @@ Public Class Request
                             End If
 
                         End If
-                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRequest now was successful: (anzError=" & anzError.ToString & ")")
+                        If awinSettings.visboDebug Then
+                            Call logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRequest now was successful: (anzError=" & anzError.ToString & ")")
+                        End If
 
                         hresp = Nothing
                         toDo = False
@@ -4245,6 +4307,7 @@ Public Class Request
                                     End Select
 
                                 Else
+
                                     Dim msgtxt As String = "second try form request.GetRequestStream(): " & hresp.StatusCode
                                     Call logger(ptErrLevel.logInfo, msgtxt, "(2)GetRestServerResponse", anzFehler)
 
@@ -4273,10 +4336,12 @@ Public Class Request
                             Case WebExceptionStatus.ConnectionClosed
                             Case WebExceptionStatus.CacheEntryNotFound
                             Case Else
-                                Dim msgtxt As String = "WebExceptionStatus: " & ex.Status
-                                Dim outputCollection As New Collection
-                                outputCollection.Add(msgtxt)
-                                Call logger(ptErrLevel.logInfo, msgtxt, "(3)GetRestServerResponse", anzFehler)
+                                If awinSettings.visboDebug Then
+                                    Dim msgtxt As String = "WebExceptionStatus: " & ex.Status
+                                    Dim outputCollection As New Collection
+                                    outputCollection.Add(msgtxt)
+                                    Call logger(ptErrLevel.logInfo, msgtxt, "(3)GetRestServerResponse", anzFehler)
+                                End If
                                 response = hresp
                                 Exit While
                         End Select
@@ -4368,15 +4433,19 @@ Public Class Request
                                             '    Exit While
 
                                         Case Else
-                                            Dim msgtxt As String = "WebExceptionStatus: " & ex.Status & " HttpStatusCode: (" & hresp.StatusCode & ") " & hresp.StatusDescription
-                                            Call logger(ptErrLevel.logError, msgtxt, "(4)GetRestServerResponse", anzFehler)
+                                            If awinSettings.visboDebug Then
+                                                Dim msgtxt As String = "WebExceptionStatus: " & ex.Status & " HttpStatusCode: (" & hresp.StatusCode & ") " & hresp.StatusDescription
+                                                Call logger(ptErrLevel.logError, msgtxt, "(4)GetRestServerResponse", anzFehler)
+                                            End If
                                             response = hresp
                                             Exit While
                                     End Select
 
                                 Case Else
-                                    Dim msgtxt As String = "WebExceptionStatus: (" & ex.Status & ") " & ex.Message
-                                    Call logger(ptErrLevel.logError, msgtxt, "(5)GetRestServerResponse", anzFehler)
+                                    If awinSettings.visboDebug Then
+                                        Dim msgtxt As String = "WebExceptionStatus: (" & ex.Status & ") " & ex.Message
+                                        Call logger(ptErrLevel.logError, msgtxt, "(5)GetRestServerResponse", anzFehler)
+                                    End If
                                     response = hresp
                                     Exit While
                             End Select
@@ -4738,6 +4807,174 @@ Public Class Request
     End Function
 
 
+    ''' <summary>
+    ''' Holt  aus VisboCenter mit vcid alle registrierten user
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <returns>VisboCenter mit allen Eigenschaften</returns>
+    Private Function GETallUserOfVC(ByVal vcid As String, ByRef err As clsErrorCodeMsg) As List(Of clsUserReg)
+
+        Dim result As New List(Of clsUserReg)
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest
+            serverUriString = serverUriString & "/" & vcid & "/user"
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As String
+            Dim webVCantwort As clsWebVCUser
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCantwort = JsonConvert.DeserializeObject(Of clsWebVCUser)(Antwort)
+            End Using
+
+            If errcode = 200 Then           'success
+                ' Call MsgBox(webVCantwort.message & vbCrLf & "es existieren " & webVCantwort.vc.Count & "VisboCenters")
+                result = webVCantwort.user
+            Else
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallUserOfVC", errcode, errmsg & " : " & webVCantwort.message)
+
+            End If
+            err.errorCode = errcode
+            err.errorMsg = errmsg
+
+        Catch ex As Exception
+            err.errorCode = errcode
+            err.errorMsg = errmsg
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETallUserOfVC = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' Holt  aus Projekt mit vpid alle definierten Berechtigungs-Gruppen
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <returns>all groups of VP </returns>
+    Private Function GETallGroupsOfVP(ByVal vpid As String, ByRef err As clsErrorCodeMsg) As List(Of clsGroup)
+
+        Dim result As New List(Of clsGroup)
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vp"
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest
+            serverUriString = serverUriString & "/" & vpid & "/group"
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As String
+            Dim webVPantwort As clsWebGroups
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVPantwort = JsonConvert.DeserializeObject(Of clsWebGroups)(Antwort)
+            End Using
+
+            If errcode = 200 Then           'success
+                ' Call MsgBox(webVCantwort.message & vbCrLf & "es existieren " & webVCantwort.vc.Count & "VisboCenters")
+                result = webVPantwort.groups
+            Else
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallGroupsOfVP", errcode, errmsg & " : " & webVPantwort.message)
+
+            End If
+            err.errorCode = errcode
+            err.errorMsg = errmsg
+
+        Catch ex As Exception
+            err.errorCode = errcode
+            err.errorMsg = errmsg
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETallGroupsOfVP = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' invites the user "userEmail" to the group "groupID" for the project vpid
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="groupID"></param>
+    ''' <param name="userEmail"></param>
+    ''' <returns>all users in this vp and group </returns>
+    Private Function POSTUserToGroupOfVP(ByVal vpid As String, ByVal groupID As String, ByVal userEmail As String, ByRef err As clsErrorCodeMsg) As List(Of clsUser)
+
+        Dim result As New List(Of clsUser)
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vp"
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest
+            serverUriString = serverUriString & "/" & vpid & "/group/" & groupID & "/user"
+            Dim serverUri As New Uri(serverUriString)
+
+            ' DATA - Block zusammensetzen
+            Dim user As New clsUser
+            user.email = userEmail
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = serverInputDataJson(user, "")
+
+            Dim Antwort As String
+            Dim webVPantwort As clsWebGroups
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVPantwort = JsonConvert.DeserializeObject(Of clsWebGroups)(Antwort)
+            End Using
+
+            If errcode = 200 Then           'success
+                ' Call MsgBox(webVCantwort.message & vbCrLf & "es existieren " & webVCantwort.vc.Count & "VisboCenters")
+                If webVPantwort.groups.Count > 0 Then
+                    result = webVPantwort.groups(0).users
+                End If
+
+            Else
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallGroupsOfVP", errcode, errmsg & " : " & webVPantwort.message)
+
+            End If
+            err.errorCode = errcode
+            err.errorMsg = errmsg
+
+        Catch ex As Exception
+            err.errorCode = errcode
+            err.errorMsg = errmsg
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        POSTUserToGroupOfVP = result
+
+    End Function
     ''' <summary>
     ''' Holt alle VisboProject zu dem VisboCenter vcid 
     ''' und baut im Cache die Liste VPsId sortiert nach id und die VPsN sortiert nach Namen auf
@@ -8376,7 +8613,7 @@ Public Class Request
                                             ByVal webAntwortMsg As String, Optional ByVal withBreak As Boolean = False) As Boolean
 
         Dim result As Boolean = False
-
+        Dim msgTxt As String = ""
         Try
 
             Select Case errcode
@@ -8453,6 +8690,9 @@ Public Class Request
                 Case Else
 
             End Select
+
+            msgTxt = errcode & ": Fehler in " & restCall & " : " & webAntwortMsg
+            Call logger(ptErrLevel.logError, "errorHandling_withBreak", msgTxt)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

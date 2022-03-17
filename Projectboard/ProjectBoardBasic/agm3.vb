@@ -3987,6 +3987,8 @@ Public Module agm3
         BussUndBettag = d
     End Function
 
+
+
     ''' <summary>
     ''' liest Projekte gemäß Konfiguration ein 
     ''' </summary>
@@ -9430,4 +9432,6 @@ Public Module agm3
         appInstance.EnableEvents = formerEE
 
     End Sub
+
+
 End Module

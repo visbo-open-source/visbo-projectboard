@@ -34,8 +34,8 @@ Imports System.Web
 
 'Weitere Informationen erhalten Sie in der Menüband-XML-Dokumentation in der Hilfe zu Visual Studio-Tools für Office.
 
-<Runtime.InteropServices.ComVisible(True)> _
-    Public Class Ribbon1
+<Runtime.InteropServices.ComVisible(True)>
+Public Class Ribbon1
     Implements Microsoft.Office.Core.IRibbonExtensibility
 
     Private ribbon As Microsoft.Office.Core.IRibbonUI
@@ -3244,7 +3244,7 @@ Imports System.Web
                     Else
                         tmpLabel = "Modify Budget (Planning Version)"
                     End If
-                    Else
+                Else
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                         tmpLabel = "Ändern Attribute"
                     Else

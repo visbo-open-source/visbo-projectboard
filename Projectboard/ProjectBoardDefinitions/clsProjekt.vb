@@ -39,6 +39,7 @@ Public Class clsProjekt
     ' tk ergänzt am 12.6.18 eine Kundeninterne Nummer 
     ' kann als eine vom Kunden vergebene Kundenspezifische Projekt-Nummer benutzt werden
     Private _kundenNummer As String = ""
+
     Public Property kundenNummer As String
         Get
             kundenNummer = _kundenNummer

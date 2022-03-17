@@ -99,6 +99,7 @@
     <Compile Include="clsSubRoleID.vb" />
     <Compile Include="clsTSOOrganisationWeb.vb" />
     <Compile Include="clsTSORoleDefinitionWeb.vb" />
+    <Compile Include="clsUser.vb" />
     <Compile Include="clsVarTs.vb" />
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />
@@ -111,6 +112,7 @@
     <Compile Include="clsWebCapa.vb" />
     <Compile Include="clsWebCostVPv.vb" />
     <Compile Include="clsWebEmail.vb" />
+    <Compile Include="clsWebGroups.vb" />
     <Compile Include="clsWebVCSettingAppearance.vb" />
     <Compile Include="clsWebVCSettingconfiguration.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
@@ -137,7 +139,7 @@
     <Compile Include="clsUserReg.vb" />
     <Compile Include="clsUserProfile.vb" />
     <Compile Include="clsVC.vb" />
-    <Compile Include="clsUser.vb" />
+    <Compile Include="clsWebVCUser.vb" />
     <Compile Include="clsWebOneVC.vb" />
     <Compile Include="clsWebOutput.vb" />
     <Compile Include="clsWebUser.vb" />
