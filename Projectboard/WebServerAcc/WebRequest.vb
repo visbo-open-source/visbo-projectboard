@@ -2950,17 +2950,18 @@ Public Class Request
 
             If anz = 1 Then
 
+
+                listofOrgaWeb.timestamp = DateTimeToISODate(ts.ToUniversalTime)
+                Dim oldTs As Date = DateTimeToISODate(oldOrga.timestamp.ToUniversalTime)
+
+
                 ' Update der Organisation - Setting
-                If oldOrga.timestamp.ToLocalTime.Year = ts.Year And
-                            oldOrga.timestamp.ToLocalTime.Month = ts.Month Then
-
-                    listofOrgaWeb.timestamp = DateTimeToISODate(ts.ToUniversalTime)
-
+                If oldTs.Year = listofOrgaWeb.timestamp.Year And
+                            oldTs.Month = listofOrgaWeb.timestamp.Month Then
 
                     result = PUTOneTSOrganisation(aktVCid, listofOrgaWeb, tsoOrgaID, err)
                 Else
                     ' Create der TSOOrganisation
-                    listofOrgaWeb.timestamp = DateTimeToISODate(ts.ToUniversalTime)
                     result = POSTOneTSOrganisation(aktVCid, listofOrgaWeb, err)
                 End If
 
@@ -3484,6 +3485,8 @@ Public Class Request
 
             orgaListe = New List(Of clsTSOOrganisationWeb)
             orgaListe = GETOneTSOrganisation(aktVCid, validfrom, "", err, refnext, hierarchy, withCapa)
+
+            'orgaListe = GETOneTSOrganisation(aktVCid, Date.MinValue, "", err, refnext, hierarchy, withCapa)
 
             If awinSettings.visboDebug Then
                 logger(ptErrLevel.logInfo, "retrieveTSOrgaFromDB", "after reading the  Organisation: (" & err.errorCode & ")")
@@ -7181,13 +7184,23 @@ Public Class Request
                 If refnext Then
                     serverUriString = serverUriString & "&refDate=" & timestamp
                     serverUriString = serverUriString & "&refNext=" & refnext.ToString
+
                 End If
             End If
             If hierarchy Then
-                serverUriString = serverUriString & "&hierarchy=1"
+                If serverUriString.Contains("?") Then
+                    serverUriString = serverUriString & "&hierarchy=1"
+                Else
+                    serverUriString = serverUriString & "?hierarchy=1"
+                End If
             End If
+
             If withCapa Then
-                serverUriString = serverUriString & "&withCapa=1"
+                If serverUriString.Contains("?") Then
+                    serverUriString = serverUriString & "&withCapa=1"
+                Else
+                    serverUriString = serverUriString & "?withCapa=1"
+                End If
             End If
 
 
@@ -7289,15 +7302,15 @@ Public Class Request
                 result = True
             Else
                 ' Fehlerbehandlung je nach errcode
-                Dim statError As Boolean = errorHandling_withBreak("POSTOneVCsetting", errcode, errmsg & " : " & webTSOOrga.message)
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneTSOrganisation", errcode, errmsg & " : " & webTSOOrga.message)
             End If
 
 
             err.errorCode = errcode
-            err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webTSOOrga.message
+            err.errorMsg = "POSTOneTSOrganisation" & " : " & errmsg & " : " & webTSOOrga.message
 
         Catch ex As Exception
-            Call logger(ptErrLevel.logError, ex.Message, "POSTOneVCsetting: ", anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "POSTOneTSOrganisation: ", anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 

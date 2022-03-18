@@ -8852,6 +8852,7 @@ Public Module agm2
                 importedCustomization.missingDefinitionColor = awinSettings.missingDefinitionColor
 
                 importedCustomization.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
+                importedCustomization.isActualDataRelevant = awinSettings.ActualdataOrgaUnits
 
                 importedCustomization.onePersonOneRole = awinSettings.onePersonOneRole
                 importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
@@ -9008,7 +9009,9 @@ Public Module agm2
         Else  ' Import mit Configuration
 
             ' Auslesen der Rollen Definitionen 
-            Call readRoleDefinitionsWithConfig(orgaSheet, newRoleDefinitions, outputCollection, configListe)
+            Dim outputline As String = "Import of a downloaded Organisation no longer supported. Please use the upload of an organisation in the Visbo WEB UI"
+            outputCollection.Add(outputline)
+            'Call readRoleDefinitionsWithConfig(orgaSheet, newRoleDefinitions, outputCollection, configListe)
         End If
 
 
@@ -9080,18 +9083,24 @@ Public Module agm2
                             .allCosts = newCostDefinitions
                             ' ur:20210201: auf Anweisung von TK .validFrom = validFrom
                             ' aktuell soll nur eine Organisation (also alle gleiches validFrom) im VC gespeichert sein
-                            If Not IsNothing(oldOrga) Then
-                                Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
-                                .validFrom = oldOrga.validFrom
-                            Else
-                                Call logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
-                                ' es existiert noch keine Orga
-                                .validFrom = validFrom
-                            End If
+                            ' mit ReSt-Server Version 22-3 oder mit TSOrga soll das validFrom auch hergenommen werden
+                            'If Not IsNothing(oldOrga) Then
+                            '    Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
+                            '    .validFrom = validFrom
+                            'Else
+                            '    Call logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
+                            '    ' es existiert noch keine Orga
+                            '    .validFrom = validFrom
+                            'End If
+
+                            .validFrom = validFrom
+                            Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the new Organisation will be " & importedOrga.validFrom.ToString)
+
                         End With
 
                         ' es werden die ActualData relevante OrgaUnits geholt und ggfs. auch korrigiert
-                        Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
+                        'Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
+                        Dim actDataRelevantOrgaUnits As String = awinSettings.ActualdataOrgaUnits
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -21618,7 +21627,11 @@ Public Module agm2
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
                         ' ur:20210729 kommt nun eigentlich von Organisation
                         If awinSettings.ActualdataOrgaUnits = "" Then
-                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                            If customizations.isActualDataRelevant <> "" Then
+                                awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
+                            Else
+                                awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                            End If
                         End If
                         awinSettings.onePersonOneRole = customizations.onePersonOneRole
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
@@ -21701,13 +21714,20 @@ Public Module agm2
                 Try
                     ' jetzt die CurrentOrga definieren
                     Dim currentOrga As New clsOrganisation
+                    Dim nextOrga As New clsOrganisation
 
-                    ' jetzt werden die ORganisation ausgelesen 
-                    ' wenn es keine Organisation gibt , d
+                    ' jetzt werden die ORganisationen ausgelesen 
+                    ' die aktuell gültige und die nächste, sofern schon verfügbar
+
+                    ' ur: before TSOrganisation
+                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
                     currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
 
-                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+                    nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, True, True, True)
+                    If nextOrga.count > 0 Then
+                        validOrganisations.addOrga(nextOrga)
+                    End If
 
                     If currentOrga.count > 0 Then
 
@@ -26342,6 +26362,7 @@ Public Module agm2
         customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
 
         customizations.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
+        customizations.isActualDataRelevant = awinSettings.ActualdataOrgaUnits
 
         customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
