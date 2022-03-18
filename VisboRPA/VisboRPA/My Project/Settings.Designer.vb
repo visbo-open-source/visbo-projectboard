@@ -15,7 +15,7 @@ Option Explicit On
 Namespace My
     
     <Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute(),  _
-     Global.System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.8.0.0"),  _
+     Global.System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0"),  _
      Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Advanced)>  _
     Partial Friend NotInheritable Class MySettings
         Inherits Global.System.Configuration.ApplicationSettingsBase
@@ -66,13 +66,16 @@ Namespace My
             End Set
         End Property
         
-        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data")>  _
-        Public ReadOnly Property rpaPath() As String
+         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data\RPA")>  _
+        Public Property rpaPath() As String
             Get
                 Return CType(Me("rpaPath"),String)
             End Get
+            Set
+                Me("rpaPath") = value
+            End Set
         End Property
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
@@ -84,6 +87,75 @@ Namespace My
             End Get
             Set
                 Me("swPath") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property VisboCenter() As String
+            Get
+                Return CType(Me("VisboCenter"),String)
+            End Get
+            Set
+                Me("VisboCenter") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property activePortfolio() As String
+            Get
+                Return CType(Me("activePortfolio"),String)
+            End Get
+            Set
+                Me("activePortfolio") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+        Public Property rememberUserPWD() As Boolean
+            Get
+                Return CType(Me("rememberUserPWD"),Boolean)
+            End Get
+            Set
+                Me("rememberUserPWD") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data\RPA\settings")>  _
+        Public Property VisboConfigFiles() As String
+            Get
+                Return CType(Me("VisboConfigFiles"),String)
+            End Get
+            Set
+                Me("VisboConfigFiles") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("https://dev.visbo.net/api")>  _
+        Public ReadOnly Property VisboURL() As String
+            Get
+                Return CType(Me("VisboURL"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property proxyURL() As String
+            Get
+                Return CType(Me("proxyURL"),String)
+            End Get
+            Set
+                Me("proxyURL") = value
             End Set
         End Property
     End Class

@@ -44,9 +44,6 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MongoDB.Bson">
-      <HintPath>..\MongoDbAccess\CSharpDriver\MongoDB.Bson.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -110,10 +107,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
-      <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
-      <Name>MongoDbAccess</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>

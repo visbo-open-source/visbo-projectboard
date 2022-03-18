@@ -78,6 +78,7 @@
     <Compile Include="clsAppearanceWeb.vb" />
     <Compile Include="clsBewertungWeb.vb" />
     <Compile Include="clsCache.vb" />
+    <Compile Include="clsConfigurationWeb.vb" />
     <Compile Include="clsCustomFieldDefinitionsWeb.vb" />
     <Compile Include="clsCustomizationWeb.vb" />
     <Compile Include="clsCustomUserRolesWeb.vb" />
@@ -86,6 +87,7 @@
     <Compile Include="clsHierarchyWeb.vb" />
     <Compile Include="clsHryNodeWeb.vb" />
     <Compile Include="clsKostenartDefinitionWeb.vb" />
+    <Compile Include="clsAllUnitsDefinitionWeb.vb" />
     <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
@@ -95,6 +97,9 @@
     <Compile Include="clsStringDouble.vb" />
     <Compile Include="clsStringString.vb" />
     <Compile Include="clsSubRoleID.vb" />
+    <Compile Include="clsTSOOrganisationWeb.vb" />
+    <Compile Include="clsTSORoleDefinitionWeb.vb" />
+    <Compile Include="clsUser.vb" />
     <Compile Include="clsVarTs.vb" />
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />
@@ -104,9 +109,12 @@
     <Compile Include="clsVCSetting.vb" />
     <Compile Include="clsVCSettingTypeClasses.vb" />
     <Compile Include="clsVP_bac_rac.vb" />
+    <Compile Include="clsWebCapa.vb" />
     <Compile Include="clsWebCostVPv.vb" />
     <Compile Include="clsWebEmail.vb" />
+    <Compile Include="clsWebGroups.vb" />
     <Compile Include="clsWebVCSettingAppearance.vb" />
+    <Compile Include="clsWebVCSettingconfiguration.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
     <Compile Include="clsWebVCSettingCustomization.vb" />
     <Compile Include="clsWebVCSettingCustomroles.vb" />
@@ -119,6 +127,7 @@
     <Compile Include="clsWebVCrole.vb" />
     <Compile Include="clsWebVCSettingEverything.vb" />
     <Compile Include="clsWebVCSettingOrganisation.vb" />
+    <Compile Include="clsWebVCTSOrganisation.vb" />
     <Compile Include="clsWebVPf.vb" />
     <Compile Include="clsWebVPlock.vb" />
     <Compile Include="clsWebVPv.vb" />
@@ -130,7 +139,7 @@
     <Compile Include="clsUserReg.vb" />
     <Compile Include="clsUserProfile.vb" />
     <Compile Include="clsVC.vb" />
-    <Compile Include="clsUser.vb" />
+    <Compile Include="clsWebVCUser.vb" />
     <Compile Include="clsWebOneVC.vb" />
     <Compile Include="clsWebOutput.vb" />
     <Compile Include="clsWebUser.vb" />

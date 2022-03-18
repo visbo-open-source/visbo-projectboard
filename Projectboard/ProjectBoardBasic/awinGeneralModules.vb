@@ -4378,14 +4378,15 @@ Public Module awinGeneralModules
                         outPutCollection.Add(outputLine)
                     End If
                 Else
-                    If awinSettings.englishLanguage Then
-                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
-                        outPutCollection.Add(outputLine)
-                    Else
-                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
-                        outPutCollection.Add(outputLine)
+                    If Not visboClient.Contains("RPA") Then
+                        If awinSettings.englishLanguage Then
+                            outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
+                            outPutCollection.Add(outputLine)
+                        Else
+                            outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
+                            outPutCollection.Add(outputLine)
+                        End If
                     End If
-
                 End If
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
@@ -8392,6 +8393,7 @@ Public Module awinGeneralModules
         Dim tmpResult As Boolean = False
 
         Dim jetzt As Date = Date.Now
+        Dim isTemplate As Boolean = False
 
         enableOnUpdate = False
 
@@ -8400,7 +8402,10 @@ Public Module awinGeneralModules
 
         Try
             Dim formerVName As String = ""
-            If Not (hproj.projectType = ptPRPFType.projectTemplate) Then
+
+            isTemplate = (hproj.projectType = ptPRPFType.projectTemplate)
+
+            If Not isTemplate Then
 
                 ' die aktuelle WriteProtection holen 
                 writeProtections.adjustListe(False) = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
@@ -8426,7 +8431,7 @@ Public Module awinGeneralModules
                 ' prüfen auf Rolle 
                 formerVName = hproj.variantName
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And Not isTemplate Then
                     If hproj.variantName = "" Then
                         hproj.variantName = ptVariantFixNames.pfv.ToString
                     End If
@@ -8452,7 +8457,7 @@ Public Module awinGeneralModules
                         kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
 
                         ' abfragen, ob Portfolio MAnager
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And Not isTemplate Then
                             If hproj.variantName = ptVariantFixNames.pfv.ToString Then
                                 hproj.updatedAt = standInDB.updatedAt
                             End If

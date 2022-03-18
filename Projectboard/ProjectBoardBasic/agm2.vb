@@ -4456,8 +4456,11 @@ Public Module agm2
     Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef mapProj As clsProjekt, ByRef importdate As Date)
 
         Dim prj As MSProject.Application = Nothing
+        Dim pjApp As Object
         If modus = "RPA" Then
-            prj = New MSProject.Application
+            pjApp = CreateObject("MSProject.Application")
+            pjApp.Visible = False
+            'prj = New MSProject.Application
         End If
 
         Dim msproj As MSProject.Project
@@ -5612,6 +5615,7 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Sub awinImportProjectmitHrchy(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
 
+        Dim err As New clsErrorCodeMsg
         Dim zeile As Integer, spalte As Integer
         Dim hproj As New clsProjekt
         Dim ProjektdauerIndays As Integer = 0
@@ -7111,7 +7115,7 @@ Public Module agm2
                     Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
 
                     If outputCollection.Count > 0 Then
-                        showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "")
+                        showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "", ptErrLevel.logError)
                     End If
 
                 Catch ex As Exception
@@ -7282,6 +7286,7 @@ Public Module agm2
         Dim abstandAnfang As Double
         Dim abstandEnde As Double
         Dim lastSpaltenValue As Integer
+        Dim msgtxt As String = ""
 
 
         Dim dauerFaktor As Double = 1.0
@@ -7360,11 +7365,23 @@ Public Module agm2
                     If IsNothing(pName) Then
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Name of project is missing !"
+                        Else
+                            msgtxt = "Projekt-Name fehlt ..!"
+                        End If
+                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                     ElseIf pName.Length < 2 Then
 
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of project has to have at least two characters and it should be unique... !"
+                            Else
+                                msgtxt = "Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         Catch ex As Exception
 
                         End Try
@@ -7373,6 +7390,12 @@ Public Module agm2
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of project shound not have #, (, ), and newLine ... !"
+                            Else
+                                msgtxt = "Projekt-Name darf keine #, (, ), Zeilenumbrüche enthalten ..!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         Catch ex As Exception
 
                         End Try
@@ -7400,8 +7423,20 @@ Public Module agm2
 
                         If IsNothing(vorlageName) Then
                             CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of the template is missing !"
+                            Else
+                                msgtxt = "Name des Templates fehlt!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         ElseIf vorlageName.Trim.Length = 0 Then
                             CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Name of the template is missing !"
+                            Else
+                                msgtxt = "Name des Templates fehlt!"
+                            End If
+                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                         Else
                             If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
 
@@ -7473,29 +7508,59 @@ Public Module agm2
                                     capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(capacityNeeded, True) Then
                                         Throw New ArgumentException("ungültige Kapa-Angabe")
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Capa-Input is not valid ... !"
+                                        Else
+                                            msgtxt = "ungültige Kapa-Angabe..!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                     End If
 
                                     lastSpaltenValue = spalte + 9
                                     externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(externCostInput, False) Then
                                         Throw New ArgumentException("ungültige Kosten-Angabe")
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Input of needs is not valid ... !"
+                                        Else
+                                            msgtxt = "ungültige Kosten-Angabe ..!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                     End If
 
                                     ' Konsistenzprüfung ...
                                     ' es darf nicht sein, dass Budget und externe Kosten berechnet werden sollen ...
                                     If budget = -999 And externCostInput = "filltobudget" Then
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "There are not enough input - to calculate the budget and the external needs is not possible !"
+                                        Else
+                                            msgtxt = "unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         Throw New ArgumentException("unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden")
                                     End If
 
                                     lastSpaltenValue = spalte + 10
                                     risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If risk < 0 Or risk > 10.0 Then
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Metric Risk should be between [0 and 10] !"
+                                        Else
+                                            msgtxt = "Kennzahl Risiko muss zwischen [0 und 10] liegen!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         Throw New ArgumentException("Kennzahl Risiko muss zwischen [0 und 10] liegen")
                                     End If
 
                                     lastSpaltenValue = spalte + 11
                                     sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If sfit < 0 Or sfit > 10.0 Then
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Metric Strategic Fit should be between [0 and 10] !"
+                                        Else
+                                            msgtxt = "Kennzahl Strategie muss zwischen [0 und 10] liegen!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         Throw New ArgumentException("Kennzahl Strategie muss zwischen [0 und 10] liegen")
                                     End If
 
@@ -7514,6 +7579,12 @@ Public Module agm2
                                         End While
 
                                         If Not found Then
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "unknown business unit !"
+                                            Else
+                                                msgtxt = "Business Unit unbekannt ..!"
+                                            End If
+                                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                             Throw New ArgumentException("Business Unit unbekannt ..")
                                         End If
                                     End If
@@ -7579,11 +7650,23 @@ Public Module agm2
                                             ok = True
                                         Else
                                             CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "StartDate is before the start of calendar... !"
+                                            Else
+                                                msgtxt = "Start liegt vor Kalender-Start  ..!"
+                                            End If
+                                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                             ok = False
                                         End If
 
                                     Else
                                         CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "StartDate and EndDate are not valid... !"
+                                        Else
+                                            msgtxt = "ungültiges Start- und Ende-Datum ..!"
+                                        End If
+                                        Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         ok = False
                                     End If
 
@@ -7593,6 +7676,8 @@ Public Module agm2
                                     'Call MsgBox(ex.Message)
                                     CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                     CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+
+                                    Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & ex.Message)
                                 End Try
 
                                 ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
@@ -7654,6 +7739,12 @@ Public Module agm2
                             Else
                                 'CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
                                 CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Template " & vorlageName & " does not exists !"
+                                Else
+                                    msgtxt = "Template " & vorlageName & " fehlt!"
+                                End If
+                                Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                 ok = False
                             End If
 
@@ -7695,6 +7786,12 @@ Public Module agm2
                                     ok = False
                                     CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                     CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Project: " & pName & " variant: " & variantName & " could not be created !"
+                                    Else
+                                        msgtxt = "Projekt: " & pName & " Variante: " & variantName & " konnte nicht erzeugt werden !"
+                                    End If
+                                    Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                 End If
 
 
@@ -7707,6 +7804,12 @@ Public Module agm2
                                             If ImportProjekte.Containskey(pkey) Then
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
+                                                If awinSettings.englishLanguage Then
+                                                    msgtxt = "Project: " & hproj.name & " variant: " & hproj.variantName & " already read !"
+                                                Else
+                                                    msgtxt = "Projekt: " & hproj.name & " Variante: " & hproj.variantName & " ist bereits eingelesen !"
+                                                End If
+                                                Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                             Else
 
                                                 createdProjects = createdProjects + 1
@@ -7728,6 +7831,8 @@ Public Module agm2
                                         Catch ex As Exception
                                             CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                             CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                            msgtxt = ex.Message
+                                            Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                         End Try
 
                                     End If
@@ -7754,7 +7859,8 @@ Public Module agm2
         Catch ex As Exception
 
             Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
-
+            msgtxt = "Fehler in Portfolio-Datei" & ex.Message
+            Call logger(ptErrLevel.logError, "awinImportProjektInventur", msgtxt)
         End Try
 
         readProjects = geleseneProjekte
@@ -8746,6 +8852,7 @@ Public Module agm2
                 importedCustomization.missingDefinitionColor = awinSettings.missingDefinitionColor
 
                 importedCustomization.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
+                importedCustomization.isActualDataRelevant = awinSettings.ActualdataOrgaUnits
 
                 importedCustomization.onePersonOneRole = awinSettings.onePersonOneRole
                 importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
@@ -8902,7 +9009,9 @@ Public Module agm2
         Else  ' Import mit Configuration
 
             ' Auslesen der Rollen Definitionen 
-            Call readRoleDefinitionsWithConfig(orgaSheet, newRoleDefinitions, outputCollection, configListe)
+            Dim outputline As String = "Import of a downloaded Organisation no longer supported. Please use the upload of an organisation in the Visbo WEB UI"
+            outputCollection.Add(outputline)
+            'Call readRoleDefinitionsWithConfig(orgaSheet, newRoleDefinitions, outputCollection, configListe)
         End If
 
 
@@ -8974,18 +9083,24 @@ Public Module agm2
                             .allCosts = newCostDefinitions
                             ' ur:20210201: auf Anweisung von TK .validFrom = validFrom
                             ' aktuell soll nur eine Organisation (also alle gleiches validFrom) im VC gespeichert sein
-                            If Not IsNothing(oldOrga) Then
-                                Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
-                                .validFrom = oldOrga.validFrom
-                            Else
-                                Call logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
-                                ' es existiert noch keine Orga
-                                .validFrom = validFrom
-                            End If
+                            ' mit ReSt-Server Version 22-3 oder mit TSOrga soll das validFrom auch hergenommen werden
+                            'If Not IsNothing(oldOrga) Then
+                            '    Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
+                            '    .validFrom = validFrom
+                            'Else
+                            '    Call logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
+                            '    ' es existiert noch keine Orga
+                            '    .validFrom = validFrom
+                            'End If
+
+                            .validFrom = validFrom
+                            Call logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the new Organisation will be " & importedOrga.validFrom.ToString)
+
                         End With
 
                         ' es werden die ActualData relevante OrgaUnits geholt und ggfs. auch korrigiert
-                        Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
+                        'Dim actDataRelevantOrgaUnits As String = importedOrga.allRoles.getActualdataOrgaUnits
+                        Dim actDataRelevantOrgaUnits As String = awinSettings.ActualdataOrgaUnits
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -13847,6 +13962,9 @@ Public Module agm2
                                     validPNameRoleNameIDs.Add(pName, tmpRoleNameListe)
                                 End If
                             Else
+                                outPutLine = "ImportIstdatenStdFormat , Unkown Project: " & pName
+                                outputCollection.Add(outPutLine)
+
                                 ' Call logger
                                 ReDim logArray(5)
                                 logArray(0) = "Unbekanntes Projekt"
@@ -13928,34 +14046,41 @@ Public Module agm2
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
                             Dim pName As String = handledNames(tmpPName)
 
-                            Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
-                            Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+                            ' ur:08022022: eingefügt
+                            'nur wenn das Projekt existiert d.h. in der Liste validPNameRoleNameIDs enthalten ist weitermachen mit den Werten der Rollen
+                            If validPNameRoleNameIDs.ContainsKey(pName) Then
+                                Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
+                                Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
 
-                            Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
+                                Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
 
 
-                            Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
-                            Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
-                            Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
-                            Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
+                                Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
+                                Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                                Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
+                                Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
 
-                            ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
-                            Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
+                                ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
+                                Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
 
-                            Dim weitermachen As Boolean = False
-                            If (curIstPTValue > 0 And curIstEuroValue = 0) Then
-                                ' der Wert ist schon in curIstPtValue 
-                                weitermachen = True
-                            ElseIf curIstPTValue = 0 And curIstEuroValue > 0 And currentRole.tagessatzIntern > 0 Then
-                                curIstPTValue = curIstEuroValue / currentRole.tagessatzIntern
-                                weitermachen = True
+                                Dim weitermachen As Boolean = False
+                                If (curIstPTValue > 0 And curIstEuroValue = 0) Then
+                                    ' der Wert ist schon in curIstPtValue 
+                                    weitermachen = True
+                                ElseIf curIstPTValue = 0 And curIstEuroValue > 0 And currentRole.tagessatzIntern > 0 Then
+                                    curIstPTValue = curIstEuroValue / currentRole.tagessatzIntern
+                                    weitermachen = True
+                                Else
+                                    weitermachen = False
+                                End If
+
+                                If weitermachen Then
+                                    validProjectNames.Item(pName).Item(roleName)(ixPos) = validProjectNames.Item(pName).Item(roleName)(ixPos) + curIstPTValue
+                                End If
                             Else
-                                weitermachen = False
+                                'Projekt pName nicht vorhanden => keine Istdaten eintragen
                             End If
-
-                            If weitermachen Then
-                                validProjectNames.Item(pName).Item(roleName)(ixPos) = validProjectNames.Item(pName).Item(roleName)(ixPos) + curIstPTValue
-                            End If
+                            'ur: 08022022: eingefügt
 
                         Else
                             ' Fehler wurde bereits in Schleife 1 entdeckt und protokolliert 
@@ -14140,7 +14265,7 @@ Public Module agm2
             ReDim logArray(1)
             logArray(0) = "Exception aufgetreten 100457: "
             logArray(1) = ex.Message
-            Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+            Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
@@ -21502,7 +21627,11 @@ Public Module agm2
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
                         ' ur:20210729 kommt nun eigentlich von Organisation
                         If awinSettings.ActualdataOrgaUnits = "" Then
-                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                            If customizations.isActualDataRelevant <> "" Then
+                                awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
+                            Else
+                                awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                            End If
                         End If
                         awinSettings.onePersonOneRole = customizations.onePersonOneRole
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
@@ -21585,11 +21714,20 @@ Public Module agm2
                 Try
                     ' jetzt die CurrentOrga definieren
                     Dim currentOrga As New clsOrganisation
+                    Dim nextOrga As New clsOrganisation
 
-                    ' jetzt werden die ORganisation ausgelesen 
-                    ' wenn es keine Organisation gibt , d
+                    ' jetzt werden die ORganisationen ausgelesen 
+                    ' die aktuell gültige und die nächste, sofern schon verfügbar
 
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+                    ' ur: before TSOrganisation
+                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
+
+                    nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, True, True, True)
+                    If nextOrga.count > 0 Then
+                        validOrganisations.addOrga(nextOrga)
+                    End If
 
                     If currentOrga.count > 0 Then
 
@@ -25623,6 +25761,12 @@ Public Module agm2
         readInterneAnwesenheitslistenAllg = listOfArchivFiles
 
     End Function
+    ''' <summary>
+    ''' zeuss-Datei wegen Arbeitsverteilung eines Monats checken
+    ''' </summary>
+    ''' <param name="kapaConfig"></param>
+    ''' <param name="listOfFiles"></param>
+    ''' <returns></returns>
     Public Function createReferenzListe(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport), ByVal listOfFiles As ObjectModel.ReadOnlyCollection(Of String)) As SortedList(Of String, String)
         ' the beginning and the end of the calendar in the capafile an the actualData are different
 
@@ -25725,7 +25869,7 @@ Public Module agm2
     End Function
 
     ''' <summary>
-    ''' verschiebt die Dateien von listOfFiles in den Folder 'folder\archiv'
+    ''' verschiebt die Dateien von der Liste "listOfFiles" in den Folder '...\archiv'
     ''' </summary>
     ''' <param name="listOfFiles"></param>
     ''' <param name="folder"></param>
@@ -25923,16 +26067,26 @@ Public Module agm2
     Function createTemplateOfProject(ByVal hproj As clsProjekt) As clsProjektvorlage
 
         Dim projVorlage As New clsProjektvorlage
-        projVorlage.VorlagenName = hproj.name
-        projVorlage.Schrift = hproj.Schrift
-        projVorlage.Schriftfarbe = hproj.Schriftfarbe
-        ' tk farbe is now defined via business Unit
-        ' projVorlage.farbe = hproj.farbe
-        projVorlage.earliestStart = -6
-        projVorlage.latestStart = 6
-        projVorlage.Erloes = hproj.Erloes
-        projVorlage.AllPhases = hproj.AllPhases
-        projVorlage.hierarchy = hproj.hierarchy
+
+        Try
+            If Not IsNothing(hproj) Then
+                projVorlage.VorlagenName = hproj.name
+                projVorlage.Schrift = hproj.Schrift
+                projVorlage.Schriftfarbe = hproj.Schriftfarbe
+                ' tk farbe is now defined via business Unit
+                ' projVorlage.farbe = hproj.farbe
+                projVorlage.earliestStart = -6
+                projVorlage.latestStart = 6
+                projVorlage.Erloes = hproj.Erloes
+                projVorlage.AllPhases = hproj.AllPhases
+                projVorlage.hierarchy = hproj.hierarchy
+            Else
+                Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined")
+            End If
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined")
+        End Try
 
         createTemplateOfProject = projVorlage
     End Function
@@ -26208,6 +26362,7 @@ Public Module agm2
         customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
 
         customizations.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
+        customizations.isActualDataRelevant = awinSettings.ActualdataOrgaUnits
 
         customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
@@ -26300,6 +26455,145 @@ Public Module agm2
         End Try
 
         ISODateToDateTime = newDate
+    End Function
+
+
+    Public Function transformCapa(ByVal roleDef As clsRollenDefinition) As List(Of clsCapa)
+
+        Dim newCapas As New List(Of clsCapa)
+        Dim newCapaYear As New clsCapa
+        With roleDef
+
+            Dim dbKapa() As Double = Nothing
+            ' damit wird festgelegt, ab wo im kapazitaet240 Array die dbKApa Werte zu platzieren sind ...
+            Dim startOfNonStandardValues As Date = Date.MinValue
+
+            ' jetzt die SubRoles übernehmen 
+            If .getSubRoleCount >= 1 Then
+                'For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
+                '    Dim sr As New clsSubRoleID
+                '    sr.key = kvp.Key
+                '    'sr.value = kvp.Value.ToString
+                '    sr.value = kvp.Value
+                '    Me.subRoleIDs.Add(sr)
+                'Next
+
+            Else
+                ' das kann nur bei Blättern der Fall sein, alle übergeordneten Orga-Units, also solche die Kinder haben, bekommen ihre Kapa aus den "Blättern"
+                ' nachsehen, ob es irgendwelche Non-Default Kapa Werte gibt 
+                Dim anzahlMonate As Integer = roleDef.kapazitaet.Length - 1
+
+
+                Dim startingIndex As Integer = -1
+                Dim endingIndex As Integer = anzahlMonate + 1
+
+                For i As Integer = 1 To anzahlMonate
+                    If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                        startingIndex = i
+                        Exit For
+                    End If
+                Next
+
+                If startingIndex = -1 Then
+                    ' alle Kapa-Werte sind Standard 
+                    ' das heisst man kann es bei den Voreinstellungen lassen 
+                    ' 
+                    dbKapa = Nothing
+                    startOfNonStandardValues = Date.MinValue
+
+                Else
+                    ' startingIndex kann jetzt nur Werte zwischen 1 und 240 haben ..
+                    startOfNonStandardValues = StartofCalendar.AddMonths(startingIndex - 1)
+
+                    endingIndex = anzahlMonate
+
+                    For i As Integer = anzahlMonate To startingIndex Step -1
+                        If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                            endingIndex = i
+                            Exit For
+                        End If
+                    Next
+
+
+                    Dim hstartOfYear As Date = startOfNonStandardValues
+
+                    Dim firstMonth As Integer = hstartOfYear.Month
+                    Dim firstDay As Integer = hstartOfYear.Day
+                    hstartOfYear = DateSerial(hstartOfYear.Year, 1, 1)
+                    hstartOfYear = hstartOfYear
+
+                    Dim modEnd As Integer = 0
+                    Dim modStart As Integer = 0
+
+                    ' calc count of years
+
+                    Dim quotEnd As Integer = Math.DivRem(endingIndex, 12, modEnd)
+                    Dim quotStart As Integer = Math.DivRem(startingIndex, 12, modStart)
+                    Dim anzYears As Integer = quotEnd - quotStart
+                    Dim modulo As Integer = 0
+                    Dim resultY As Integer = Math.DivRem(endingIndex - startingIndex + 1, 12, modulo)
+
+
+                    ' fill the year-Arrays
+
+                    For iY As Integer = 0 To anzYears - 1
+                        newCapaYear = New clsCapa
+                        newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + iY, 1, 1)
+                        newCapaYear.roleID = roleDef.UID
+                        For iM As Integer = 0 To 11
+                            newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(startingIndex - (modStart - 1) + iM))
+                        Next
+                        newCapas.Add(newCapaYear)
+                        startingIndex = startingIndex + 12
+                    Next
+
+                    '' transform first year
+                    'For iM = 0 To firstMonth - 2
+                    '    newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
+                    'Next
+                    'For iM = firstMonth - 1 To Math.Min(11, anzahlMonate)
+                    '    newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(iM - firstMonth + startingIndex - 1))
+                    '    todos = todos - 1
+                    'Next
+                    'anzahlMonate = anzahlMonate - todos
+                    'If anzahlMonate < 11 And todos = 0 Then
+                    '    For k As Integer = anzahlMonate To 11
+                    '        newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
+                    '    Next
+                    'End If
+                    'newCapas.Add(newCapaYear)
+
+
+
+                    '' transform next year
+                    'While todos > 0
+                    '    newCapaYear = New clsCapa
+                    '    newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + 1, 1, 1)
+
+                    '    For j = 0 To Math.Min(11, anzahlMonate)
+                    '        newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(iM + j - firstMonth + startingIndex - 1))
+                    '        todos = todos - 1
+                    '    Next
+                    '    anzahlMonate = anzahlMonate - todos
+                    '    If anzahlMonate < 11 And todos = 0 Then
+                    '        For k As Integer = anzahlMonate To 11
+                    '            newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
+                    '        Next
+                    '    End If
+                    '    newCapas.Add(newCapaYear)
+                    'End While
+
+                End If
+
+            End If
+
+            'startOfCal = startOfNonStandardValues.ToUniversalTime
+
+
+        End With
+
+        transformCapa = newCapas
+
     End Function
 
 End Module

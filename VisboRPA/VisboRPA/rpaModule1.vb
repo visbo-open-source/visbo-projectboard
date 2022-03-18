@@ -1,4 +1,5 @@
 ﻿Imports xlns = Microsoft.Office.Interop.Excel
+
 Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports Newtonsoft.Json
@@ -7,12 +8,39 @@ Imports DBAccLayer
 Imports WebServerAcc
 Imports System.Security.Principal
 
-
+Imports System.Diagnostics
 Module rpaModule1
 
-    Public myActivePortfolio As String = ""
-    Public inputvalues As clsRPASetting = Nothing
 
+    Public myActivePortfolio As String
+    Public myVC As String
+    Public inputvalues As clsRPASetting
+
+    Public rpaPath As String
+    Public swPath As String
+
+    Public errMsgCode As clsErrorCodeMsg
+    Public msgTxt As String
+    Public errMessages As Collection
+
+    Public completedOK As Boolean = False
+    Public result As Boolean = False
+
+    Public rpaFolder As String
+    Public successFolder As String
+    Public failureFolder As String
+    Public collectFolder As String
+    Public logfileFolder As String
+    Public unknownFolder As String
+    Public settingsFolder As String
+    Public settingJsonFile As String
+
+    Public lastReadingCustomization As Date = Date.MinValue
+    Public lastReadingOrganisation As Date = Date.MinValue
+    Public lastReadingCustomFields As Date = Date.MinValue
+    Public lastReadingProjectTemplates As Date = Date.MinValue
+
+    Public watchDialog As VisboRPAStart
 
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
@@ -20,426 +48,339 @@ Module rpaModule1
         ' suggestions for Team Members will follow 
         ' automation in resource And team allocation will follow
 
-        Dim nonStop As Boolean = True
-        Dim errMsgCode As New clsErrorCodeMsg
-        Dim msgTxt As String = ""
-        Dim result As Boolean = False
+        Dim actDir = My.Computer.FileSystem.CurrentDirectory
 
-        Dim rpaPath As String = My.Settings.rpaPath
-        Dim swPath As String = My.Settings.swPath
+        'Call MsgBox("aktuellesDir:" & actDir)
 
-        Dim rpaFolder As String = My.Computer.FileSystem.CombinePath(rpaPath, "RPA")
-        Dim successFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "success")
-        Dim failureFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "failure")
-        Dim collectFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "collect")
-        Dim logfileFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "logfiles")
-        Dim unknownFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "unknown")
-        Dim settingsFolder As String = My.Computer.FileSystem.CombinePath(rpaFolder, "settings")
-        Dim settingJsonFile As String = My.Computer.FileSystem.CombinePath(settingsFolder, "rpa_setting.json")
+        ' name des aktuell laufenden Clients
+        visboClient = "VISBO RPA /"
 
-        'Dim myActivePortfolio As String = ""
-        'Dim inputvalues As clsRPASetting = Nothing
 
-        ' Read the Setting-file of RPA
-        If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-            Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-            inputvalues = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
-            ' is there a activePortfolio
-            myActivePortfolio = inputvalues.activePortfolio
+        ' check if the VisboRPA is already running
+        If IsProcessRunning("VisboRPA.exe") Then
+            Call MsgBox("VisboRPA is already running")
+            Exit Sub
+        End If
+
+        ' to reset all settings to the beginning
+        'My.Settings.Reset()
+
+        ' Zugriff zu Daten über den VisboServer
+        awinSettings.visboServer = True
+        ' default Plattform
+        awinSettings.databaseURL = My.Settings.VisboURL
+        ' default VisboCenter
+        awinSettings.databaseName = My.Settings.VisboCenter
+        ' user password merken
+        ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        If My.Settings.rememberUserPWD Then
+            awinSettings.userNamePWD = My.Settings.userNamePWD
         Else
-            ' Exit ! 
-            ' read all files, categorize and verify them  
-            msgTxt = "Exit - there is no File " & settingJsonFile
-            Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-            Console.WriteLine(msgTxt)
+            awinSettings.userNamePWD = ""
+        End If
+        ' proxy Server URL
+        awinSettings.proxyURL = My.Settings.proxyURL
+        ' Default Path für RPA
+        rpaPath = My.Settings.rpaPath
+        ' Default Portfolio zu verwenden
+        myActivePortfolio = My.Settings.activePortfolio
 
-            ' break the RPA - Service
-            nonStop = False
+        myVC = My.Settings.VisboCenter
+
+        Dim defaultPath = rpaPath
+        'Dim defaultPath = "C:\VISBO\VISBO Config Data\RPA"
+
+
+        'Init the ReSt-Server/database Access - Schnittstelle
+        If IsNothing(databaseAcc) Then
+            databaseAcc = New DBAccLayer.Request
         End If
 
 
+        ' Parameter für die Excel Instance festlegen
+        appInstance = New xlns.Application
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        appInstance.Visible = False
+        appInstance.DisplayAlerts = False
 
-        Try
-            Dim anzFiles As Integer = 0
+        'rpaPath not yet defined, therefore the defaultPath is used
+        If rpaPath = "" Then
+            rpaPath = defaultPath
+        End If
 
-            '' FileNamen für logging zusammenbauen
+        ' create DefaultDirectories if they are not exist 
+        If Not My.Computer.FileSystem.DirectoryExists(rpaPath) Then
+            My.Computer.FileSystem.CreateDirectory(rpaPath)
+        End If
+
+        rpaFolder = rpaPath
+        If Not My.Computer.FileSystem.DirectoryExists(rpaFolder) Then
+            My.Computer.FileSystem.CreateDirectory(rpaFolder)
+        End If
+
+        ' create Formula for Input of other RPA-Folder
+        watchDialog = New VisboRPAStart
+
+
+        ' FileNamen für logging zusammenbauen
+        logfileNamePath = createLogfileName(rpaFolder, "")
+
+
+        Dim err As New clsErrorCodeMsg
+        noDB = False
+
+        If awinSettings.userNamePWD <> "" Then
+
+            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+
+            dbUsername = visboCrypto.getUserNameFromCipher(awinSettings.userNamePWD)
+            dbPasswort = visboCrypto.getPwdFromCipher(awinSettings.userNamePWD)
+            
+
+            If IsNothing(awinSettings.VCid) Then
+                awinSettings.VCid = ""
+            End If
+
+            If IsNothing(databaseAcc) Then
+                databaseAcc = New DBAccLayer.Request
+            End If
+
+            'ur:08022022: soll mit Default erfragt werden
+            'Try
+            '    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
+            'Catch ex As Exception
+            '    loginErfolgreich = False
+            'End Try
+
+            If Not loginErfolgreich Then
+
+                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "Login for starting")
+                loginErfolgreich = logInToMongoDB(True)
+
+            End If
+
+        Else
+            loginErfolgreich = logInToMongoDB(True)
+        End If
+
+
+        If loginErfolgreich Then
+
+            ' FileNamen für logging zusammenbauen
             logfileNamePath = createLogfileName(rpaFolder, "")
 
-            Dim listToProcess As New SortedList(Of String, Integer)
-            Dim listToProcess2 As New SortedList(Of String, Integer)
-            Dim listActualDataFiles As New SortedList(Of String, Integer)
 
-            '    If My.Computer.FileSystem.FileExists(settingJsonFile) Then
-            '        Dim jsonSetting As String = File.ReadAllText(settingJsonFile)
-            '        Dim inputvalues As clsRPASetting = JsonConvert.DeserializeObject(Of clsRPASetting)(jsonSetting)
+            ' hierin wird der eigentliche Import erledigt
+            watchDialog.ShowDialog()
+        Else
+            ' FileNamen für logging zusammenbauen
+            logfileNamePath = createLogfileName(rpaFolder, "")
 
-            '        ' is there a activePortfolio
-            '        myActivePortfolio = inputvalues.activePortfolio
+            Call logger(ptErrLevel.logInfo, "VisboRPA: proxyURL", awinSettings.proxyURL)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Plattform", awinSettings.databaseURL)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: User", dbUsername)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: Visbo Center", awinSettings.databaseName)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: active Portfolio", myActivePortfolio)
+            Call logger(ptErrLevel.logInfo, "VisboRPA: RPA Folder", rpaFolder)
 
-            ' now check whether or not the folder are existings , if not create them 
-            If Not My.Computer.FileSystem.DirectoryExists(successFolder) Then
-                My.Computer.FileSystem.CreateDirectory(successFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(failureFolder) Then
-                My.Computer.FileSystem.CreateDirectory(failureFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(collectFolder) Then
-                My.Computer.FileSystem.CreateDirectory(collectFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(logfileFolder) Then
-                My.Computer.FileSystem.CreateDirectory(logfileFolder)
-            End If
-
-            If Not My.Computer.FileSystem.DirectoryExists(unknownFolder) Then
-                My.Computer.FileSystem.CreateDirectory(unknownFolder)
-            End If
-
-            ' read all files, categorize and verify them  
-            msgTxt = "Starting ..."
+            msgTxt = "VISBO Robotic Process automation cancelled: For more details have a look at the logfiles ....  " & rpaFolder & "\logfiles"
+            Call MsgBox(msgTxt)
+            ' Console.WriteLine(msgTxt)
             Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-
-            visboClient = "VISBO RPA / "
-
-            ' 
-            ' startUpRPA  liest orga, appearances und andere Settings - analog awinSetTypen , allerdings nie mit Versuch, etwas von Platte zu lesen ... 
-            nonStop = startUpRPA(inputvalues.VisboCenter, inputvalues.VisboUrl, swPath)
-
-
-            If nonStop Then
-                ' Sendet eine Email an den User
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & "correct start of the RPA", errMsgCode)
-
-            Else
-                msgTxt = "wrong settings - exited without performing jobs ...."
-                'Call MsgBox(msgTxt)
-                Console.WriteLine(msgTxt)
-                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & msgTxt, errMsgCode)
-
-                ' Stoppt den Service aufgrund von ungültigen Settings
-                nonStop = False
-            End If
-
-
-
-            ' never ending loop for importing the different files - RPA
-            Do While nonStop
-
-                Dim myName As String = ""
-                Dim rpaCategory As New PTRpa
-                listToProcess = New SortedList(Of String, Integer)
-                listToProcess2 = New SortedList(Of String, Integer)
-
-
-                Try
-
-                    ' Completion-File delivered?
-                    Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
-                    Dim completedOK As Boolean = (completionFiles.Count > 0)
-
-
-                    ' read all Excel based files 
-                    Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
-
-
-
-                    For Each fullFileName As String In listOfImportfiles
-
-                        myName = My.Computer.FileSystem.GetName(fullFileName)
-
-                        ' Bestimme den Import-Typ der zu importierenden Daten
-                        rpaCategory = bestimmeRPACategory(fullFileName)
-
-                        If rpaCategory = PTRpa.visboUnknown Then
-                            ' move file to unknown Folder ... 
-                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
-                        Else
-
-                            If Not listToProcess.ContainsKey(myName) Then
-                                listToProcess.Add(fullFileName, CInt(rpaCategory))
-                            End If
-                        End If
-
-                    Next
-
-                    ' read all Microsoft Project Files 
-                    listOfImportfiles = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
-                    For Each fullFileName As String In listOfImportfiles
-
-                        myName = My.Computer.FileSystem.GetName(fullFileName)
-                        rpaCategory = PTRpa.visboMPP
-
-                        If Not listToProcess.ContainsKey(myName) Then
-                            listToProcess.Add(fullFileName, CInt(rpaCategory))
-                        End If
-
-                    Next
-
-                    listOfImportfiles = Nothing
-
-                    ImportProjekte.Clear()
-                    Dim importOrganisations As New clsOrganisations
-                    Dim importCustomization As New clsCustomization
-                    Dim importAppearances As New clsAppearances
-                    Dim importDate As Date = Date.Now()
-                    Dim allOk As Boolean = False
-
-
-                    If completedOK Then
-
-                        logfileNamePath = createLogfileName(rpaFolder, myActivePortfolio)
-
-                        ' that means, all timesheets are in the RPA folder
-                        For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
-
-                            'collect the Timesheets for actualData in one separate list and dir 'collect'
-                            If kvp.Value = PTRpa.visboActualData2 Then
-                                myName = My.Computer.FileSystem.GetName(kvp.Key)
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logInfo, "collect: ", myName)
-                                listActualDataFiles.Add(newDestination, kvp.Value)
-                            Else
-                                ' all other files to import
-                                listToProcess2.Add(kvp.Key, kvp.Value)
-                            End If
-                        Next
-
-                        listToProcess = listToProcess2
-
-                        ' import actualData like Timesheets from collectFolder
-                        allOk = processVisboActualData2("Timesheets", myActivePortfolio, collectFolder, importDate)
-
-                        For Each kvp As KeyValuePair(Of String, Integer) In listActualDataFiles
-                            myName = My.Computer.FileSystem.GetName(kvp.Key)
-                            If allOk Then
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logInfo, "success: ", myName)
-                                Console.WriteLine(myName & ": successful ...")
-                                errMsgCode = New clsErrorCodeMsg
-                                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
-                            Else
-                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                                My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                Call logger(ptErrLevel.logError, "failed: ", myName)
-                                Console.WriteLine(myName & ": with errors ...")
-
-                                errMsgCode = New clsErrorCodeMsg
-                                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                            & myName & ": with errors ..." & vbCrLf _
-                                                                                            & "Look for more details in the Failure-Folder", errMsgCode)
-
-                            End If
-
-                        Next
-
-                        ' logfile in entsprechenden folder verschieben
-                        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                        If Not allOk Then
-                            Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                            My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                        End If
-
-                    End If
-
-                    For Each kvp As KeyValuePair(Of String, Integer) In listToProcess
-
-                        myName = My.Computer.FileSystem.GetName(kvp.Key)
-                        Dim currentWB As xlns.Workbook = Nothing
-
-
-                        Try
-
-                            If Not kvp.Value = PTRpa.visboMPP _
-                                And Not kvp.Value = PTRpa.visboActualData1 _
-                                And Not kvp.Value = PTRpa.visboActualData2 Then
-
-                                appInstance.DisplayAlerts = False
-                                currentWB = appInstance.Workbooks.Open(kvp.Key)
-                            End If
-
-                            logfileNamePath = createLogfileName(rpaFolder, myName)
-                            Select Case kvp.Value
-                                Case CInt(PTRpa.visboProjectList)
-
-                                    allOk = processProjectList(myName, myActivePortfolio)
-
-                                Case CInt(PTRpa.visboFindProjectStart)
-
-                                    allOk = processFindProjectStart(myName, myActivePortfolio)
-
-                                Case CInt(PTRpa.visboMPP)
-
-                                    allOk = processMppFile(kvp.Key, importDate)
-
-                                Case CInt(PTRpa.visboProject)
-
-                                    allOk = processVisboBrief(myName, importDate)
-
-                                Case CInt(PTRpa.visboJira)
-
-                                    allOk = processVisboJira(kvp.Key, importDate)
-
-                                Case CInt(PTRpa.visboDefaultCapacity)
-                                    allOk = True
-
-                                Case CInt(PTRpa.visboInitialOrga)
-
-                                    allOk = processInitialOrga(myName)
-
-                                Case CInt(PTRpa.visboRoundtripOrga)
-
-                                    allOk = processRoundTripOrga(myName)
-
-                                Case CInt(PTRpa.visboModifierCapacities)
-
-                                    allOk = True
-
-                                Case CInt(PTRpa.visboExternalContracts)
-
-                                    allOk = True
-
-                                Case CInt(PTRpa.visboActualData1)
-
-                                    allOk = processVisboActualData1(kvp.Key, importDate)
-
-                                Case CInt(PTRpa.visboActualData2)
-
-                                    'Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
-                                    ' in collectFolder verschieben
-                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
-                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                    Call logger(ptErrLevel.logInfo, "collect: ", myName)
-                                    ' nachsehen ob collect vollständig
-                                    If completionFiles.Count > 0 Then
-                                        allOk = processVisboActualData2(kvp.Key, myActivePortfolio, collectFolder, importDate)
-                                    End If
-
-
-                                Case Else
-
-                            End Select
-
-                            ' Sendet eine Email an den User
-
-                            'Dim result_sendEmail As Boolean = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("files abgearbeitet", errMsgCode)
-
-                            If Not (kvp.Value = PTRpa.visboMPP Or
-                                        kvp.Value = PTRpa.visboJira Or
-                                        kvp.Value = PTRpa.visboActualData1 Or
-                                        kvp.Value = PTRpa.visboActualData2) Then
-
-                                If allOk Then
-                                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
-                                Else
-                                    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
-                                End If
-                                currentWB.Close(SaveChanges:=True)
-                            End If
-
-                            'If Not IsNothing(currentWB) Then
-                            '    currentWB.Close(SaveChanges:=True)
-                            'End If
-
-                            If Not kvp.Value = PTRpa.visboActualData2 Then
-
-                                If allOk Then
-                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                    Call logger(ptErrLevel.logInfo, "success: ", myName)
-                                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(successFolder, logFileName)
-                                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-                                    Console.WriteLine(myName & ": successful ...")
-                                    errMsgCode = New clsErrorCodeMsg
-                                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
-
-
-                                Else
-                                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                                    My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                                    Call logger(ptErrLevel.logError, "failed: ", myName)
-                                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-
-                                    errMsgCode = New clsErrorCodeMsg
-                                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                                & myName & ": with errors ..." & vbCrLf _
-                                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
-                                End If
-
-                            End If
-
-
-
-                        Catch ex As Exception
-                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
-                            My.Computer.FileSystem.MoveFile(kvp.Key, newDestination, True)
-                            Call logger(ptErrLevel.logError, "failed: ", ex.Message)
-                            If Not kvp.Value = PTRpa.visboMPP Then
-                                currentWB.Close(SaveChanges:=True)
-                            End If
-                            Console.WriteLine(myName & ": failed ...")
-                        End Try
-
-                    Next
-
-                    Console.WriteLine("looking for next jobs!")
-                    'msgTxt = "looking for next jobs!"
-                    'Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", msgTxt)
-
-                Catch ex As Exception
-
-                    If awinSettings.englishLanguage Then
-                        msgTxt = "Error importing: "
-                    Else
-                        msgTxt = "Fehler beim Import von: "
-                    End If
-                    Call logger(ptErrLevel.logsevereError, msgTxt, myName & "/" & rpaCategory.ToString)
-                End Try
-
-            Loop
-
-
-
-            ' now store User Login Data
-            My.Settings.userNamePWD = awinSettings.userNamePWD
-
-                ' speichern 
-                My.Settings.Save()
-
-                '' now release all writeProtections ...
-            'Dim errMsgCode As New clsErrorCodeMsg
-            'If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, errMsgCode) Then
-            '    If awinSettings.visboDebug Then
-            '        Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
-            '    End If
-            'Else
-            '    msgTxt = "Write Protections could not be released ! Please do so in Web-UI ..."
-            '    Call logger(ptErrLevel.logError, "VISBO Robotic Process automation End", msgTxt)
-            '    Console.WriteLine(msgTxt)
-            'End If
-
-
-        Catch ex As Exception
-            msgTxt = "Exit - Failure in rpa Main: " & ex.Message
-            Call logger(ptErrLevel.logError, "VISBO Robotic Process automation", msgTxt)
-            Console.WriteLine(msgTxt)
-        End Try
-
+            ' Fehlermeldung für login-Error
+        End If
 
 
     End Sub
+    ''' <summary>
+    ''' Check if the process is already running
+    ''' </summary>
+    ''' <param name="process"></param>
+    ''' <returns></returns>
+    Public Function IsProcessRunning(process As String)
+        Dim objList As Object
 
+        objList = GetObject("winmgmts:") _
+        .ExecQuery("select * from win32_process where name='" & process & "'")
+
+        IsProcessRunning = objList.Count > 1
+    End Function
+
+
+    ''' <summary>
+    ''' Import of file fname, category rpaCat time importDate to the VisboCenter awinSettings.databaseName
+    ''' </summary>
+    ''' <param name="fname"></param>
+    ''' <param name="rpaCat"></param>
+    ''' <param name="importDate"></param>
+    ''' <returns></returns>
+    Public Function importOneProject(ByVal fname As String, ByVal rpaCat As PTRpa, ByVal importDate As Date) As Boolean
+
+
+        Dim myName As String = My.Computer.FileSystem.GetName(fname)
+        Dim currentWB As xlns.Workbook = Nothing
+        Dim allOk As Boolean = False
+
+        errMessages = New Collection
+
+        Try
+
+            If Not rpaCat = PTRpa.visboMPP _
+                                And Not rpaCat = PTRpa.visboActualData1 _
+                                And Not rpaCat = PTRpa.visboActualData2 Then
+
+                appInstance.DisplayAlerts = False
+                currentWB = appInstance.Workbooks.Open(fname)
+            End If
+
+            logfileNamePath = createLogfileName(rpaFolder, myName)
+            Select Case rpaCat
+                Case CInt(PTRpa.visboProjectList)
+
+                    allOk = processProjectList(myName, myActivePortfolio)
+
+                Case CInt(PTRpa.visboFindProjectStart)
+
+                    allOk = processFindProjectStart(myName, myActivePortfolio)
+
+                Case CInt(PTRpa.visboMPP)
+
+                    allOk = processMppFile(fname, importDate)
+
+                Case CInt(PTRpa.visboProject)
+
+                    allOk = processVisboBrief(myName, importDate, errMessages)
+
+                Case CInt(PTRpa.visboJira)
+
+                    allOk = processVisboJira(fname, importDate)
+
+                Case CInt(PTRpa.visboDefaultCapacity)
+
+                    allOk = processVisboUrlaubsplaner(fname, importDate, errMessages)
+
+                Case CInt(PTRpa.visboInitialOrga)
+
+                    allOk = processInitialOrga(myName)
+
+                Case CInt(PTRpa.visboRoundtripOrga)
+                    ' this will no longer be support -> error message
+                    allOk = processRoundTripOrga(myName)
+
+                Case CInt(PTRpa.visboModifierCapacities)
+
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
+
+                Case CInt(PTRpa.visboExternalContracts)
+
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
+
+
+                Case CInt(PTRpa.visboActualData1)
+
+                    allOk = processVisboActualData1(fname, importDate)
+
+                Case CInt(PTRpa.visboActualData2)
+
+                    logfileNamePath = createLogfileName(rpaFolder)
+
+                    'Dim completionFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(rpaFolder, FileIO.SearchOption.SearchTopLevelOnly, "Timesheet_completed*.*")
+                    ' in collectFolder verschieben
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "collect: ", myName)
+                    ' nachsehen ob collect vollständig
+                    If completedOK Then
+                        allOk = processVisboActualData2(fname, myActivePortfolio, collectFolder, importDate)
+                    End If
+
+                Case CInt(PTRpa.visboActualData3)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import of actual data ???", " do not exist so far !")
+
+                Case CInt(PTRpa.visboNewTagetik)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import new Projects of Tagetik", " not yet integrated !")
+
+                Case CInt(PTRpa.visboUpdateTagetik)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
+
+                Case CInt(PTRpa.visboEGeckoCapacity)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
+
+                Case CInt(PTRpa.visboInstartProposal)
+                    allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet of Instart", " not yet integrated !")
+
+                Case CInt(PTRpa.visboProposal)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet Telair", " not yet integrated !")
+
+                Case CInt(PTRpa.visboZeussCapacity)
+                    allOk = True
+                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities Telair", " not yet integrated !")
+
+                Case Else
+                    Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
+
+            End Select
+
+            ' Sendet eine Email an den User
+            'Dim result_sendEmail As Boolean = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("files abgearbeitet", errMsgCode)
+
+            Try
+                If Not (rpaCat = PTRpa.visboMPP Or
+                                        rpaCat = PTRpa.visboActualData1 Or
+                                        rpaCat = PTRpa.visboActualData2) Then
+
+                    'If allOk Then
+                    '    If IsNothing(currentWB) Then
+                    '        ' workbook bereits wieder geschlossen
+                    '        appInstance.DisplayAlerts = False
+                    '        currentWB = appInstance.Workbooks.Open(fname)
+                    '    End If
+                    '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
+                    'Else
+                    '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
+                    'End If
+                    currentWB.Close(SaveChanges:=False)
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' here the logfiles and the importfiles will be moved to a folder depending on the result of the import
+            If Not rpaCat = PTRpa.visboActualData2 Then
+                Call processResult(fname, allOk, errMessages)
+            Else
+                Call processResult(fname, allOk, errMessages)
+            End If
+
+        Catch ex As Exception
+
+            If awinSettings.englishLanguage Then
+                msgTxt = "Error importing: "
+            Else
+                msgTxt = "Fehler beim Import von: "
+            End If
+            Call logger(ptErrLevel.logsevereError, msgTxt, myName & "/" & rpaCat.ToString)
+        End Try
+
+        importOneProject = allOk
+
+
+    End Function
+
+
+    ''' <summary>
+    ''' clear the Session
+    ''' </summary>
     Private Sub emptyRPASession()
         ImportProjekte.Clear()
         ShowProjekte.Clear(False)
@@ -447,8 +388,226 @@ Module rpaModule1
         AlleProjektSummaries.Clear(False)
     End Sub
 
+    ''' <summary>
+    ''' Read the projectTemplates from the actual VisboCenter 
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function readProjectTemplates() As Date
+
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
 
 
+        ' lesen der templates des akt. VC
+        Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
+
+        If err.errorCode = 200 Then
+
+            Dim projVorlage As clsProjektvorlage
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
+
+                projVorlage = createTemplateOfProject(kvp.Value)
+                If Not IsNothing(projVorlage) Then
+                    ' hiermit wird die _Dauer gesetzt
+                    Dim vorlagenDauer = projVorlage.dauerInDays
+
+                    Projektvorlagen.Add(projVorlage)
+
+                Else
+                    Call logger(ptErrLevel.logError, "readProjectTemplates", "Creating a project template fromm project " & kvp.Value.name & " crashed")
+                    result = Date.MinValue
+                End If
+            Next
+            If projectTemplates.liste.Count > 0 Then
+                If projectTemplates.liste.Count = Projektvorlagen.Count Then
+                    result = Date.Now
+                End If
+            Else
+                Call logger(ptErrLevel.logWarning, "readProjectTemplates", "No project templates in this VC: " & myVC)
+                result = Date.MinValue
+            End If
+
+        Else
+            Call logger(ptErrLevel.logWarning, "readProjectTemplates", "Getting project templates from Server finished with warning: " & err.errorMsg)
+            result = Date.MinValue
+        End If
+
+        readProjectTemplates = result
+
+    End Function
+    ''' <summary>
+    ''' reading the VCSetting "customization" if stored in the actual VC
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function readCustomizations() As Date
+
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+        '
+        ' Read Customizations 
+        Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+
+        If Not IsNothing(customizations) Then
+
+            StartofCalendar = customizations.kalenderStart
+            Call logger(ptErrLevel.logInfo, "readCustomizations", " StartOfCalendar: " & StartofCalendar.ToString)
+
+            businessUnitDefinitions = customizations.businessUnitDefinitions
+
+            PhaseDefinitions = customizations.phaseDefinitions
+
+            MilestoneDefinitions = customizations.milestoneDefinitions
+
+            showtimezone_color = customizations.showtimezone_color
+            noshowtimezone_color = customizations.noshowtimezone_color
+            calendarFontColor = customizations.calendarFontColor
+            nrOfDaysMonth = customizations.nrOfDaysMonth
+            farbeInternOP = customizations.farbeInternOP
+            farbeExterne = customizations.farbeExterne
+            iProjektFarbe = customizations.iProjektFarbe
+            iWertFarbe = customizations.iWertFarbe
+            vergleichsfarbe0 = customizations.vergleichsfarbe0
+            vergleichsfarbe1 = customizations.vergleichsfarbe1
+
+            awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+            awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+            awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+            awinSettings.AmpelGruen = customizations.AmpelGruen
+
+            awinSettings.AmpelGelb = customizations.AmpelGelb
+            awinSettings.AmpelRot = customizations.AmpelRot
+            awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+            awinSettings.glowColor = customizations.glowColor
+
+            awinSettings.timeSpanColor = customizations.timeSpanColor
+            awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+
+            awinSettings.gridLineColor = customizations.gridLineColor
+
+            awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
+
+            awinSettings.onePersonOneRole = customizations.onePersonOneRole
+            awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+            awinSettings.actualDataMonth = customizations.actualDataMonth
+            ergebnisfarbe1 = customizations.ergebnisfarbe1
+            ergebnisfarbe2 = customizations.ergebnisfarbe2
+            weightStrategicFit = customizations.weightStrategicFit
+            awinSettings.kalenderStart = customizations.kalenderStart
+            awinSettings.zeitEinheit = customizations.zeitEinheit
+            awinSettings.kapaEinheit = customizations.kapaEinheit
+            awinSettings.offsetEinheit = customizations.offsetEinheit
+            awinSettings.EinzelRessExport = customizations.EinzelRessExport
+            awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+            awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+            awinSettings.spaltenbreite = customizations.spaltenbreite
+            awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+            awinSettings.propAnpassRess = customizations.propAnpassRess
+            awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+            awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+            awinSettings.fullProtocol = customizations.fullProtocol
+            awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+            awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+            awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+            awinSettings.importUnknownNames = customizations.importUnknownNames
+            awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+            awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+            awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+            awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+            awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+            awinSettings.importTyp = customizations.importTyp
+
+            awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+            awinSettings.englishLanguage = customizations.englishLanguage
+
+            awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+            awinSettings.considerRiskFee = customizations.considerRiskFee
+
+            StartofCalendar = awinSettings.kalenderStart
+
+            historicDate = StartofCalendar
+            Try
+                If awinSettings.englishLanguage Then
+                    menuCult = ReportLang(PTSprache.englisch)
+                    repCult = menuCult
+                    awinSettings.kapaEinheit = "PD"
+                Else
+                    awinSettings.kapaEinheit = "PT"
+                    menuCult = ReportLang(PTSprache.deutsch)
+                    repCult = menuCult
+                End If
+            Catch ex As Exception
+                awinSettings.englishLanguage = False
+                awinSettings.kapaEinheit = "PT"
+                menuCult = ReportLang(PTSprache.deutsch)
+                repCult = menuCult
+            End Try
+            result = Date.Now
+        Else
+            msgTxt = "No customization in VISBO"
+            Call logger(ptErrLevel.logError, "readCustomizations", msgTxt)
+            result = Date.MinValue
+        End If
+        readCustomizations = result
+    End Function
+
+    ''' <summary>
+    ''' gets the newest Organisation from now
+    ''' </summary>
+    ''' <returns>date of last reading</returns>
+    Public Function readOrganisations() As Date
+
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+
+        'Read Organisation
+
+        Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
+
+        ' ur: old ReSt-Call
+        'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, Err)
+
+        If Not IsNothing(currentOrga) Then
+            If currentOrga.count > 0 Then
+
+                If currentOrga.count > 0 Then
+                    validOrganisations.addOrga(currentOrga)
+                End If
+
+                CostDefinitions = currentOrga.allCosts
+                RoleDefinitions = currentOrga.allRoles
+
+                Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                    ' do nothing, leave it as is 
+                Else
+                    awinSettings.ActualdataOrgaUnits = tmpActDataString
+                End If
+                result = Date.Now
+
+            Else
+                msgTxt = "No organisation in VISBO"
+                Call logger(ptErrLevel.logError, "readOrganisations", msgTxt)
+                result = Date.MinValue
+
+            End If
+        Else
+            msgTxt = "No organisation in VISBO"
+            Call logger(ptErrLevel.logError, "readOrganisations", msgTxt)
+            result = Date.MinValue
+
+        End If
+
+        readOrganisations = result
+
+    End Function
     ''' <summary>
     ''' stores all projects in ImportProjekte, then clears ImportProjekte
     ''' returns true, if all went ok
@@ -478,8 +637,6 @@ Module rpaModule1
 
                     myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
 
-
-
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                         ok = ok And True
                         Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
@@ -491,6 +648,12 @@ Module rpaModule1
                     End If
 
                 Else
+                    ' hproj in alleProjekte schieben, damit writeProtection gecheckt werden kann.
+                    If Not AlleProjekte.Containskey(calcProjektKey(kvp.Value)) Then
+                        ' necessary because store ruft writeProtections für AllePRojekte Projekte auf 
+                        AlleProjekte.Add(kvp.Value, False)
+                    End If
+
                     myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
@@ -499,7 +662,7 @@ Module rpaModule1
                         Console.WriteLine("project updated: " & kvp.Value.getShapeText)
                     Else
                         ok = ok And False
-                        Call logger(ptErrLevel.logInfo, "project update failed: ", outputCollection)
+                        Call logger(ptErrLevel.logError, "project update failed: ", outputCollection)
                         Console.WriteLine("!! ... project update failed: " & kvp.Value.getShapeText)
                     End If
 
@@ -515,7 +678,15 @@ Module rpaModule1
 
         storeImportProjekte = ok
     End Function
-    Private Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String) As Boolean
+    ''' <summary>
+    ''' start of the RPA with VisboCenter , at url, rpaPath and perhaps a proxy-Server
+    ''' </summary>
+    ''' <param name="mongoName"></param>
+    ''' <param name="url"></param>
+    ''' <param name="path"></param>
+    ''' <param name="proxy"></param>
+    ''' <returns></returns>
+    Public Function startUpRPA(ByVal mongoName As String, ByVal url As String, ByVal path As String, ByVal proxy As String) As Boolean
 
         Dim result As Boolean = False
 
@@ -524,22 +695,36 @@ Module rpaModule1
 
         Try
 
-            If readawinSettings(path) Then
+            'If readawinSettings(path) Then
 
-                result = True
-                ' independent of what is given in projectboardConfig.xml
-                awinSettings.databaseName = mongoName
-                awinSettings.databaseURL = url
-                ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
-                awinSettings.rememberUserPwd = True
-                awinSettings.userNamePWD = My.Settings.userNamePWD
+            result = True
+            ' independent of what is given in projectboardConfig.xml
+            awinSettings.databaseName = mongoName
+            awinSettings.databaseURL = url
+            awinSettings.proxyURL = proxy
+            ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            'awinSettings.rememberUserPwd = True
+            'awinSettings.userNamePWD = My.Settings.userNamePWD
 
-                awinSettings.visboServer = True
+            awinSettings.visboServer = True
+            ' returns false if anything goes wrong .. 
+            result = rpaSetTypen()
 
-                ' returns false if anything goes wrong .. 
-                result = rpaSetTypen()
+            'ElseIf readawinSettings(swPath) Then
+            '    result = True
+            '    ' independent of what is given in projectboardConfig.xml
+            '    awinSettings.databaseName = mongoName
+            '    awinSettings.databaseURL = url
+            '    awinSettings.proxyURL = proxy
+            '    ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            '    awinSettings.rememberUserPwd = True
+            '    awinSettings.userNamePWD = My.Settings.userNamePWD
 
-            End If
+            '    awinSettings.visboServer = True
+
+            '    ' returns false if anything goes wrong .. 
+            '    result = rpaSetTypen()
+            'End If
 
 
         Catch ex As Exception
@@ -636,128 +821,64 @@ Module rpaModule1
 
             End If
 
-
-            ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
-
-            reportOrdnerName = awinPath & "Reports\"
-            Try
-                My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
-            Catch ex As Exception
-
-            End Try
-
-            ' ------------------
-            ' tk 10.10.21
-            ' normally not necessary
-
-            'importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
-            'importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
-            'importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
-            'importOrdnerNames(PTImpExp.batchlists) = awinPath & "Import\Batch Projektlisten"
-            'importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\Modulare Szenarien"
-            'importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\AddOn Regeln"
-            'importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
-            'importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\MassEdit"
-            'importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
-            'importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
-            'importOrdnerNames(PTImpExp.Orga) = awinPath & "Import\Organisation"
-            'importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "Import\CustomUserRoles"
-            'importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
-            'importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
-            'importOrdnerNames(PTImpExp.projectWithConfig) = awinPath & "Import\Projects With Config"
-            'importOrdnerNames(PTImpExp.rpa) = awinPath & "Import\RPA"
-
-            'exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
-            'exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
-            'exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
-            'exportOrdnerNames(PTImpExp.batchlists) = awinPath & "Export\Scenario Definitions"
-            'exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\Modulare Szenarien"
-            'exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\MassEdit"
-            'exportOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Export\Scenario Definitions"
-
-            '' jetzt werden die Directories alle angelegt, sofern Sie nicht schon existieren ... 
-            'For di As Integer = 0 To importOrdnerNames.Length - 1
-            '    Try
-
-            '        If Not IsNothing(importOrdnerNames(di)) Then
-            '            My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
-            '        Else
-            '            importOrdnerNames(di) = "-"
-            '        End If
-
-            '    Catch ex As Exception
-
-            '    End Try
-            'Next
-
-            'For di As Integer = 0 To exportOrdnerNames.Length - 1
-            '    Try
-            '        If Not IsNothing(exportOrdnerNames(di)) Then
-            '            My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
-            '        Else
-            '            exportOrdnerNames(di) = "-"
-            '        End If
-
-            '    Catch ex As Exception
-
-            '    End Try
-            'Next
-            ' end changes tl 10.10.21
-            ' --------------------------------------------------------
-
             StartofCalendar = StartofCalendar.Date
 
-            DiagrammTypen(0) = "Phase"
-            DiagrammTypen(1) = "Rolle"
-            DiagrammTypen(2) = "Kostenart"
-            DiagrammTypen(3) = "Portfolio"
-            DiagrammTypen(4) = "Ergebnis"
-            DiagrammTypen(5) = "Meilenstein"
-            DiagrammTypen(6) = "Meilenstein Trendanalyse"
-            DiagrammTypen(7) = "Phasen-Kategorie"
-            DiagrammTypen(8) = "Meilenstein-Kategorie"
-            DiagrammTypen(9) = "Cash-Flow"
+            'ur:07.02.2022 auskommentiert
+            'DiagrammTypen(0) = "Phase"
+            'DiagrammTypen(1) = "Rolle"
+            'DiagrammTypen(2) = "Kostenart"
+            'DiagrammTypen(3) = "Portfolio"
+            'DiagrammTypen(4) = "Ergebnis"
+            'DiagrammTypen(5) = "Meilenstein"
+            'DiagrammTypen(6) = "Meilenstein Trendanalyse"
+            'DiagrammTypen(7) = "Phasen-Kategorie"
+            'DiagrammTypen(8) = "Meilenstein-Kategorie"
+            'DiagrammTypen(9) = "Cash-Flow"
 
 
-            Try
-                repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
-                Call setLanguageMessages()
-            Catch ex As Exception
+            'Try
+            '    repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+            '    Call setLanguageMessages()
+            'Catch ex As Exception
 
-            End Try
-
-            autoSzenarioNamen(0) = "before Optimization"
-            autoSzenarioNamen(1) = "1. Optimum"
-            autoSzenarioNamen(2) = "2. Optimum"
-            autoSzenarioNamen(3) = "3. Optimum"
-
-            '
-            ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
-            ' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
-            arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
-            arrWsNames(2) = "Vorlage" ' depr
-            ' arrWsNames(3) = 
-            arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
-            arrWsNames(4) = "Einstellungen"                ' in Customization File 
-            ' arrWsNames(5) = 
-            arrWsNames(ptTables.meRC) = "meRC"                          ' Edit Ressourcen
-            arrWsNames(6) = "meTE"                          ' Edit Termine
-            arrWsNames(7) = "Darstellungsklassen"           ' wird in awinsettypen hinter MPT kopiert; nimmt für die Laufzeit die Darstellungsklassen auf 
-            arrWsNames(8) = "Phasen-Mappings"               ' in Customization
-            arrWsNames(9) = "meAT"                          ' Edit Attribute 
-            arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
-            ' arrWsNames(11) = 
-            arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
-            arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
-            arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
-            arrWsNames(14) = "Objekte" ' depr
-            arrWsNames(15) = "missing Definitions"          ' in Customization File 
+            'End Try
 
 
-            awinSettings.applyFilter = False
+            'ur:07.02.2022 auskommentiert ---
+            'autoSzenarioNamen(0) = "before Optimization"
+            'autoSzenarioNamen(1) = "1. Optimum"
+            'autoSzenarioNamen(2) = "2. Optimum"
+            'autoSzenarioNamen(3) = "3. Optimum"
 
-            showRangeLeft = 0
-            showRangeRight = 0
+            ''
+            '' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
+            '' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
+            'arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
+            'arrWsNames(2) = "Vorlage" ' depr
+            '' arrWsNames(3) = 
+            'arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
+            'arrWsNames(4) = "Einstellungen"                ' in Customization File 
+            '' arrWsNames(5) = 
+            'arrWsNames(ptTables.meRC) = "meRC"                          ' Edit Ressourcen
+            'arrWsNames(6) = "meTE"                          ' Edit Termine
+            'arrWsNames(7) = "Darstellungsklassen"           ' wird in awinsettypen hinter MPT kopiert; nimmt für die Laufzeit die Darstellungsklassen auf 
+            'arrWsNames(8) = "Phasen-Mappings"               ' in Customization
+            'arrWsNames(9) = "meAT"                          ' Edit Attribute 
+            'arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
+            '' arrWsNames(11) = 
+            'arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
+            'arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
+            'arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
+            'arrWsNames(14) = "Objekte" ' depr
+            'arrWsNames(15) = "missing Definitions"          ' in Customization File 
+
+
+            'awinSettings.applyFilter = False
+
+            'showRangeLeft = 0
+            'showRangeRight = 0
+            'ur:07.02.2022 auskommentiert ---
+
 
             ' always needs to be database / VISBO Server access 
             noDB = False
@@ -777,206 +898,175 @@ Module rpaModule1
                 If IsNothing(databaseAcc) Then
                     databaseAcc = New DBAccLayer.Request
                 End If
-                Try
-                    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
-                Catch ex As Exception
-                    loginErfolgreich = False
-                End Try
-
 
                 If Not loginErfolgreich Then
                     loginErfolgreich = logInToMongoDB(True)
                 End If
 
             Else
-                loginErfolgreich = logInToMongoDB(True)
-            End If
-
-
-            ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
-
-
-            If loginErfolgreich Then
-
-                ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-                Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
-
-                If listOfVCs.Count = 1 Then
-                    ' alles ok, nimm dieses  VC
-                    If awinSettings.databaseName <> "" Then
-                        If awinSettings.databaseName <> listOfVCs.Item(0).ToUpper Then
-                            Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-                        Else
-                            ' make sure it is exactly the name , consideruing lower and upper case
-                            awinSettings.databaseName = listOfVCs.Item(0)
-                        End If
-                    Else
-                        awinSettings.databaseName = listOfVCs.Item(0)
-                    End If
-                    Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
-                    If Not changeOK Then
-                        Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-                    End If
-
-                ElseIf listOfVCs.Count > 1 Then
-                    ' now choose what is  das gewünschte VC aus
-                    If Not listOfVCs.Contains(awinSettings.databaseName) Then
-                        Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-                    End If
-
-                Else
-                    ' user has no access to any VISBO Center 
-                    Throw New ArgumentException("No access to a VISBO Center ")
+                If Not loginErfolgreich Then
+                    loginErfolgreich = logInToMongoDB(True)
                 End If
-
-            Else
-                ' no valid Login
-                Throw New ArgumentException("No valid Login")
             End If
 
-            '
-            ' Read appearance Definitions
-            appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
-            If IsNothing(appearanceDefinitions.liste) Then
-                ' user has no access to any VISBO Center 
-                Throw New ArgumentException("No appearance Definitions in VISBO")
-            End If
+            ''ûr: 10032022: not needed for RPA
+            '' Read appearance Definitions
+            'appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+            'If IsNothing(appearanceDefinitions.liste) Or appearanceDefinitions.liste.Count > 0 Then
+            '    ' user has no access to any VISBO Center 
+            '    msgTxt = "No appearance Definitions in VISBO"
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", "")
+            '    'Throw New ArgumentException(msgTxt)
+            'End If
 
-            '
-            ' Read Customizations 
-            Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+            ''
+            '' Read Customizations 
+            lastReadingCustomization = readCustomizations()
 
-            If Not IsNothing(customizations) Then
-                StartofCalendar = customizations.kalenderStart
-                Call logger(ptErrLevel.logInfo, "rpaSetTypen", " StartOfCalendar: " & StartofCalendar.ToString)
+            'Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
 
-                businessUnitDefinitions = customizations.businessUnitDefinitions
+            'If Not IsNothing(customizations) Then
+            '    StartofCalendar = customizations.kalenderStart
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", " StartOfCalendar: " & StartofCalendar.ToString)
 
-                PhaseDefinitions = customizations.phaseDefinitions
+            '    businessUnitDefinitions = customizations.businessUnitDefinitions
 
-                MilestoneDefinitions = customizations.milestoneDefinitions
+            '    PhaseDefinitions = customizations.phaseDefinitions
 
-                showtimezone_color = customizations.showtimezone_color
-                noshowtimezone_color = customizations.noshowtimezone_color
-                calendarFontColor = customizations.calendarFontColor
-                nrOfDaysMonth = customizations.nrOfDaysMonth
-                farbeInternOP = customizations.farbeInternOP
-                farbeExterne = customizations.farbeExterne
-                iProjektFarbe = customizations.iProjektFarbe
-                iWertFarbe = customizations.iWertFarbe
-                vergleichsfarbe0 = customizations.vergleichsfarbe0
-                vergleichsfarbe1 = customizations.vergleichsfarbe1
+            '    MilestoneDefinitions = customizations.milestoneDefinitions
 
-                awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
-                awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
-                awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
-                awinSettings.AmpelGruen = customizations.AmpelGruen
+            '    showtimezone_color = customizations.showtimezone_color
+            '    noshowtimezone_color = customizations.noshowtimezone_color
+            '    calendarFontColor = customizations.calendarFontColor
+            '    nrOfDaysMonth = customizations.nrOfDaysMonth
+            '    farbeInternOP = customizations.farbeInternOP
+            '    farbeExterne = customizations.farbeExterne
+            '    iProjektFarbe = customizations.iProjektFarbe
+            '    iWertFarbe = customizations.iWertFarbe
+            '    vergleichsfarbe0 = customizations.vergleichsfarbe0
+            '    vergleichsfarbe1 = customizations.vergleichsfarbe1
 
-                awinSettings.AmpelGelb = customizations.AmpelGelb
-                awinSettings.AmpelRot = customizations.AmpelRot
-                awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
-                awinSettings.glowColor = customizations.glowColor
+            '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+            '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+            '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+            '    awinSettings.AmpelGruen = customizations.AmpelGruen
 
-                awinSettings.timeSpanColor = customizations.timeSpanColor
-                awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+            '    awinSettings.AmpelGelb = customizations.AmpelGelb
+            '    awinSettings.AmpelRot = customizations.AmpelRot
+            '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+            '    awinSettings.glowColor = customizations.glowColor
 
-                awinSettings.gridLineColor = customizations.gridLineColor
+            '    awinSettings.timeSpanColor = customizations.timeSpanColor
+            '    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
 
-                awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+            '    awinSettings.gridLineColor = customizations.gridLineColor
 
-                awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
 
-                awinSettings.onePersonOneRole = customizations.onePersonOneRole
-                awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+            '    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            '    awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
 
-                awinSettings.actualDataMonth = customizations.actualDataMonth
-                ergebnisfarbe1 = customizations.ergebnisfarbe1
-                ergebnisfarbe2 = customizations.ergebnisfarbe2
-                weightStrategicFit = customizations.weightStrategicFit
-                awinSettings.kalenderStart = customizations.kalenderStart
-                awinSettings.zeitEinheit = customizations.zeitEinheit
-                awinSettings.kapaEinheit = customizations.kapaEinheit
-                awinSettings.offsetEinheit = customizations.offsetEinheit
-                awinSettings.EinzelRessExport = customizations.EinzelRessExport
-                awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
-                awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
-                awinSettings.spaltenbreite = customizations.spaltenbreite
-                awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
-                awinSettings.propAnpassRess = customizations.propAnpassRess
-                awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+            '    awinSettings.onePersonOneRole = customizations.onePersonOneRole
+            '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
-                awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
-                awinSettings.fullProtocol = customizations.fullProtocol
-                awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
-                awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
-                awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
-                awinSettings.importUnknownNames = customizations.importUnknownNames
-                awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+            '    awinSettings.actualDataMonth = customizations.actualDataMonth
+            '    ergebnisfarbe1 = customizations.ergebnisfarbe1
+            '    ergebnisfarbe2 = customizations.ergebnisfarbe2
+            '    weightStrategicFit = customizations.weightStrategicFit
+            '    awinSettings.kalenderStart = customizations.kalenderStart
+            '    awinSettings.zeitEinheit = customizations.zeitEinheit
+            '    awinSettings.kapaEinheit = customizations.kapaEinheit
+            '    awinSettings.offsetEinheit = customizations.offsetEinheit
+            '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+            '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+            '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+            '    awinSettings.spaltenbreite = customizations.spaltenbreite
+            '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+            '    awinSettings.propAnpassRess = customizations.propAnpassRess
+            '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
 
-                awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
-                awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
-                awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
-                awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+            '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+            '    awinSettings.fullProtocol = customizations.fullProtocol
+            '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+            '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+            '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+            '    awinSettings.importUnknownNames = customizations.importUnknownNames
+            '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
 
-                awinSettings.importTyp = customizations.importTyp
+            '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+            '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+            '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+            '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
 
-                awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+            '    awinSettings.importTyp = customizations.importTyp
 
-                awinSettings.englishLanguage = customizations.englishLanguage
+            '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
 
-                awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
-                awinSettings.considerRiskFee = customizations.considerRiskFee
+            '    awinSettings.englishLanguage = customizations.englishLanguage
 
-                StartofCalendar = awinSettings.kalenderStart
+            '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+            '    awinSettings.considerRiskFee = customizations.considerRiskFee
 
-                historicDate = StartofCalendar
-                Try
-                    If awinSettings.englishLanguage Then
-                        menuCult = ReportLang(PTSprache.englisch)
-                        repCult = menuCult
-                        awinSettings.kapaEinheit = "PD"
-                    Else
-                        awinSettings.kapaEinheit = "PT"
-                        menuCult = ReportLang(PTSprache.deutsch)
-                        repCult = menuCult
-                    End If
-                Catch ex As Exception
-                    awinSettings.englishLanguage = False
-                    awinSettings.kapaEinheit = "PT"
-                    menuCult = ReportLang(PTSprache.deutsch)
-                    repCult = menuCult
-                End Try
-            Else
-                Throw New ArgumentException("No customization in VISBO")
-            End If
+            '    StartofCalendar = awinSettings.kalenderStart
+
+            '    historicDate = StartofCalendar
+            '    Try
+            '        If awinSettings.englishLanguage Then
+            '            menuCult = ReportLang(PTSprache.englisch)
+            '            repCult = menuCult
+            '            awinSettings.kapaEinheit = "PD"
+            '        Else
+            '            awinSettings.kapaEinheit = "PT"
+            '            menuCult = ReportLang(PTSprache.deutsch)
+            '            repCult = menuCult
+            '        End If
+            '    Catch ex As Exception
+            '        awinSettings.englishLanguage = False
+            '        awinSettings.kapaEinheit = "PT"
+            '        menuCult = ReportLang(PTSprache.deutsch)
+            '        repCult = menuCult
+            '    End Try
+            'Else
+            '    msgTxt = "No customization in VISBO"
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+            '    'Throw New ArgumentException(msgTxt)
+            'End If
 
             '
             ' now read Organisation 
-            Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+            ''
+            '' Read Customizations 
+            lastReadingOrganisation = readOrganisations()
 
-            If Not IsNothing(currentOrga) Then
-                If currentOrga.count > 0 Then
+            'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    If currentOrga.count > 0 Then
-                        validOrganisations.addOrga(currentOrga)
-                    End If
+            'If Not IsNothing(currentOrga) Then
+            '    If currentOrga.count > 0 Then
 
-                    CostDefinitions = currentOrga.allCosts
-                    RoleDefinitions = currentOrga.allRoles
+            '        If currentOrga.count > 0 Then
+            '            validOrganisations.addOrga(currentOrga)
+            '        End If
 
-                    Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
-                    If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
-                        ' do nothing, leave it as is 
-                    Else
-                        awinSettings.ActualdataOrgaUnits = tmpActDataString
-                    End If
+            '        CostDefinitions = currentOrga.allCosts
+            '        RoleDefinitions = currentOrga.allRoles
 
-                Else
-                    Throw New ArgumentException("No organisation in VISBO")
-                End If
-            Else
-                Throw New ArgumentException("No organisation in VISBO")
-            End If
+            '        Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+            '        If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+            '            ' do nothing, leave it as is 
+            '        Else
+            '            awinSettings.ActualdataOrgaUnits = tmpActDataString
+            '        End If
+
+            '    Else
+            '        msgTxt = "No organisation in VISBO"
+            '        Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+            '        'Throw New ArgumentException("msgTxt")
+            '    End If
+            'Else
+            '    msgTxt = "No organisation in VISBO"
+            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
+            '    'Throw New ArgumentException("msgTxt")
+            'End If
 
             '
             ' now read customFieldDefinitions; is allowed to be empty
@@ -999,46 +1089,7 @@ Module rpaModule1
 
             '
             ' now read Vorlagen - maybe Empty
-            Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
-
-            If Not IsNothing(projectTemplates) Then
-                Dim projVorlage As clsProjektvorlage
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
-
-                    projVorlage = createTemplateOfProject(kvp.Value)
-                    ' hiermit wird die _Dauer gesetzt
-                    Dim vorlagenDauer = projVorlage.dauerInDays
-
-                    Projektvorlagen.Add(projVorlage)
-                Next
-            End If
-
-            If awinSettings.englishLanguage Then
-                windowNames(PTwindows.mpt) = "VISBO Multiproject-Board"
-                windowNames(PTwindows.massEdit) = "edit projects: "
-                windowNames(PTwindows.meChart) = "project and portfolio Charts: "
-                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
-                windowNames(PTwindows.mptpr) = "Project Charts"
-            Else
-                windowNames(PTwindows.mpt) = "VISBO Multiprojekt-Tafel"
-                windowNames(PTwindows.massEdit) = "Projekte editieren: "
-                windowNames(PTwindows.meChart) = "Projekt und Portfolio Charts: "
-                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
-                windowNames(PTwindows.mptpr) = "Projekt Charts"
-            End If
-
-
-            projectboardViews(PTview.mpt) = Nothing
-            projectboardViews(PTview.mptpr) = Nothing
-            projectboardViews(PTview.mptprpf) = Nothing
-            projectboardViews(PTview.meOnly) = Nothing
-            projectboardViews(PTview.meChart) = Nothing
-
-            projectboardWindows(PTwindows.mpt) = Nothing
-            projectboardWindows(PTwindows.mptpr) = Nothing
-            projectboardWindows(PTwindows.mptpf) = Nothing
-            projectboardWindows(PTwindows.massEdit) = Nothing
-            projectboardWindows(PTwindows.meChart) = Nothing
+            lastReadingProjectTemplates = readProjectTemplates()
 
             result = True
 
@@ -1053,7 +1104,9 @@ Module rpaModule1
 
     End Function
 
-    Private Function bestimmeRPACategory(ByVal fileName As String) As PTRpa
+
+
+    Public Function bestimmeRPACategory(ByVal fileName As String) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
 
         ' Open fileName 
@@ -1063,7 +1116,7 @@ Module rpaModule1
 
                 Try
                     appInstance.DisplayAlerts = False
-                    Dim currentWB As xlns.Workbook = appInstance.Workbooks.Open(fileName, UpdateLinks:=0)
+                    Dim currentWB As xlns.Workbook = Module1.appInstance.Workbooks.Open(fileName, UpdateLinks:=0)
                     currentWB.Final = False
                     appInstance.DisplayAlerts = True
 
@@ -1101,6 +1154,9 @@ Module rpaModule1
                         ' Check auf VISBO Project Template  
 
                         ' Check auf Urlaubskalender 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkUrlaubsplaner(currentWB)
+                        End If
 
                         ' Check auf Modifier Kapazitäten
 
@@ -1109,9 +1165,9 @@ Module rpaModule1
                             result = checkExtRahmenvertr(currentWB)
                         End If
 
-                        ' Check auf Instart eGecko Urlaube ... 
+                        ' Check auf Instart eGecko Urlaube ...(Instart) 
 
-                        ' Check auf Zeuss Kapazitäten
+                        ' Check auf Zeuss Kapazitäten... (Telair)
 
                         ' Check auf Ist-Daten 
                         If result = PTRpa.visboUnknown Then
@@ -1130,7 +1186,9 @@ Module rpaModule1
                         ' Check auf Tagetik update projects 
 
                         ' Check auf Instart Calculation Template 
-
+                        If result = PTRpa.visboUnknown Then
+                            result = checkInstartProposal(currentWB)
+                        End If
                         ' Check auf VISBO Calculation Template 
 
                         currentWB.Close(SaveChanges:=False)
@@ -1417,6 +1475,48 @@ Module rpaModule1
         checkExtRahmenvertr = result
     End Function
 
+
+    ''' <summary>
+    ''' checks whether or not it is a VISBO Urlaubskalender 
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkUrlaubsplaner(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim possibleTableNames() As String = {"1.Halbjahr", "2.Halbjahr"}
+        Dim verifiedStructure As Boolean = False
+        Try
+
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+                Next
+            End If
+
+            If found Then
+                result = PTRpa.visboDefaultCapacity
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkUrlaubsplaner = result
+    End Function
+
+
     Private Function checkVCOrganisation(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim possibleTableNames() As String = {"VisboCenterOrganisation"}
@@ -1467,7 +1567,7 @@ Module rpaModule1
         result(1) = 1.0
 
         Try
-            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+            Dim currentWB As xlns.Workbook = CType(Module1.appInstance.ActiveWorkbook,
                                                             Global.Microsoft.Office.Interop.Excel.Workbook)
 
             Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -1646,6 +1746,48 @@ Module rpaModule1
     End Function
 
     ''' <summary>
+    ''' checks whether or not a file is a Instart Proposal - CalcSheet
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkInstartProposal(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "VISBO Summary"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                Try
+
+                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
+
+                    ' hier muss noch geprüft werden, ob alle timesheets vorhanden, sonst in separates Dir schieben und erst wenn Timesheet-completed - file vorhanden, dann alle einlesen
+
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboProposal
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkInstartProposal = result
+    End Function
+    ''' <summary>
     ''' returns the sequence of the project-names 
     ''' there is only one project-variant per ranking allowed
     ''' </summary>
@@ -1681,7 +1823,7 @@ Module rpaModule1
 
 
         Try
-            Dim activeWSListe As xlns.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet,
+            Dim activeWSListe As xlns.Worksheet = CType(Module1.appInstance.ActiveWorkbook.ActiveSheet,
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             With activeWSListe
@@ -1721,19 +1863,50 @@ Module rpaModule1
         getRanking = rankingList
     End Function
 
-    Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date) As Boolean
+    Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim allOK As Boolean = False
+        Dim aktDateTime As Date = Date.Now
+
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProject.ToString, myName)
+
+        ' ist hier eine Projektvorlage zu importieren?
+        Dim isTemplate As Boolean = LCase(myName).Contains("template")
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+        ' project brief is not a template, then you need the actual templates
+
+        'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+        lastReadingProjectTemplates = readProjectTemplates()
+        'End If
+
+
+        'If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        lastReadingOrganisation = readOrganisations()
+        'End If
+
 
         'read Project Brief and put it into ImportProjekte
         Try
             Dim hproj As clsProjekt = Nothing
+            Dim vproj As clsProjektvorlage = Nothing
+
+            Dim wsGeneralInformation As xlns.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Stammdaten"),
+                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             ' read the file and import into hproj
+
+
             Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
 
+            If isTemplate And Not IsNothing(hproj) Then
+                hproj.projectType = ptPRPFType.projectTemplate
+            End If
+
             allOK = Not IsNothing(hproj)
+
             If allOK Then
                 Try
                     Dim keyStr As String = calcProjektKey(hproj)
@@ -1880,8 +2053,15 @@ Module rpaModule1
     Private Function processProjectList(ByVal myName As String, ByVal myActivePortfolio As String) As Boolean
 
         Dim allOk As Boolean = False
+        Dim aktDateTime As Date = Date.Now
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
         Try
+
             Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
 
             Dim overloadAllowedinMonths As Double = 1.05
@@ -1906,7 +2086,10 @@ Module rpaModule1
                 End If
             Next
 
-
+            'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+            lastReadingProjectTemplates = readProjectTemplates()
+            'End If
+            Dim anzTemplates As Integer = Projektvorlagen.Count
 
             allOk = awinImportProjektInventur(readProjects, createdProjects)
             If allOk Then
@@ -1915,49 +2098,6 @@ Module rpaModule1
             Else
                 Call logger(ptErrLevel.logError, "failure in Processing: " & myName, PTRpa.visboProjectList.ToString)
             End If
-
-            If allOk Then
-
-                Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
-
-                For Each si As String In skillIDs
-                    If Not skillList.Contains(si) Then
-                        skillList.Add(si)
-                    End If
-                Next
-
-                Dim doTheInitialJob As Boolean = True
-                Dim dbPortfolioNames As New SortedList(Of String, String)
-
-                ' if Portfolio with active Projects is given and exists:  
-                ' then we probably do have a brownfield
-                If myActivePortfolio <> "" Then
-                    ' load portfolio projects 
-                    ' now store the Portfolio , with name portfolioName
-                    Dim errMsg As New clsErrorCodeMsg
-                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
-                    doTheInitialJob = Not dbPortfolioNames.ContainsKey(myActivePortfolio)
-                End If
-
-                If doTheInitialJob Then
-                    allOk = processProjectListWithoutActivePortfolio(aggregationList,
-                                                                     skillList,
-                                                                     portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
-                Else
-                    ' check whether and how projects are fitting to the already existing Portfolio 
-                    allOk = processProjectListWithActivePortfolio(aggregationList,
-                                                                     skillList,
-                                                                     myActivePortfolio, dbPortfolioNames(myActivePortfolio), portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
-                End If
-
-            Else
-                ' no additional logger necessary - is done in storeImportProjekte
-            End If
-
-
-            ' now empty the complete session  
-            Call emptyRPASession()
-            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProjectList.ToString, myName)
 
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "errors occurred when processing: " & PTRpa.visboProjectList.ToString, myName & ": " & ex.Message)
@@ -2131,205 +2271,211 @@ Module rpaModule1
             For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
 
                 Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
-                Dim stdDuration As Integer = hproj.dauerInDays
-                Dim myDuration As Integer = stdDuration
-                Dim minDuration As Integer = CInt(stdDuration * 0.7)
+
+                If Not IsNothing(hproj) Then
+
+                    Dim stdDuration As Integer = hproj.dauerInDays
+                    Dim myDuration As Integer = stdDuration
+                    Dim minDuration As Integer = CInt(stdDuration * 0.7)
 
 
 
-                Dim storeRequired As Boolean = False
+                    Dim storeRequired As Boolean = False
 
-                Dim newStartDate As Date
-                Dim newEndDate As Date
-                Dim key As String = calcProjektKey(hproj)
+                    Dim newStartDate As Date
+                    Dim newEndDate As Date
+                    Dim key As String = calcProjektKey(hproj)
 
-                If getColumnOfDate(hproj.startDate) < showRangeLeft Then
+                    If getColumnOfDate(hproj.startDate) < showRangeLeft Then
 
-                    ' create variant if not already done
-                    If hproj.variantName <> "arb" Then
-                        hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
-                        ' bring that into AlleProjekte
-                        key = calcProjektKey(hproj)
-                        deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
+                            ' bring that into AlleProjekte
+                            key = calcProjektKey(hproj)
+                            deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
 
-                        newStartDate = hproj.startDate.AddDays(deltaInDays)
-                        newEndDate = hproj.endeDate.AddDays(deltaInDays)
+                            newStartDate = hproj.startDate.AddDays(deltaInDays)
+                            newEndDate = hproj.endeDate.AddDays(deltaInDays)
 
-                        Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+                            Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
 
-                        If Not IsNothing(tmpProj) Then
-                            hproj = tmpProj
-                            storeRequired = True
-                        Else
-                            msgTxt = "project could be moved"
+                            If Not IsNothing(tmpProj) Then
+                                hproj = tmpProj
+                                storeRequired = True
+                            Else
+                                msgTxt = "project could be moved"
+                            End If
+
                         End If
 
                     End If
 
-                End If
+
+                    ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.AddAnyway(hproj)
+
+                    ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
+                    skillList.Clear()
+                    Dim skillIDs As Collection = hproj.getSkillNameIds
+
+                    For Each si As String In skillIDs
+                        If Not skillList.Contains(si) Then
+                            skillList.Add(si)
+                        End If
+                    Next
+
+                    ' now define showrangeLeft and showrangeRight from hproj 
+                    showRangeLeft = getColumnOfDate(hproj.startDate)
+                    showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                    Dim sumIterations As Integer = 0
+                    Dim endIterations As Integer = 0
+                    Dim durationIterations As Integer = 0
+
+                    If overutilizationFound Then
+
+                        ' create variant if not already done
+                        If hproj.variantName <> "arb" Then
+                            hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
+
+                            key = calcProjektKey(hproj)
+                            AlleProjekte.Add(hproj)
+                        End If
+
+                        deltaInDays = 7
+                        Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
+                        Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
+
+                        Dim rememberStartDate As Date = hproj.startDate
+                        Dim rememberEndDate As Date = hproj.endeDate
+
+                        Try
+                            Dim tmpProj As clsProjekt = Nothing
+                            Do While overutilizationFound And endIterations <= maxEndIterations
+                                ' move project by deltaIndays
+
+                                newStartDate = rememberStartDate.AddDays(deltaInDays)
+
+                                Do While overutilizationFound And durationIterations <= maxDurationIterations
+
+                                    newEndDate = rememberEndDate
+                                    tmpProj = moveProject(hproj, newStartDate, newEndDate)
 
 
-                ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
-                AlleProjekte.Add(hproj)
-                ShowProjekte.AddAnyway(hproj)
+                                    If Not IsNothing(tmpProj) Then
 
-                ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
-                skillList.Clear()
-                Dim skillIDs As Collection = hproj.getSkillNameIds
+                                        hproj = tmpProj
 
-                For Each si As String In skillIDs
-                    If Not skillList.Contains(si) Then
-                        skillList.Add(si)
-                    End If
-                Next
+                                        ' now replace in AlleProjekte, ShowProjekte 
+                                        AlleProjekte.Add(tmpProj)
+                                        ShowProjekte.AddAnyway(tmpProj)
 
-                ' now define showrangeLeft and showrangeRight from hproj 
-                showRangeLeft = getColumnOfDate(hproj.startDate)
-                showRangeRight = getColumnOfDate(hproj.endeDate)
+                                        ' now define showrangeLeft and showrangeRight from hproj 
+                                        showRangeLeft = getColumnOfDate(hproj.startDate)
+                                        showRangeRight = getColumnOfDate(hproj.endeDate)
 
-                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-                Dim sumIterations As Integer = 0
-                Dim endIterations As Integer = 0
-                Dim durationIterations As Integer = 0
+                                        Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                        Console.WriteLine(infomsg)
+                                        Dim myMessages As New Collection
+                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
-                If overutilizationFound Then
+                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
 
-                    ' create variant if not already done
-                    If hproj.variantName <> "arb" Then
-                        hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
+                                        If overutilizationFound Then
+                                            durationIterations = durationIterations + 1
+                                        End If
 
-                        key = calcProjektKey(hproj)
-                        AlleProjekte.Add(hproj)
-                    End If
-
-                    deltaInDays = 7
-                    Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
-                    Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
-
-                    Dim rememberStartDate As Date = hproj.startDate
-                    Dim rememberEndDate As Date = hproj.endeDate
-
-                    Try
-                        Dim tmpProj As clsProjekt = Nothing
-                        Do While overutilizationFound And endIterations <= maxEndIterations
-                            ' move project by deltaIndays
-
-                            newStartDate = rememberStartDate.AddDays(deltaInDays)
-
-                            Do While overutilizationFound And durationIterations <= maxDurationIterations
-
-                                newEndDate = rememberEndDate
-                                tmpProj = moveProject(hproj, newStartDate, newEndDate)
-
-
-                                If Not IsNothing(tmpProj) Then
-
-                                    hproj = tmpProj
-
-                                    ' now replace in AlleProjekte, ShowProjekte 
-                                    AlleProjekte.Add(tmpProj)
-                                    ShowProjekte.AddAnyway(tmpProj)
-
-                                    ' now define showrangeLeft and showrangeRight from hproj 
-                                    showRangeLeft = getColumnOfDate(hproj.startDate)
-                                    showRangeRight = getColumnOfDate(hproj.endeDate)
-
-                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                    Console.WriteLine(infomsg)
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-
-                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-
-                                    If overutilizationFound Then
-                                        durationIterations = durationIterations + 1
+                                    Else
+                                        ' Error occurred 
+                                        Throw New ArgumentException("tmpProj is Nothing")
                                     End If
 
-                                Else
-                                    ' Error occurred 
-                                    Throw New ArgumentException("tmpProj is Nothing")
+                                    newStartDate = newStartDate.AddDays(deltaInDays)
+                                Loop
+
+                                If overutilizationFound Then
+
+                                    rememberStartDate = rememberStartDate.AddDays(deltaInDays)
+                                    rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+
+                                    tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+
+                                        hproj = tmpProj
+
+                                        ' now replace in AlleProjekte, ShowProjekte 
+                                        AlleProjekte.Add(tmpProj)
+                                        ShowProjekte.AddAnyway(tmpProj)
+
+                                        ' now define showrangeLeft and showrangeRight from hproj 
+                                        showRangeLeft = getColumnOfDate(hproj.startDate)
+                                        showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                                        Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                        Console.WriteLine(infomsg)
+                                        Dim myMessages As New Collection
+                                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+
+                                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+
+                                        If overutilizationFound Then
+                                            endIterations = endIterations + 1
+                                        End If
+
+                                    Else
+                                        ' Error occurred 
+                                        Throw New ArgumentException("tmpProj is Nothing")
+                                    End If
                                 End If
 
-                                newStartDate = newStartDate.AddDays(deltaInDays)
+
                             Loop
 
-                            If overutilizationFound Then
+                        Catch ex As Exception
+                            Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
+                            Dim myMessages As New Collection
+                            Call logger(ptErrLevel.logError, infomsg, myMessages)
+                            overutilizationFound = True
+                        End Try
 
-                                rememberStartDate = rememberStartDate.AddDays(deltaInDays)
-                                rememberEndDate = rememberEndDate.AddDays(deltaInDays)
+                        If Not overutilizationFound Then
+                            ' it is already in there ... but now needed to be stored
+                            storeRequired = True
+                        Else
+                            ' take it out again , because there was no solution
+                            AlleProjekte.Remove(key)
+                            ShowProjekte.Remove(hproj.name)
+                        End If
 
-                                tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+                    Else
+                        ' all ok, just continue
+                    End If
 
-                                If Not IsNothing(tmpProj) Then
-
-                                    hproj = tmpProj
-
-                                    ' now replace in AlleProjekte, ShowProjekte 
-                                    AlleProjekte.Add(tmpProj)
-                                    ShowProjekte.AddAnyway(tmpProj)
-
-                                    ' now define showrangeLeft and showrangeRight from hproj 
-                                    showRangeLeft = getColumnOfDate(hproj.startDate)
-                                    showRangeRight = getColumnOfDate(hproj.endeDate)
-
-                                    Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                    Console.WriteLine(infomsg)
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-
-                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
-
-                                    If overutilizationFound Then
-                                        endIterations = endIterations + 1
-                                    End If
-
-                                Else
-                                    ' Error occurred 
-                                    Throw New ArgumentException("tmpProj is Nothing")
-                                End If
-                            End If
-
-
-                        Loop
-
-                    Catch ex As Exception
-                        Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
+                    If storeRequired Then
                         Dim myMessages As New Collection
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        overutilizationFound = True
-                    End Try
-
-                    If Not overutilizationFound Then
-                        ' it is already in there ... but now needed to be stored
-                        storeRequired = True
+                        If storeSingleProjectToDB(hproj, myMessages) Then
+                            Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                            'Console.WriteLine(infomsg)
+                        Else
+                            ' take it out again , because there was no solution
+                            ShowProjekte.Remove(hproj.name)
+                            Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logError, infomsg, myMessages)
+                            'Console.WriteLine(infomsg)
+                        End If
                     Else
-                        ' take it out again , because there was no solution
-                        AlleProjekte.Remove(key)
-                        ShowProjekte.Remove(hproj.name)
-                    End If
-
-                Else
-                    ' all ok, just continue
-                End If
-
-                If storeRequired Then
-                    Dim myMessages As New Collection
-                    If storeSingleProjectToDB(hproj, myMessages) Then
-                        Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                        Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
+                        Dim myMessages As New Collection
                         Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
-                    Else
-                        ' take it out again , because there was no solution
-                        ShowProjekte.Remove(hproj.name)
-                        Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
                     End If
                 Else
-                    Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
-                    Dim myMessages As New Collection
-                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    Console.WriteLine(infomsg)
+                    Call logger(ptErrLevel.logInfo, "processProjectListWithActivePortfolio", "project '" & rankingPair.Value & "' does not exist so far")
                 End If
 
             Next
@@ -2675,11 +2821,15 @@ Module rpaModule1
                 Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                 ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                        CStr(settingTypes(ptSettingTypes.organisation)),
-                                                        orgaName,
-                                                        importedOrga.validFrom,
-                                                        err)
+                'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                '                                        CStr(settingTypes(ptSettingTypes.organisation)),
+                '                                        orgaName,
+                '                                        importedOrga.validFrom,
+                '                                        err)
+                result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
+                                                                                  orgaName,
+                                                                                  importedOrga.validFrom,
+                                                                                  err)
 
                 If result = True Then
                     allOK = True
@@ -2708,81 +2858,88 @@ Module rpaModule1
         Dim msgTxt As String = ""
         'Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
         Dim outputCollection As New Collection
-        Try
+        'Try
 
-            Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboRoundtripOrga.ToString, myName)
+        '    Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboRoundtripOrga.ToString, myName)
 
-            ' ===========================================================
-            ' Konfigurationsdatei lesen und Validierung durchführen
+        '    ' ===========================================================
+        '    ' Konfigurationsdatei lesen und Validierung durchführen
 
-            ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-            Dim configOrgaImport As String = awinPath & configfilesOrdner & "configOrgaImport.xlsx"
-            Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
-            Dim lastrow As Integer = 0
+        '    ' Ur: 21.02.2022: geändert auf configuration Orga im VC als Setting
 
-            Call logger(ptErrLevel.logInfo, "start reading configuration: " & PTRpa.visboRoundtripOrga.ToString, configOrgaImport)
+        '    ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
+        '    'Dim configOrgaImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configOrgaImport.xlsx")
 
-            ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
-            ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
-            Dim allesOK As Boolean = checkOrgaImportConfig(configOrgaImport, myName, orgaImportConfig, lastrow, outputCollection)
+        '    Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
+        '    Dim lastrow As Integer = 0
 
-            If Not allesOK Then
-                Call logger(ptErrLevel.logError, "error reading configuration: " & PTRpa.visboRoundtripOrga.ToString, configOrgaImport)
-                processRoundTripOrga = False
-                Exit Function
-            End If
+        '    Call logger(ptErrLevel.logInfo, "start reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga")
 
-            Try
+        '    ' check Config-File - zum Einlesen der Oragnistation gemäß Konfiguration
+        '    ' hier werden Werte für die Konfiguration gelesen aus dem VCSetting "configuration Orga"
+        '    Dim allesOK As Boolean = checkOrgaImportConfig("configuration Orga", myName, orgaImportConfig, lastrow, outputCollection)
 
-                ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
-                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
+        '    If Not allesOK Then
+        '        Call logger(ptErrLevel.logError, "error reading configuration Orga: " & PTRpa.visboRoundtripOrga.ToString, "VCSetting configuration Orga does not exist")
+        '        processRoundTripOrga = False
+        '        Exit Function
+        '    End If
+
+        '    Try
+
+        '        ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
+        '        Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
 
 
-                If outputCollection.Count > 0 Then
-                    Dim errmsg As String = vbLf & " .. Exit .. Organisation not imported  "
-                    outputCollection.Add(errmsg)
+        '        If outputCollection.Count > 0 Then
+        '            Dim errmsg As String = vbLf & " .. Exit .. Organisation not imported  "
+        '            outputCollection.Add(errmsg)
 
-                    Call logger(ptErrLevel.logError, "RPA Error Importing Organisation ", outputCollection)
+        '            Call logger(ptErrLevel.logError, "RPA Error Importing Organisation ", outputCollection)
 
-                ElseIf importedOrga.count > 0 Then
+        '        ElseIf importedOrga.count > 0 Then
 
-                    ' TopNodes und OrgaTeamChilds bauen 
-                    Call importedOrga.allRoles.buildTopNodes()
+        '            ' TopNodes und OrgaTeamChilds bauen 
+        '            Call importedOrga.allRoles.buildTopNodes()
 
-                    Dim err As New clsErrorCodeMsg
-                    Dim result As Boolean = False
-                    ' ute -> überprüfen bzw. fertigstellen ... 
-                    Dim orgaName As String = ptSettingTypes.organisation.ToString
+        '            Dim err As New clsErrorCodeMsg
+        '            Dim result As Boolean = False
+        '            ' ute -> überprüfen bzw. fertigstellen ... 
+        '            Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                    ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
-                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                        CStr(settingTypes(ptSettingTypes.organisation)),
-                                                        orgaName,
-                                                        importedOrga.validFrom,
-                                                        err)
+        '            ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
+        '            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+        '                                                CStr(settingTypes(ptSettingTypes.organisation)),
+        '                                                orgaName,
+        '                                                importedOrga.validFrom,
+        '                                                err)
 
-                    If result = True Then
-                        allOK = True
-                        msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
-                        Console.WriteLine(msgTxt)
-                        Call logger(ptErrLevel.logInfo, PTRpa.visboRoundtripOrga.ToString, msgTxt)
-                    Else
-                        allOK = False
-                        msgTxt = "Storing organisaiton failed "
-                        Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, msgTxt)
-                    End If
-                End If
+        '            If result = True Then
+        '                allOK = True
+        '                msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
+        '                Console.WriteLine(msgTxt)
+        '                Call logger(ptErrLevel.logInfo, PTRpa.visboRoundtripOrga.ToString, msgTxt)
+        '            Else
+        '                allOK = False
+        '                msgTxt = "Storing organisaiton failed "
+        '                Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, msgTxt)
+        '            End If
+        '        End If
 
-                Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboRoundtripOrga.ToString, myName)
-            Catch ex As Exception
-                allOK = False
-            End Try
+        '        Call logger(ptErrLevel.logInfo, "endProcessing: " & PTRpa.visboRoundtripOrga.ToString, myName)
+        '    Catch ex As Exception
+        '        allOK = False
+        '    End Try
 
-        Catch ex As Exception
-            allOK = False
-            msgTxt = ""
-            Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, ex.Message)
-        End Try
+        'Catch ex As Exception
+        '    allOK = False
+        '    msgTxt = ""
+        '    Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, ex.Message)
+        'End Try
+
+        msgTxt = "This Import will no longer be supported, because you can download the Orga, change it and upload it via WebUI"
+        Call logger(ptErrLevel.logError, "VisboRoundTripOrga", msgTxt)
+        allOK = False
 
         processRoundTripOrga = allOK
 
@@ -2792,8 +2949,14 @@ Module rpaModule1
     Private Function processVisboJira(ByVal myName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
         'read File with Jira-Projects and put it into ImportProjekte
         Try
@@ -2806,6 +2969,8 @@ Module rpaModule1
             Dim dateiName As String = ""
             Dim listofArchivAllg As New List(Of String)
             Dim outPutCollection As New Collection
+            Dim configJIRAProjects As String = ""
+
 
             Dim outputLine As String = ""
 
@@ -2813,11 +2978,12 @@ Module rpaModule1
 
             ' Konfigurationsdatei lesen und Validierung durchführen
 
-            ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-            Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
+            ' wenn es gibt - lesen der Jira und anderer, die durch configCapaImport beschrieben sind
+            ' no longer necessary
+            ' Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-            Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+            Dim allesOK As Boolean = checkJIRAProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
 
             If allesOK Then
 
@@ -2830,6 +2996,7 @@ Module rpaModule1
                     ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
 
                     Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
                         Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -2838,7 +3005,9 @@ Module rpaModule1
                     End If
 
                 End Try
-
+            Else
+                Call logger(ptErrLevel.logError, "processVisboJira", outPutCollection)
+                allOk = False
             End If
 
             ' store Projects
@@ -2860,6 +3029,160 @@ Module rpaModule1
 
     End Function
 
+
+    Private Function processVisboUrlaubsplaner(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivUrlaub As New List(Of String)
+        Dim listofArchivConfig As New List(Of String)
+        Dim result As Boolean = False
+        Dim outputCollection As New Collection
+        Dim aktDateTime As Date = Date.Now
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        ' Timer
+        Dim sw As clsStopWatch
+        sw = New clsStopWatch
+        sw.StartTimer()
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+
+                Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & myName, "processVisboUrlaubsplaner", anzFehler)
+                result = readAvailabilityOfRole(myName, outputCollection)
+                If result Then
+                    ' hier: merken der erfolgreich importierten KapaFiles
+                    listofArchivUrlaub.Add(myName)
+                    Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & myName, outputCollection)
+                Else
+                    Call logger(ptErrLevel.logError, "Einlesen Verfügbarkeiten " & myName, outputCollection)
+                End If
+
+                '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
+                'listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
+
+                If listofArchivUrlaub.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or visboClient = "VISBO RPA / " Then
+
+                            Dim resultOne As Boolean = True
+                            Dim capasOfOneRole As List(Of clsCapa)
+
+                            Dim orga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
+
+                            Dim capas As List(Of clsCapa) = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
+
+                            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
+
+                                Dim roledef As clsRollenDefinition = kvp.Value
+                                If Not roledef.isSummaryRole Then
+                                    capasOfOneRole = transformCapa(roledef)
+                                    For Each capa As clsCapa In capasOfOneRole
+                                        resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, capas, err)
+                                        If resultOne Then
+                                            Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
+                                        Else
+                                            Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful")
+                                        End If
+                                        result = result And resultOne
+                                    Next
+                                End If
+                            Next
+
+                            If result = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "processUrlaubsplaner: ", -1)
+                            Else
+                                msgTxt = "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg
+                                Call logger(ptErrLevel.logError, msgTxt, "processUrlaubsplaner: ", -1)
+                                outputCollection.Add(msgTxt)
+                            End If
+                        Else
+                            msgTxt = "Error when writing Capacities to Database...- wrong customUserRole" & vbCrLf & myCustomUserRole.customUserRole
+                            Call logger(ptErrLevel.logError, msgTxt, "processUrlaubsplaner: ", -1)
+                            outputCollection.Add(msgTxt)
+                            result = False
+                        End If
+                    Else
+                        Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
+                    End If
+                Else
+                    result = False
+                    If outputCollection.Count > 0 Then
+                        Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
+                    Else
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "there do not exists any 'Urlaubsplaner*'!"
+                        Else
+                            msgTxt = "Es existiert kein 'Urlaubsplaner*.*' !"
+                        End If
+                        Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", msgTxt)
+                        outputCollection.Add(msgTxt)
+                    End If
+
+                End If
+
+            Else
+                If awinSettings.englishLanguage Then
+                    msgTxt = "No valid roles! Please import one first!"
+                Else
+                    msgTxt = "Die gültige Organisation beinhaltet keine Rollen! "
+                End If
+                Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", msgTxt)
+                outputCollection.Add(msgTxt)
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                msgTxt = "No valid organization! Please import one first!"
+            Else
+                msgTxt = "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren"
+            End If
+            outputCollection.Add(msgTxt)
+
+
+            Dim errMsg As String
+            If awinSettings.englishLanguage Then
+                errMsg = "Capacities not updated - please first remove the errors in the importfiles ... "
+                outputCollection.Add(errMsg)
+            Else
+                errMsg = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+                outputCollection.Add(errMsg)
+            End If
+            Call logger(ptErrLevel.logError, "processUrlaubsplaner: ", outputCollection)
+
+        End If
+
+
+        Dim ti As Long = sw.EndTimer()
+        errMessages = outputCollection
+
+        processVisboUrlaubsplaner = result
+
+    End Function
+
     ''' <summary>
     ''' standard import of actual data like Instart
     ''' </summary>
@@ -2869,6 +3192,15 @@ Module rpaModule1
     Private Function processVisboActualData1(ByVal myName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+            lastReadingCustomization = readCustomizations()
+        End If
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
 
@@ -2949,11 +3281,12 @@ Module rpaModule1
     End Function
 
 
-    Private Function processVisboActualData2(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+    Public Function processVisboActualData2(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
-
+        logfileNamePath = createLogfileName(rpaFolder, myName)
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData2.ToString, myName)
+
 
         Dim weitermachen As Boolean = False
         Dim outPutCollection As New Collection
@@ -3012,7 +3345,7 @@ Module rpaModule1
         ' Konfigurations-Dateien lesen 
         ' ===========================================================
         ' Konfigurationsdatei lesen und Validierung durchführen
-        Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+        Dim configActualDataImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configActualDataImport.xlsx")
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
         ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
@@ -3388,7 +3721,7 @@ Module rpaModule1
 
                             End If
                             Dim istDatenVName As String = ptVariantFixNames.acd.ToString
-                                Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
                             ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
                             ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
@@ -3543,8 +3876,20 @@ Module rpaModule1
 
                 Else
                     For Each errImp As String In listOfErrorImportFilesAllg
+                        Dim errImpName As String = My.Computer.FileSystem.GetName(errImp)
+                        Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, errImpName)
+                        My.Computer.FileSystem.MoveFile(errImp, newDestination, True)
+                        Call logger(ptErrLevel.logError, "failed: ", errImp)
+                        Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                        Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                        My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
                     Next
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                    & myName & ": with errors ..." & vbCrLf _
+                                                                                    & "Look for more details in the Failure-Folder", errMsgCode)
                     ' Fehler erfolgt
                     ' Dateien müssen in failure-Directory verschoben werden
                     Call MsgBox("TODO")
@@ -3559,18 +3904,18 @@ Module rpaModule1
                     outPutline = "Es gibt keine Datei zum Importieren von Istdaten"
                 End If
 
-                Call logger(ptErrLevel.logWarning, outPutline, "PTImportIstdaten", anzFehler)
+                Call logger(ptErrLevel.logWarning, outPutline, "processVisboActualData2", anzFehler)
 
             End If
 
         Else
             ' Fehlermeldung für Konfigurationsfile nicht vorhanden
             If awinSettings.englishLanguage Then
-                outPutline = "Error: either no configuration file found or worng definitions !"
+                outPutline = "Error: either no configuration file found or worng definitions ! " & configActualDataImport
             Else
-                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
+                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen ! " & configActualDataImport
             End If
-            Call logger(ptErrLevel.logError, outPutline, "PTImportIstdaten", anzFehler)
+            Call logger(ptErrLevel.logError, outPutline, "processVisboActualData2", anzFehler)
 
             allOk = allOk And False
 
@@ -3580,300 +3925,213 @@ Module rpaModule1
 
     End Function
 
+    Public Function processInstartProposal(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim instartImportConfigOK As Boolean = False
 
-    ''''' <summary>
-    ''''' composition of the FileName of the different Logfiles for the RPA Import as well
-    ''''' </summary>
-    ''''' <param name="rpaFolder"></param>
-    ''''' <param name="rpaImportfile"></param>
-    ''''' <returns></returns>
-    ''Public Function createLogfileName(Optional ByVal rpaFolder As String = "", Optional ByVal rpaImportfile As String = "") As String
-    ''    ' FileNamen zusammenbauen
-    ''    Dim logfileOrdner As String = "logfiles"
-
-
-    ''    If IsNothing(awinPath) Then
-    ''        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''    End If
-    ''    Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-
-    ''    ' write logfiles in rpaFolder, if RPA was started
-    ''    If Not IsNothing(rpaFolder) And rpaFolder <> "" Then
-    ''        logfilePath = My.Computer.FileSystem.CombinePath(rpaFolder, logfileOrdner)
-    ''    End If
-
-    ''    Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''    Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''    ' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''    If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''    End If
-    ''    createLogfileName = logfileNamePath
-    ''End Function
-
-    ''''' <summary>
-    '''''  schreibt in das logfile mit Errorlevel
-    ''''' </summary>
-    ''''' <param name="errLevel"></param>
-    ''''' <param name="text"></param>
-    ''''' <param name="addOn"></param>
-    ''''' <param name="anzFehler"></param>
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByVal anzFehler As Long)
-
-    ''    Try
-    ''        Dim strMeld As String
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
-
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-
-    ''        '' write logfiles in rpaFolder, if RPA was started
-    ''        'If Not IsNothing(rpaFolder) Then
-    ''        '    logfilePath = rpaFolder
-    ''        'End If
-
-    ''        'Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-
-
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-
-    ''    Catch ex As Exception
-    ''        If awinSettings.englishLanguage Then
-    ''            Call MsgBox("ERROR while Writing to logfile" & ex.Message)
-    ''        Else
-    ''            Call MsgBox("Fehler beim Schreiben ins logfile" & ex.Message)
-    ''        End If
-
-    ''    End Try
-
-
-    ''End Sub
-
-
-
-    ''''' <summary>
-    ''''' schreibt die Inhalte der Collection als String in das Logfile
-    ''''' </summary>
-    ''''' <param name="meldungen"></param>
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal meldungen As Collection)
-
-    ''    Try
-    ''        Dim anzZeilen As Integer = meldungen.Count
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        'logfileNamePath = createLogfileName(rpaFolder, rpaImportfile)
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-
-    ''        For i As Integer = 1 To anzZeilen
-
-    ''            Dim text As String = CStr(meldungen.Item(i))
-    ''            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
-    ''            logf.writeline(strMeld)
-
-    ''        Next
-    ''        logf.close()
-    ''    Catch ex As Exception
-
-    ''    End Try
-    ''End Sub
-
-    ''''' <summary>
-    ''''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
-    ''''' </summary>
-    ''''' <param name="text"></param>
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String)
-
-    ''    Try
-    ''        Dim anzSpalten As Integer = text.Length
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-
-    ''        ' Meldungstext zusammensetzen aus dem text-array
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
-    ''        For i As Integer = 0 To anzSpalten - 1
-    ''            strMeld = strMeld & logTrennz & CStr(text(i))
-    ''        Next
-
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-    ''    Catch ex As Exception
-
-    ''    End Try
-
-    ''End Sub
-
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String, ByVal values() As Double)
-
-
-    ''    Try
-    ''        Dim anzSpalten As Integer = text.Length
-    ''        Dim anzSpaltenValues As Integer = values.Length
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-
-    ''        ' Meldungstext zusammensetzen aus dem text-array
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
-    ''        For i As Integer = 0 To anzSpalten - 1
-    ''            strMeld = strMeld & logTrennz & CStr(text(i))
-    ''        Next
-    ''        For k As Integer = 0 To anzSpaltenValues - 1
-    ''            strMeld = strMeld & logTrennz & Format(values(k), "#,##0.##")
-    ''        Next
-
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-    ''    Catch ex As Exception
-
-    ''    End Try
-
-    ''End Sub
-
-
-    ''Public Sub logger(ByVal logfileNamePath As String, ByVal errLevel As Integer, ByVal addOn As String, ByVal strLog As String)
-    ''    Try
-
-    ''        Dim strMeld As String
-
-    ''        ' tk 15.8. in Order to avoid warning statements in Visual Studio 
-    ''        ' once this is needed in the code, then uncomment it accordingly 
-    ''        'Const ForReading = 1, ForWriting = 2, ForAppending = 8
-
-    ''        Const ForAppending = 8
-    ''        Const logTrennz As String = " , "
-    ''        ' logfile-stream erzeugen
-    ''        Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-    ''        '' FileNamen zusammenbauen
-    ''        ' Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
-
-    ''        '' FileNamen zusammenbauen
-    ''        'Dim logfileOrdner As String = "logfiles"
-    ''        'If IsNothing(awinPath) Then
-    ''        '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-    ''        '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-    ''        'End If
-    ''        'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    ''        'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-    ''        'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-    ''        '' Fragen, ob bereits existiert - eventuell nicht nötig
-    ''        'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    ''        '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-    ''        'End If
-    ''        ' logfile öffnen
-    ''        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-    ''        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
-    ''        logf.writeline(strMeld)
-    ''        logf.close()
-
-    ''    Catch ex As Exception
-
-    ''    End Try
-    ''End Sub
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configProposalImport As String = ""
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+            ' wenn es gibt - lesen der Jira und anderer, die durch configCapaImport beschrieben sind
+            ' no longer necessary
+            ' Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            Dim allesOK As Boolean = checkProjectImportConfig(configProposalImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If allesOK Then
+
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
+                'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
+
+                If allesOK Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Else
+                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        End If
+
+                    End Try
+                Else
+
+                End If
+
+
+            End If
+
+
+            outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+            outPutCollection.Add(outputString)
+
+            If outPutCollection.Count > 0 Then
+                If awinSettings.englishLanguage Then
+                    Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                Else
+                    Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                End If
+            End If
+
+            Try
+                ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+
+                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                Else
+                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                End If
+
+            End Try
+
+            'Else
+            '    Call logger(ptErrLevel.logError, "processInstartProposal", outPutCollection)
+            '    allOk = False
+            'End If
+
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboInstartProposal.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
+        End Try
+
+        processInstartProposal = allOk
+    End Function
+    ''' <summary>
+    ''' Gibt das jeweilige Ergebnis weiter fürs logfile und schiebt die jeweilige Datei in die entsprechenden Folder
+    ''' </summary>
+    ''' <param name="fullfileName"></param>
+    ''' <param name="allOK"></param>
+    Public Sub processResult(ByVal fullfileName As String, ByVal allOK As Boolean, ByVal meldungen As Collection)
+
+        Dim myName As String = My.Computer.FileSystem.GetName(fullfileName)
+
+        ' reading messages of logfile
+        Dim errMessages As Collection = readlogger(ptErrLevel.logError)
+
+        Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
+
+        For i As Integer = 1 To meldungen.Count
+            Dim text As String = CStr(meldungen.Item(i))
+            mailMessage = mailMessage & text & vbCrLf
+        Next
+
+        For i As Integer = 1 To errMessages.Count
+            Dim text As String = CStr(errMessages.Item(i))
+            mailMessage = mailMessage & text & vbCrLf
+        Next
+
+        'nur dann ist fehlerfrei importiert
+        allOK = allOK And meldungen.Count < 1 And errMessages.Count < 1
+
+        If allOK Then
+            Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+            My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
+            Call logger(ptErrLevel.logInfo, "success: ", myName)
+
+            errMsgCode = New clsErrorCodeMsg
+            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ..." & vbCrLf _
+                                                                            & mailMessage, errMsgCode)
+
+        Else
+            Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+            If My.Computer.FileSystem.FileExists(fullfileName) Then
+                My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
+                Call logger(ptErrLevel.logError, "failed: ", fullfileName)
+
+                'Dim errMessages As Collection = readlogger(ptErrLevel.logError)
+
+                Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+
+                'Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
+
+                'For i As Integer = 1 To meldungen.Count
+                '    Dim text As String = CStr(meldungen.Item(i))
+                '    mailMessage = mailMessage & text & vbCrLf
+                'Next
+
+                'For i As Integer = 1 To errMessages.Count
+                '    Dim text As String = CStr(errMessages.Item(i))
+                '    mailMessage = mailMessage & text & vbCrLf
+                'Next
+
+
+                errMsgCode = New clsErrorCodeMsg
+                'result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                '                                                            & myName & ": with errors ..." & vbCrLf _
+                '                                                            & "Look for more details in the Failure-Folder: " & failureFolder, errMsgCode)
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                            & myName & ": with errors ..." & vbCrLf _
+                                                                            & mailMessage, errMsgCode)
+            End If
+        End If
+
+
+        ' wieder in das normale logfile schreiben
+        logfileNamePath = createLogfileName(rpaFolder)
+
+        If Not result Then
+            If awinSettings.englishLanguage Then
+                msgTxt = "Sending an Email to report the result failed !"
+            Else
+                msgTxt = "Beim Senden einer Email, um das Ergebnis zu melden, ging schief !"
+            End If
+            Call logger(ptErrLevel.logError, "processResult", msgTxt)
+        End If
+    End Sub
 
 End Module

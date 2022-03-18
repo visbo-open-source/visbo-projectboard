@@ -47,9 +47,6 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MongoDB.Bson">
-      <HintPath>..\MongoDbAccess\CSharpDriver\MongoDB.Bson.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -73,8 +70,10 @@
     <Compile Include="clsAppearanceDB.vb" />
     <Compile Include="clsAppearances.vb" />
     <Compile Include="clsBewertungDB.vb" />
+    <Compile Include="clsCapa.vb" />
     <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
+    <Compile Include="clsConfigLine.vb" />
     <Compile Include="clsConfigOrgaImport.vb" />
     <Compile Include="clsConfigProjectsImport.vb" />
     <Compile Include="clsCustomField.vb" />

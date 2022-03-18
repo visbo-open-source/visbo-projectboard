@@ -310,7 +310,7 @@ Public Module Module1
         acd = 1 ' ggf später für ActualData 
     End Enum
 
-    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
+    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts", "importConfiguration"}
 
     Public Enum ptSettingTypes
         customfields = 0
@@ -322,6 +322,7 @@ Public Module Module1
         reportprofiles = 6
         ppttemplates = 7
         generalexcelcharts = 8
+        importConfiguration = 9
     End Enum
 
     Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
@@ -7702,58 +7703,6 @@ Public Module Module1
     End Sub
 
 
-    '''' <summary>
-    '''' initialisert das Logfile
-    '''' </summary>
-    '''' <remarks></remarks>
-    'Public Sub logfileInit()
-
-    '    Try
-
-    '        With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
-    '            .Name = "logBuch"
-    '            CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
-    '            CType(.Columns(1), Excel.Range).ColumnWidth = 15
-    '            CType(.Columns(2), Excel.Range).ColumnWidth = 10
-    '            CType(.Columns(3), Excel.Range).ColumnWidth = 50
-    '            CType(.Columns(4), Excel.Range).ColumnWidth = 100
-    '        End With
-    '    Catch ex As Exception
-    '        Call MsgBox("Error bei logfileInit")
-    '    End Try
-
-
-    'End Sub
-    ''''' <summary>
-    '''' schreibt in das logfile
-    '''' </summary>
-    '''' <param name="text"></param>
-    '''' <param name="addOn"></param>
-    '''' <remarks></remarks>
-    'Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
-
-    '    Dim obj As Object
-
-    '    Try
-    '        obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
-    '        With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-
-    '            CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-    '            CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-    '            CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
-    '            CType(.Cells(1, 3), Excel.Range).Value = addOn
-    '            CType(.Cells(1, 4), Excel.Range).Value = text
-
-    '        End With
-    '        anzFehler = anzFehler + 1
-    '        xlsLogfile.Save()
-
-    '    Catch ex As Exception
-
-    '    End Try
-    'End Sub
-
 
     ''' <summary>
     ''' composition of the FileName of the different Logfiles for the RPA Import as well
@@ -7806,29 +7755,6 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            '' FileNamen zusammenbauen
-            'Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
-
-            'Dim logfileOrdner As String = "logfiles"
-            'If IsNothing(awinPath) Then
-            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            'End If
-            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-
-            '' write logfiles in rpaFolder, if RPA was started
-            'If Not IsNothing(rpaFolder) Then
-            '    logfilePath = rpaFolder
-            'End If
-
-            'Dim logfileName As String = "logfile" & "_" & rpaImportfile & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            '' Fragen, ob bereits existiert - eventuell nicht nötig
-            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-            'End If
-
-
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
@@ -7869,23 +7795,6 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-
-            '' FileNamen zusammenbauen
-            'logfileNamePath = createLogfileName(rpaFolder, rpaImportfile)
-
-            '' FileNamen zusammenbauen
-            'Dim logfileOrdner As String = "logfiles"
-            'If IsNothing(awinPath) Then
-            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            'End If
-            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            '' Fragen, ob bereits existiert - eventuell nicht nötig
-            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-            'End If
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
 
@@ -7923,20 +7832,6 @@ Public Module Module1
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
 
-            '' FileNamen zusammenbauen
-            'Dim logfileOrdner As String = "logfiles"
-            'If IsNothing(awinPath) Then
-            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            'End If
-            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            '' Fragen, ob bereits existiert - eventuell nicht nötig
-            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-            'End If
-
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
             For i As Integer = 0 To anzSpalten - 1
@@ -7971,21 +7866,6 @@ Public Module Module1
             Const logTrennz As String = " , "
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
-
-
-            '' FileNamen zusammenbauen
-            'Dim logfileOrdner As String = "logfiles"
-            'If IsNothing(awinPath) Then
-            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            'End If
-            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            '' Fragen, ob bereits existiert - eventuell nicht nötig
-            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-            'End If
 
             ' Meldungstext zusammensetzen aus dem text-array
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
@@ -8022,23 +7902,6 @@ Public Module Module1
             ' logfile-stream erzeugen
             Dim fs = CreateObject("Scripting.FileSystemObject")
 
-
-            '' FileNamen zusammenbauen
-            ' Dim logfileNamePath As String = createLogfileName(rpaFolder, rpaImportfile)
-
-            '' FileNamen zusammenbauen
-            'Dim logfileOrdner As String = "logfiles"
-            'If IsNothing(awinPath) Then
-            '    Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-            '    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
-            'End If
-            'Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            'Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-            '' Fragen, ob bereits existiert - eventuell nicht nötig
-            'If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            '    My.Computer.FileSystem.CreateDirectory(logfilePath)
-            'End If
             ' logfile öffnen
             Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
             strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
@@ -8049,120 +7912,62 @@ Public Module Module1
 
         End Try
     End Sub
-    '''' <summary>
-    '''' öffnet das LogFile
-    '''' </summary>
-    '''' <remarks></remarks>
-    'Public Sub logfileOpen()
-
-    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
-    '    If appInstance.ScreenUpdating Then
-    '        appInstance.ScreenUpdating = False
-    '    End If
 
 
-    '    ' aktives Workbook merken im Variable actualWB
-    '    Dim actualWB As String = appInstance.ActiveWorkbook.Name
+    Public Function readlogger(ByVal errLevel As Integer) As Collection
 
-    '    Dim logfileOrdner As String = "logfiles"
-    '    Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-    '    Dim logfileName As String = "logfile" & "_" & Date.Now.Year.ToString & Date.Now.Month.ToString("0#") & Date.Now.Day.ToString("0#") & "_" & Date.Now.TimeOfDay.ToString.Replace(":", "-") & ".xlsx"
-    '    Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+        Dim errMessages As New Collection
+        Try
+            ' logfile-stream 
+            Using logf As New Microsoft.VisualBasic.FileIO.TextFieldParser(logfileNamePath)
+                logf.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited
+                logf.Delimiters = New String() {","}
+                Dim currentRow As String
+                While Not logf.EndOfData
+                    Try
+                        currentRow = logf.ReadLine()
+                        Select Case errLevel
+                            Case ptErrLevel.logInfo
+                                If currentRow.Contains(errorLevel(ptErrLevel.logInfo)) Or currentRow.Contains(errorLevel(ptErrLevel.logDebug)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
+                                    errMessages.Add(currentRow)
+                                End If
+                            Case ptErrLevel.logDebug
+                                If currentRow.Contains(errorLevel(ptErrLevel.logDebug)) Or
+                                 currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                 currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
+                                    errMessages.Add(currentRow)
+                                End If
+                            Case ptErrLevel.logWarning
+                                If currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                 currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
+                                    errMessages.Add(currentRow)
+                                End If
+                            Case ptErrLevel.logError
+                                If currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                 currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
+                                    errMessages.Add(currentRow)
+                                End If
+                            Case ptErrLevel.logsevereError
+                                If currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
+                                    errMessages.Add(currentRow)
+                                End If
+                            Case Else
+                                errMessages.Add(currentRow)
+                        End Select
 
-    '    If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-    '        My.Computer.FileSystem.CreateDirectory(logfilePath)
-    '    End If
+                    Catch ex As Microsoft.VisualBasic.FileIO.MalformedLineException
+                        Call logger(ptErrLevel.logsevereError, "readLogger", "Line " & ex.Message & " is invalid.  Skipping")
+                    End Try
+                End While
+            End Using
+        Catch ex As Exception
+        End Try
+        readlogger = errMessages
 
-    '    ' Prüfen, ob es bereits ein offenes Logfile gibt ... 
-    '    Try
-    '        If myLogfile <> "" Then
-    '            ''Call logfileSchliessen()
-    '        End If
-    '    Catch ex As Exception
+    End Function
 
-    '    End Try
-
-    '    Try
-    '        ' Logfile neu anlegen 
-    '        xlsLogfile = appInstance.Workbooks.Add
-    '        ' schreibt Sheet Namen in logfile ...  
-    '        Call logfileInit()
-
-    '        xlsLogfile.SaveAs(logfileNamePath)
-    '        myLogfile = xlsLogfile.Name
-
-    '    Catch ex As Exception
-    '        logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
-    '                                        "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Administrator"
-    '        appInstance.ScreenUpdating = True
-    '        Throw New ArgumentException(logmessage)
-    '    End Try
-
-
-
-    '    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
-    '    appInstance.Workbooks(actualWB).Activate()
-
-    '    If appInstance.ScreenUpdating <> formerSU Then
-    '        appInstance.ScreenUpdating = formerSU
-    '    End If
-
-
-    'End Sub
-
-
-    '''' <summary>
-    '''' schliesst  das logfile 
-    '''' </summary>  
-    '''' <remarks></remarks>
-    'Public Sub logfileSchliessen()
-
-    '    appInstance.EnableEvents = False
-
-    '    Try
-
-    '        If myLogfile <> "" Then
-    '            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
-    '            myLogfile = ""
-    '        End If
-
-
-    '    Catch ex As Exception
-    '        Call MsgBox("Fehler beim Schließen des Logfiles")
-    '    End Try
-
-    '    appInstance.EnableEvents = True
-    'End Sub
-
-    '''' <summary>
-    '''' schliesst  das logfile 
-    '''' </summary>  
-    '''' <remarks></remarks>
-    'Public Sub logfileSchliessen()
-
-
-    '    ' aktives Workbook merken im Variable actualWB
-    '    Dim actualWB As String = appInstance.ActiveWorkbook.Name
-
-    '    appInstance.EnableEvents = False
-
-    '    Try
-
-    '        If myLogfile <> "" Then
-    '            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
-    '            myLogfile = ""
-    '        End If
-
-
-    '    Catch ex As Exception
-    '        Call MsgBox("Fehler beim Schließen des Logfiles")
-    '    End Try
-
-    '    appInstance.EnableEvents = True
-
-    '    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
-    '    appInstance.Workbooks(actualWB).Activate()
-    'End Sub
 
     ''' <summary>
     ''' zeigt die in der OutputCollection gesammelten Rückmeldungen in einem Fenster mit Scrollbar 
@@ -8171,18 +7976,24 @@ Public Module Module1
     ''' <param name="header"></param>
     ''' <param name="explanation"></param>
     ''' <remarks></remarks>
-    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String)
-        If outPutCollection.Count > 0 Then
+    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String, Optional ByVal logType As Integer = ptErrLevel.logInfo)
 
-            Dim outputFormular As New frmOutputWindow
-            With outputFormular
-                .Text = header
-                .lblOutput.Text = explanation
-                .textCollection = outPutCollection
-                .ShowDialog()
-            End With
+        If visboClient.Contains("RPA") Then
+            Call logger(logType, header, outPutCollection)
+        Else
+            If outPutCollection.Count > 0 Then
 
+                Dim outputFormular As New frmOutputWindow
+                With outputFormular
+                    .Text = header
+                    .lblOutput.Text = explanation
+                    .textCollection = outPutCollection
+                    .ShowDialog()
+                End With
+
+            End If
         End If
+
     End Sub
 
 

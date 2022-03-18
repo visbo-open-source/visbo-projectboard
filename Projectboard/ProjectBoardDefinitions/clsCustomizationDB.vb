@@ -32,6 +32,7 @@
     Private _missingDefinitionColor As Long
 
     Private _allianzIstDatenReferate As String
+    Private _isActualDataRelevant As String
     Private _autoSetActualDataDate As Boolean
     Private _actualDataMonth As Date
 
@@ -362,6 +363,18 @@
         Set(value As String)
             If Not IsNothing(value) Then
                 _allianzIstDatenReferate = value
+            End If
+        End Set
+    End Property
+
+
+    Public Property isActualDataRelevant As String
+        Get
+            isActualDataRelevant = _isActualDataRelevant
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _isActualDataRelevant = value
             End If
         End Set
     End Property
@@ -795,6 +808,7 @@
             .missingDefinitionColor = Me.missingDefinitionColor
 
             .allianzIstDatenReferate = Me.allianzIstDatenReferate
+            .isActualDataRelevant = Me.isActualDataRelevant
 
             .autoSetActualDataDate = Me.autoSetActualDataDate
 
@@ -883,6 +897,7 @@
             Me.missingDefinitionColor = .missingDefinitionColor
 
             Me.allianzIstDatenReferate = .allianzIstDatenReferate
+            Me.isActualDataRelevant = .isActualDataRelevant
 
             Me.autoSetActualDataDate = .autoSetActualDataDate
 

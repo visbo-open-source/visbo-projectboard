@@ -34,8 +34,8 @@ Imports System.Web
 
 'Weitere Informationen erhalten Sie in der Menüband-XML-Dokumentation in der Hilfe zu Visual Studio-Tools für Office.
 
-<Runtime.InteropServices.ComVisible(True)> _
-    Public Class Ribbon1
+<Runtime.InteropServices.ComVisible(True)>
+Public Class Ribbon1
     Implements Microsoft.Office.Core.IRibbonExtensibility
 
     Private ribbon As Microsoft.Office.Core.IRibbonUI
@@ -3244,7 +3244,7 @@ Imports System.Web
                     Else
                         tmpLabel = "Modify Budget (Planning Version)"
                     End If
-                    Else
+                Else
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                         tmpLabel = "Ändern Attribute"
                     Else
@@ -7055,11 +7055,15 @@ Imports System.Web
 
                     ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
-                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
-                                                                                    CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                                    orgaName,
-                                                                                    importedOrga.validFrom,
-                                                                                    err)
+                        'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                        '                                                            CStr(settingTypes(ptSettingTypes.organisation)),
+                        '                                                            orgaName,
+                        '                                                            importedOrga.validFrom,
+                        '                                                            err)
+                        result = CType(databaseAcc, DBAccLayer.Request).storeTSOOrganisationToDB(importedOrga,
+                                                                                  orgaName,
+                                                                                  importedOrga.validFrom,
+                                                                                  err)
 
                     Else
                         result = True
@@ -7422,8 +7426,9 @@ Imports System.Web
                             If awinSettings.englishLanguage Then
                                 txtMsg = referenzPortfolioName & ": Portfolio does not exist - Cancelled ..."
                             End If
-
-                            Call MsgBox(txtMsg)
+                            If Not visboClient.Contains("RPA") Then
+                                Call MsgBox(txtMsg)
+                            End If
 
                             ''Call logfileSchliessen()
 
@@ -8141,19 +8146,49 @@ Imports System.Web
                         ' keine Fehler aufgetreten ... 
                         ' jetzt wird die Orga als Setting weggespeichert ... 
                         Dim err As New clsErrorCodeMsg
-                        Dim result As Boolean = False
+                        Dim result As Boolean = True
+                        Dim resultSum As Boolean = True
+                        Dim capas As List(Of clsCapa) = Nothing
+
+                        Dim capasOfOneRole As List(Of clsCapa) = Nothing
+                        Dim orga As clsOrganisation = Nothing
+
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
 
-                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
-                                                                                CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                                orgaName,
-                                                                                changedOrga.validFrom,
-                                                                                err)
+                            capas = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
 
-                            If result = True Then
+
+                            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
+
+                                Dim roledef As clsRollenDefinition = kvp.Value
+                                If Not roledef.isSummaryRole Then
+                                    capasOfOneRole = transformCapa(roledef)
+                                    For Each capa As clsCapa In capasOfOneRole
+                                        result = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, capas, err)
+                                        If result Then
+                                            Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
+                                        Else
+                                            Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful")
+                                        End If
+                                        resultSum = resultSum And result
+                                    Next
+                                End If
+                            Next
+
+
+                            '' here TODO: Split the orga - information and the capacity-Information
+
+                            'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                            '                                                     CStr(settingTypes(ptSettingTypes.organisation)),
+                            '                                                    orgaName,
+                            '                                                    changedOrga.validFrom,
+                            '                                                    err)
+
+                            If resultSum = True Then
                                 Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                                 Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
 
@@ -8165,8 +8200,8 @@ Imports System.Web
                                 Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
 
                             Else
-                                Call MsgBox("Error when writing Organisation to Database:" & vbCrLf & err.errorMsg)
-                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                Call MsgBox("Error when writing Capacities to Database:" & vbCrLf & err.errorMsg)
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
                             End If
 
                         Else
@@ -9220,7 +9255,7 @@ Imports System.Web
         Dim configJIRAProjects As String = awinPath & configfilesOrdner & "configJIRAProjectImport.xlsx"
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
+        Dim allesOK As Boolean = checkJIRAProjectImportConfig(configJIRAProjects, projectsFile, JIRAProjectsConfig, lastrow, outPutCollection)
 
         If allesOK Then
 

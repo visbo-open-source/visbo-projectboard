@@ -1,10 +1,14 @@
-﻿Imports MongoDB.Bson
+﻿
+' ur: 20220210 remove direkt MongoDB-Access
+'Imports MongoDB.Bson
 ''' <summary>
 ''' die Datenbank Klasse für Projekt-Write Protections
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsWriteProtectionItemDB
-    Public Id As ObjectId
+
+    ' ur: 20220210 remove direkt MongoDB-Access
+    'Public id As ObjectId
     Public pName As String
     Public vName As String
     Public type As Integer
