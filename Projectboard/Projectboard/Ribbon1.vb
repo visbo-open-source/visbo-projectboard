@@ -6966,14 +6966,16 @@ Public Class Ribbon1
         ' ===========================================================
         ' Konfigurationsdatei lesen und Validierung durchführen
 
-        ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-        Dim configOrgaImport As String = awinPath & configfilesOrdner & "configOrgaImport.xlsx"
-        Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
-        Dim lastrow As Integer = 0
+        ' ur: 21.03.2022
+        ' wenn es gibt - lesen der Organisation downloaded via WEBUI - no longer supported
 
-        ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
-        ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
-        Dim allesOK As Boolean = checkOrgaImportConfig(configOrgaImport, dateiname, orgaImportConfig, lastrow, outputCollection)
+        'Dim configOrgaImport As String = awinPath & configfilesOrdner & "configOrgaImport.xlsx"
+        'Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
+        'Dim lastrow As Integer = 0
+
+        '' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        '' hier werden Werte für actualDataFile, actualDataConfig gesetzt
+        'Dim allesOK As Boolean = checkOrgaImportConfig(configOrgaImport, dateiname, orgaImportConfig, lastrow, outputCollection)
 
 
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*rganisation*.xls*")
@@ -6984,14 +6986,9 @@ Public Class Ribbon1
 
         Dim weiterMachen As Boolean = False
 
-        'Call projektTafelInit()
-
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
-
-        ' öffnen des LogFiles
-        'Call logfileOpen()
 
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
@@ -7024,8 +7021,9 @@ Public Class Ribbon1
                 ' Öffnen des Organisations-Files
                 appInstance.Workbooks.Open(dateiname)
 
-                ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
-                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
+                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
+                ' ur: 21.03.2022: no longer import of organisation with config for orga roundtrip
+                ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 
