@@ -2937,7 +2937,7 @@ Module rpaModule1
         '    Call logger(ptErrLevel.logError, PTRpa.visboRoundtripOrga.ToString, ex.Message)
         'End Try
 
-        msgTxt = "This Import will no longer be supported, because you can download the Orga, change it and upload it via WebUI"
+        msgTxt = "This Import will no longer be supported! " & " NOW: Download the Orga, change it and upload it via WebUI"
         Call logger(ptErrLevel.logError, "VisboRoundTripOrga", msgTxt)
         allOK = False
 
