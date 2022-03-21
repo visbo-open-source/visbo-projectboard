@@ -8972,7 +8972,7 @@ Public Module agm2
         Dim newRoleDefinitions As New clsRollen
         Dim withoutConfiguration As Boolean = False
 
-        Dim validFrom As Date = Date.Now
+        Dim validFrom As Date = Date.MinValue
         ' auslesen der Gültigkeit
         Try
             validFrom = CDate(CType(orgaSheet.Cells(1, 2), Excel.Range).Value)
@@ -9001,7 +9001,7 @@ Public Module agm2
 
         ' Import ohne Configuration
 
-        If IsNothing(configListe) Or withoutConfiguration Then
+        If withoutConfiguration Then
             ' Auslesen der Rollen Definitionen
             Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
 
@@ -9009,7 +9009,7 @@ Public Module agm2
         Else  ' Import mit Configuration
 
             ' Auslesen der Rollen Definitionen 
-            Dim outputline As String = "Import of a downloaded Organisation no longer supported. Please use the upload of an organisation in the Visbo WEB UI"
+            Dim outputline As String = "Import of a downloaded Organisation no longer supported." & vbCrLf & "Please use the upload of an organisation in the Visbo WEB UI"
             outputCollection.Add(outputline)
             'Call readRoleDefinitionsWithConfig(orgaSheet, newRoleDefinitions, outputCollection, configListe)
         End If
