@@ -1264,10 +1264,11 @@ Public Class Request
                                         aktvp.managerID = u.userId
                                     End If
                                 Next
-
-                                Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
-                                If vpList.Count <= 0 Then
-                                    Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                If newManager.Count > 0 Then
+                                    Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                                    If vpList.Count <= 0 Then
+                                        Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                    End If
                                 End If
                             End If
                         Next
@@ -4960,10 +4961,11 @@ Public Class Request
                     result = webVPantwort.groups(0).users
                 End If
 
+            ElseIf errcode = 400 Then           ' not an email address delivered
+                Call logger(ptErrLevel.logWarning, "POSTUserToGroupOfVP", "'" & userEmail & "' is not a valid email address")
             Else
-
                 ' Fehlerbehandlung je nach errcode
-                Dim statError As Boolean = errorHandling_withBreak("GETallGroupsOfVP", errcode, errmsg & " : " & webVPantwort.message)
+                Dim statError As Boolean = errorHandling_withBreak("POSTUserToGroupOfVP", errcode, errmsg & " : " & webVPantwort.message)
 
             End If
             err.errorCode = errcode
@@ -8704,7 +8706,7 @@ Public Class Request
 
             End Select
 
-            msgTxt = errcode & ": Fehler in " & restCall & " : " & webAntwortMsg
+            webAntwortMsg = errcode & ": Fehler in " & restCall & " : " & webAntwortMsg
             Call logger(ptErrLevel.logError, "errorHandling_withBreak", msgTxt)
 
         Catch ex As Exception

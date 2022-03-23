@@ -6518,6 +6518,8 @@ Public Module agm2
             ' Einlesen der Ressourcen
             ' ------------------------------------------------------------------------------------------------------
             Dim wsRessourcen As Excel.Worksheet
+
+            Dim outputCollection As New Collection
             Try
                 wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"),
                                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -7082,6 +7084,15 @@ Public Module agm2
                                                 Catch ex As Exception
                                                     Throw New Exception(ex.Message)
                                                 End Try
+                                            Else
+
+                                                Dim logmessage As String = ""
+                                                If awinSettings.englishLanguage Then
+                                                    logmessage = hname & " does not exist in the current organisation"
+                                                Else
+                                                    logmessage = hname & " existiert nicht in der aktuellen Organisation"
+                                                End If
+                                                outputcollection.Add(logmessage)
 
                                             End If
 
@@ -7099,6 +7110,9 @@ Public Module agm2
 
                         Next zelle
 
+                        If outputCollection.Count > 0 Then
+                            showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "", ptErrLevel.logError)
+                        End If
 
                     End With
                 Catch ex As Exception
@@ -7111,7 +7125,7 @@ Public Module agm2
                     wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcenbedarfe"),
                                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                    Dim outputCollection As New Collection
+
                     Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
 
                     If outputCollection.Count > 0 Then
