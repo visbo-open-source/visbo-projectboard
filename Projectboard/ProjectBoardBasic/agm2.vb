@@ -6052,7 +6052,7 @@ Public Module agm2
                                                     Call logger(ptErrLevel.logError, "Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
                                                     Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                                 Else
-                                                    Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " &
+                                                    Dim exMsg As String = "Fehler, Lesen Termine: '" & objectName & "' unzulässige Angaben für Offset (>=0) und Dauer (>=1): " &
                                                                         "Offset= " & offset.ToString &
                                                                         ", Duration= " & duration.ToString & " " & objectName & "; "
 
@@ -6064,7 +6064,7 @@ Public Module agm2
                                             ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
                                             If duration <> ProjektdauerIndays Or offset <> 0 Then
 
-                                                Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " &
+                                                Dim exMsg As String = "Fehler, Lesen Termine: ProjektPhase '" & objectName & "' - unzulässige Angaben für  Dauer der ProjektPhase " &
                                                                         "Offset= " & offset.ToString &
                                                                         ", Duration=" & duration.ToString & " " & objectName & "; " &
                                                                         ", ProjektDauer=" & ProjektdauerIndays.ToString
@@ -6113,10 +6113,10 @@ Public Module agm2
 
                                         If duration < 1 Or offset < 0 Then
                                             If startDate = Date.MinValue And endeDate = Date.MinValue Then
-                                                Call logger(ptErrLevel.logError, "Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
-                                                Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
+                                                Call logger(ptErrLevel.logError, "Fehler, Lesen Termine: '" & objectName & "' - Es wurde kein Start- oder kein Ende-Datum eingetragen!", hproj.name, anzFehler)
+                                                Throw New Exception("Fehler, Lesen Termine: '" & objectName & "' wurde kein Datum eingetragen!")
                                             Else
-                                                Dim exmsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " &
+                                                Dim exmsg As String = "Fehler, Lesen Termine:  '" & objectName & "' - unpassende Angaben Start und Ende " &
                                                                     offset.ToString & ", " & duration.ToString & ": " & objectName
 
                                                 Call logger(ptErrLevel.logError, exmsg, hproj.name, anzFehler)
@@ -6278,8 +6278,8 @@ Public Module agm2
                                                 Next l
                                                 hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                             Else
-                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & cphase.nameID), hproj.name, anzFehler)
-                                                Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden" & cphase.nameID)
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine:  '" & objectName & "' - Hierarchie kann nicht richtig aufgebaut werden:" & cphase.nameID), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine: '" & objectName & "' -  Hierarchie kann nicht richtig aufgebaut werden" & cphase.nameID)
                                             End If
 
                                             hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
@@ -6307,8 +6307,8 @@ Public Module agm2
 
                                             If aktLevel = 0 Then
                                                 ' Fehler, denn Meilenstein kann nicht parallel zu Rootphase sein??
-                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName), hproj.name, anzFehler)
-                                                Throw New ArgumentException("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName)
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: '" & objectName & "' -  Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins passt nicht"), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine: '" & objectName & "' -   Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName)
 
                                             ElseIf aktLevel = 1 Then
                                                 phaseNameID = rootPhaseName
@@ -6326,8 +6326,8 @@ Public Module agm2
                                                 Next l
                                                 phaseNameID = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                             Else
-                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName), hproj.name, anzFehler)
-                                                Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName)
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine:  '" & objectName & "' - Hierarchie kann nicht richtig aufgebaut werden: Meilenstein "), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine: '" & objectName & "' -  Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName)
                                             End If
 
 
@@ -6345,10 +6345,10 @@ Public Module agm2
                                                 (DateDiff(DateInterval.Day, hilfsPhase.getStartDate, milestoneDate) < 0 Or
                                                  DateDiff(DateInterval.Day, hilfsPhase.getEndDate, milestoneDate) > 0) Then
 
-                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: '" & objectName & "' -  Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
                                                                     milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf &
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
-                                                Throw New Exception("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
+                                                Throw New Exception("Fehler, Lesen Termine:  '" & objectName & "' -  Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
                                                                     milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf &
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                                             End If
@@ -6359,8 +6359,8 @@ Public Module agm2
                                                 milestoneDate = hproj.startDate.AddDays(hilfsPhase.startOffsetinDays + hilfsPhase.dauerInDays)
                                             Else
                                                 If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                                    Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
-                                                                "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '"), hproj.name & ".xlsx", anzFehler)
+                                                    Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' hat seinen Termin später als das EndeDatum des Projekts" & vbLf &
+                                                                "Bitte korrigieren Sie dies evt. auch im Tabellenblatt Ressourcen der Datei '"), hproj.name & ".xlsx", anzFehler)
                                                 End If
 
                                             End If
@@ -6495,7 +6495,7 @@ Public Module agm2
                         End With
 
                     Catch ex As Exception
-                        Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
+                        Call logger(ptErrLevel.logError, ex.Message, "awinImportProjectmitHrchy", anzFehler)
                         'Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
                         Throw New ArgumentException(ex.Message)
 
@@ -6508,7 +6508,7 @@ Public Module agm2
                     Throw New ArgumentException("Es wurden keine Termine definiert! Projekt " & hproj.name & " kann nicht eingelesen werden")
                 End If
             Catch ex As Exception
-                Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
+                Call logger(ptErrLevel.logError, ex.Message, "awinImportProjectmitHrchy", anzFehler)
                 Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
 
             End Try
@@ -6518,6 +6518,8 @@ Public Module agm2
             ' Einlesen der Ressourcen
             ' ------------------------------------------------------------------------------------------------------
             Dim wsRessourcen As Excel.Worksheet
+
+            Dim outputCollection As New Collection
             Try
                 wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"),
                                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -7082,6 +7084,15 @@ Public Module agm2
                                                 Catch ex As Exception
                                                     Throw New Exception(ex.Message)
                                                 End Try
+                                            Else
+
+                                                Dim logmessage As String = ""
+                                                If awinSettings.englishLanguage Then
+                                                    logmessage = hname & " does not exist in the current organisation"
+                                                Else
+                                                    logmessage = hname & " existiert nicht in der aktuellen Organisation"
+                                                End If
+                                                outputcollection.Add(logmessage)
 
                                             End If
 
@@ -7099,6 +7110,9 @@ Public Module agm2
 
                         Next zelle
 
+                        If outputCollection.Count > 0 Then
+                            showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "", ptErrLevel.logError)
+                        End If
 
                     End With
                 Catch ex As Exception
@@ -7111,7 +7125,7 @@ Public Module agm2
                     wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcenbedarfe"),
                                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                    Dim outputCollection As New Collection
+
                     Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
 
                     If outputCollection.Count > 0 Then

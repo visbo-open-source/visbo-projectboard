@@ -4134,4 +4134,115 @@ Module rpaModule1
         End If
     End Sub
 
+    Public Function processNewImportFile(ByVal fileName As String) As Boolean
+
+        Dim fullFileName As String = fileName
+        Dim myName As String = ""
+        Dim rpaCategory As New PTRpa
+        Dim result As Boolean = False
+
+        ' Completion-File delivered?
+        completedOK = LCase(fullFileName).Contains(LCase("Timesheet_completed"))
+        If completedOK Then
+
+
+            Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was created at: " & Date.Now().ToLongDateString)
+
+            'Einlesen der TimeSheets - Telair
+            ' nachsehen ob collect vollständig
+            myName = My.Computer.FileSystem.GetName(fullFileName)
+            result = processVisboActualData2(myName, myActivePortfolio, collectFolder, Date.Now())
+            ' TODO: löschen des Timesheet-compl
+            If result Then
+                Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
+                My.Computer.FileSystem.MoveFile(myName, newDestination, True)
+                Call logger(ptErrLevel.logInfo, "success: ", myName)
+
+                ' wieder in das normale logfile schreiben
+                logfileNamePath = createLogfileName(rpaFolder)
+                errMsgCode = New clsErrorCodeMsg
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+            Else
+                Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
+                If My.Computer.FileSystem.FileExists(fullFileName) Then
+                    My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Call logger(ptErrLevel.logError, "failed: ", fullFileName)
+                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+
+                    ' wieder in das normale logfile schreiben
+                    logfileNamePath = createLogfileName(rpaFolder)
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                & myName & ": with errors ..." & vbCrLf _
+                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
+                End If
+            End If
+        End If
+
+
+        If My.Computer.FileSystem.FileExists(fullFileName) And Not fullFileName.Contains("~$") Then
+
+            Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was created at: " & Date.Now().ToLongDateString)
+
+            'FileExtension ansehen
+            Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
+            Select Case fileExt
+                Case ".xlsx"
+
+                    myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                    ' Bestimme den Import-Typ der zu importierenden Daten
+                    rpaCategory = bestimmeRPACategory(fullFileName)
+
+                    If rpaCategory = PTRpa.visboUnknown Then
+                        ' move file to unknown Folder ... 
+                        Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                        My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                        Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                    Else
+                        result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                        If result Then
+                            Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                        End If
+                    End If
+                Case ".mpp"
+
+                    myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                    ' Import Typ ist Microsoft Project File
+                    rpaCategory = PTRpa.visboMPP
+
+                    ' Import wird durchgeführt
+                    result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                    If result Then
+                        Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                    End If
+
+                Case Else
+                    myName = My.Computer.FileSystem.GetName(fullFileName)
+                    rpaCategory = PTRpa.visboUnknown
+                    ' move file to unknown Folder ... 
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+
+                    Try
+                        My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    Catch ex As Exception
+                        Call MsgBox("try catch watch.created" & ex.Message)
+                    End Try
+
+                    Call logger(ptErrLevel.logInfo, "unknown file / category: unknown", myName)
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                & myName & vbCrLf & " unknown file / category ...", errMsgCode)
+            End Select
+        Else
+            Dim a As String = ""
+        End If
+
+        processNewImportFile = result
+
+    End Function
 End Module
