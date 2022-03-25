@@ -1916,10 +1916,10 @@ Module rpaModule1
                     Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
                 Catch ex2 As Exception
                     allOK = False
-                    Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, ex2.Message)
+                    Call logger(ptErrLevel.logError, "RPA Error importing project brief file " & PTRpa.visboProject.ToString, ex2.Message)
                 End Try
             Else
-                Call logger(ptErrLevel.logError, "RPA Error Importing MS Project file " & PTRpa.visboProject.ToString, myName)
+                Call logger(ptErrLevel.logError, "RPA Error importing project brief file " & PTRpa.visboProject.ToString, myName)
             End If
 
             ' store Project 
@@ -2060,6 +2060,9 @@ Module rpaModule1
             lastReadingOrganisation = readOrganisations()
         End If
 
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
         Try
 
             Dim portfolioName As String = myName.Substring(0, myName.IndexOf(".xls"))
@@ -2129,6 +2132,9 @@ Module rpaModule1
         Dim msgTxt As String = ""
 
         Dim heute As Date = Date.Now
+
+        ' cache löschen
+        Dim result0 As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
         Try
             ShowProjekte.Clear()
@@ -2518,6 +2524,9 @@ Module rpaModule1
         Dim saveShowRangeLeft As Integer = showRangeLeft
         Dim saveShowRangeRight As Integer = showRangeRight
 
+        ' cache löschen
+        result = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
         Try
             ' Get the Ranking out of Excel List , it is just the ordering of the rows 
             ' value holds the AllProjekte.Key, i.e name#variantName
@@ -2690,6 +2699,9 @@ Module rpaModule1
         Dim myName As String = My.Computer.FileSystem.GetName(fileName)
         Dim allOk As Boolean = False
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboMPP.ToString, myName)
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
         Try
 
@@ -2958,6 +2970,10 @@ Module rpaModule1
             lastReadingOrganisation = readOrganisations()
         End If
 
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
         'read File with Jira-Projects and put it into ImportProjekte
         Try
             '' read the file and import into hproj
@@ -3044,6 +3060,7 @@ Module rpaModule1
         If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
             lastReadingOrganisation = readOrganisations()
         End If
+
 
         Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
 
@@ -3204,6 +3221,9 @@ Module rpaModule1
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
 
+        ' cache löschen
+        Dim result0 As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
         Dim weitermachen As Boolean = False
         Dim outPutCollection As New Collection
         Dim outPutline As String = ""
@@ -3287,6 +3307,8 @@ Module rpaModule1
         logfileNamePath = createLogfileName(rpaFolder, myName)
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData2.ToString, myName)
 
+        ' cache löschen
+        Dim result0 As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
         Dim weitermachen As Boolean = False
         Dim outPutCollection As New Collection
@@ -3937,6 +3959,11 @@ Module rpaModule1
             lastReadingOrganisation = readOrganisations()
         End If
 
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
         'read File with Proposals Instart and put it into ImportProjekte
         Try
             '' read the file and import into hproj
@@ -4060,6 +4087,7 @@ Module rpaModule1
 
         ' reading messages of logfile
         Dim errMessages As Collection = readlogger(ptErrLevel.logError)
+        Dim warnMessages As Collection = readlogger(ptErrLevel.logWarning)
 
         Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
 
@@ -4068,8 +4096,8 @@ Module rpaModule1
             mailMessage = mailMessage & text & vbCrLf
         Next
 
-        For i As Integer = 1 To errMessages.Count
-            Dim text As String = CStr(errMessages.Item(i))
+        For i As Integer = 1 To warnMessages.Count
+            Dim text As String = CStr(warnMessages.Item(i))
             mailMessage = mailMessage & text & vbCrLf
         Next
 
