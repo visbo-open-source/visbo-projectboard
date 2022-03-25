@@ -26,7 +26,7 @@
     <PublishUrl>c:\publish\VISBO Projectboard\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>4.3.1.21</ApplicationVersion>
+    <ApplicationVersion>4.4.0.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>

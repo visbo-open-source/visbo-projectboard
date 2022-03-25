@@ -4456,12 +4456,6 @@ Public Module agm2
     Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef mapProj As clsProjekt, ByRef importdate As Date)
 
         Dim prj As MSProject.Application = Nothing
-        Dim pjApp As Object
-        If modus = "RPA" Then
-            pjApp = CreateObject("MSProject.Application")
-            pjApp.Visible = False
-            'prj = New MSProject.Application
-        End If
 
         Dim msproj As MSProject.Project
 
@@ -4502,14 +4496,21 @@ Public Module agm2
             'On Error Resume Next
             Try
                 prj = CType(GetObject(, "msproject.application"), MSProject.Application)
+
+                ' remove the question if the macros should be deactivate 
+                'prj.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
+
             Catch ex As Exception
                 prj = CType(CreateObject("msproject.application"), MSProject.Application)
+
+                ' remove the question if the macros should be deactivate 
+                'prj.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
 
                 If IsNothing(prj) Then
                     If modus <> "RPA" Then
                         Call MsgBox("MSproject ist nicht installiert")
                     Else
-                        Call logger(ptErrLevel.logError, "Import MS Project", "not installed ... Exit")
+                        Call logger(ptErrLevel.logError, "Import MS Project", "Microsoft Project is not installed ... Exit")
                     End If
 
                     Exit Sub
@@ -4521,7 +4522,10 @@ Public Module agm2
                 ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
                 ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
 
-                prj.FileOpen(Name:=filename,
+                ' remove the question if the macros should be deactivate 
+                prj.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
+
+                prj.FileOpenEx(Name:=filename,
                             ReadOnly:=True, FormatID:="MSProject.MPP", NoAuto:=True)
 
 

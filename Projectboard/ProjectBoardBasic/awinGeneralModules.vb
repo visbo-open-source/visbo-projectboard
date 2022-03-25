@@ -1313,7 +1313,7 @@ Public Module awinGeneralModules
                     If Not IsNothing(formerProj) Then
                         ' Fall Telair oder auch andere: wenn PNr angeben ist und die PNames aus DB und Import nicht übereinstimmen, dann gewinnt DB 
                         If formerProj.name <> hproj.name Then
-                            Dim txtMsg As String = "from " & hproj.name & " to " & formerProj.name
+                            Dim txtMsg As String = "from '" & hproj.name & "' to '" & formerProj.name & "'"
                             nameChangeCollection.Add(txtMsg)
 
                             hproj.name = formerProj.name
@@ -1508,6 +1508,10 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
                 ImportProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
             Next
+            If nameChangeCollection.Count > 0 Then
+                Dim headerMsg As String = "project Names were changed To DB-Names according to their project number: "
+                Call showOutPut(nameChangeCollection, headerMsg, "", ptErrLevel.logWarning)
+            End If
         Else
             ' interactive Excel Client
             If ImportProjekte.Count < 1 Then
@@ -1540,7 +1544,7 @@ Public Module awinGeneralModules
 
                 If nameChangeCollection.Count > 0 Then
                     Dim headerMsg As String = "project Names were changed To DB-Names"
-                    Call showOutPut(nameChangeCollection, headerMsg, "")
+                    Call showOutPut(nameChangeCollection, headerMsg, "", ptErrLevel.logWarning)
                 End If
 
 
