@@ -552,7 +552,7 @@ Module rpaModule1
             result = Date.Now
         Else
             msgTxt = "No customization in VISBO"
-            Call logger(ptErrLevel.logError, "readCustomizations", msgTxt)
+            Call logger(ptErrLevel.logWarning, "readCustomizations", msgTxt)
             result = Date.MinValue
         End If
         readCustomizations = result
@@ -3217,6 +3217,9 @@ Module rpaModule1
         End If
         If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
             lastReadingCustomization = readCustomizations()
+            If lastReadingCustomization <= Date.MinValue Then
+                Call logger(ptErrLevel.logError, "processVisboActualData1", "the import of actual data requires the existence of a customization setting")
+            End If
         End If
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
@@ -3304,11 +3307,24 @@ Module rpaModule1
     Public Function processVisboActualData2(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
 
         Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+
         logfileNamePath = createLogfileName(rpaFolder, myName)
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData2.ToString, myName)
 
         ' cache löschen
         Dim result0 As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+            lastReadingCustomization = readCustomizations()
+            If lastReadingCustomization <= Date.MinValue Then
+                Call logger(ptErrLevel.logError, "processVisboActualData2", "the import of actual data requires the existence of a customization setting")
+            End If
+        End If
 
         Dim weitermachen As Boolean = False
         Dim outPutCollection As New Collection
