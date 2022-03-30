@@ -21745,12 +21745,14 @@ Public Module agm2
                     nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, True, True, True)
                     If nextOrga.count > 0 Then
                         validOrganisations.addOrga(nextOrga)
+                        tsOfnextOrga = nextOrga.validFrom
                     End If
 
                     If currentOrga.count > 0 Then
 
                         If currentOrga.count > 0 Then
                             validOrganisations.addOrga(currentOrga)
+                            tsOfcurrentOrga = currentOrga.validFrom
                         End If
 
                         CostDefinitions = currentOrga.allCosts

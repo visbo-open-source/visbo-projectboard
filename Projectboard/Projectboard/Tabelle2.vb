@@ -149,11 +149,12 @@ Public Class Tabelle2
     Private Sub Tabelle2_BeforeDoubleClick(Target As Microsoft.Office.Interop.Excel.Range, ByRef Cancel As Boolean) Handles Me.BeforeDoubleClick
 
         Dim former_EE As Boolean = appInstance.EnableEvents
+        Dim newRangeLeft As Integer = 0
+        Dim newRangeRight As Integer = 0
 
         appInstance.EnableEvents = True
 
         Dim currentCell As Excel.Range = Target
-
 
         ' die Rechtsklick-Behandlung soll auf alle Fälle abgeschaltet werden 
         Cancel = True
@@ -273,12 +274,16 @@ Public Class Tabelle2
                                             Else
                                                 tmpZeile = existingZeile
                                             End If
+
+                                            ' ur: 2022.03.29 
+                                            Dim changed1 As Boolean = getTimeZoneRegardingTSO(newRangeLeft, newRangeRight, True)
+
                                             ' aktualisiere die ergänzte Rolle 
                                             Call aktualisiereRoleCostInSheet(tmpZeile,
-                                                                                 visboZustaende.meColSD, showRangeLeft, showRangeRight,
+                                                                                 visboZustaende.meColSD, newRangeLeft, newRangeLeft,
                                                                                  phStart, phEnde, mySubstituteRole.Xwerte)
 
-                                            Call updateMassEditSummenValue(hproj, cphase, showRangeLeft, showRangeRight, kvp.Key, True, tmpZeile)
+                                            Call updateMassEditSummenValue(hproj, cphase, newRangeLeft, newRangeRight, kvp.Key, True, tmpZeile)
 
                                         End If
 
@@ -288,9 +293,12 @@ Public Class Tabelle2
 
                                 Next
 
+                                ' ur: 2022.03.29 
+                                Dim changed2 As Boolean = getTimeZoneRegardingTSO(newRangeLeft, newRangeRight, True)
+
                                 ' aktualisiere die ursprüngliche Rolle 
                                 Call aktualisiereRoleCostInSheet(Target.Row,
-                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight,
+                                                                     visboZustaende.meColSD, newRangeLeft, newRangeLeft,
                                                                      phStart, phEnde, myRole.Xwerte)
 
                                 ' den neuen Summenwert in die Summenspalte eintragen 
@@ -1182,6 +1190,10 @@ Public Class Tabelle2
                                         End If
 
 
+                                        Dim von As Integer = 0
+                                        Dim bis As Integer = 0
+                                        ' ur: 2022.03.29 
+                                        Dim changed1 As Boolean = getTimeZoneRegardingTSO(von, bis, True)
 
                                         If isRole Then
 
@@ -1232,9 +1244,11 @@ Public Class Tabelle2
 
                                             auslastungChanged = True
 
+
                                             ' jetzt muss die Excel Zeile geschreiben werden - dort wird auch der auslastungs-Array aktualisiert 
+
                                             Call aktualisiereRoleCostInSheet(Target.Row,
-                                                                                 visboZustaende.meColSD, showRangeLeft, showRangeRight,
+                                                                                 visboZustaende.meColSD, von, bis,
                                                                                  phStart, phEnde, xValues)
 
 
@@ -1269,9 +1283,10 @@ Public Class Tabelle2
                                             End If
 
                                             kostenChanged = True
+
                                             ' jetzt muss die Excel Zeile geschreiben werden 
                                             Call aktualisiereRoleCostInSheet(Target.Row,
-                                                                                 visboZustaende.meColSD, showRangeLeft, showRangeRight,
+                                                                                 visboZustaende.meColSD, von, bis,
                                                                                  phStart, phEnde, xValues)
 
                                         End If
@@ -1382,7 +1397,14 @@ Public Class Tabelle2
                         Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
                         'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
+                        Dim former_showRangeLeft As Integer = showRangeLeft
+                        Dim former_showRangeRight As Integer = showRangeRight
+                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                         Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+
+                        showRangeLeft = former_showRangeLeft
+                        showRangeRight = former_showRangeRight
                     End If
 
                 Catch ex As Exception
@@ -1636,7 +1658,8 @@ Public Class Tabelle2
     Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
 
         appInstance.EnableEvents = False
-
+        Dim former_showRangeLeft As Integer = showRangeLeft
+        Dim former_showRangeRight As Integer = showRangeRight
 
 
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
@@ -1775,6 +1798,9 @@ Public Class Tabelle2
 
             If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
 
+                ' umgesetzte timeZone
+                Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                 Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
                 If pNameChanged Then
@@ -1800,11 +1826,11 @@ Public Class Tabelle2
 
 
         End With
-
-
-
         appInstance.EnableEvents = True
 
+        ' zurücksetzen timezone
+        showRangeRight = former_showRangeRight
+        showRangeLeft = former_showRangeLeft
     End Sub
 
     ''' <summary>
@@ -2084,7 +2110,7 @@ Public Class Tabelle2
 
     ''' <summary>
     ''' aktualisiert die Werte in der angegebenen Zeile mit den Daten aus XWerte 
-    ''' fiunktioniert sowohl für Rollen als auch Kosten 
+    ''' funktioniert sowohl für Rollen als auch Kosten 
     ''' </summary>
     ''' <param name="zeile"></param>
     ''' <param name="von"></param>
@@ -2101,8 +2127,6 @@ Public Class Tabelle2
         Dim schnittmenge() As Double
 
         Dim editRange As Excel.Range
-
-
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False

@@ -12868,6 +12868,13 @@ Public Class Ribbon1
     Sub PTMEShowCharts(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
+        Dim former_showRangeLeft As Integer = showRangeLeft
+        Dim former_showRangeRight As Integer = showRangeRight
+
+        ' ur:2022.03.29: change the timezone because of TSO orga
+
+
+        Dim timeZoneWasOff As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
         ' whether or there need to be three or four charts
         Dim withSkills As Boolean = RoleDefinitions.getAllSkillIDs.Count > 0
@@ -13040,11 +13047,14 @@ Public Class Ribbon1
 
             ' show 4 Windows, if there are SKills
 
-
-            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
+            ''ur:2022.03.29: in future only 2/3 charts
+            'Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
+            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
             Dim showFourDiagrams As Boolean = (withSkills And visboZustaende.projectBoardMode = ptModus.massEditRessSkills)
             If showFourDiagrams Then
-                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
+                ''ur:2022.03.29: in future only 2/3 charts
+                'stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
+                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
             End If
 
             Dim chWidth As Double = stdBreite
@@ -13058,11 +13068,12 @@ Public Class Ribbon1
             'Dim chTop As Double = 5
             Dim chTop As Double = 0
 
-            ' show the project Profit/Lost Diagram
+            ''ur: 2022.03.29: no longern shown because of new TSO-orga
+            '' show the project Profit/Lost Diagram
             If ShowProjekte.contains(pName) Then
                 hproj = ShowProjekte.getProject(pName)
-                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
-                                                                     chTop, chLeft, chWidth, chHeight, False, True)
+                'Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
+                'chTop, chLeft, chWidth, chHeight, False, True)
 
                 selectedProjekte.Clear(False)
                 selectedProjekte.Add(hproj, False)
@@ -13304,6 +13315,10 @@ Public Class Ribbon1
 
         ' jetzt das Chart-Window aktivieren (sonst bleibt Ribbon stehen)
         projectboardWindows(PTwindows.meChart).Activate()
+
+
+        showRangeLeft = former_showRangeLeft
+        showRangeRight = former_showRangeRight
 
 
     End Sub

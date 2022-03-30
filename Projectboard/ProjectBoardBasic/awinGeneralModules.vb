@@ -794,23 +794,20 @@ Public Module awinGeneralModules
 
                     End If
 
+                    Dim former_showRangeLeft As Integer = showRangeLeft
+                    Dim former_showRangeRight As Integer = showRangeRight
+                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
                     ' betrachteter Zeitraum wurde geändert - typus = 4
                     Call awinNeuZeichnenDiagramme(4)
-
+                    showRangeLeft = former_showRangeLeft
+                    showRangeRight = former_showRangeRight
 
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
             End If
 
-
-
-
-
-
         End If
-
-
 
         appInstance.EnableEvents = formerEE
         If appInstance.ScreenUpdating <> formerSU Then
@@ -7685,7 +7682,6 @@ Public Module awinGeneralModules
                                   Optional ByVal calledFromMassEdit As Boolean = False,
                                   Optional ByVal currentRCName As String = "")
 
-
         ' Validieren ...
         If IsNothing(currentRCName) Then
             currentRCName = ""
@@ -7762,6 +7758,7 @@ Public Module awinGeneralModules
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
                 If anzDiagrams > 0 Then
+
                     For i = 1 To anzDiagrams
                         chtobj = CType(.ChartObjects(i), Excel.ChartObject)
                         If chtobj.Name <> "" Then
@@ -8374,11 +8371,13 @@ Public Module awinGeneralModules
                         End If
 
                     Next
+
                 End If
 
             End With
 
         End If
+
 
     End Sub
 

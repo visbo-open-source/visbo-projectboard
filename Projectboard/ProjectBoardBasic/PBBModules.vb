@@ -477,16 +477,19 @@ Public Module PBBModules
 
             ElseIf controlID = "PTXG1B7" Then
 
+                Dim former_showRangeLeft As Integer = showRangeLeft
+                Dim former_showRangeRight As Integer = showRangeRight
 
 
                 ' Multiprojekt Sicht erfordert Zeitraum 
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' alles ok 
                     ' Hierarchie auswählen, Leistbarkeit
+
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff(True)
                 Else
 
-                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
-
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff(True)
 
                 End If
 
@@ -499,6 +502,9 @@ Public Module PBBModules
                     returnValue = .ShowDialog
 
                 End With
+
+                showRangeLeft = former_showRangeLeft
+                showRangeRight = former_showRangeRight
 
             ElseIf controlID = "PT1G1M1B1" Then
                 ' Namen auswählen, Einzelprojekt Berichte 

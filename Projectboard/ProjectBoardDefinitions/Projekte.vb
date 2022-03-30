@@ -6229,11 +6229,34 @@ Public Module Projekte
     ''' gibt false zurück, wenn keine TimeZone gesetzt ist und keine Projekte da sind
     ''' </summary>
     ''' <returns></returns>
-    Public Function setTimeZoneIfTimeZonewasOff() As Boolean
+    Public Function setTimeZoneIfTimeZonewasOff(Optional ByVal regardOrgas As Boolean = False, Optional ByVal showInfo As Boolean = False) As Boolean
         Dim timeZoneWasOff As Boolean = False
+        Dim msgTxt As String = ""
+        Dim changed As Boolean = False
+
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
             If ShowProjekte.Count > 0 Then
                 timeZoneWasOff = True
+                If regardOrgas Then
+                    ' regarding the timezone of the currentOrga
+                    If getColumnOfDate(tsOfcurrentOrga) > showRangeLeft Then
+                        showRangeLeft = getColumnOfDate(tsOfcurrentOrga)
+                        changed = True
+                    End If
+                    If getColumnOfDate(tsOfnextOrga) < showRangeRight Then
+                        showRangeRight = getColumnOfDate(tsOfnextOrga) - 1
+                        changed = True
+                    End If
+                    'If changed Then
+                    '    If awinSettings.englishLanguage Then
+                    '        msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                    '    Else
+                    '        msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                    '    End If
+                    '    Call MsgBox(msgTxt)
+                    'End If
+
+                End If
             Else
                 timeZoneWasOff = False
 
@@ -6249,6 +6272,27 @@ Public Module Projekte
                     showRangeLeft = ShowProjekte.getMinMonthColumn
                     showRangeRight = ShowProjekte.getMaxMonthColumn
                 End If
+                If regardOrgas Then
+                    ' regarding the timezone of the currentOrga
+                    If getColumnOfDate(tsOfcurrentOrga) > showRangeLeft Then
+                        showRangeLeft = getColumnOfDate(tsOfcurrentOrga)
+                        changed = True
+                    End If
+                    If getColumnOfDate(tsOfnextOrga) < showRangeRight Then
+                        showRangeRight = getColumnOfDate(tsOfnextOrga) - 1
+                        changed = True
+                    End If
+                    'If changed Then
+                    '    If awinSettings.englishLanguage Then
+                    '        msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                    '    Else
+                    '        msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                    '    End If
+                    '    Call MsgBox(msgTxt)
+                    'End If
+
+                End If
+
                 Call awinShowtimezone(showRangeLeft, showRangeRight, True)
             End If
 
@@ -6256,6 +6300,51 @@ Public Module Projekte
         End If
 
         setTimeZoneIfTimeZonewasOff = timeZoneWasOff
+
+    End Function
+    ''' <summary>
+    ''' gibt neue Werte für die Time Zone gemäß Orga
+    ''' gibt true zurück, wenn neue Werte für newRangeLeft und newRangeRight gesetzt wurden
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getTimeZoneRegardingTSO(ByRef newRangeLeft As Integer, ByRef newRangeRight As Integer, Optional ByVal regardOrgas As Boolean = False) As Boolean
+
+        Dim timeZoneWasOff As Boolean = False
+        Dim msgTxt As String = ""
+        newRangeLeft = showRangeLeft
+        newRangeRight = showRangeRight
+        Dim changed As Boolean = False
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            If ShowProjekte.Count > 0 Then
+                If regardOrgas Then
+                    ' regarding the timezone of the currentOrga
+                    If getColumnOfDate(tsOfcurrentOrga) > newRangeLeft Then
+                        newRangeLeft = getColumnOfDate(tsOfcurrentOrga)
+                        changed = True
+                    End If
+                    If getColumnOfDate(tsOfnextOrga) < newRangeRight Then
+                        newRangeRight = getColumnOfDate(tsOfnextOrga) - 1
+                        changed = True
+                    End If
+                    If changed Then
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                        Else
+                            msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                        End If
+                        Call MsgBox(msgTxt)
+                    End If
+                End If
+            Else
+                timeZoneWasOff = False
+                Call MsgBox("hier bin ich 1 ")
+            End If ' alles ok 
+        Else
+            Call MsgBox("hier bin ich 2 ")
+        End If
+
+        getTimeZoneRegardingTSO = changed
 
     End Function
 

@@ -378,7 +378,7 @@
             <!--label="Meilenstein-Ampeln"-->
             <!--<button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>-->
             <menuSeparator id="PTXG1s4"/>
-            <button id="PTXG1B9" getVisible="chckVisibility" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0ShowCashFlow" supertip ="CashFlow anzeigen, über alle aktuell angezeigten Projekte"/>
+            <button id="PTXG1B9" getVisible="chckVisibility" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowCashFlow" supertip ="CashFlow anzeigen, über alle aktuell angezeigten Projekte"/>
             <!--label="Custom"-->
             <!--<button id="PTcustom" getVisible="chckVisibility" label ="Custom" enabled="false"/>-->
             <!--<menuSeparator id="PTXG1s4"/>-->
@@ -503,7 +503,7 @@
           <!--label="Budget/Kosten"-->
           <!--<button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>-->
           <!--label="Info Vergleich mit früherem Stand"-->
-          <button id="PTMEC3" getLabel ="bestimmeLabel"  enabled ="true" onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+          <button id="PTMEC3" getLabel ="bestimmeLabel"  enabled ="false" onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
         </group>
       </tab>
       <tab id="PTmassEdit" getVisible="chckVisibility" getLabel ="bestimmeLabel">

@@ -108,6 +108,8 @@ Public Module Module1
 
     ' hier werden die gültigen Organisationen mitgemerkt ... 
     Public validOrganisations As New clsOrganisations
+    Public tsOfcurrentOrga As Date = Date.MinValue
+    Public tsOfnextOrga As Date = Date.MaxValue
 
 
     Public Projektvorlagen As New clsProjektvorlagen
