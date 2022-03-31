@@ -794,13 +794,8 @@ Public Module awinGeneralModules
 
                     End If
 
-                    Dim former_showRangeLeft As Integer = showRangeLeft
-                    Dim former_showRangeRight As Integer = showRangeRight
-                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
                     ' betrachteter Zeitraum wurde geändert - typus = 4
                     Call awinNeuZeichnenDiagramme(4)
-                    showRangeLeft = former_showRangeLeft
-                    showRangeRight = former_showRangeRight
 
                 Catch ex As Exception
                     Call MsgBox(ex.Message)

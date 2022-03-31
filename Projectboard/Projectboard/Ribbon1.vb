@@ -2702,9 +2702,13 @@ Public Class Ribbon1
 
             Case "PTXG1B7" ' Leistbarkeitscharts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rollen/Kosten/Meilensteine/Phasen"
+                    'tmpLabel = "Rollen/Kosten/Meilensteine/Phasen"
+                    ' ur:20220331: nach Änderung der Organisation
+                    tmpLabel = "Portfolio-Charts"
                 Else
-                    tmpLabel = "Ressources/Costs/Milestones/Phases"
+                    'tmpLabel = "Ressources/Costs/Milestones/Phases"
+                    ' ur:20220331: nach Änderung der Organisation
+                    tmpLabel = "Portfolio-Charts"
                 End If
                 'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                 '    tmpLabel = "Auswahl über Projekt-Struktur..."
@@ -8558,6 +8562,7 @@ Public Class Ribbon1
                     outputCollection.Add(msgStr)
                     Call logger(ptErrLevel.logError, msgStr, "PTImportProjectTemplates", -1)
                 Else
+                    outputCollection.Clear()
                     If awinSettings.englishLanguage Then
                         msgStr = "Template: " & template.name & " stored"
                     Else
@@ -12500,6 +12505,11 @@ Public Class Ribbon1
         Call projektTafelInit()
 
         Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+        Dim former_showRangeLeft As Integer = showRangeLeft
+        Dim former_showRangeRight As Integer = showRangeRight
+
+        ' regarding currentOrga timezone
+        ok = setTimeZoneIfTimeZonewasOff(True)
 
         If ok Then
             appInstance.ScreenUpdating = False
@@ -12579,6 +12589,8 @@ Public Class Ribbon1
             End If
         End If
 
+        showRangeRight = former_showRangeRight
+        showRangeLeft = former_showRangeLeft
 
 
     End Sub

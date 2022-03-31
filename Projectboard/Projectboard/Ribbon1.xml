@@ -322,24 +322,25 @@
         <!--label="Charts"-->
         <group id="PT7G1"  >
           <!--label="Projekt-Charts"-->
-          <splitButton id="PT7G1M1split" size="large">
+          <!--<splitButton id="PT7G1M1split" size="large">-->
             <!--label="wichtigsten Projekt-Charts "-->
-            <!--<button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="TomMostImportantProjectCharts" supertip="Anzeige der wichtigsten Projekt-Charts"/>-->
-            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
-            <menu id ="PT7G1M1new" >
-              <!--label="Personal Bedarfe"-->
+            <!--<button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>-->
+            <!--<menu id ="PT7G1M1new" >
+              --><!--label="Personal Bedarfe"--><!--
               <button id="PT0G1M1B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
               <menuSeparator id="PT7G1s1"/>
-              <!--label="Kosten Bedarfe"-->
+              --><!--label="Kosten Bedarfe"--><!--
               <button id="PT0G1M1B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B5GKosten" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Kostenbedarfe und die Gesamt-Summe zeigen"/>
               <menuSeparator id="PT7G1s2"/>
-              <!--label="Gewinn/Verlust"-->
-              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>
+              -->
+			<!--label="Gewinn/Verlust"--><!--
+              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>-->
               <!--<menuSeparator id="PT7G1s3"/>-->
               <!--label="Strategie/Risiko/Marge"-->
               <!--<button id="PT0G1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>-->
               <!--<menuSeparator id="PT7G1s4"/>
-              --><!--label="Plan/Aktuell"--><!--
+              -->
+			<!--label="Plan/Aktuell"--><!--
               <menu id="PT7G1M2" getVisible="chckVisibility" getLabel ="bestimmeLabel">
                 --><!--label="Personalkosten"--><!--
                 <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
@@ -348,28 +349,28 @@
                 --><!--label="Gesamt Kosten"--><!--
                 <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="true" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
               </menu>-->
-            </menu>
-          </splitButton>
+            <!--</menu>
+          </splitButton>-->
           <!--label="Portfolio-Charts"-->
-          <splitButton id="PT7G1M0split" size="large">
+          <!--<splitButton id="PT7G1M0split" size="large">-->
           <!--label="Capazity Utilization"-->
           <!--<button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>-->
-          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>
-          <menu id="PT7G1M"  getVisible="chckVisibility" >
+          <button id="PTXG1B7" size="large" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>
+          <!--<menu id="PT7G1M"  getVisible="chckVisibility" >-->
             <!--label="Ressource/Cost/Milestones/Phases"-->
-            <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>
+            <!--<button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>-->
             <!--<menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
             --><!--label="Auswahl über Namen"--><!--
             <button id="PTXG1B6" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
             --><!--label="Auswahl über Hierarchie"--><!--
             <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
             </menu>-->
-            <menuSeparator id="PTXG1s1"/>
+            <!--<menuSeparator id="PTXG1s1"/>-->
             <!--label="Profit/Loss"-->
             <!--<button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
             <menuSeparator id="PTXG1s3"/>-->
             <!--label="Capazity Utilization"-->
-            <button id="PTXG1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
+            <!--<button id="PTXG1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>-->
             <!--<menuSeparator id="PTXG1s2"/>-->
             <!--label="Strategie/Risiko/Marge"-->
             <!--<button id="PTXG1B8" getVisible="chckVisibility" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>-->
@@ -377,15 +378,15 @@
             <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
             <!--label="Meilenstein-Ampeln"-->
             <!--<button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>-->
-            <menuSeparator id="PTXG1s4"/>
-            <button id="PTXG1B9" getVisible="chckVisibility" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowCashFlow" supertip ="CashFlow anzeigen, über alle aktuell angezeigten Projekte"/>
+            <!--<menuSeparator id="PTXG1s4"/>-->
+            <!--<button id="PTXG1B9" getVisible="chckVisibility" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowCashFlow" supertip ="CashFlow anzeigen, über alle aktuell angezeigten Projekte"/>-->
             <!--label="Custom"-->
             <!--<button id="PTcustom" getVisible="chckVisibility" label ="Custom" enabled="false"/>-->
             <!--<menuSeparator id="PTXG1s4"/>-->
             <!--label="größter Engpass"
             <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/>--> 
-           </menu>
-          </splitButton>
+           <!--</menu>-->
+          <!--</splitButton>-->
           <!--<separator id="PT0G1s7"/>
           <button id="PT7G1B1" label="Copy chart style" supertip ="muss noch programmiert werden"/>
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
@@ -488,8 +489,7 @@
             <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
             <button id="Pt6G6B2" label="Create RepMsg"  onAction="PTCreateReportMessages" />
           </group>
-      </tab>-->
-       
+      </tab>-->       
       <!--label="zurück zur Multiprojekt-Tafel"-->
       <tab id="PTzurück" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTzurück1" getVisible="chckVisibility" >

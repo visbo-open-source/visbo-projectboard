@@ -183,6 +183,12 @@
     <Compile Include="frmAllocateRessources.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmChangedTimeZone.Designer.vb">
+      <DependentUpon>frmChangedTimeZone.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmChangedTimeZone.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmProvideDate.Designer.vb">
       <DependentUpon>frmProvideDate.vb</DependentUpon>
     </Compile>
@@ -349,6 +355,9 @@
   <ItemGroup>
     <EmbeddedResource Include="frmAllocateRessources.resx">
       <DependentUpon>frmAllocateRessources.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmChangedTimeZone.resx">
+      <DependentUpon>frmChangedTimeZone.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProvideDate.resx">
       <DependentUpon>frmProvideDate.vb</DependentUpon>

@@ -275,15 +275,22 @@ Public Class Tabelle2
                                                 tmpZeile = existingZeile
                                             End If
 
-                                            ' ur: 2022.03.29 
-                                            Dim changed1 As Boolean = getTimeZoneRegardingTSO(newRangeLeft, newRangeRight, True)
+                                            '' ur: 2022.03.29 
+                                            'Dim changed1 As Boolean = getTimeZoneRegardingTSO(newRangeLeft, newRangeRight, True)
+
+                                            '' aktualisiere die ergänzte Rolle 
+                                            'Call aktualisiereRoleCostInSheet(tmpZeile,
+                                            '                                     visboZustaende.meColSD, newRangeLeft, newRangeLeft,
+                                            '                                     phStart, phEnde, mySubstituteRole.Xwerte)
+
+                                            'Call updateMassEditSummenValue(hproj, cphase, newRangeLeft, newRangeRight, kvp.Key, True, tmpZeile)
 
                                             ' aktualisiere die ergänzte Rolle 
                                             Call aktualisiereRoleCostInSheet(tmpZeile,
-                                                                                 visboZustaende.meColSD, newRangeLeft, newRangeLeft,
+                                                                                 visboZustaende.meColSD, showRangeLeft, showRangeLeft,
                                                                                  phStart, phEnde, mySubstituteRole.Xwerte)
 
-                                            Call updateMassEditSummenValue(hproj, cphase, newRangeLeft, newRangeRight, kvp.Key, True, tmpZeile)
+                                            Call updateMassEditSummenValue(hproj, cphase, showRangeLeft, showRangeRight, kvp.Key, True, tmpZeile)
 
                                         End If
 
@@ -293,12 +300,16 @@ Public Class Tabelle2
 
                                 Next
 
-                                ' ur: 2022.03.29 
-                                Dim changed2 As Boolean = getTimeZoneRegardingTSO(newRangeLeft, newRangeRight, True)
+                                '' ur: 2022.03.29 
+                                'Dim changed2 As Boolean = getTimeZoneRegardingTSO(newRangeLeft, newRangeRight, True)
 
+                                '' aktualisiere die ursprüngliche Rolle 
+                                'Call aktualisiereRoleCostInSheet(Target.Row,
+                                '                                     visboZustaende.meColSD, newRangeLeft, newRangeLeft,
+                                '                                     phStart, phEnde, myRole.Xwerte)
                                 ' aktualisiere die ursprüngliche Rolle 
                                 Call aktualisiereRoleCostInSheet(Target.Row,
-                                                                     visboZustaende.meColSD, newRangeLeft, newRangeLeft,
+                                                                     visboZustaende.meColSD, showRangeLeft, showRangeLeft,
                                                                      phStart, phEnde, myRole.Xwerte)
 
                                 ' den neuen Summenwert in die Summenspalte eintragen 
@@ -1395,16 +1406,9 @@ Public Class Tabelle2
                         ' tk 18.1.20
 
                         Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
-                        'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
-
-                        Dim former_showRangeLeft As Integer = showRangeLeft
-                        Dim former_showRangeRight As Integer = showRangeRight
-                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
                         Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
 
-                        showRangeLeft = former_showRangeLeft
-                        showRangeRight = former_showRangeRight
                     End If
 
                 Catch ex As Exception

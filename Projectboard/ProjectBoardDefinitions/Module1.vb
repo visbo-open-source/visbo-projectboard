@@ -110,6 +110,7 @@ Public Module Module1
     Public validOrganisations As New clsOrganisations
     Public tsOfcurrentOrga As Date = Date.MinValue
     Public tsOfnextOrga As Date = Date.MaxValue
+    Public notAgain As Boolean = False
 
 
     Public Projektvorlagen As New clsProjektvorlagen
@@ -7994,6 +7995,7 @@ Public Module Module1
                 End With
 
             End If
+            Call logger(logType, header, outPutCollection)
         End If
 
     End Sub

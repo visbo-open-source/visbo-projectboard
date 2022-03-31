@@ -6326,6 +6326,9 @@ Public Module awinDiagrams
     ''' <remarks></remarks>
     Sub awinNeuZeichnenDiagramme(ByVal typus As Integer,
                                  Optional ByVal roleCost As String = Nothing)
+
+
+
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
         ' tk 28.12.18  ein Wechsel soll / darf nicht gemacht werden; das führt ggf zu Schwierigkeiten
@@ -6399,47 +6402,89 @@ Public Module awinDiagrams
 
 
                 anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+
+                ' remember the showRangeLeft and showRangeRight
+                Dim former_showRangeLeft As Integer = showRangeLeft
+                Dim former_showRangeRight As Integer = showRangeRight
+
                 For i = 1 To anz_diagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
+
 
                     Select Case typus
                         '
                         '
                         Case 8 ' Selection hat sich geändert 
-
-                            If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or
-                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+                            ' trennen und umsetzen
+                            If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Then
 
                                 If rcName <> "" Then
+                                    former_showRangeLeft = showRangeLeft
+                                    former_showRangeRight = showRangeRight
+                                    ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
+                                    Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
+                                                                roleCost:=rcName,
+                                                                isRole:=isRole)
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+                                End If
+                            End If
+
+                            If istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+
+                                If rcName <> "" Then
+                                    former_showRangeLeft = showRangeLeft
+                                    former_showRangeRight = showRangeRight
+                                    ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                     Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
                                                                     roleCost:=rcName,
                                                                     isRole:=isRole)
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
                                 End If
+                            End If
 
 
-                            ElseIf istSkillDiagramm(chtobj) And rcNameID <> "" Then
 
+                            If istSkillDiagramm(chtobj) And rcNameID <> "" Then
+                                ' umsetzen
                                 If rcName <> "" Then
+                                    former_showRangeLeft = showRangeLeft
+                                    former_showRangeRight = showRangeRight
+                                    ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                     Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
                                                                     roleCost:=rcNameID,
                                                                     isRole:=isRole)
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
                                 End If
-
-
-
                             End If
+
+
                         Case 99
-                            ' nur die Strategie - / Risiko Diagramme sollen neu gezeichnet, d.h die Markierungen zurückgesetzt werden 
-                            If istSummenDiagramm(chtobj, p) Then
-                                If p = PTpfdk.Dependencies Or
-                                       p = PTpfdk.FitRisiko Or
-                                       p = PTpfdk.FitRisikoVol Or
-                                       p = PTpfdk.ZeitRisiko Or
-                                       p = PTpfdk.ComplexRisiko Then
-                                    Call awinUpdateMarkerInPortfolioDiagrams(chtobj)
-                                    'Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.AmpelFarbe)
-                                End If
-                            End If
+                            ' ur: 20220331: comment out because no longer used
+                            '' nur die Strategie - / Risiko Diagramme sollen neu gezeichnet, d.h die Markierungen zurückgesetzt werden 
+                            'If istSummenDiagramm(chtobj, p) Then
+                            '    If p = PTpfdk.Dependencies Or
+                            '           p = PTpfdk.FitRisiko Or
+                            '           p = PTpfdk.FitRisikoVol Or
+                            '           p = PTpfdk.ZeitRisiko Or
+                            '           p = PTpfdk.ComplexRisiko Then
+                            '        Call awinUpdateMarkerInPortfolioDiagrams(chtobj)
+
+                            '    End If
+                            'End If
 
                         Case Else
                             ' 1: Projekt wurde verschoben
@@ -6451,21 +6496,70 @@ Public Module awinDiagrams
                             ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
                             ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
-                            If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or
-                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
+                            If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj)) Then
 
                                 If IsNothing(roleCost) Then
+
+                                    former_showRangeLeft = showRangeLeft
+                                    former_showRangeRight = showRangeRight
+                                    ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                     Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
                                 Else
                                     If roleCost <> "" Then
+
+                                        former_showRangeLeft = showRangeLeft
+                                        former_showRangeRight = showRangeRight
+                                        ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                         Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+
+                                        showRangeLeft = former_showRangeLeft
+                                        showRangeRight = former_showRangeRight
+
                                     End If
                                 End If
 
 
+                            ElseIf (typus <> 5) And (istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
+
+                                If IsNothing(roleCost) Then
+
+                                    former_showRangeLeft = showRangeLeft
+                                    former_showRangeRight = showRangeRight
+                                    ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
+                                    Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
+                                Else
+                                    If roleCost <> "" Then
+
+                                        former_showRangeLeft = showRangeLeft
+                                        former_showRangeRight = showRangeRight
+                                        ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
+                                        Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+
+                                        showRangeLeft = former_showRangeLeft
+                                        showRangeRight = former_showRangeRight
+
+                                    End If
+                                End If
+
 
                             ElseIf istSummenDiagramm(chtobj, p) Then
-
+                                ' unbenutzt
                                 If p = PTpfdk.ErgebnisWasserfall Then
                                     Call awinUpdateErgebnisDiagramm(chtobj)
 
@@ -6478,32 +6572,70 @@ Public Module awinDiagrams
                                     Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.AmpelFarbe)
 
                                 ElseIf p = PTpfdk.Auslastung Then
+                                    ' umsetzen
                                     Try
+                                        former_showRangeLeft = showRangeLeft
+                                        former_showRangeRight = showRangeRight
+                                        ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                         Call awinUpdateAuslastungsDiagramm(chtobj)
                                     Catch ex As Exception
 
                                     End Try
 
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
+
                                 ElseIf p = PTpfdk.UeberAuslastung Then
+                                    ' umsetzen
                                     Try
+                                        former_showRangeLeft = showRangeLeft
+                                        former_showRangeRight = showRangeRight
+                                        ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                         Call updateAuslastungsDetailPie(chtobj, 1)
                                     Catch ex As Exception
 
                                     End Try
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
                                 ElseIf p = PTpfdk.Unterauslastung Then
+                                    ' umsetzen
                                     Try
+                                        former_showRangeLeft = showRangeLeft
+                                        former_showRangeRight = showRangeRight
+                                        ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                         Call updateAuslastungsDetailPie(chtobj, 2)
                                     Catch ex As Exception
 
                                     End Try
 
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
+
                                     ' p = 19 
                                 ElseIf p = PTpfdk.Budget Then
+                                    ' umsetzen
                                     Try
+                                        former_showRangeLeft = showRangeLeft
+                                        former_showRangeRight = showRangeRight
+                                        ' set showRangeLeft and showRangeRight according to the current/next TSO Organisation
+                                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+
                                         Call awinUpdateBudgetErgebnisDiagramm(chtobj)
                                     Catch ex As Exception
 
                                     End Try
+
+                                    showRangeLeft = former_showRangeLeft
+                                    showRangeRight = former_showRangeRight
                                 End If
 
 
@@ -6519,44 +6651,9 @@ Public Module awinDiagrams
                     appInstance.EnableEvents = formerEE
                 End If
 
-                'CType(formerActiveSheet, Excel.Worksheet).Activate()
-
                 If appInstance.ScreenUpdating <> formerSU Then
                     appInstance.ScreenUpdating = formerSU
                 End If
-
-                ' tk 28.12.18 deprectaed, unsinnig!?
-                ' wenn das ActiveSheet ungleich dem currentSheetName war, muss jetzt zurück gewechselt werden ... 
-                'Dim xName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
-                'If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> formerActiveSheet.Name Then
-
-                '    If appInstance.EnableEvents <> formerEE Then
-                '        appInstance.EnableEvents = formerEE
-                '    End If
-
-                '    'CType(formerActiveSheet, Excel.Worksheet).Activate()
-
-                '    If appInstance.ScreenUpdating <> formerSU Then
-                '        appInstance.ScreenUpdating = formerSU
-                '    End If
-                'End If
-                ' Ende Änderung 28.12.18
-
-                ' tk 24.5.17 das wird nicht mehr benötigt, weil die Charts jetzt in einem Extra Sheet sind ... 
-                '' '' wenn es geschützt war .. 
-                'If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                '    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                '                 AllowFormattingCells:=True, _
-                '                 AllowInsertingColumns:=False,
-                '                 AllowInsertingRows:=True, _
-                '                 AllowDeletingColumns:=False, _
-                '                 AllowDeletingRows:=True, _
-                '                 AllowSorting:=True, _
-                '                 AllowFiltering:=True)
-                '    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                '    .EnableAutoFilter = True
-                'End If
-
 
             End With
         End If

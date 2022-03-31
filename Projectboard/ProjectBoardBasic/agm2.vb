@@ -5628,6 +5628,8 @@ Public Module agm2
         Dim projektAmpelFarbe As Integer
         Dim projektAmpelText As String
 
+        Dim ImportOK As Boolean = True
+
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet
 
         Try
@@ -7092,9 +7094,9 @@ Public Module agm2
 
                                                 Dim logmessage As String = ""
                                                 If awinSettings.englishLanguage Then
-                                                    logmessage = hname & " does not exist in the current organisation"
+                                                    logmessage = "Orga-Unit '" & hname & "' does not exist in the current organisation"
                                                 Else
-                                                    logmessage = hname & " existiert nicht in der aktuellen Organisation"
+                                                    logmessage = "Organisation Einheit '" & hname & "' existiert nicht in der aktuellen Organisation"
                                                 End If
                                                 outputcollection.Add(logmessage)
 
@@ -7116,6 +7118,7 @@ Public Module agm2
 
                         If outputCollection.Count > 0 Then
                             showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "", ptErrLevel.logError)
+                            ImportOK = False
                         End If
 
                     End With
@@ -7134,6 +7137,7 @@ Public Module agm2
 
                     If outputCollection.Count > 0 Then
                         showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "", ptErrLevel.logError)
+                        ImportOK = False
                     End If
 
                 Catch ex As Exception
@@ -7143,6 +7147,9 @@ Public Module agm2
                 End Try
             End If
 
+            If outputCollection.Count > 0 Then
+
+            End If
             ' ------------------------------------------------------------------
             '   Ende Einlesen Ressourcen
             ' -------------------------------------------------------------------
@@ -7159,6 +7166,9 @@ Public Module agm2
 
 
         If isTemplate Then
+            If Not ImportOK Then
+                hproj = Nothing
+            End If
             ' hier müssen die Werte für die Vorlage übergeben werden.
             Dim projVorlage As New clsProjektvorlage
             projVorlage = createTemplateOfProject(hproj)
@@ -7175,7 +7185,9 @@ Public Module agm2
 
         Else
             hprojekt = hproj
+
         End If
+
 
     End Sub
 
@@ -21644,6 +21656,7 @@ Public Module agm2
 
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
                         ' ur:20210729 kommt nun eigentlich von Organisation
+                        ' ur:20220322 now it is back to customization
                         If awinSettings.ActualdataOrgaUnits = "" Then
                             If customizations.isActualDataRelevant <> "" Then
                                 awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
@@ -26101,11 +26114,11 @@ Public Module agm2
                 projVorlage.AllPhases = hproj.AllPhases
                 projVorlage.hierarchy = hproj.hierarchy
             Else
-                Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined")
+                Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined properly")
             End If
 
         Catch ex As Exception
-            Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined")
+            Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined properly")
         End Try
 
         createTemplateOfProject = projVorlage

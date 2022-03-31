@@ -6233,6 +6233,7 @@ Public Module Projekte
         Dim timeZoneWasOff As Boolean = False
         Dim msgTxt As String = ""
         Dim changed As Boolean = False
+        Dim antwortFrm As New frmChangedTimeZone
 
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
             If ShowProjekte.Count > 0 Then
@@ -6247,14 +6248,9 @@ Public Module Projekte
                         showRangeRight = getColumnOfDate(tsOfnextOrga) - 1
                         changed = True
                     End If
-                    'If changed Then
-                    '    If awinSettings.englishLanguage Then
-                    '        msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
-                    '    Else
-                    '        msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
-                    '    End If
-                    '    Call MsgBox(msgTxt)
-                    'End If
+                    If Not notAgain Then
+                        antwortFrm.ShowDialog()
+                    End If
 
                 End If
             Else
@@ -6282,14 +6278,9 @@ Public Module Projekte
                         showRangeRight = getColumnOfDate(tsOfnextOrga) - 1
                         changed = True
                     End If
-                    'If changed Then
-                    '    If awinSettings.englishLanguage Then
-                    '        msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
-                    '    Else
-                    '        msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
-                    '    End If
-                    '    Call MsgBox(msgTxt)
-                    'End If
+                    If Not notAgain Then
+                        antwortFrm.ShowDialog()
+                    End If
 
                 End If
 
