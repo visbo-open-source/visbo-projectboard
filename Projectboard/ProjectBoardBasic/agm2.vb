@@ -8996,9 +8996,15 @@ Public Module agm2
     Public Function ImportOrganisation(ByRef outputCollection As Collection, Optional ByVal configListe As SortedList(Of String, clsConfigOrgaImport) = Nothing) As clsOrganisation
 
 
-
         Dim importedOrga As New clsOrganisation
-        Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
+        Dim blattName As String = "Organisation"
+
+        Dim currentWB As Excel.Workbook = appInstance.ActiveWorkbook
+        Dim orgaSheet As Excel.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+        orgaSheet.Activate()
+
+        'Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+        'Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
         Dim newRoleDefinitions As New clsRollen
         Dim withoutConfiguration As Boolean = False
 
