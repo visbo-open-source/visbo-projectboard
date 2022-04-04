@@ -8,7 +8,7 @@
     <Setting Name="rpaPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA</Value>
     </Setting>
-    <Setting Name="swPath" Type="System.String" Scope="User">
+    <Setting Name="swPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\VISBO\Software</Value>
     </Setting>
     <Setting Name="VisboCenter" Type="System.String" Scope="User">
@@ -20,13 +20,13 @@
     <Setting Name="rememberUserPWD" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="VisboConfigFiles" Type="System.String" Scope="User">
+    <Setting Name="VisboConfigFiles" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA\settings</Value>
     </Setting>
     <Setting Name="VisboURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">https://dev.visbo.net/api</Value>
     </Setting>
-    <Setting Name="proxyURL" Type="System.String" Scope="User">
+    <Setting Name="proxyURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

@@ -204,16 +204,8 @@ Public Class VisboRPAStart
 
             If listOfVCs.Count = 1 Then
                 ' alles ok, nimm dieses  VC
-                If awinSettings.databaseName <> "" Then
-                    If awinSettings.databaseName <> listOfVCs.Item(0).ToUpper Then
-                        Throw New ArgumentException("No access to this VISBO Center " & awinSettings.databaseName)
-                    Else
-                        ' make sure it is exactly the name , consideruing lower and upper case
-                        awinSettings.databaseName = listOfVCs.Item(0)
-                    End If
-                Else
-                    awinSettings.databaseName = listOfVCs.Item(0)
-                End If
+                awinSettings.databaseName = listOfVCs.Item(0)
+
                 Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
                 If Not changeOK Then
                     Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)

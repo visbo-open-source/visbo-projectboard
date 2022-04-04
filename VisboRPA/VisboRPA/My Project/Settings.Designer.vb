@@ -78,16 +78,13 @@ Namespace My
             End Set
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\Software")>  _
-        Public Property swPath() As String
+        Public ReadOnly Property swPath() As String
             Get
                 Return CType(Me("swPath"),String)
             End Get
-            Set
-                Me("swPath") = value
-            End Set
         End Property
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
@@ -126,16 +123,13 @@ Namespace My
             End Set
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("C:\VISBO\VISBO Config Data\RPA\settings")>  _
-        Public Property VisboConfigFiles() As String
+        Public ReadOnly Property VisboConfigFiles() As String
             Get
                 Return CType(Me("VisboConfigFiles"),String)
             End Get
-            Set
-                Me("VisboConfigFiles") = value
-            End Set
         End Property
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
@@ -147,16 +141,13 @@ Namespace My
             End Get
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("")>  _
-        Public Property proxyURL() As String
+        Public ReadOnly Property proxyURL() As String
             Get
                 Return CType(Me("proxyURL"),String)
             End Get
-            Set
-                Me("proxyURL") = value
-            End Set
         End Property
     End Class
 End Namespace

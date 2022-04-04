@@ -1876,12 +1876,7 @@ Module rpaModule1
         ' cache löschen
         Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
-        ' project brief is not a template, then you need the actual templates
-
-        'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
-        lastReadingProjectTemplates = readProjectTemplates()
-        'End If
-
+        ' project brief do not need any template
 
         'If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
         lastReadingOrganisation = readOrganisations()
