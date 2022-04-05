@@ -19440,10 +19440,11 @@ Public Module agm2
 
                     infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                     infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    infoBlock.NumberFormat = "##,##0.0"
 
                     infoDatablock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     infoDatablock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                    infoDatablock.NumberFormat = "##,##0.#"
+                    infoDatablock.NumberFormat = "##,##0.0"
 
 
                     For mis As Integer = 0 To bis - von
@@ -21764,7 +21765,7 @@ Public Module agm2
 
                     'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
 
-                    nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, True, True, True)
+                    nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, True, True, True)
                     If nextOrga.count > 0 Then
                         validOrganisations.addOrga(nextOrga)
                         tsOfnextOrga = nextOrga.validFrom

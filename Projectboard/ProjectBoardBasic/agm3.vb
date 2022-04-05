@@ -8930,10 +8930,11 @@ Public Module agm3
                     End If
 
                     Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, heute)
-                    Dim a As Integer = beauftragung.dauerInDays
                     Dim baselineValues() As Double = Nothing
 
                     If Not IsNothing(beauftragung) Then
+                        ' Berechnung der Dauer
+                        Dim a As Integer = beauftragung.dauerInDays
                         ' jetzt die Werte für die Beauftragung schreiben 
                         baselineValues = beauftragung.getResourceValuesInTimeFrame(von, bis, roleNameID, inclSubRoles:=True, outPutInEuro:=False)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,
@@ -9003,6 +9004,8 @@ Public Module agm3
                     Dim baselineValues() As Double = Nothing
 
                     If Not IsNothing(beauftragung) Then
+                        ' Berechnung der Dauer
+                        Dim a As Integer = beauftragung.dauerInDays
                         ' jetzt die Werte für die Beauftragung schreiben 
                         baselineValues = beauftragung.getCostValuesInTimeFrame(von, bis, curCost.name)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,

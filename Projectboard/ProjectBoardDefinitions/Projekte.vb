@@ -6224,12 +6224,49 @@ Public Module Projekte
 
     'End Sub
 
+
     ''' <summary>
     ''' setzt die Time Zone
     ''' gibt false zurück, wenn keine TimeZone gesetzt ist und keine Projekte da sind
     ''' </summary>
     ''' <returns></returns>
     Public Function setTimeZoneIfTimeZonewasOff(Optional ByVal regardOrgas As Boolean = False, Optional ByVal showInfo As Boolean = False) As Boolean
+        Dim timeZoneWasOff As Boolean = False
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            If ShowProjekte.Count > 0 Then
+                timeZoneWasOff = True
+            Else
+                timeZoneWasOff = False
+
+            End If ' alles ok 
+        Else
+
+            If ShowProjekte.Count > 0 Then
+                timeZoneWasOff = True
+                If selectedProjekte.Count > 0 Then
+                    showRangeLeft = selectedProjekte.getMinMonthColumn
+                    showRangeRight = selectedProjekte.getMaxMonthColumn
+                Else
+                    showRangeLeft = ShowProjekte.getMinMonthColumn
+                    showRangeRight = ShowProjekte.getMaxMonthColumn
+                End If
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            End If
+
+
+        End If
+
+        setTimeZoneIfTimeZonewasOff = timeZoneWasOff
+
+    End Function
+
+    ''' <summary>
+    ''' ACHTUNG: not used
+    ''' setzt die Time Zone
+    ''' gibt false zurück, wenn keine TimeZone gesetzt ist und keine Projekte da sind
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function setTimeZoneIfTimeZonewasOffnew(Optional ByVal regardOrgas As Boolean = False, Optional ByVal showInfo As Boolean = False) As Boolean
         Dim timeZoneWasOff As Boolean = False
         Dim msgTxt As String = ""
         Dim changed As Boolean = False
@@ -6290,7 +6327,7 @@ Public Module Projekte
 
         End If
 
-        setTimeZoneIfTimeZonewasOff = timeZoneWasOff
+        setTimeZoneIfTimeZonewasOffnew = timeZoneWasOff
 
     End Function
     ''' <summary>

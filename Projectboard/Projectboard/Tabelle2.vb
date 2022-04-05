@@ -280,14 +280,14 @@ Public Class Tabelle2
 
                                             '' aktualisiere die ergänzte Rolle 
                                             'Call aktualisiereRoleCostInSheet(tmpZeile,
-                                            '                                     visboZustaende.meColSD, newRangeLeft, newRangeLeft,
+                                            '                                     visboZustaende.meColSD, newRangeLeft, newRangeRight,
                                             '                                     phStart, phEnde, mySubstituteRole.Xwerte)
 
                                             'Call updateMassEditSummenValue(hproj, cphase, newRangeLeft, newRangeRight, kvp.Key, True, tmpZeile)
 
                                             ' aktualisiere die ergänzte Rolle 
                                             Call aktualisiereRoleCostInSheet(tmpZeile,
-                                                                                 visboZustaende.meColSD, showRangeLeft, showRangeLeft,
+                                                                                 visboZustaende.meColSD, showRangeLeft, showRangeRight,
                                                                                  phStart, phEnde, mySubstituteRole.Xwerte)
 
                                             Call updateMassEditSummenValue(hproj, cphase, showRangeLeft, showRangeRight, kvp.Key, True, tmpZeile)
@@ -309,7 +309,7 @@ Public Class Tabelle2
                                 '                                     phStart, phEnde, myRole.Xwerte)
                                 ' aktualisiere die ursprüngliche Rolle 
                                 Call aktualisiereRoleCostInSheet(Target.Row,
-                                                                     visboZustaende.meColSD, showRangeLeft, showRangeLeft,
+                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight,
                                                                      phStart, phEnde, myRole.Xwerte)
 
                                 ' den neuen Summenwert in die Summenspalte eintragen 

@@ -5271,13 +5271,18 @@ Public Class Ribbon1
 
         Dim formerES As Boolean = awinSettings.meEnableSorting
 
+        If control.Id = "PTXG1B7" Then
+            Dim warningFrm As New frmChangedTimeZone
+            If Not notAgain Then
+                warningFrm.ShowDialog()
+            End If
+        End If
+
         Call PBBNameHierarchySelAction(control.Id)
 
         If control.Id = "PTMEC1" And awinSettings.meEnableSorting <> formerES Then
             Me.ribbon.Invalidate()
         End If
-
-
 
         ' jetzt muss die Behandlung rein, dass ggf das Portfolio oder Project Window angezeigt werden ... 
         If control.Id = "PTXG1B6" Or
@@ -12884,7 +12889,10 @@ Public Class Ribbon1
         Dim former_showRangeRight As Integer = showRangeRight
 
         ' ur:2022.03.29: change the timezone because of TSO orga
-
+        Dim warningFrm As New frmChangedTimeZone
+        If Not notAgain Then
+            warningFrm.ShowDialog()
+        End If
 
         Dim timeZoneWasOff As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
