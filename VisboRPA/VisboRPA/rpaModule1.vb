@@ -11,6 +11,8 @@ Imports System.Security.Principal
 Imports System.Diagnostics
 Module rpaModule1
 
+    ' Name des TempFiles
+    Public tempFile As String = My.Computer.FileSystem.GetTempFileName()
 
     Public myActivePortfolio As String
     Public myVC As String
@@ -50,20 +52,24 @@ Module rpaModule1
 
         Dim actDir = My.Computer.FileSystem.CurrentDirectory
 
-        'Call MsgBox("aktuellesDir:" & actDir)
+        'Call MsgBox("TempFile:" & tempFile)
 
         ' name des aktuell laufenden Clients
         visboClient = "VISBO RPA /"
 
+        logfileNamePath = tempFile
+
+        Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "Before Test if VisboRPA.exe is already running")
 
         ' check if the VisboRPA is already running
-        If IsProcessRunning("VisboRPA.exe") Then
+        If IsProcessRunning("VisboRPA") Then
             Call MsgBox("VisboRPA is already running")
             Exit Sub
         End If
 
         ' to reset all settings to the beginning
         'My.Settings.Reset()
+        Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "Before reading my.settings...")
 
         ' Zugriff zu Daten über den VisboServer
         awinSettings.visboServer = True
@@ -88,16 +94,18 @@ Module rpaModule1
 
         myVC = My.Settings.VisboCenter
 
+        Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "default RPA-path will be set to '" & rpaPath & "'")
+
         Dim defaultPath = rpaPath
         'Dim defaultPath = "C:\VISBO\VISBO Config Data\RPA"
 
-
+        Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "Init the ReSt-Server/database Access - Schnittstelle")
         'Init the ReSt-Server/database Access - Schnittstelle
         If IsNothing(databaseAcc) Then
             databaseAcc = New DBAccLayer.Request
         End If
 
-
+        Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "Excel-application mit Parameter festlegen ")
         ' Parameter für die Excel Instance festlegen
         appInstance = New xlns.Application
         appInstance.EnableEvents = False
@@ -124,12 +132,14 @@ Module rpaModule1
         watchDialog = New VisboRPAStart
 
 
-        ' FileNamen für logging zusammenbauen
-        logfileNamePath = createLogfileName(rpaFolder, "")
+        '' FileNamen für logging zusammenbauen
+        'logfileNamePath = createLogfileName(rpaFolder, "")
 
 
         Dim err As New clsErrorCodeMsg
         noDB = False
+
+        Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "check if the user/pwd is remembered")
 
         If awinSettings.userNamePWD <> "" Then
 
@@ -168,8 +178,11 @@ Module rpaModule1
 
         If loginErfolgreich Then
 
+            Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "login successfull")
+
             ' FileNamen für logging zusammenbauen
             logfileNamePath = createLogfileName(rpaFolder, "")
+            'Call MsgBox("logfile Name and path changed: " & logfileNamePath)
 
 
             ' hierin wird der eigentliche Import erledigt
@@ -199,13 +212,18 @@ Module rpaModule1
     ''' </summary>
     ''' <param name="process"></param>
     ''' <returns></returns>
-    Public Function IsProcessRunning(process As String)
-        Dim objList As Object
+    Public Function IsProcessRunning(process As String) As Boolean
 
-        objList = GetObject("winmgmts:") _
-        .ExecQuery("select * from win32_process where name='" & process & "'")
+        Dim p() As Process
+        p = System.Diagnostics.Process.GetProcessesByName(process)
+        If p.Count > 1 Then
+            ' Process is running
+            IsProcessRunning = True
+        Else
+            ' Process is not running
+            IsProcessRunning = False
+        End If
 
-        IsProcessRunning = objList.Count > 1
     End Function
 
 
@@ -796,8 +814,8 @@ Module rpaModule1
 
             ' Debug-Mode?
             ' Logfile schreiben: 
-            Call logger(ptErrLevel.logInfo, "startUpRPA", "localPath:" & awinPath)
-            Call logger(ptErrLevel.logInfo, "startUpRPA", "GlobalPath:" & globalPath)
+            'Call logger(ptErrLevel.logInfo, "startUpRPA", "localPath:" & awinPath)
+            'Call logger(ptErrLevel.logInfo, "startUpRPA", "GlobalPath:" & globalPath)
 
 
             If globalPath <> "" Then

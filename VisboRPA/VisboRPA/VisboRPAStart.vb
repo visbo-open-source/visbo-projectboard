@@ -197,6 +197,14 @@ Public Class VisboRPAStart
         ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
         Dim err As New clsErrorCodeMsg
 
+        If tempFile = "" Then
+            tempFile = My.Computer.FileSystem.GetTempFileName()
+        End If
+
+        If logfileNamePath = "" Then
+            logfileNamePath = tempFile
+        End If
+
         If loginErfolgreich Then
 
             ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
@@ -208,6 +216,7 @@ Public Class VisboRPAStart
 
                 Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
                 If Not changeOK Then
+                    Call logger(ptErrLevel.logError, "VisboRPA load", "No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                     Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                 Else
                     myVC = awinSettings.databaseName
@@ -224,6 +233,7 @@ Public Class VisboRPAStart
                     awinSettings.databaseName = myVC
                     Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
                     If Not changeOK Then
+                        Call logger(ptErrLevel.logError, "VisboRPA load", "No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                     Else
                         awinSettings.databaseName = myVC
@@ -361,7 +371,7 @@ Public Class VisboRPAStart
 
             rpaFolder = rpaPath
 
-            Call startWatching(rpaFolder)
+            'Call startWatching(rpaFolder)
         End If
 
     End Sub
