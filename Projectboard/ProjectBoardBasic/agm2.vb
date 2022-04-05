@@ -21759,12 +21759,16 @@ Public Module agm2
                     ' ur: before TSOrganisation
                     'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
+                    Dim newestOrgaTS As Date = DateSerial(2200, 12, 31)
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, False, True, True)
+
+                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
 
                     nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, True, True, True)
                     If nextOrga.count > 0 Then
                         validOrganisations.addOrga(nextOrga)
                         tsOfnextOrga = nextOrga.validFrom
+
                     End If
 
                     If currentOrga.count > 0 Then

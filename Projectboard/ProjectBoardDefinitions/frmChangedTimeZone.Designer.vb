@@ -22,6 +22,7 @@ Partial Class frmChangedTimeZone
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmChangedTimeZone))
         Me.showNoMore = New System.Windows.Forms.CheckBox()
         Me.messageBox = New System.Windows.Forms.TextBox()
         Me.OKButton = New System.Windows.Forms.Button()
@@ -33,22 +34,23 @@ Partial Class frmChangedTimeZone
         '
         Me.showNoMore.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.showNoMore.AutoSize = True
-        Me.showNoMore.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.showNoMore.Location = New System.Drawing.Point(26, 107)
+        Me.showNoMore.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.showNoMore.Location = New System.Drawing.Point(26, 109)
         Me.showNoMore.Name = "showNoMore"
-        Me.showNoMore.Size = New System.Drawing.Size(174, 21)
+        Me.showNoMore.Size = New System.Drawing.Size(202, 19)
         Me.showNoMore.TabIndex = 1
-        Me.showNoMore.Text = "do not show once more"
+        Me.showNoMore.Text = "do not show this message again"
         Me.showNoMore.UseVisualStyleBackColor = True
         '
         'messageBox
         '
         Me.messageBox.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.messageBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.messageBox.Location = New System.Drawing.Point(26, 37)
+        Me.messageBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.messageBox.Location = New System.Drawing.Point(26, 23)
+        Me.messageBox.Multiline = True
         Me.messageBox.Name = "messageBox"
-        Me.messageBox.Size = New System.Drawing.Size(1040, 26)
+        Me.messageBox.Size = New System.Drawing.Size(584, 49)
         Me.messageBox.TabIndex = 2
         Me.messageBox.Text = "In den folgenden Charts werden nur Werte angezeigt, die zur aktuell gültigen " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Or" &
     "ganisation gehören!"
@@ -56,11 +58,11 @@ Partial Class frmChangedTimeZone
         'OKButton
         '
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.OKButton.BackColor = System.Drawing.SystemColors.HighlightText
-        Me.OKButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.OKButton.Location = New System.Drawing.Point(880, 105)
+        Me.OKButton.BackColor = System.Drawing.SystemColors.ControlLight
+        Me.OKButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.OKButton.Location = New System.Drawing.Point(463, 98)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(186, 23)
+        Me.OKButton.Size = New System.Drawing.Size(147, 30)
         Me.OKButton.TabIndex = 3
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = False
@@ -70,23 +72,25 @@ Partial Class frmChangedTimeZone
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Panel1.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.Panel1.BackColor = System.Drawing.SystemColors.Control
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.messageBox)
         Me.Panel1.Controls.Add(Me.showNoMore)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(1101, 156)
+        Me.Panel1.Size = New System.Drawing.Size(645, 156)
         Me.Panel1.TabIndex = 0
         '
         'frmChangedTimeZone
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1101, 158)
+        Me.ClientSize = New System.Drawing.Size(645, 158)
         Me.Controls.Add(Me.Panel1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmChangedTimeZone"
-        Me.Text = "Changed Time Zone"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
+        Me.Text = "Changed Organisation"
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
         Me.ResumeLayout(False)
