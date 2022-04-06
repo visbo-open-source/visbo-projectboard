@@ -99,7 +99,7 @@
               <button id="PT4G1B14" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportOfflineData" supertip ="Es werden offline editierte Ressourcenbedarfe eingelesen"/>-->
               <menu id="PT4G1M1-2" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="VISBO-Steckbriefe"-->
-                <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+                <!--<button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>-->
                 <!--label ="VISBO Open XML-->
                 <!--<button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>-->
                 <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
@@ -118,13 +118,13 @@
               <!--<menuSeparator id="menuSeparator1"/>-->
               <!--label="Projekte (Batch)"-->
               <menu id="PT4G1M1-3" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
-                <button id="PT4G1B7" imageMso="ImportExcel" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="neue Projekte können auf Basis einer VISBO Liste in 'Import\Batch Projektlisten' erzeugt werden"/>
+                <!--<button id="PT4G1B7" imageMso="ImportExcel" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="neue Projekte können auf Basis einer VISBO Liste in 'Import\Batch Projektlisten' erzeugt werden"/>-->
                 <!--label="Import Projects with Config-File"-->
                 <button id="PT4G1B9" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportProjectsWithConfig" supertip ="neue Projekte können auf Basis von einer oder mehreren Excel-Dateien aus dem Folder 'Import\projects with config' gemäss vorhandener Konfigurationsdatei importiert werden" />
                 <button id="PT4G1B18" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTUpdateProjectsWithConfig" supertip ="aktuelle Projekte mit Excel-Dateien aus dem Folder 'Import\projects with config' updaten" />
                 <!--<menuSeparator id="menuSeparator2"/>-->
                 <!--label="Import Portfolio Definition"-->
-                <button id="PT4G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>
+                <button id="PT4G1B5" imageMso="ImportExcel" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>
                 <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
               <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
               -->
