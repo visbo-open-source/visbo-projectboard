@@ -7,7 +7,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
     <RootNamespace>ExcelWorkbook1</RootNamespace>
-    <AssemblyName>Projectboard</AssemblyName>
+    <AssemblyName>VISBO Projectboard</AssemblyName>
     <VSTO_HostDocumentName>Projectboard.xlsx</VSTO_HostDocumentName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
@@ -26,12 +26,12 @@
     <PublishUrl>c:\publish\VISBO Projectboard\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>4.4.0.1</ApplicationVersion>
+    <ApplicationVersion>4.5.0.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
-    <ProductName>Projectboard</ProductName>
+    <ProductName>VISBO Projectboard</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
     <SupportUrl />
     <FriendlyName>VISBO VisualBoard</FriendlyName>
@@ -75,7 +75,7 @@
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>Projectboard.xml</DocumentationFile>
+    <DocumentationFile>VISBO Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
@@ -91,7 +91,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>Projectboard.xml</DocumentationFile>
+    <DocumentationFile>VISBO Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
@@ -404,6 +404,12 @@
   <ItemGroup>
     <None Include="Resources\visbo-favicon-150x150.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon.ico" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -428,7 +434,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>C53411A4CA5E97AFA1DD99D65CE7532B6055E08B</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
