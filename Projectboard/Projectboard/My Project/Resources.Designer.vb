@@ -201,16 +201,6 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
-        '''</summary>
-        Public ReadOnly Property visbo_icon() As System.Drawing.Icon
-            Get
-                Dim obj As Object = ResourceManager.GetObject("visbo_icon", resourceCulture)
-                Return CType(obj,System.Drawing.Icon)
-            End Get
-        End Property
-        
-        '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
         Public ReadOnly Property visboWEB() As System.Drawing.Bitmap

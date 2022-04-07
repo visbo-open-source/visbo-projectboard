@@ -13069,12 +13069,13 @@ Public Class Ribbon1
 
             ''ur:2022.03.29: in future only 2/3 charts
             'Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
-            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
+            ' tk 7.4 show all
+            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12)
             Dim showFourDiagrams As Boolean = (withSkills And visboZustaende.projectBoardMode = ptModus.massEditRessSkills)
             If showFourDiagrams Then
                 ''ur:2022.03.29: in future only 2/3 charts
                 'stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
-                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
+                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
             End If
 
             Dim chWidth As Double = stdBreite
@@ -13103,7 +13104,7 @@ Public Class Ribbon1
             ' now show Utilization Chart
             ' das Auslastungs-Chart Orga-Einheit
             Dim repObj As Excel.ChartObject = Nothing
-            chLeft = chLeft + chWidth + 2
+            'chLeft = chLeft + chWidth + 2
             chWidth = stdBreite
 
 
@@ -13135,193 +13136,196 @@ Public Class Ribbon1
 
 
             ' now Show Soll-Ist Vergleich mit Plan vs Last_Plan oder Plan vs Beauftragung
-            Dim obj As Excel.ChartObject = Nothing
-            chLeft = chLeft + chWidth + 2
-            chWidth = stdBreite
+            ' tk do not show soll-ist
+            'Dim obj As Excel.ChartObject = Nothing
+            'chLeft = chLeft + chWidth + 2
+            'chWidth = stdBreite
 
-            ' hier muss jetzt das lproj bestimmt werden 
-            Dim lproj As clsProjekt = Nothing
-
-
-            Dim comparisonTyp As Integer
-            Dim qualifier2 As String = ""
-            Dim teamID As Integer = -1
-
-            Dim scInfo As New clsSmartPPTChartInfo
-            With scInfo
-                .hproj = hproj
-                .vergleichsArt = PTVergleichsArt.beauftragung
-                .einheit = PTEinheiten.euro
-                .prPF = ptPRPFType.project
-                If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
-                    .elementTyp = ptElementTypen.roles
-                    scInfo.einheit = PTEinheiten.personentage
-                Else
-                    .elementTyp = ptElementTypen.costs
-                    scInfo.einheit = PTEinheiten.euro
-                End If
-                .chartTyp = PTChartTypen.Balken
-                .detailID = PTprdk.KostenBalken2
-            End With
-
-            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-
-            If awinSettings.meCompareVsLastPlan Then
-                Dim vpID As String = ""
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, vpID, awinSettings.meDateForLastPlan, err)
-                comparisonTyp = PTprdk.KostenBalken2
-
-                scInfo.vergleichsArt = PTVergleichsArt.planungsstand
-
-                scInfo.vergleichsDatum = awinSettings.meDateForLastPlan
-                scInfo.vglProj = lproj
-                scInfo.vergleichsTyp = PTVergleichsTyp.standVom
-                scInfo.q2 = rcName
-                scInfo.detailID = PTprdk.KostenBalken2
-            Else
-
-                If awinSettings.meCompareWithLastVersion Then
-
-                    lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
-                    comparisonTyp = PTprdk.KostenBalken2
-
-                    scInfo.vglProj = lproj
-                    scInfo.vergleichsTyp = PTVergleichsTyp.letzter
-                    scInfo.q2 = ""
-                    scInfo.detailID = PTprdk.KostenBalken2
-
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                        If myCustomUserRole.specifics.Length > 0 Then
-                            If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
-
-                                comparisonTyp = PTprdk.PersonalBalken2
-                                scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
-
-                            End If
-                        End If
-
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
-
-                        ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
-                        ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
-                        If rcName <> "" Then
-                            Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
-
-                            If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
-
-                                Dim tmpParentName As String = ""
-
-                                If rcNameTeamID = -1 Then
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                Else
-                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
-                                    If tmpParentName = "" Then
-                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                    Else
-                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                        If lproj.containsRoleNameID(tmpParentNameID) Then
-                                            ' passt bereits 
-                                        Else
-                                            tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                        End If
-
-                                    End If
-                                End If
-
-                                If tmpParentName <> "" Then
-                                    scInfo.q2 = tmpParentName
-                                End If
-                            End If
+            '' hier muss jetzt das lproj bestimmt werden 
+            'Dim lproj As clsProjekt = Nothing
 
 
-                        End If
+            'Dim comparisonTyp As Integer
+            'Dim qualifier2 As String = ""
+            'Dim teamID As Integer = -1
 
-                    End If
+            'Dim scInfo As New clsSmartPPTChartInfo
+            'With scInfo
+            '    .hproj = hproj
+            '    .vergleichsArt = PTVergleichsArt.beauftragung
+            '    .einheit = PTEinheiten.euro
+            '    .prPF = ptPRPFType.project
+            '    If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+            '        .elementTyp = ptElementTypen.roles
+            '        scInfo.einheit = PTEinheiten.personentage
+            '    Else
+            '        .elementTyp = ptElementTypen.costs
+            '        scInfo.einheit = PTEinheiten.euro
+            '    End If
+            '    .chartTyp = PTChartTypen.Balken
+            '    .detailID = PTprdk.KostenBalken2
+            'End With
+
+            'Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
+            'If awinSettings.meCompareVsLastPlan Then
+            '    Dim vpID As String = ""
+            '    lproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, vpID, awinSettings.meDateForLastPlan, err)
+            '    comparisonTyp = PTprdk.KostenBalken2
+
+            '    scInfo.vergleichsArt = PTVergleichsArt.planungsstand
+
+            '    scInfo.vergleichsDatum = awinSettings.meDateForLastPlan
+            '    scInfo.vglProj = lproj
+            '    scInfo.vergleichsTyp = PTVergleichsTyp.standVom
+            '    scInfo.q2 = rcName
+            '    scInfo.detailID = PTprdk.KostenBalken2
+            'Else
+
+            '    If awinSettings.meCompareWithLastVersion Then
+
+            '        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+            '        comparisonTyp = PTprdk.KostenBalken2
+
+            '        scInfo.vglProj = lproj
+            '        scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+            '        scInfo.q2 = ""
+            '        scInfo.detailID = PTprdk.KostenBalken2
+
+            '        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+            '            If myCustomUserRole.specifics.Length > 0 Then
+            '                If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+
+            '                    comparisonTyp = PTprdk.PersonalBalken2
+            '                    scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+
+            '                End If
+            '            End If
+
+            '        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+
+            '            ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
+            '            ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
+            '            If rcName <> "" Then
+            '                Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+            '                If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
+
+            '                    Dim tmpParentName As String = ""
+
+            '                    If rcNameTeamID = -1 Then
+            '                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+            '                    Else
+            '                        Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+            '                        tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
+            '                        If tmpParentName = "" Then
+            '                            tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+            '                        Else
+            '                            Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+            '                            If lproj.containsRoleNameID(tmpParentNameID) Then
+            '                                ' passt bereits 
+            '                            Else
+            '                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+            '                            End If
+
+            '                        End If
+            '                    End If
+
+            '                    If tmpParentName <> "" Then
+            '                        scInfo.q2 = tmpParentName
+            '                    End If
+            '                End If
+
+
+            '            End If
+
+            '        End If
 
 
 
-                Else
-                    lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
-                    comparisonTyp = PTprdk.KostenBalken
+            '    Else
+            '        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+            '        comparisonTyp = PTprdk.KostenBalken
 
-                    scInfo.vglProj = lproj
-                    scInfo.vergleichsTyp = PTVergleichsTyp.erster
-                    scInfo.q2 = ""
-                    scInfo.detailID = PTprdk.KostenBalken
+            '        scInfo.vglProj = lproj
+            '        scInfo.vergleichsTyp = PTVergleichsTyp.erster
+            '        scInfo.q2 = ""
+            '        scInfo.detailID = PTprdk.KostenBalken
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                        If myCustomUserRole.specifics.Length > 0 Then
-                            If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+            '        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+            '            If myCustomUserRole.specifics.Length > 0 Then
+            '                If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
-                                comparisonTyp = PTprdk.PersonalBalken
-                                scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+            '                    comparisonTyp = PTprdk.PersonalBalken
+            '                    scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
 
-                            End If
-                        End If
+            '                End If
+            '            End If
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+            '        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
 
-                        If rcName <> "" Then
-                            Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+            '            If rcName <> "" Then
+            '                Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
 
-                            If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
+            '                If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
 
-                                Dim tmpParentName As String = ""
+            '                    Dim tmpParentName As String = ""
 
-                                If rcNameTeamID = -1 Then
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                Else
-                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
-                                    If tmpParentName = "" Then
-                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                    Else
-                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                        If lproj.containsRoleNameID(tmpParentNameID) Then
-                                            ' passt bereits 
-                                        Else
-                                            tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                        End If
+            '                    If rcNameTeamID = -1 Then
+            '                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+            '                    Else
+            '                        Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+            '                        tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
+            '                        If tmpParentName = "" Then
+            '                            tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+            '                        Else
+            '                            Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+            '                            If lproj.containsRoleNameID(tmpParentNameID) Then
+            '                                ' passt bereits 
+            '                            Else
+            '                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+            '                            End If
 
-                                    End If
-                                End If
+            '                        End If
+            '                    End If
 
-                                If tmpParentName <> "" Then
-                                    scInfo.q2 = tmpParentName
-                                End If
+            '                    If tmpParentName <> "" Then
+            '                        scInfo.q2 = tmpParentName
+            '                    End If
 
-                            End If
-
-
-                        End If
-                    End If
-
-                End If
-
-            End If
-
-            'Dim vglBaseline As Boolean = Not IsNothing(lproj)
-            Dim reportObj As Excel.ChartObject = Nothing
+            '                End If
 
 
-            Try
+            '            End If
+            '        End If
 
-                Call createRessBalkenOfProject(scInfo, 2, reportObj, chTop, chLeft, chHeight, chWidth, True,
-                                                   calledFromMassEdit:=True)
+            '    End If
 
-                ' alt, am 20.2. durch obiges ersetzt 
-                'If scInfo.q2 = "" Then
-                '    Call createCostBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, False, comparisonTyp)
-                'Else
-                '    Call createRessBalkenOfProject(scInfo, 2, reportObj, chTop, chLeft, chHeight, chWidth, True,
-                '                                   calledFromMassEdit:=True)
-                'End If
+            'End If
+
+            ''Dim vglBaseline As Boolean = Not IsNothing(lproj)
+            'Dim reportObj As Excel.ChartObject = Nothing
 
 
-            Catch ex As Exception
+            'Try
 
-            End Try
+            '    Call createRessBalkenOfProject(scInfo, 2, reportObj, chTop, chLeft, chHeight, chWidth, True,
+            '                                       calledFromMassEdit:=True)
+
+            '    ' alt, am 20.2. durch obiges ersetzt 
+            '    'If scInfo.q2 = "" Then
+            '    '    Call createCostBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, False, comparisonTyp)
+            '    'Else
+            '    '    Call createRessBalkenOfProject(scInfo, 2, reportObj, chTop, chLeft, chHeight, chWidth, True,
+            '    '                                   calledFromMassEdit:=True)
+            '    'End If
+
+
+            'Catch ex As Exception
+
+            'End Try
+
+            ' tk end of do not show soll-Ist
 
 
         Else
