@@ -2073,6 +2073,12 @@ Module rpaModule1
             lastReadingOrganisation = readOrganisations()
         End If
 
+        'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
+        lastReadingProjectTemplates = readProjectTemplates()
+        'End If
+
+        lastReadingCustomization = readCustomizations()
+
         ' cache löschen
         Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
@@ -2102,9 +2108,7 @@ Module rpaModule1
                 End If
             Next
 
-            'If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 24 Then
-            lastReadingProjectTemplates = readProjectTemplates()
-            'End If
+
             Dim anzTemplates As Integer = Projektvorlagen.Count
 
             allOk = awinImportProjektInventur(readProjects, createdProjects)
@@ -3228,12 +3232,12 @@ Module rpaModule1
         If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
             lastReadingOrganisation = readOrganisations()
         End If
-        If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
-            lastReadingCustomization = readCustomizations()
-            If lastReadingCustomization <= Date.MinValue Then
-                Call logger(ptErrLevel.logError, "processVisboActualData1", "the import of actual data requires the existence of a customization setting")
-            End If
+        'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+        lastReadingCustomization = readCustomizations()
+        If lastReadingCustomization <= Date.MinValue Then
+            Call logger(ptErrLevel.logError, "processVisboActualData1", "the import of actual data requires the existence of a customization setting")
         End If
+        'End If
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboActualData1.ToString, myName)
 
@@ -3332,12 +3336,12 @@ Module rpaModule1
         If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
             lastReadingOrganisation = readOrganisations()
         End If
-        If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
-            lastReadingCustomization = readCustomizations()
+        'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+        lastReadingCustomization = readCustomizations()
             If lastReadingCustomization <= Date.MinValue Then
                 Call logger(ptErrLevel.logError, "processVisboActualData2", "the import of actual data requires the existence of a customization setting")
             End If
-        End If
+        'End If
 
         Dim weitermachen As Boolean = False
         Dim outPutCollection As New Collection
