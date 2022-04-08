@@ -13069,13 +13069,13 @@ Public Class Ribbon1
 
             ''ur:2022.03.29: in future only 2/3 charts
             'Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
-            ' tk 7.4 show all
-            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12)
+            ' tk 7.4 show Budget as well
+            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
             Dim showFourDiagrams As Boolean = (withSkills And visboZustaende.projectBoardMode = ptModus.massEditRessSkills)
             If showFourDiagrams Then
                 ''ur:2022.03.29: in future only 2/3 charts
                 'stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
-                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
+                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
             End If
 
             Dim chWidth As Double = stdBreite
@@ -13093,8 +13093,7 @@ Public Class Ribbon1
             '' show the project Profit/Lost Diagram
             If ShowProjekte.contains(pName) Then
                 hproj = ShowProjekte.getProject(pName)
-                'Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
-                'chTop, chLeft, chWidth, chHeight, False, True)
+                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, chTop, chLeft, chWidth, chHeight, False, True)
 
                 selectedProjekte.Clear(False)
                 selectedProjekte.Add(hproj, False)
@@ -13104,7 +13103,7 @@ Public Class Ribbon1
             ' now show Utilization Chart
             ' das Auslastungs-Chart Orga-Einheit
             Dim repObj As Excel.ChartObject = Nothing
-            'chLeft = chLeft + chWidth + 2
+            chLeft = chLeft + chWidth + 2
             chWidth = stdBreite
 
 
