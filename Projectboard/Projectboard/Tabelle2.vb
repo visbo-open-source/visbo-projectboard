@@ -999,14 +999,7 @@ Public Class Tabelle2
 
                                         End If
 
-
-
                                     Else
-                                        'Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
-                                        'If awinSettings.englishLanguage Then
-                                        '    errMsg = "unknown role/cost ..."
-                                        'End If
-                                        'Call MsgBox(errMsg)
                                         Target.Cells(1, 1).value = visboZustaende.oldValue
                                     End If
 
@@ -1201,10 +1194,13 @@ Public Class Tabelle2
                                         End If
 
 
-                                        Dim von As Integer = 0
-                                        Dim bis As Integer = 0
-                                        ' ur: 2022.03.29 
-                                        Dim changed1 As Boolean = getTimeZoneRegardingTSO(von, bis, True)
+                                        Dim von As Integer = showRangeLeft
+                                        Dim bis As Integer = showRangeRight
+
+                                        'Dim von As Integer = 0
+                                        'Dim bis As Integer = 0
+                                        '' ur: 2022.03.29 
+                                        'Dim changed1 As Boolean = getTimeZoneRegardingTSO(von, bis, True)
 
                                         If isRole Then
 
