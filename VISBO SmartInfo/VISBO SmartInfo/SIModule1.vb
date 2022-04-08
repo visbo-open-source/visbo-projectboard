@@ -5012,59 +5012,10 @@ Module SIModule1
         End With
 
 
-        ' ur:2019-09-19 TestxlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
-
-
-        'xlApp.Visible = smartChartsAreEditable
-        'xlApp.ScreenUpdating = False
-        'xlApp.DisplayFormulaBar = False
-
-
-        'Try
-        ' ur:2019-09-19 Test
-        'If Not IsNothing(xlApp.ActiveWindow) Then
-
-        '    With xlApp.ActiveWindow
-        '        .Visible = smartChartsAreEditable
-        '        '.Caption = "VISBO Smart Diagram"
-        '        '.DisplayHeadings = False
-        '        '.DisplayWorkbookTabs = False
-
-        '        .Width = 50
-        '        .Height = 15
-        '        .Top = 10
-        '        .Left = -120
-
-        '    End With
-        'End If
-
-        ''Catch ex As Exception
-
-        ''End Try
-
-
         pptChart.Refresh()
-        ' ur:2019.06.03: anstatt Try CatchEx ohne Aktion versuchsweise
-        'On Error Resume Next
-        'On Error GoTo 0
-        'pptChartData = Nothing
-        'pptChart = Nothing
+
         pptChartData.BreakLink()
 
-
-
-        'If xlApp.Workbooks.Count = 1 Then
-
-        '    For Each wb As Excel.Workbook In xlApp.Workbooks
-        '        wb.Saved = True
-        '        xlApp.Quit()
-        '    Next
-        'Else
-        '    For Each wb As Excel.Workbook In xlApp.Workbooks
-        '        wb.Close(SaveChanges:=False)
-        '    Next
-
-        'End If
 
 
     End Sub

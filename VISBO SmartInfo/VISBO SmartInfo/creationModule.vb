@@ -342,6 +342,10 @@ Module creationModule
 
                     If kennzeichnung = "Projekt-Name" Or
                         kennzeichnung = "Portfolio-Name" Or
+                        kennzeichnung = "Rolle" Or
+                        kennzeichnung = "Skill" Or
+                        kennzeichnung = "Meilenstein" Or
+                        kennzeichnung = "Phase" Or
                         kennzeichnung = "Custom-Field" Or
                         kennzeichnung = "selectedItems" Or
                         kennzeichnung = "Einzelprojektsicht" Or
@@ -1085,6 +1089,89 @@ Module creationModule
 
                                 End Try
 
+                            Case "Rolle"
+
+
+                                Try
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+                                    If qualifier <> "" Then
+                                        Dim smartChartInfo As New clsSmartPPTChartInfo
+                                        With smartChartInfo
+
+                                            If showRangeLeft > 0 Then
+                                                .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                            End If
+                                            If showRangeRight > 0 Then
+                                                .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                            End If
+
+                                            .einheit = PTEinheiten.personentage
+                                            .elementTyp = ptElementTypen.roles
+                                            .pName = getPnameFromKey(currentConstellationPvName)
+                                            .vName = getVariantnameFromKey(currentConstellationPvName)
+                                            .vpid = currentSessionConstellation.vpID
+                                            .prPF = ptPRPFType.portfolio
+                                            .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                            .bigType = ptReportBigTypes.charts
+
+                                            ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                            .hproj = Nothing
+                                            .vglProj = Nothing
+
+
+                                        End With
+
+                                        If smartChartInfo.q2 <> "" Then
+
+                                            Dim roleID As String = RoleDefinitions.parseRoleNameID(smartChartInfo.q2, -1).ToString
+                                            Dim paramRoleIDToAppend As String = ""
+                                            If roleID <> "" Then
+                                                paramRoleIDToAppend = "&roleID=" & roleID
+                                            End If
+
+
+                                            Dim noLegend As Boolean = False
+                                            If qualifier2 = "noLegend" Then
+                                                noLegend = True
+                                            End If
+                                            Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
+
+                                            ' 
+                                            ' tk got the Method from Ute / Projectboard. Do not add an Icon but rather link it to the elready existing shape 
+                                            '
+                                            ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                                            '
+                                            Dim beginningDate As String = ""
+                                            Dim endingDate As String = ""
+                                            If Not IsNothing(smartChartInfo.vpid) Then
+                                                Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                                If smartChartInfo.zeitRaumLeft > Date.MinValue Then
+                                                    beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("s")
+                                                End If
+                                                If smartChartInfo.zeitRaumRight > Date.MinValue Then
+                                                    Dim hzeitRaumRight As Date = smartChartInfo.zeitRaumRight
+                                                    hzeitRaumRight = DateAdd(DateInterval.Month, 1, hzeitRaumRight)
+                                                    endingDate = "&to=" & hzeitRaumRight.ToString("s")
+                                                End If
+
+                                                Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & "&unit=1" & paramRoleIDToAppend & beginningDate & endingDate
+                                                Call createHyperlinkInShape(pptShape, visboHyperLinkURL)
+
+                                            End If
+
+                                        End If
+
+                                    End If
+
+
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                End Try
+
+
 
 
                             Case "Ampel-Farbe"
@@ -1501,6 +1588,26 @@ Module creationModule
 
     End Sub
 
+    ''' <summary>
+    ''' links the given Shape with an provided HyperLink
+    ''' </summary>
+    ''' <param name="shapeToGetLink"></param>
+    ''' <param name="hyperLinkURL"></param>
+    ''' <param name="subURL"></param>
+    Public Sub createHyperlinkInShape(ByRef shapeToGetLink As PowerPoint.Shape, ByVal hyperLinkURL As String, Optional ByVal subURL As String = "")
+
+        With shapeToGetLink
+            With .ActionSettings(PowerPoint.PpMouseActivation.ppMouseClick)
+                .Action = PowerPoint.PpActionType.ppActionHyperlink
+                .Hyperlink.Address = hyperLinkURL
+                .Hyperlink.ScreenTip = "Go To Visbo-WEB"
+                .Hyperlink.AddToFavorites()
+                .Hyperlink.SubAddress = subURL
+            End With
+        End With
+
+    End Sub
+
 
     '''' <summary>
     '''' erstellt Balken und Curve Projekt-Diagramme , Soll-Ist 
@@ -1511,7 +1618,8 @@ Module creationModule
     '''' <param name="currentSlideName"></param>
     '''' <param name="chartContainer"></param>
     Public Sub createProjektChartInPPTNew(ByVal sCInfo As clsSmartPPTChartInfo,
-                                      ByVal chartContainer As PowerPoint.Shape)
+                                      ByVal chartContainer As PowerPoint.Shape,
+                                          Optional ByVal noLegend As Boolean = False)
 
         ' Festlegen der Titel Schriftgrösse
         Dim titleFontSize As Single = 14
@@ -1644,11 +1752,6 @@ Module creationModule
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
         Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
-        'Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
-        '                                                           Width:=width, Height:=height)
-        ' 
-        ' tk brauchen wir das ?  
-        'Dim tmpWB As Excel.Workbook = CType(newPPTChart.Chart.ChartData.Workbook, Excel.Workbook)
 
 
         ' jetzt kommt das Löschen der alten SeriesCollections . . 
@@ -1955,15 +2058,6 @@ Module creationModule
                     End If
 
 
-                    ' tk 9.7.19 führt zu Fehler
-                    'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
-                    '    If titleFontSize - 4 >= 6 Then
-                    '        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
-                    '    Else
-                    '        .Format.TextFrame2.TextRange.Font.Size = 6
-                    '    End If
-                    'End If
-
                 End With
             Catch ex As Exception
 
@@ -1981,35 +2075,30 @@ Module creationModule
                         .TickLabels.Font.Size = 6
                     End If
 
-                    ' führt immer zu Fehler 
-                    'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
-                    '    If titleFontSize - 4 >= 6 Then
-                    '        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
-                    '    Else
-                    '        .Format.TextFrame2.TextRange.Font.Size = 6
-                    '    End If
-                    'End If
 
                 End With
             Catch ex As Exception
 
             End Try
 
-            Try
-                .HasLegend = True
-                With .Legend
-                    .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
+            If Not noLegend Then
 
-                    If titleFontSize - 4 >= 6 Then
-                        .Font.Size = titleFontSize - 4
-                    Else
-                        .Font.Size = 6
-                    End If
+                Try
+                    .HasLegend = True
+                    With .Legend
+                        .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
 
-                End With
-            Catch ex As Exception
+                        If titleFontSize - 4 >= 6 Then
+                            .Font.Size = titleFontSize - 4
+                        Else
+                            .Font.Size = 6
+                        End If
 
-            End Try
+                    End With
+                Catch ex As Exception
+
+                End Try
+            End If
 
             .HasTitle = True
             .ChartTitle.Text = " " ' Platzhalter 
@@ -2045,11 +2134,6 @@ Module creationModule
 
         newPPTChart.Chart.Refresh()
 
-        ' jetzt das Excel wieder schliessen 
-        ' tk brauchen wir das ? 8.10.19
-        'tmpWB.Close(SaveChanges:=False)
-        '
-        ' jetzt werden die Smart-Infos an das Chart angehängt ...
 
         Call addSmartPPTChartInfo(newPPTChart, sCInfo)
 
