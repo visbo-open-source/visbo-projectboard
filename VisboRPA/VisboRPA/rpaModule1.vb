@@ -1896,9 +1896,9 @@ Module rpaModule1
 
         ' project brief do not need any template
 
-        'If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
-        lastReadingOrganisation = readOrganisations()
-        'End If
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
 
         'read Project Brief and put it into ImportProjekte
@@ -2069,7 +2069,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -2983,7 +2983,7 @@ Module rpaModule1
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -3074,7 +3074,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -3229,10 +3229,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
-            lastReadingOrganisation = readOrganisations()
-        End If
-        'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+        lastReadingOrganisation = readOrganisations()
         lastReadingCustomization = readCustomizations()
         If lastReadingCustomization <= Date.MinValue Then
             Call logger(ptErrLevel.logError, "processVisboActualData1", "the import of actual data requires the existence of a customization setting")
@@ -3333,7 +3330,7 @@ Module rpaModule1
         Dim result0 As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
         'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
@@ -3988,7 +3985,7 @@ Module rpaModule1
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
