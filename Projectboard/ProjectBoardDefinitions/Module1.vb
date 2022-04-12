@@ -108,7 +108,7 @@ Public Module Module1
 
     ' hier werden die gültigen Organisationen mitgemerkt ... 
     Public validOrganisations As New clsOrganisations
-    Public tsOfcurrentOrga As Date = Date.MinValue
+    Public tsOfUsedOrga As Date = Date.MinValue
     Public tsOfnextOrga As Date = Date.MaxValue
     Public notAgain As Boolean = False
 
@@ -7917,6 +7917,11 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="errLevel"></param>
+    ''' <returns></returns>
     Public Function readlogger(ByVal errLevel As Integer) As Collection
 
         Dim errMessages As New Collection
@@ -7931,20 +7936,24 @@ Public Module Module1
                         currentRow = logf.ReadLine()
                         Select Case errLevel
                             Case ptErrLevel.logInfo
-                                If currentRow.Contains(errorLevel(ptErrLevel.logInfo)) Or currentRow.Contains(errorLevel(ptErrLevel.logDebug)) Or
-                                    currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                If currentRow.Contains(errorLevel(ptErrLevel.logInfo)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logDebug)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
                                     currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
                                     errMessages.Add(currentRow)
                                 End If
                             Case ptErrLevel.logDebug
                                 If currentRow.Contains(errorLevel(ptErrLevel.logDebug)) Or
-                                 currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                 currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or
+                                 currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
                                  currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
                                     errMessages.Add(currentRow)
                                 End If
                             Case ptErrLevel.logWarning
-                                If currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
-                                 currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
+                                If currentRow.Contains(errorLevel(ptErrLevel.logWarning)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logError)) Or
+                                    currentRow.Contains(errorLevel(ptErrLevel.logsevereError)) Then
                                     errMessages.Add(currentRow)
                                 End If
                             Case ptErrLevel.logError

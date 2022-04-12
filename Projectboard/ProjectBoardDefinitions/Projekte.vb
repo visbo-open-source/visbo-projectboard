@@ -6277,8 +6277,8 @@ Public Module Projekte
                 timeZoneWasOff = True
                 If regardOrgas Then
                     ' regarding the timezone of the currentOrga
-                    If getColumnOfDate(tsOfcurrentOrga) > showRangeLeft Then
-                        showRangeLeft = getColumnOfDate(tsOfcurrentOrga)
+                    If getColumnOfDate(tsOfUsedOrga) > showRangeLeft Then
+                        showRangeLeft = getColumnOfDate(tsOfUsedOrga)
                         changed = True
                     End If
                     If getColumnOfDate(tsOfnextOrga) < showRangeRight Then
@@ -6307,8 +6307,8 @@ Public Module Projekte
                 End If
                 If regardOrgas Then
                     ' regarding the timezone of the currentOrga
-                    If getColumnOfDate(tsOfcurrentOrga) > showRangeLeft Then
-                        showRangeLeft = getColumnOfDate(tsOfcurrentOrga)
+                    If getColumnOfDate(tsOfUsedOrga) > showRangeLeft Then
+                        showRangeLeft = getColumnOfDate(tsOfUsedOrga)
                         changed = True
                     End If
                     If getColumnOfDate(tsOfnextOrga) < showRangeRight Then
@@ -6347,8 +6347,8 @@ Public Module Projekte
             If ShowProjekte.Count > 0 Then
                 If regardOrgas Then
                     ' regarding the timezone of the currentOrga
-                    If getColumnOfDate(tsOfcurrentOrga) > newRangeLeft Then
-                        newRangeLeft = getColumnOfDate(tsOfcurrentOrga)
+                    If getColumnOfDate(tsOfUsedOrga) > newRangeLeft Then
+                        newRangeLeft = getColumnOfDate(tsOfUsedOrga)
                         changed = True
                     End If
                     If getColumnOfDate(tsOfnextOrga) < newRangeRight Then
@@ -6357,9 +6357,9 @@ Public Module Projekte
                     End If
                     If changed Then
                         If awinSettings.englishLanguage Then
-                            msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                            msgTxt = "capacity and planned cost values will only be calculated during the current Organisation " & vbCrLf & tsOfUsedOrga.ToString & " - " & tsOfnextOrga.ToString
                         Else
-                            msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfcurrentOrga.ToString & " - " & tsOfnextOrga.ToString
+                            msgTxt = "Im Chart werden nur Werte während der Gültigkeit der aktuellen Organisation angezeigt ! " & vbCrLf & tsOfUsedOrga.ToString & " - " & tsOfnextOrga.ToString
                         End If
                         Call MsgBox(msgTxt)
                     End If
@@ -8902,7 +8902,7 @@ Public Module Projekte
             Exit Sub
         End If
 
-        
+
         Dim sortierteListe As New SortedList(Of Double, String)
         For r = 1 To anzRollen
             roleName = RoleDefinitions.getRoledef(r).name
@@ -9045,7 +9045,7 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
             End If
 
@@ -9110,8 +9110,8 @@ Public Module Projekte
     '''            = 5 : Strategie / Risiko 
     '''            = 6 : Ergebnis
     ''' </remarks>
-    Public Sub updateCostBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, _
-                                         ByRef chtobj As Excel.ChartObject, _
+    Public Sub updateCostBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                         ByRef chtobj As Excel.ChartObject,
                                          ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
@@ -9366,7 +9366,7 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
             End If
 
@@ -10060,8 +10060,8 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Public Sub createRessPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                            ByVal top As Double, left As Double, height As Double, width As Double, _
+    Public Sub createRessPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                            ByVal top As Double, left As Double, height As Double, width As Double,
                                             ByVal calledFromReporting As Boolean)
 
         'Dim kennziffer As Integer = 4
@@ -10239,7 +10239,7 @@ Public Module Projekte
             'Else
             '    titelTeile(1) = ""
             'End If
-            
+
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -10261,7 +10261,7 @@ Public Module Projekte
             'Else
             '    titelTeile(1) = ""
             'End If
-            
+
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -10355,7 +10355,7 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
 
@@ -10621,7 +10621,7 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
             End If
 
@@ -10648,8 +10648,8 @@ Public Module Projekte
     '            = 5 : Strategie / Risiko 
     '            = 6 : Ergebnis
 
-    Public Sub createCostPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                        ByVal top As Double, left As Double, height As Double, width As Double, _
+    Public Sub createCostPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                        ByVal top As Double, left As Double, height As Double, width As Double,
                                         ByVal calledFromReporting As Boolean)
 
         Dim kennziffer As Integer = 4
@@ -10762,7 +10762,7 @@ Public Module Projekte
             'Else
             '    titelTeile(1) = ""
             'End If
-            
+
 
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -10784,7 +10784,7 @@ Public Module Projekte
             'Else
             '    titelTeile(1) = ""
             'End If
-            
+
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
@@ -10799,7 +10799,7 @@ Public Module Projekte
             Throw New ArgumentException(repMessages.getmsg(167))
             Exit Sub
         End If
-        
+
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -10887,7 +10887,7 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                             titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
 
@@ -10904,7 +10904,7 @@ Public Module Projekte
         End With
 
         appInstance.EnableEvents = formerEE
-            'appInstance.ScreenUpdating = True
+        'appInstance.ScreenUpdating = True
 
 
     End Sub
@@ -11093,7 +11093,7 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
                 ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
@@ -12298,7 +12298,7 @@ Public Module Projekte
 
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
                     achieved = False
@@ -13385,7 +13385,7 @@ Public Module Projekte
     ''' <param name="auswahl"></param>
     ''' <param name="changeScale"></param>
     ''' <remarks></remarks>
-    Public Sub updateProjektErgebnisCharakteristik2_deprecated(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+    Public Sub updateProjektErgebnisCharakteristik2_deprecated(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject,
                                                     ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
@@ -13689,7 +13689,7 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
                 ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
@@ -14061,12 +14061,12 @@ Public Module Projekte
     ''' <param name="responsiblePerson"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function erstelleInventurProjekt(ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
-                                           ByVal startdate As Date, ByVal endedate As Date, _
-                                           ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
-                                           ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
-                                           ByVal listOfCustomFields As Collection, _
-                                           ByVal responsiblePerson As String, _
+    Public Function erstelleInventurProjekt(ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String,
+                                           ByVal startdate As Date, ByVal endedate As Date,
+                                           ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double,
+                                           ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String,
+                                           ByVal listOfCustomFields As Collection,
+                                           ByVal responsiblePerson As String,
                                            ByVal profitUSerAskedFor As Double) As clsProjekt
 
         Dim newprojekt As New clsProjekt
