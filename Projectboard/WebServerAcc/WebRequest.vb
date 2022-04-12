@@ -2847,6 +2847,12 @@ Public Class Request
         retrieveCostsFromDB = result
 
     End Function
+
+    Public Function removeCapas(ByVal capas As clsCapas, ByRef err As clsErrorCodeMsg) As Boolean
+        Dim result As Boolean = False
+
+        removeCapas = result
+    End Function
     ''' <summary>
     ''' save of the capacity of one person one year 
     ''' </summary>
