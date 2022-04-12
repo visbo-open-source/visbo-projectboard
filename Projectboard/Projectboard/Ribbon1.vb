@@ -7561,7 +7561,7 @@ Public Class Ribbon1
                                     ' ins Protokoll eintragen 
                                     logArray(0) = " Mitarbeiter ohne TimeSheet: "
                                     If awinSettings.englishLanguage Then
-                                        logArray(0) = "Employee wothout TimeSheet: "
+                                        logArray(0) = "Employee without TimeSheet: "
                                     End If
                                     logArray(1) = ""
                                     logArray(2) = roleName
@@ -7896,18 +7896,43 @@ Public Class Ribbon1
                             End Try
 
                         Else
-
-                            logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
-                            outPutCollection.Add(logmessage)
-
-                            If outPutCollection.Count > 0 Then
+                            ' Auflisten fehlerhafter Timesheets - führen zum Abbruch des Imports
+                            For Each ts As String In listOfErrorImportFilesAllg
                                 If awinSettings.englishLanguage Then
-                                    Call showOutPut(outPutCollection, "no Import because of errors", "please check the notifications ...")
+                                    logmessage = vbLf & "Timesheet '" & ts & "' could not be imported due to errors"
                                 Else
-                                    Call showOutPut(outPutCollection, "Kein Import wegen Fehler", "folgende Probleme sind aufgetaucht")
+                                    logmessage = vbLf & "Timesheet '" & ts & "' konnte aufgrund von Fehlern nicht importiert werden "
+                                End If
+                                outPutCollection.Add(logmessage)
+                                Call logger(ptErrLevel.logError, "PTImportIstDaten", logmessage)
+                            Next
+
+                            'filter outputMessages out of logfile
+                            Dim newoutputColl As Collection = readlogger(ptErrLevel.logError)
+
+
+
+                            logmessage = vbLf & "detaillierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                            outPutCollection.Add(logmessage)
+                            newoutputColl.Add(logmessage)
+
+                            If newoutputColl.Count > 0 Then
+                                If awinSettings.englishLanguage Then
+                                    Call showOutPut(newoutputColl, "no Import because of errors", "please check the notifications ...", ptErrLevel.logWarning)
+                                Else
+                                    Call showOutPut(newoutputColl, "Kein Import wegen Fehler", "folgende Probleme sind aufgetaucht", ptErrLevel.logWarning)
                                 End If
 
                             End If
+
+                            'If outPutCollection.Count > 0 Then
+                            '    If awinSettings.englishLanguage Then
+                            '        Call showOutPut(outPutCollection, "no Import because of errors", "please check the notifications ...", ptErrLevel.logWarning)
+                            '    Else
+                            '        Call showOutPut(outPutCollection, "Kein Import wegen Fehler", "folgende Probleme sind aufgetaucht", ptErrLevel.logWarning)
+                            '    End If
+
+                            'End If
                         End If
 
                     Else

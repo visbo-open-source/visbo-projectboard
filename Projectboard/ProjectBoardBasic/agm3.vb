@@ -1611,14 +1611,14 @@ Public Module agm3
                                             result = False
                                         Else
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to given Name: " & vbCrLf & "Spreadsheet '" & currentWS.Name & "' in File '" & tmpDatei & "' contains: " &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zum angegebenen Namen: " & vbCrLf & "Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' enthält: " &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
 
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
@@ -1626,14 +1626,14 @@ Public Module agm3
                                         If hrole.name <> personalName Then
                                             ' Warning: name and personal Number do not match ...
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to given Name: " & vbCrLf & "Spreadsheet '" & currentWS.Name & "' in File '" & tmpDatei & "' contains: " &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zum angegebenen Namen: " & vbCrLf & "Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' enthält: " &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
                                     End If
                                     'Dim identical As Boolean = (personalName = hrole.name)
@@ -1735,7 +1735,12 @@ Public Module agm3
 
                                             Dim pvkey As String
                                             If Not IsNothing(projektName) Then
-                                                pvkey = calcProjektKey(projektName, "")
+                                                Try
+                                                    pvkey = calcProjektKey(projektName, "")
+                                                Catch ex As Exception
+                                                    pvkey = ""
+                                                End Try
+
                                             Else
                                                 pvkey = ""
                                             End If
