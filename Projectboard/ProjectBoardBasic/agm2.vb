@@ -26508,7 +26508,7 @@ Public Module agm2
     ''' <returns></returns>
     Public Function storeCapasOfRoles() As Boolean
 
-        Dim functionResult As Boolean = False
+        Dim functionResult As Boolean = True
         Dim capasOfOneRole As New clsCapas
         Dim resultOne As Boolean = True
 
@@ -26587,7 +26587,7 @@ Public Module agm2
 
     Private Function transformCapa(ByVal roleDef As clsRollenDefinition) As clsCapas
 
-        Dim totalEndDate As Date = DateAndTime.DateSerial(2200, 12, 31)
+        Dim totalEndDate As Date = DateAndTime.DateSerial(2200, 1, 1)
         Dim newCapas As New clsCapas
         Dim newCapaYear As New clsCapa
         With roleDef
