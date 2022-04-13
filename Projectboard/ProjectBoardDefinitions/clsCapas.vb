@@ -26,7 +26,8 @@
 
         For Each capaItem As clsCapa In _liste
             found = (capaItem.roleID = capa.roleID) And
-                    (capaItem.startOfYear.Year = capa.startOfYear.Year)
+                    (capaItem.startOfYear.Year = capa.startOfYear.Year) And
+                    (DateDiff(DateInterval.Day, capaItem.startOfYear, capa.startOfYear) = 0)
 
             If found Then
                 foundItem = capaItem
@@ -87,7 +88,7 @@
         Dim tmpResult As clsCapa = Nothing
 
         For Each capaItem As clsCapa In _liste
-            If (capaItem.roleID = uid) And (DateDiff(DateInterval.Month, capaItem.startOfYear, myDate) = 0) Then
+            If (capaItem.roleID = uid) And (DateDiff(DateInterval.Day, capaItem.startOfYear, myDate) = 0) Then
                 tmpResult = capaItem
                 Exit For
             End If
@@ -108,11 +109,11 @@
         Remove = tmpResult
     End Function
 
-    Public Function Remove(ByVal uid As String, ByVal year As Integer) As clsCapas
+    Public Function Remove(ByVal uid As String, ByVal myDate As Date) As clsCapas
         Dim tmpResult As New clsCapas
 
         For Each capaItem As clsCapa In _liste
-            If (capaItem.roleID <> uid) And (capaItem.startOfYear.Year <> year) Then
+            If (capaItem.roleID <> uid) Or (DateDiff(DateInterval.Day, capaItem.startOfYear, myDate) <> 0) Then
                 tmpResult.Add(capaItem)
             End If
         Next
@@ -128,10 +129,12 @@
     Public Function containsIdentical(ByVal myCapa As clsCapa) As Boolean
         Dim result As Boolean = False
 
-        Dim capaItem As clsCapa = getCapa(myCapa.roleID, myCapa.startOfYear)
+        If Not IsNothing(myCapa) Then
+            Dim capaItem As clsCapa = getCapa(myCapa.roleID, myCapa.startOfYear)
 
-        If Not IsNothing(capaItem) Then
-            result = capaItem.isIdenticalTo(myCapa)
+            If Not IsNothing(capaItem) Then
+                result = capaItem.isIdenticalTo(myCapa)
+            End If
         End If
 
         containsIdentical = result
@@ -141,33 +144,39 @@
     Public Function containsIdentical(ByVal subset As clsCapas) As Boolean
 
         Dim myUid As String = ""
-        If subset.liste.Count = 0 Then
-            ' ist falsch 
-        Else
-            myUid = subset.liste.First.roleID
-        End If
+        Dim isIdentical As Boolean = False
 
-        Dim isIdentical As Boolean = Count(myUid) = subset.Count(myUid)
+        If Not IsNothing(subset) Then
 
-        If isIdentical Then
-            For Each subsetItem As clsCapa In subset.liste
+            If subset.liste.Count = 0 Then
+                ' ist falsch 
+            Else
+                myUid = subset.liste.First.roleID
+            End If
 
-                Dim atleastOne As Boolean = False
-                For Each capaItem As clsCapa In _liste
-                    atleastOne = atleastOne Or subsetItem.isIdenticalTo(capaItem)
-                    If atleastOne = True Then
+            isIdentical = (Count(myUid) = subset.Count(myUid))
+
+            If isIdentical Then
+                For Each subsetItem As clsCapa In subset.liste
+
+                    Dim atleastOne As Boolean = False
+                    For Each capaItem As clsCapa In _liste
+                        atleastOne = atleastOne Or subsetItem.isIdenticalTo(capaItem)
+                        If atleastOne = True Then
+                            Exit For
+                        End If
+                    Next
+
+                    isIdentical = isIdentical And atleastOne
+
+                    If Not isIdentical Then
                         Exit For
                     End If
+
                 Next
-
-                isIdentical = isIdentical And atleastOne
-
-                If Not isIdentical Then
-                    Exit For
-                End If
-
-            Next
+            End If
         End If
+
 
         containsIdentical = isIdentical
 

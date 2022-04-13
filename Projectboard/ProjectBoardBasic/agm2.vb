@@ -26534,7 +26534,7 @@ Public Module agm2
                 Try
                     capasOfOneRole = transformCapa(roledef)
                 Catch ex As Exception
-                    Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "storeCapasOfRoles / transform of " & roledef.name & "(" & roledef.UID & ") wasn't successful:")
+                    Call logger(ptErrLevel.logError, "storeCapasOfRoles", "storeCapasOfRoles / transform of " & roledef.name & "(" & roledef.UID & ") wasn't successful:")
                     Exit For
                 End Try
 
@@ -26546,6 +26546,11 @@ Public Module agm2
                     If Not IsNothing(dbCapasOfOneRole) Then
                         If dbCapasOfOneRole.liste.Count > 0 Then
                             resultOne = CType(databaseAcc, DBAccLayer.Request).removeCapas(dbCapasOfOneRole, err)
+
+                            ' write protocol
+                            For Each capa As clsCapa In dbCapasOfOneRole.liste
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.ToString)
+                            Next
                         End If
                     End If
 
@@ -26555,14 +26560,21 @@ Public Module agm2
                         ' only store if values have changed with regard to dbCapas
                         If Not dbCapas.containsIdentical(capa) Then
 
-                            resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, dbCapas.liste, err)
+                            Try
+                                resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, dbCapas.liste, err)
+                            Catch ex As Exception
+                                resultOne = False
+                            End Try
+
                             If resultOne Then
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "Import Capa of RoleID =" & roledef.name & "(" & roledef.UID & ") and Year = " & capa.startOfYear.ToString & " was successful")
                             Else
-                                Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful:" & vbLf & err.errorMsg)
+                                Call logger(ptErrLevel.logError, "storeCapasOfRoles", "Import Capa of RoleID =" & roledef.name & "(" & roledef.UID & ") and Year = " & capa.startOfYear.ToString & " wasn't successful:" & vbLf & err.errorMsg)
                             End If
 
                             functionResult = functionResult And resultOne
+                        Else
+                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "no changes for Role =" & roledef.name & " in Year = " & capa.startOfYear.ToString)
                         End If
 
                     Next
@@ -26572,6 +26584,12 @@ Public Module agm2
                     If Not IsNothing(delCapasOfOneRole) Then
                         If delCapasOfOneRole.liste.Count > 0 Then
                             resultOne = CType(databaseAcc, DBAccLayer.Request).removeCapas(delCapasOfOneRole, err)
+
+                            ' write protocol
+                            For Each capa As clsCapa In delCapasOfOneRole.liste
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.ToString)
+                            Next
+
                         End If
                     End If
 
@@ -26675,7 +26693,9 @@ Public Module agm2
 
                     Dim quotEnd As Integer = Math.DivRem(endingIndex, 12, modEnd)
                     Dim quotStart As Integer = Math.DivRem(startingIndex, 12, modStart)
-                    Dim anzYears As Integer = quotEnd - quotStart
+                    ' tk 13.4. das war vorher ..
+                    'Dim anzYears As Integer = quotEnd - quotStart
+                    Dim anzYears As Integer = quotEnd - quotStart + 1
                     Dim modulo As Integer = 0
                     Dim resultY As Integer = Math.DivRem(endingIndex - startingIndex + 1, 12, modulo)
 
