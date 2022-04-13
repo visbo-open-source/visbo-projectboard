@@ -2848,6 +2848,12 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' delete Capas which are mentioned in given list
+    ''' </summary>
+    ''' <param name="capas"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function removeCapas(ByVal capas As clsCapas, ByRef err As clsErrorCodeMsg) As Boolean
         Dim result As Boolean = False
         Try
@@ -2877,20 +2883,23 @@ Public Class Request
 
                 If capa.roleID = capaOfUnit.roleID Then
                     'found = True
-                    If capa.startOfYear = capaOfUnit.startOfYear.ToLocalTime Then
+                    If capa.startOfYear = capaOfUnit.startOfYear Then
                         found = True
+                        'switch to universalTime to save in DB
+                        capa.startOfYear = capa.startOfYear.ToUniversalTime
                         capa._id = capaOfUnit._id
                         result = PUTOneVCCapa(aktVCid, capa, err)
                         Exit For
-                        'Else
-                        '    result = POSTOneVCCapa(aktVCid, capa, err)
+
                     End If
-                    'Else
-                    '    found = False
+
                 End If
             Next
 
             If Not found Then
+                'switch to universalTime to save in DB
+                capa.startOfYear = capa.startOfYear.ToUniversalTime
+
                 result = POSTOneVCCapa(aktVCid, capa, err)
             End If
 
@@ -3836,6 +3845,13 @@ Public Class Request
             Dim allCapas As New List(Of clsCapa)
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
             allCapas = GETallVCCapas(aktVCid, roleID, startOfYear, err)
+
+            If err.errorCode = 200 Then
+                ' switch all StartOfYear to localTime
+                For Each capa As clsCapa In allCapas
+                    capa.startOfYear = capa.startOfYear.ToLocalTime
+                Next
+            End If
             result = allCapas
 
         Catch ex As Exception
