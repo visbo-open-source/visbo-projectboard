@@ -6143,6 +6143,7 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
+        ' please convert all dates in result into localTime ...
         GETallVCCapas = result
 
     End Function

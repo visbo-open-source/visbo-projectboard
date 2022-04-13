@@ -26539,15 +26539,15 @@ Public Module agm2
                 End Try
 
                 If capasOfOneRole.liste.Count = 0 Then
-                    ' now there are only Standard values for this particular roledef.uid ..
+                    ' now there are obviously only Standard values for this particular roledef.uid ..
                     ' nothing needs to be stored, but it needs to be checked if there are capas for this uid in the db  
                     ' if yes: then delete them 
 
-
-                    For Each deleteCapa As clsCapa In dbCapasOfOneRole.liste
-                        ' delete this old capa record of roledef.uid in DB 
-                    Next
-
+                    If Not IsNothing(dbCapasOfOneRole) Then
+                        If dbCapasOfOneRole.liste.Count > 0 Then
+                            resultOne = CType(databaseAcc, DBAccLayer.Request).removeCapas(dbCapasOfOneRole, err)
+                        End If
+                    End If
 
                 Else
                     ' there are non-standard values capa records of roledef.uid
@@ -26568,9 +26568,14 @@ Public Module agm2
                     Next
 
                     Dim delCapasOfOneRole As clsCapas = dbCapasOfOneRole.minus(capasOfOneRole)
-                    For Each deleteCapa As clsCapa In delCapasOfOneRole.liste
-                        ' delete this old capa record of roledef.uid in DB 
-                    Next
+
+                    If Not IsNothing(delCapasOfOneRole) Then
+                        If delCapasOfOneRole.liste.Count > 0 Then
+                            resultOne = CType(databaseAcc, DBAccLayer.Request).removeCapas(delCapasOfOneRole, err)
+                        End If
+                    End If
+
+
 
                 End If
             End If
