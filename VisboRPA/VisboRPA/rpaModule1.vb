@@ -3117,57 +3117,16 @@ Module rpaModule1
                         Dim err As New clsErrorCodeMsg
 
                         ' ute -> überprüfen bzw. fertigstellen ... 
-                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+                        ' Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                         If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or visboClient = "VISBO RPA / " Then
 
-                            Dim resultOne As Boolean = True
-                            Dim capasOfOneRole As New List(Of clsCapa)
 
-                            Dim orga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
+                            ' tk 13.4.22 wozu brauchen wir das hier ? 
+                            'Dim orga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
 
-                            Dim capas As List(Of clsCapa) = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
 
-                            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
-
-                                Dim roledef As clsRollenDefinition = kvp.Value
-                                If Not roledef.isSummaryRole Then
-                                    Try
-                                        capasOfOneRole = transformCapa(roledef)
-                                    Catch ex As Exception
-                                        Dim a As Integer = roledef.UID
-                                    End Try
-
-                                    If capasOfOneRole.Count = 0 Then
-                                        ' now there are only Standard values for this particular roledef.uid ..
-                                        ' 
-                                        Dim found As Boolean = False
-                                        ' check whether there are records in DB containing non-standard values 
-                                        For Each capa As clsCapa In capas
-                                            If (capa.roleID = roledef.UID) Then
-                                                found = True
-                                                Exit For
-                                            End If
-                                        Next
-
-                                        If found Then
-                                            ' delete all old capa records of roledef.uid in DB 
-                                        End If
-
-                                    Else
-                                        ' there are non-standard values capa records of roledef.uid
-                                        For Each capa As clsCapa In capasOfOneRole
-                                            resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, capas, err)
-                                            If resultOne Then
-                                                Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
-                                            Else
-                                                Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful")
-                                            End If
-                                            result = result And resultOne
-                                        Next
-                                    End If
-                                End If
-                            Next
+                            result = storeCapasOfRoles()
 
                             If result = True Then
                                 Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "processUrlaubsplaner: ", -1)

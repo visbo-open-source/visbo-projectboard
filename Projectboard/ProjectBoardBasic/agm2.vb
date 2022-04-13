@@ -26501,11 +26501,89 @@ Public Module agm2
         ISODateToDateTime = newDate
     End Function
 
+    ''' <summary>
+    ''' stores all capas which need to be stored resp deletes all old capa timeFrames which are not any more relevant because now role has left the company or 
+    ''' is having each month the default capa
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function storeCapasOfRoles() As Boolean
 
-    Public Function transformCapa(ByVal roleDef As clsRollenDefinition) As List(Of clsCapa)
+        Dim functionResult As Boolean = False
+        Dim capasOfOneRole As New clsCapas
+        Dim resultOne As Boolean = True
+
+        Dim dbCapas As New clsCapas
+
+        Dim err As New clsErrorCodeMsg
+
+        ' jetzt aus der Datenbank die bisherigen capas holen 
+        ' mit dem folgenden Befehl ist sicher gestellt dass dbCapas
+        dbCapas.liste = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
+
+
+        ' 
+        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
+
+            Dim roledef As clsRollenDefinition = kvp.Value
+
+            ' only calculate for persons resp leafs in the orga-tree
+            If Not roledef.isSummaryRole Then
+
+                Dim dbCapasOfOneRole As clsCapas = dbCapas.getCapasOfOneRole(roledef.UID)
+
+                Try
+                    capasOfOneRole = transformCapa(roledef)
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "storeCapasOfRoles / transform of " & roledef.name & "(" & roledef.UID & ") wasn't successful:")
+                    Exit For
+                End Try
+
+                If capasOfOneRole.liste.Count = 0 Then
+                    ' now there are only Standard values for this particular roledef.uid ..
+                    ' nothing needs to be stored, but it needs to be checked if there are capas for this uid in the db  
+                    ' if yes: then delete them 
+
+
+                    For Each deleteCapa As clsCapa In dbCapasOfOneRole.liste
+                        ' delete this old capa record of roledef.uid in DB 
+                    Next
+
+
+                Else
+                    ' there are non-standard values capa records of roledef.uid
+                    For Each capa As clsCapa In capasOfOneRole.liste
+                        ' only store if values have changed with regard to dbCapas
+                        If Not dbCapas.containsIdentical(capa) Then
+
+                            resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, dbCapas.liste, err)
+                            If resultOne Then
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
+                            Else
+                                Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful:" & vbLf & err.errorMsg)
+                            End If
+
+                            functionResult = functionResult And resultOne
+                        End If
+
+                    Next
+
+                    Dim delCapasOfOneRole As clsCapas = dbCapasOfOneRole.minus(capasOfOneRole)
+                    For Each deleteCapa As clsCapa In delCapasOfOneRole.liste
+                        ' delete this old capa record of roledef.uid in DB 
+                    Next
+
+                End If
+            End If
+        Next
+
+        storeCapasOfRoles = functionResult
+
+    End Function
+
+    Private Function transformCapa(ByVal roleDef As clsRollenDefinition) As clsCapas
 
         Dim totalEndDate As Date = DateAndTime.DateSerial(2200, 12, 31)
-        Dim newCapas As New List(Of clsCapa)
+        Dim newCapas As New clsCapas
         Dim newCapaYear As New clsCapa
         With roleDef
 

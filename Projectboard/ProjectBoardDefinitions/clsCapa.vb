@@ -14,7 +14,7 @@ Public Class clsCapa
 
         If Not IsNothing(vglCapa) Then
             tmpResult = (roleID = vglCapa.roleID) And
-                    (DateDiff(DateInterval.Day, startOfYear, vglCapa.startOfYear) = 0) And
+                    (DateDiff(DateInterval.Month, startOfYear, vglCapa.startOfYear) = 0) And
                     (capaPerMonth.Count = vglCapa.capaPerMonth.Count)
 
             If tmpResult Then

@@ -1,10 +1,17 @@
 ﻿Public Class clsCapas
 
     Private _liste As List(Of clsCapa)
-    Public ReadOnly Property liste As List(Of clsCapa)
+    Public Property liste As List(Of clsCapa)
         Get
             liste = _liste
         End Get
+        Set(value As List(Of clsCapa))
+            If Not IsNothing(value) Then
+                _liste = value
+            Else
+                _liste = New List(Of clsCapa)
+            End If
+        End Set
     End Property
 
     ''' <summary>
@@ -34,6 +41,61 @@
 
     End Sub
 
+    Public Function Count(ByVal uid As String) As Integer
+        Dim tmpResult As Integer = 0
+
+        For Each capaItem As clsCapa In _liste
+            If capaItem.roleID = uid Then
+                tmpResult = tmpResult + 1
+            End If
+        Next
+        Count = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' returns a clsCapa = List(of clsCapa) containing only items with regard to uid
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Public Function getCapasOfOneRole(ByVal uid As String) As clsCapas
+        Dim tmpResult As New clsCapas
+
+        For Each capaItem As clsCapa In _liste
+            If capaItem.roleID = uid Then
+                tmpResult.Add(capaItem)
+            End If
+        Next
+
+        getCapasOfOneRole = tmpResult
+    End Function
+
+    Public Function minus(ByVal myCapas As clsCapas) As clsCapas
+        Dim tmpResult As New clsCapas
+
+        For Each capaItem As clsCapa In _liste
+
+            If IsNothing(myCapas.getCapa(capaItem.roleID, capaItem.startOfYear)) Then
+                tmpResult.Add(capaItem)
+            End If
+
+        Next
+
+        minus = tmpResult
+    End Function
+
+    Private Function getCapa(ByVal uid As String, ByVal myDate As Date) As clsCapa
+        Dim tmpResult As clsCapa = Nothing
+
+        For Each capaItem As clsCapa In _liste
+            If (capaItem.roleID = uid) And (DateDiff(DateInterval.Month, capaItem.startOfYear, myDate) = 0) Then
+                tmpResult = capaItem
+                Exit For
+            End If
+        Next
+
+        getCapa = tmpResult
+    End Function
+
     Public Function Remove(ByVal uid As String) As clsCapas
         Dim tmpResult As New clsCapas
 
@@ -44,16 +106,6 @@
         Next
 
         Remove = tmpResult
-    End Function
-
-    Public Function Count(ByVal uid As String) As Integer
-        Dim tmpResult As Integer = 0
-        For Each capaItem As clsCapa In _liste
-            If capaItem.roleID = uid Then
-                tmpResult = tmpResult + 1
-            End If
-        Next
-        Count = tmpResult
     End Function
 
     Public Function Remove(ByVal uid As String, ByVal year As Integer) As clsCapas
@@ -67,6 +119,24 @@
 
         Remove = tmpResult
     End Function
+
+    ''' <summary>
+    ''' returns true if myCapa is exactly contained, i.e with respect to uid, startofYear, values of single months  
+    ''' </summary>
+    ''' <param name="myCapa"></param>
+    ''' <returns></returns>
+    Public Function containsIdentical(ByVal myCapa As clsCapa) As Boolean
+        Dim result As Boolean = False
+
+        Dim capaItem As clsCapa = getCapa(myCapa.roleID, myCapa.startOfYear)
+
+        If Not IsNothing(capaItem) Then
+            result = capaItem.isIdenticalTo(myCapa)
+        End If
+
+        containsIdentical = result
+    End Function
+
 
     Public Function containsIdentical(ByVal subset As clsCapas) As Boolean
 
@@ -85,6 +155,9 @@
                 Dim atleastOne As Boolean = False
                 For Each capaItem As clsCapa In _liste
                     atleastOne = atleastOne Or subsetItem.isIdenticalTo(capaItem)
+                    If atleastOne = True Then
+                        Exit For
+                    End If
                 Next
 
                 isIdentical = isIdentical And atleastOne
