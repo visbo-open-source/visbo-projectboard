@@ -2155,7 +2155,7 @@ Public Module agm3
 
                                 enableOnUpdate = True
                                 If awinSettings.englishLanguage Then
-                                    msgtxt = "Your planning holidays couldn't be read, because of problems"
+                                    msgtxt = "Your planning holidays couldn't be read ... "
                                 Else
                                     msgtxt = "Ihre Urlaubsplanung konnte nicht berücksichtigt werden"
                                 End If
@@ -2273,14 +2273,14 @@ Public Module agm3
 
                                             Next
 
-                                            If visboClient = "VISBO RPA / " Then
-                                                If awinSettings.englishLanguage Then
-                                                    msgtxt = "Role " & rolename & " updated ..."
-                                                Else
-                                                    msgtxt = "Rolle " & rolename & " aktualisiert ..."
-                                                End If
-                                                Call logger(ptErrLevel.logInfo, msgtxt, "readAvailabilityOfRole", anzFehler)
-                                            End If
+                                            'If visboClient = "VISBO RPA / " Then
+                                            '    If awinSettings.englishLanguage Then
+                                            '        msgtxt = "Role " & rolename & " updated ..."
+                                            '    Else
+                                            '        msgtxt = "Rolle " & rolename & " aktualisiert ..."
+                                            '    End If
+                                            '    Call logger(ptErrLevel.logInfo, msgtxt, "readAvailabilityOfRole", anzFehler)
+                                            'End If
 
 
                                         Else

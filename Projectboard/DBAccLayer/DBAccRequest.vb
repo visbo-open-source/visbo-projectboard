@@ -2394,6 +2394,57 @@ Public Class Request
 
     End Function
 
+
+    ''' <summary>
+    ''' remove all capa entries listed in capas
+    ''' </summary>
+    ''' <param name="capas"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function removeCapas(ByVal capas As clsCapas, ByRef err As clsErrorCodeMsg) As Boolean
+        Dim result As Boolean = False
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).removeCapas(capas, err)
+
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).removeCapas(capas, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert; ur:2020.12.3nun sollen auch Appearances in DB gespeichert werden
+
+
+            End If
+
+        Catch ex As Exception
+
+            'Call MsgBox("removeCapas: " & ex.Message)
+        End Try
+
+        removeCapas = result
+    End Function
+
     ''' <summary>
     ''' save of the capacity of one person one year 
     ''' </summary>
