@@ -26605,7 +26605,7 @@ Public Module agm2
 
     Private Function transformCapa(ByVal roleDef As clsRollenDefinition) As clsCapas
 
-        Dim totalEndDate As Date = DateAndTime.DateSerial(2200, 1, 1)
+
         Dim newCapas As New clsCapas
         Dim newCapaYear As New clsCapa
         With roleDef
@@ -26623,9 +26623,9 @@ Public Module agm2
                 ' das kann nur bei Blättern der Fall sein, alle übergeordneten Orga-Units, also solche die Kinder haben, bekommen ihre Kapa aus den "Blättern"
                 ' nachsehen, ob es irgendwelche Non-Default Kapa Werte gibt 
                 Dim anzahlMonate As Integer = roleDef.kapazitaet.Length - 1
+                Dim totalEndDate As Date = StartofCalendar.AddMonths(anzahlMonate)
 
-
-                Dim startingIndex As Integer = -1
+                Dim startingIndex As Integer = 0
                 Dim endingIndex As Integer = anzahlMonate + 1
 
                 Dim entryCol As Integer = -1
@@ -26644,6 +26644,15 @@ Public Module agm2
                     End If
                 End If
 
+                ' double check: make sure that values before entryCol and after exit col are all set to Null 
+                For i As Integer = 1 To anzahlMonate
+                    If i < entryCol Or i >= exitCol Then
+                        roleDef.kapazitaet(i) = 0
+                    End If
+                Next
+
+                ' now define starting and ending Index for optimum storage usage: store only when it is not default 
+                ' come from the left to define entryCol 
                 For i As Integer = 1 To anzahlMonate
                     If i >= entryCol Then
                         If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
@@ -26656,7 +26665,7 @@ Public Module agm2
 
                 If startingIndex = -1 Then
                     ' alle Kapa-Werte sind Standard 
-                    ' das heisst man kann es bei den Voreinstellungen lassen 
+                    ' das heisst man muss keine clsCapas Timespans speichern 
                     ' 
 
                     startOfNonStandardValues = totalEndDate
@@ -26679,39 +26688,28 @@ Public Module agm2
 
                     Next
 
-                    Dim hstartOfYear As Date = startOfNonStandardValues
+                    ' for testing / debugging purposes
+                    Dim myName As String = roleDef.name
 
-                    Dim firstMonth As Integer = hstartOfYear.Month
-                    Dim firstDay As Integer = hstartOfYear.Day
-                    hstartOfYear = DateSerial(hstartOfYear.Year, 1, 1)
-                    hstartOfYear = hstartOfYear
+                    ' now start with beginning of the first year 
+                    Dim startYear As Integer = startOfNonStandardValues.Year
+                    Dim copyStartDate As Date = DateSerial(startYear, 1, 1)
 
-                    Dim modEnd As Integer = 0
-                    Dim modStart As Integer = 0
+                    Dim copyIndex As Integer = getColumnOfDate(copyStartDate)
 
-                    ' calc count of years
+                    Do Until copyIndex >= endingIndex
 
-                    Dim quotEnd As Integer = Math.DivRem(endingIndex, 12, modEnd)
-                    Dim quotStart As Integer = Math.DivRem(startingIndex, 12, modStart)
-                    ' tk 13.4. das war vorher ..
-                    'Dim anzYears As Integer = quotEnd - quotStart
-                    Dim anzYears As Integer = quotEnd - quotStart + 1
-                    Dim modulo As Integer = 0
-                    Dim resultY As Integer = Math.DivRem(endingIndex - startingIndex + 1, 12, modulo)
-
-
-                    ' fill the year-Arrays
-
-                    For iY As Integer = 0 To anzYears - 1
                         newCapaYear = New clsCapa
-                        newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + iY, 1, 1)
+                        newCapaYear.startOfYear = DateSerial(startYear, 1, 1)
                         newCapaYear.roleID = roleDef.UID
                         For iM As Integer = 0 To 11
-                            newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(startingIndex - (modStart - 1) + iM))
+                            newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(copyIndex + iM))
                         Next
                         newCapas.Add(newCapaYear)
-                        startingIndex = startingIndex + 12
-                    Next
+                        copyIndex = copyIndex + 12
+                        startYear = startYear + 1
+
+                    Loop
 
 
                 End If
