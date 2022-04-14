@@ -26549,9 +26549,13 @@ Public Module agm2
 
                             ' write protocol
                             For Each capa As clsCapa In dbCapasOfOneRole.liste
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.ToString)
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Re-set to Default values for " & roledef.name & " in Year " & capa.startOfYear.Year.ToString)
                             Next
+                        Else
+                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in all Years ")
                         End If
+                    Else
+                        Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in all Years ")
                     End If
 
                 Else
@@ -26567,14 +26571,14 @@ Public Module agm2
                             End Try
 
                             If resultOne Then
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "Import Capa of RoleID =" & roledef.name & "(" & roledef.UID & ") and Year = " & capa.startOfYear.ToString & " was successful")
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "changed Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.Year.ToString)
                             Else
-                                Call logger(ptErrLevel.logError, "storeCapasOfRoles", "Import Capa of RoleID =" & roledef.name & "(" & roledef.UID & ") and Year = " & capa.startOfYear.ToString & " wasn't successful:" & vbLf & err.errorMsg)
+                                Call logger(ptErrLevel.logError, "storeCapasOfRoles", "failed to change Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.Year.ToString & vbLf & err.errorMsg)
                             End If
 
                             functionResult = functionResult And resultOne
                         Else
-                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "no changes for Role =" & roledef.name & " in Year = " & capa.startOfYear.ToString)
+                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "no capa changes (identical) for Role =" & roledef.name & " in Year = " & capa.startOfYear.Year.ToString)
                         End If
 
                     Next
@@ -26587,7 +26591,7 @@ Public Module agm2
 
                             ' write protocol
                             For Each capa As clsCapa In delCapasOfOneRole.liste
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.ToString)
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.Year.ToString)
                             Next
 
                         End If
@@ -26625,7 +26629,7 @@ Public Module agm2
                 Dim anzahlMonate As Integer = roleDef.kapazitaet.Length - 1
                 Dim totalEndDate As Date = StartofCalendar.AddMonths(anzahlMonate)
 
-                Dim startingIndex As Integer = 0
+                Dim startingIndex As Integer = -1
                 Dim endingIndex As Integer = anzahlMonate + 1
 
                 Dim entryCol As Integer = -1
@@ -26645,11 +26649,15 @@ Public Module agm2
                 End If
 
                 ' double check: make sure that values before entryCol and after exit col are all set to Null 
-                For i As Integer = 1 To anzahlMonate
-                    If i < entryCol Or i >= exitCol Then
-                        roleDef.kapazitaet(i) = 0
-                    End If
-                Next
+                Try
+                    For i As Integer = 1 To anzahlMonate
+                        If i < entryCol Or i >= exitCol Then
+                            roleDef.kapazitaet(i) = 0
+                        End If
+                    Next
+                Catch ex As Exception
+
+                End Try
 
                 ' now define starting and ending Index for optimum storage usage: store only when it is not default 
                 ' come from the left to define entryCol 
