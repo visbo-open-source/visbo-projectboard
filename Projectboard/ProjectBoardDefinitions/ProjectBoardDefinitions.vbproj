@@ -71,6 +71,7 @@
     <Compile Include="clsAppearances.vb" />
     <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsCapa.vb" />
+    <Compile Include="clsCapas.vb" />
     <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
     <Compile Include="clsConfigLine.vb" />

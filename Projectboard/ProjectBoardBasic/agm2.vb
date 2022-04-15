@@ -26501,140 +26501,231 @@ Public Module agm2
         ISODateToDateTime = newDate
     End Function
 
+    ''' <summary>
+    ''' stores all capas which need to be stored resp deletes all old capa timeFrames which are not any more relevant because now role has left the company or 
+    ''' is having each month the default capa
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function storeCapasOfRoles() As Boolean
 
-    Public Function transformCapa(ByVal roleDef As clsRollenDefinition) As List(Of clsCapa)
+        Dim functionResult As Boolean = True
+        Dim capasOfOneRole As New clsCapas
+        Dim resultOne As Boolean = True
 
-        Dim newCapas As New List(Of clsCapa)
+        Dim dbCapas As New clsCapas
+
+        Dim err As New clsErrorCodeMsg
+
+        ' jetzt aus der Datenbank die bisherigen capas holen 
+        ' mit dem folgenden Befehl ist sicher gestellt dass dbCapas
+        dbCapas.liste = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
+
+
+        ' 
+        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
+
+            Dim roledef As clsRollenDefinition = kvp.Value
+
+            ' only calculate for persons resp leafs in the orga-tree
+            If Not roledef.isSummaryRole Then
+
+                Dim dbCapasOfOneRole As clsCapas = dbCapas.getCapasOfOneRole(roledef.UID)
+
+                Try
+                    capasOfOneRole = transformCapa(roledef)
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logError, "storeCapasOfRoles", "storeCapasOfRoles / transform of " & roledef.name & "(" & roledef.UID & ") wasn't successful:")
+                    Exit For
+                End Try
+
+                If capasOfOneRole.liste.Count = 0 Then
+                    ' now there are obviously only Standard values for this particular roledef.uid ..
+                    ' nothing needs to be stored, but it needs to be checked if there are capas for this uid in the db  
+                    ' if yes: then delete them 
+
+                    If Not IsNothing(dbCapasOfOneRole) Then
+                        If dbCapasOfOneRole.liste.Count > 0 Then
+                            resultOne = CType(databaseAcc, DBAccLayer.Request).removeCapas(dbCapasOfOneRole, err)
+
+                            ' write protocol
+                            For Each capa As clsCapa In dbCapasOfOneRole.liste
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Re-set to Default values for " & roledef.name & " in Year " & capa.startOfYear.Year.ToString)
+                            Next
+                        Else
+                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in all Years ")
+                        End If
+                    Else
+                        Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in all Years ")
+                    End If
+
+                Else
+                    ' there are non-standard values capa records of roledef.uid
+                    For Each capa As clsCapa In capasOfOneRole.liste
+                        ' only store if values have changed with regard to dbCapas
+                        If Not dbCapas.containsIdentical(capa) Then
+
+                            Try
+                                resultOne = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, dbCapas.liste, err)
+                            Catch ex As Exception
+                                resultOne = False
+                            End Try
+
+                            If resultOne Then
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "changed Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.Year.ToString)
+                            Else
+                                Call logger(ptErrLevel.logError, "storeCapasOfRoles", "failed to change Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.Year.ToString & vbLf & err.errorMsg)
+                            End If
+
+                            functionResult = functionResult And resultOne
+                        Else
+                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "no capa changes (identical) for Role =" & roledef.name & " in Year = " & capa.startOfYear.Year.ToString)
+                        End If
+
+                    Next
+
+                    Dim delCapasOfOneRole As clsCapas = dbCapasOfOneRole.minus(capasOfOneRole)
+
+                    If Not IsNothing(delCapasOfOneRole) Then
+                        If delCapasOfOneRole.liste.Count > 0 Then
+                            resultOne = CType(databaseAcc, DBAccLayer.Request).removeCapas(delCapasOfOneRole, err)
+
+                            ' write protocol
+                            For Each capa As clsCapa In delCapasOfOneRole.liste
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.Year.ToString)
+                            Next
+
+                        End If
+                    End If
+
+
+
+                End If
+            End If
+        Next
+
+        storeCapasOfRoles = functionResult
+
+    End Function
+
+    Private Function transformCapa(ByVal roleDef As clsRollenDefinition) As clsCapas
+
+
+        Dim newCapas As New clsCapas
         Dim newCapaYear As New clsCapa
         With roleDef
 
-            Dim dbKapa() As Double = Nothing
+
             ' damit wird festgelegt, ab wo im kapazitaet240 Array die dbKApa Werte zu platzieren sind ...
             Dim startOfNonStandardValues As Date = Date.MinValue
 
             ' jetzt die SubRoles übernehmen 
             If .getSubRoleCount >= 1 Then
-                'For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
-                '    Dim sr As New clsSubRoleID
-                '    sr.key = kvp.Key
-                '    'sr.value = kvp.Value.ToString
-                '    sr.value = kvp.Value
-                '    Me.subRoleIDs.Add(sr)
-                'Next
+
+                ' there is nothing to do , because for summary Roles no capa values are stored
 
             Else
                 ' das kann nur bei Blättern der Fall sein, alle übergeordneten Orga-Units, also solche die Kinder haben, bekommen ihre Kapa aus den "Blättern"
                 ' nachsehen, ob es irgendwelche Non-Default Kapa Werte gibt 
                 Dim anzahlMonate As Integer = roleDef.kapazitaet.Length - 1
-
+                Dim totalEndDate As Date = StartofCalendar.AddMonths(anzahlMonate)
 
                 Dim startingIndex As Integer = -1
                 Dim endingIndex As Integer = anzahlMonate + 1
 
-                For i As Integer = 1 To anzahlMonate
-                    If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
-                        startingIndex = i
-                        Exit For
+                Dim entryCol As Integer = -1
+                Dim exitCol As Integer = getColumnOfDate(totalEndDate)
+
+                ' tk 12.4.2022 Berücksichtigung von EntryCol and ExitCol 
+                If roleDef.entryDate <> Date.MinValue Then
+                    If DateDiff(DateInterval.Month, StartofCalendar, roleDef.entryDate) > 0 Then
+                        entryCol = getColumnOfDate(roleDef.entryDate)
                     End If
+                End If
+
+                If roleDef.exitDate <> Date.MinValue Then
+                    If DateDiff(DateInterval.Month, roleDef.exitDate, totalEndDate) > 0 Then
+                        exitCol = getColumnOfDate(roleDef.exitDate)
+                    End If
+                End If
+
+                ' double check: make sure that values before entryCol and after exit col are all set to Null 
+                Try
+                    For i As Integer = 1 To anzahlMonate
+                        If i < entryCol Or i >= exitCol Then
+                            roleDef.kapazitaet(i) = 0
+                        End If
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+                ' now define starting and ending Index for optimum storage usage: store only when it is not default 
+                ' come from the left to define entryCol 
+                For i As Integer = 1 To anzahlMonate
+                    If i >= entryCol Then
+                        If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                            startingIndex = i
+                            Exit For
+                        End If
+                    End If
+
                 Next
 
                 If startingIndex = -1 Then
                     ' alle Kapa-Werte sind Standard 
-                    ' das heisst man kann es bei den Voreinstellungen lassen 
+                    ' das heisst man muss keine clsCapas Timespans speichern 
                     ' 
-                    dbKapa = Nothing
-                    startOfNonStandardValues = Date.MinValue
+
+                    startOfNonStandardValues = totalEndDate
 
                 Else
                     ' startingIndex kann jetzt nur Werte zwischen 1 und 240 haben ..
                     startOfNonStandardValues = StartofCalendar.AddMonths(startingIndex - 1)
 
+
                     endingIndex = anzahlMonate
 
                     For i As Integer = anzahlMonate To startingIndex Step -1
-                        If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
-                            endingIndex = i
-                            Exit For
+
+                        If i < exitCol Then
+                            If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                                endingIndex = i
+                                Exit For
+                            End If
                         End If
+
                     Next
 
+                    ' for testing / debugging purposes
+                    Dim myName As String = roleDef.name
 
-                    Dim hstartOfYear As Date = startOfNonStandardValues
+                    ' now start with beginning of the first year 
+                    Dim startYear As Integer = startOfNonStandardValues.Year
+                    Dim copyStartDate As Date = DateSerial(startYear, 1, 1)
 
-                    Dim firstMonth As Integer = hstartOfYear.Month
-                    Dim firstDay As Integer = hstartOfYear.Day
-                    hstartOfYear = DateSerial(hstartOfYear.Year, 1, 1)
-                    hstartOfYear = hstartOfYear
+                    Dim copyIndex As Integer = getColumnOfDate(copyStartDate)
 
-                    Dim modEnd As Integer = 0
-                    Dim modStart As Integer = 0
+                    Do Until copyIndex >= endingIndex
 
-                    ' calc count of years
-
-                    Dim quotEnd As Integer = Math.DivRem(endingIndex, 12, modEnd)
-                    Dim quotStart As Integer = Math.DivRem(startingIndex, 12, modStart)
-                    Dim anzYears As Integer = quotEnd - quotStart
-                    Dim modulo As Integer = 0
-                    Dim resultY As Integer = Math.DivRem(endingIndex - startingIndex + 1, 12, modulo)
-
-
-                    ' fill the year-Arrays
-
-                    For iY As Integer = 0 To anzYears - 1
                         newCapaYear = New clsCapa
-                        newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + iY, 1, 1)
+                        newCapaYear.startOfYear = DateSerial(startYear, 1, 1)
                         newCapaYear.roleID = roleDef.UID
                         For iM As Integer = 0 To 11
-                            newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(startingIndex - (modStart - 1) + iM))
+                            newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(copyIndex + iM))
                         Next
                         newCapas.Add(newCapaYear)
-                        startingIndex = startingIndex + 12
-                    Next
+                        copyIndex = copyIndex + 12
+                        startYear = startYear + 1
 
-                    '' transform first year
-                    'For iM = 0 To firstMonth - 2
-                    '    newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
-                    'Next
-                    'For iM = firstMonth - 1 To Math.Min(11, anzahlMonate)
-                    '    newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(iM - firstMonth + startingIndex - 1))
-                    '    todos = todos - 1
-                    'Next
-                    'anzahlMonate = anzahlMonate - todos
-                    'If anzahlMonate < 11 And todos = 0 Then
-                    '    For k As Integer = anzahlMonate To 11
-                    '        newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
-                    '    Next
-                    'End If
-                    'newCapas.Add(newCapaYear)
+                    Loop
 
-
-
-                    '' transform next year
-                    'While todos > 0
-                    '    newCapaYear = New clsCapa
-                    '    newCapaYear.startOfYear = DateSerial(hstartOfYear.Year + 1, 1, 1)
-
-                    '    For j = 0 To Math.Min(11, anzahlMonate)
-                    '        newCapaYear.capaPerMonth.Add(roleDef.kapazitaet(iM + j - firstMonth + startingIndex - 1))
-                    '        todos = todos - 1
-                    '    Next
-                    '    anzahlMonate = anzahlMonate - todos
-                    '    If anzahlMonate < 11 And todos = 0 Then
-                    '        For k As Integer = anzahlMonate To 11
-                    '            newCapaYear.capaPerMonth.Add(roleDef.defaultKapa)
-                    '        Next
-                    '    End If
-                    '    newCapas.Add(newCapaYear)
-                    'End While
 
                 End If
-
             End If
-
-            'startOfCal = startOfNonStandardValues.ToUniversalTime
 
 
         End With
+
 
         transformCapa = newCapas
 
