@@ -2847,6 +2847,25 @@ Public Class Request
         retrieveCostsFromDB = result
 
     End Function
+
+    ''' <summary>
+    ''' delete Capas which are mentioned in given list
+    ''' </summary>
+    ''' <param name="capas"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function removeCapas(ByVal capas As clsCapas, ByRef err As clsErrorCodeMsg) As Boolean
+        Dim result As Boolean = False
+        Try
+            For Each capa In capas.liste
+                result = DELETEOneVCCapa(aktVCid, capa, err)
+            Next
+        Catch ex As Exception
+
+        End Try
+
+        removeCapas = result
+    End Function
     ''' <summary>
     ''' save of the capacity of one person one year 
     ''' </summary>
@@ -2864,20 +2883,23 @@ Public Class Request
 
                 If capa.roleID = capaOfUnit.roleID Then
                     'found = True
-                    If capa.startOfYear = capaOfUnit.startOfYear.ToLocalTime Then
+                    If capa.startOfYear = capaOfUnit.startOfYear Then
                         found = True
+                        'switch to universalTime to save in DB
+                        capa.startOfYear = capa.startOfYear.ToUniversalTime
                         capa._id = capaOfUnit._id
                         result = PUTOneVCCapa(aktVCid, capa, err)
                         Exit For
-                        'Else
-                        '    result = POSTOneVCCapa(aktVCid, capa, err)
+
                     End If
-                    'Else
-                    '    found = False
+
                 End If
             Next
 
             If Not found Then
+                'switch to universalTime to save in DB
+                capa.startOfYear = capa.startOfYear.ToUniversalTime
+
                 result = POSTOneVCCapa(aktVCid, capa, err)
             End If
 
@@ -3823,6 +3845,13 @@ Public Class Request
             Dim allCapas As New List(Of clsCapa)
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
             allCapas = GETallVCCapas(aktVCid, roleID, startOfYear, err)
+
+            If err.errorCode = 200 Then
+                ' switch all StartOfYear to localTime
+                For Each capa As clsCapa In allCapas
+                    capa.startOfYear = capa.startOfYear.ToLocalTime
+                Next
+            End If
             result = allCapas
 
         Catch ex As Exception
@@ -6130,6 +6159,7 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
+        ' please convert all dates in result into localTime ...
         GETallVCCapas = result
 
     End Function
@@ -6194,6 +6224,64 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' Removes the capaPerMonth For a specific roleID And calendar year, all mentioned in capa
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="capa"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function DELETEOneVCCapa(ByVal vcid As String, ByVal capa As clsCapa, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/capa/" & capa._id
+
+            Call logger(ptErrLevel.logInfo, "DELETEOneVCCapa", "ReST Server request DELETE: " & serverUriString)
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(capa, "")
+
+
+            Dim Antwort As String
+            Dim webVCcapaantwort As clsWebOutput = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCcapaantwort = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("DELETEOneVCCapa", errcode, errmsg & " : " & webVCcapaantwort.message)
+                Call logger(ptErrLevel.logError, "DELETEOneVCCapa: " & serverUriString, errmsg & " : " & webVCcapaantwort.message)
+            End If
+
+            err.errorCode = errcode
+            err.errorMsg = "DELETEOneVCCapa" & " : " & errmsg & " : " & webVCcapaantwort.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        DELETEOneVCCapa = result
+
+    End Function
 
 
     ''' <summary>

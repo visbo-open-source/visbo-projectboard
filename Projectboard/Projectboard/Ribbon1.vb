@@ -8153,47 +8153,21 @@ Public Class Ribbon1
                         ' keine Fehler aufgetreten ... 
                         ' jetzt wird die Orga als Setting weggespeichert ... 
                         Dim err As New clsErrorCodeMsg
-                        Dim result As Boolean = True
                         Dim resultSum As Boolean = True
-                        Dim capas As List(Of clsCapa) = Nothing
+                        Dim capas As clsCapas = Nothing
 
-                        Dim capasOfOneRole As List(Of clsCapa) = Nothing
-                        Dim orga As clsOrganisation = Nothing
+                        ' Dim orga As clsOrganisation = Nothing
 
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
-                            orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
 
-                            capas = CType(databaseAcc, DBAccLayer.Request).retrieveCapasFromDB(0, StartofCalendar, err)
+                            ' tk wozu brauche ich das hier ? 
+                            ' orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
 
-
-                            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In RoleDefinitions.liste
-
-                                Dim roledef As clsRollenDefinition = kvp.Value
-                                If Not roledef.isSummaryRole Then
-                                    capasOfOneRole = transformCapa(roledef)
-                                    For Each capa As clsCapa In capasOfOneRole
-                                        result = CType(databaseAcc, DBAccLayer.Request).storeCapasOfOneOrgaUnitOneYear(capa, capas, err)
-                                        If result Then
-                                            Call logger(ptErrLevel.logInfo, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " was successful")
-                                        Else
-                                            Call logger(ptErrLevel.logError, "storeCapasOfOneOrgaUnitOneYear", "Import Capa of RoleID =" & capa.roleID & " and Year = " & capa.startOfYear.ToString & " wasn't successful")
-                                        End If
-                                        resultSum = resultSum And result
-                                    Next
-                                End If
-                            Next
-
-
-                            '' here TODO: Split the orga - information and the capacity-Information
-
-                            'result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
-                            '                                                     CStr(settingTypes(ptSettingTypes.organisation)),
-                            '                                                    orgaName,
-                            '                                                    changedOrga.validFrom,
-                            '                                                    err)
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
 
                             If resultSum = True Then
                                 Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
@@ -13070,12 +13044,22 @@ Public Class Ribbon1
             ''ur:2022.03.29: in future only 2/3 charts
             'Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
             ' tk 7.4 show Budget as well
-            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
+            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12)
+
+            If awinSettings.fullProtocol Then
+                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
+            End If
+
             Dim showFourDiagrams As Boolean = (withSkills And visboZustaende.projectBoardMode = ptModus.massEditRessSkills)
             If showFourDiagrams Then
                 ''ur:2022.03.29: in future only 2/3 charts
                 'stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
-                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
+                If awinSettings.fullProtocol Then
+                    stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
+                Else
+                    stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 2
+                End If
+
             End If
 
             Dim chWidth As Double = stdBreite
@@ -13093,7 +13077,10 @@ Public Class Ribbon1
             '' show the project Profit/Lost Diagram
             If ShowProjekte.contains(pName) Then
                 hproj = ShowProjekte.getProject(pName)
-                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, chTop, chLeft, chWidth, chHeight, False, True)
+
+                If awinSettings.fullProtocol Then
+                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, chTop, chLeft, chWidth, chHeight, False, True)
+                End If
 
                 selectedProjekte.Clear(False)
                 selectedProjekte.Add(hproj, False)
@@ -13103,7 +13090,10 @@ Public Class Ribbon1
             ' now show Utilization Chart
             ' das Auslastungs-Chart Orga-Einheit
             Dim repObj As Excel.ChartObject = Nothing
-            chLeft = chLeft + chWidth + 2
+            If awinSettings.fullProtocol Then
+                chLeft = chLeft + chWidth + 2
+            End If
+
             chWidth = stdBreite
 
 
