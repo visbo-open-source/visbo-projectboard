@@ -138,6 +138,8 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsPortfolioDefinitions.vb" />
+    <Compile Include="clsRankingParameters.vb" />
     <Compile Include="clsRPASetting.vb" />
     <Compile Include="VisboRPAStart.Designer.vb">
       <DependentUpon>VisboRPAStart.vb</DependentUpon>

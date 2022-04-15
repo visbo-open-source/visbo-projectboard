@@ -406,6 +406,20 @@ Module rpaModule1
         AlleProjektSummaries.Clear(False)
     End Sub
 
+    Private Function setWriteProtection(ByVal hproj As clsProjekt, ByVal writeProtect As Boolean) As Boolean
+
+        Dim err As New clsErrorCodeMsg
+
+        Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
+
+        Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
+                                                dbUsername, False, writeProtect)
+
+        setWriteProtection = CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem, err)
+
+    End Function
+
+
     ''' <summary>
     ''' Read the projectTemplates from the actual VisboCenter 
     ''' </summary>
@@ -1757,6 +1771,157 @@ Module rpaModule1
         checkVCOrganisation = result
     End Function
 
+    ''' <summary>
+    ''' returns form Parameters the Portfolio-Name and Vname 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' 
+    Public Function getNameList(ByVal blattName As String) As Collection
+        Dim result As New Collection
+
+
+        Try
+
+            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+                                                            Global.Microsoft.Office.Interop.Excel.Workbook)
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            Dim zeile As Integer = 2
+            Dim spalte As Integer = 1
+
+
+
+            If Not IsNothing(currentWS) Then
+                With currentWS
+                    Dim lastRow As Integer = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+                        Dim pName As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If Not IsNothing(pName) Then
+                            pName = pName.Trim
+
+                            If pName <> "" Then
+                                If Not result.Contains(pName) Then
+                                    result.Add(pName, pName)
+                                End If
+                            End If
+
+                            zeile = zeile + 1
+                        End If
+                    End While
+
+                End With
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        getNameList = result
+    End Function
+
+    ''' <summary>
+    ''' returns empty string for all roles / skills 
+    ''' noConsideration = true: all roles / skills which need to be excluded from calculation ; empty: nothing is going to excluded 
+    ''' noConsideration = false: all roles / skills which should be taken into cosideration, independent what roles / skills are ecisting; empty: all roles/skill will be considered, except those in exclusion 
+    '''  
+    ''' </summary>
+    ''' <param name="excludedNames"></param>
+    ''' <returns></returns>
+    Public Function getConsiderationList(ByVal excludedNames As Boolean) As Collection
+
+        Dim result As New Collection
+        Dim blattName As String = "Parameters"
+
+        Dim zeile As Integer = 3
+        Dim spalte As Integer = 2
+        If excludedNames Then
+            zeile = 3
+        Else
+            zeile = 4
+        End If
+
+        Try
+            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+                                                            Global.Microsoft.Office.Interop.Excel.Workbook)
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim lastColumn As Integer = CType(currentWS.Cells(zeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
+
+            For columnIndex As Integer = 2 To lastColumn
+                If Not IsNothing(CType(currentWS.Cells(zeile, columnIndex), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+
+                    Dim myName As String = CStr(CType(currentWS.Cells(zeile, columnIndex), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Dim myNameID As String = ""
+
+                    If RoleDefinitions.containsName(myName) Then
+                        Dim myRoleSkill As clsRollenDefinition = RoleDefinitions.getRoledef(myName)
+                        If Not IsNothing(myRoleSkill) And Not result.Contains(myName) Then
+
+                            If myRoleSkill.isSkill Then
+                                Dim containingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(myRoleSkill.UID).UID
+                                myNameID = RoleDefinitions.bestimmeRoleNameID(containingRoleID, myRoleSkill.UID)
+                            Else
+                                Dim skillID As Integer = -1
+                                myNameID = RoleDefinitions.bestimmeRoleNameID(myRoleSkill.UID, skillID)
+                            End If
+
+                            result.Add(myNameID, myNameID)
+
+                        End If
+                    End If
+
+                End If
+            Next
+
+
+        Catch ex As Exception
+
+        End Try
+
+        getConsiderationList = result
+    End Function
+
+    Public Function getPortfolioNames() As String()
+
+        Dim result As String()
+        ReDim result(2)
+        result(0) = "NoName"
+        result(1) = ""
+        result(2) = ""
+
+        Dim blattName As String = "Parameters"
+
+        Try
+
+            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+                                                            Global.Microsoft.Office.Interop.Excel.Workbook)
+
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            If Not IsNothing(currentWS) Then
+                With currentWS
+                    If Not IsNothing(.Cells(5, 2).value) Then
+                        result(0) = CStr(.Cells(5, 2).value).Trim
+                    End If
+                    If Not IsNothing(.Cells(6, 2).value) Then
+                        result(1) = CStr(.Cells(6, 2).value).Trim
+                    End If
+                    If Not IsNothing(.Cells(7, 2).value) Then
+                        result(2) = CStr(.Cells(7, 2).value).Trim
+                    End If
+
+                End With
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        getPortfolioNames = result
+
+    End Function
+
+
     Public Function getOverloadParams() As Double()
 
         Dim blattName As String = "Parameters"
@@ -1986,12 +2151,249 @@ Module rpaModule1
 
         checkInstartProposal = result
     End Function
+
+    ''' <summary>
+    ''' retrieves the Portfolio Variant Definitions 
+    ''' </summary>
+    ''' <param name="kennung"></param>
+    ''' <param name="blattname"></param>
+    ''' <returns></returns>
+    Public Function getPortfolioDefinitions(ByVal kennung As PTRpa,
+                               Optional ByVal blattname As String = "") As clsPortfolioDefinitions
+
+        Dim result As New clsPortfolioDefinitions
+
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 1
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattname = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattname),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            Dim lastRow As Integer
+            Dim firstZeile As xlns.Range
+
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    firstZeile = CType(.Rows(1), xlns.Range)
+                    lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    Dim portfolioZeile As Integer = 2
+
+                    ' now read the portfolio definitions, if there are any 
+
+                    If kennung = PTRpa.visboCreateHedgedVariant Then
+
+                        Dim firstPFColumn As Integer = spalte + 4
+                        Dim currentColumn As Integer = firstPFColumn
+
+                        If Not IsNothing(CType(.Cells(1, firstPFColumn), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                            Dim myPortfolioVariantName As String = CStr(CType(.Cells(1, currentColumn), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                            If myPortfolioVariantName <> "" Then
+
+                                Do While myPortfolioVariantName <> ""
+
+                                    Dim abbruch As Boolean = False
+                                    Dim myPName As String = ""
+                                    Dim myVName As String = ""
+                                    Dim myUniqueList As New Collection
+                                    Dim myPortfolioList As New List(Of String)
+
+                                    zeile = 2
+
+                                    Do While Not abbruch
+
+                                        Try
+                                            myPName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                            myVName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                        Catch ex As Exception
+                                            myVName = ""
+                                        End Try
+
+
+
+                                        ' now check whether or not there is a 'x' in myCurrentColumn
+                                        If Not IsNothing(CType(.Cells(zeile, currentColumn), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                            Dim signal As String = CStr(CType(.Cells(zeile, currentColumn), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                                            If signal.ToLower = "x" Then
+
+                                                If Not myUniqueList.Contains(myPName) Then
+                                                    myUniqueList.Add(myPName, myPName)
+                                                    Dim Key As String = calcProjektKey(myPName, myVName)
+                                                    myPortfolioList.Add(Key)
+                                                End If
+
+                                            End If
+                                        End If
+
+                                        zeile = zeile + 1
+                                        abbruch = (zeile > lastRow)
+                                    Loop
+
+                                    ' now add Portfolio definition 
+
+                                    If Not result.contains(myPortfolioVariantName) Then
+                                        result.addPortfolio(myPortfolioVariantName, myPortfolioList)
+                                    End If
+
+
+                                    ' now consider next column ...
+                                    currentColumn = currentColumn + 1
+                                    myPortfolioVariantName = CStr(CType(.Cells(1, currentColumn), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                Loop
+
+                            End If
+
+
+                        End If
+
+
+                    End If
+
+                End With
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        getPortfolioDefinitions = result
+    End Function
+
+
+    Public Function getRanking(ByVal kennung As PTRpa,
+                               Optional ByVal blattname As String = "") As SortedList(Of Integer, clsRankingParameters)
+
+        Dim result As New SortedList(Of Integer, clsRankingParameters)
+
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 1
+
+        Dim projectName As String = ""
+        Dim projectVariantName As String = ""
+
+        Dim earliestStart As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1).AddMonths(1)
+        Dim latestEnd As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1).AddMonths(13)
+
+        ' given in Percentage
+        Dim shortestDuration As Double = 1.0
+        Dim longestDuration As Double = 1.0
+
+        ' the hedge Factorm 
+        Dim hedgeFactor As Double = 1.0
+
+        Dim lastRow As Integer
+        Dim firstZeile As xlns.Range
+
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattname = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattname),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    firstZeile = CType(.Rows(1), xlns.Range)
+                    lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    Dim portfolioZeile As Integer = 2
+
+                    While zeile <= lastRow
+
+                        Dim myCurrentParams As New clsRankingParameters
+
+                        myCurrentParams.projectName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        myCurrentParams.projectVariantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                        Select Case kennung
+
+                            Case PTRpa.visboCreateHedgedVariant
+
+                                myCurrentParams.hedgeFactor = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.newStartDate = CStr(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            Case PTRpa.visboFindProjectStart
+
+                                myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.shortestDuration = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.longestDuration = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            Case PTRpa.visboSuggestResourceAllocation
+
+                                Dim peopleIDs As New SortedList(Of String, Double)
+                                Dim lastColumn As Integer = CType(.Cells(zeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
+
+                                For i As Integer = 3 To lastColumn
+                                    If Not IsNothing(CType(.Cells(zeile, i), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+
+                                        Dim myName As String = CStr(CType(.Cells(zeile, i), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                        Dim teamID As Integer = -1
+
+                                        If RoleDefinitions.containsNameOrID(myName) Then
+                                            Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myName, teamID)
+                                            Dim myNameID As String = RoleDefinitions.bestimmeRoleNameID(myRole.UID, teamID)
+
+                                            If Not peopleIDs.ContainsKey(myNameID) Then
+                                                peopleIDs.Add(myNameID, 0)
+                                            End If
+
+                                        End If
+                                    End If
+                                Next
+
+                                myCurrentParams.peopleSuggestions = peopleIDs
+
+                            Case Else
+
+                        End Select
+
+                        result.Add(zeile, myCurrentParams)
+
+                        zeile = zeile + 1
+
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+
+            Throw New Exception("Fehler In Portfolio-Datei" & ex.Message)
+        End Try
+
+        getRanking = result
+
+    End Function
+
     ''' <summary>
     ''' returns the sequence of the project-names 
     ''' there is only one project-variant per ranking allowed
     ''' </summary>
     ''' <returns></returns>
-    Public Function getRanking() As SortedList(Of Integer, String)
+    Public Function getRanking(Optional ByVal blattname As String = "") As SortedList(Of Integer, String)
 
         Dim rankingList As New SortedList(Of Integer, String)
         Dim nameList As New SortedList(Of String, String)
@@ -2001,7 +2403,7 @@ Module rpaModule1
 
 
         Dim tfZeile As Integer = 2
-        Dim listOfpNames As New SortedList(Of String, String)
+
         Dim pName As String = ""
         Dim variantName As String = ""
 
@@ -2022,38 +2424,48 @@ Module rpaModule1
 
 
         Try
-            Dim activeWSListe As xlns.Worksheet = CType(Module1.appInstance.ActiveWorkbook.ActiveSheet,
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattname = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattname),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
 
-            With activeWSListe
+            If Not IsNothing(activeWSListe) Then
 
-                firstZeile = CType(.Rows(1), xlns.Range)
-                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+                With activeWSListe
 
-                Dim portfolioZeile As Integer = 2
+                    firstZeile = CType(.Rows(1), xlns.Range)
+                    lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
 
-                While zeile <= lastRow
+                    Dim portfolioZeile As Integer = 2
+
+                    While zeile <= lastRow
 
 
-                    pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                    key = calcProjektKey(pName, variantName)
+                        key = calcProjektKey(pName, variantName)
 
-                    If Not nameList.ContainsKey(pName) Then
-                        nameList.Add(pName, key)
-                        If Not rankingList.ContainsKey(zeile) Then
-                            rankingList.Add(zeile, key)
+                        If Not nameList.ContainsKey(pName) Then
+                            nameList.Add(pName, key)
+                            If Not rankingList.ContainsKey(zeile) Then
+                                rankingList.Add(zeile, key)
+                            End If
                         End If
-                    End If
 
-                    zeile = zeile + 1
-
-
-                End While
+                        zeile = zeile + 1
 
 
-            End With
+                    End While
+
+
+                End With
+            End If
+
         Catch ex As Exception
 
             Throw New Exception("Fehler In Portfolio-Datei" & ex.Message)
@@ -2061,6 +2473,7 @@ Module rpaModule1
 
         getRanking = rankingList
     End Function
+
 
     Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 

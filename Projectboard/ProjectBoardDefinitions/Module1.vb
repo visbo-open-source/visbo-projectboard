@@ -1002,8 +1002,20 @@ Public Module Module1
         ' visbo Find Project Starts
         visboFindProjectStart = 20
 
+        ' find feasible Portfolio
+        visboFindfeasiblePortfolio = 21
+
         ' represents the Automatic Team Allocation
-        'visboSuggestResourceAllocation = 
+        visboSuggestResourceAllocation = 22
+
+        ' represent the setitngs 
+        visboJsonSetting = 23
+
+        ' represents the Auto-Distribution
+        visboAutoAdjust = 24
+
+        ' create hedged variants 
+        visboCreateHedgedVariant = 25
 
 
 
