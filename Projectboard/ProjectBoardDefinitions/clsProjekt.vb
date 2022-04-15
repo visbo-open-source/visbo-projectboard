@@ -3601,6 +3601,120 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' create hedgedVersion
+    ''' </summary>
+    ''' <param name="hedgeFactor"></param>
+    Private Sub hedgeValues(ByVal hedgeFactor As Double)
+
+        If hedgeFactor > 0 And hedgeFactor < 1.0 Then
+
+            For Each phase As clsPhase In AllPhases
+
+                For Each tmpRole As clsRolle In phase.rollenListe
+
+                    If tmpRole.Xwerte.Sum > 0 Then
+                        Try
+                            Dim length As Integer = tmpRole.Xwerte.Length
+
+                            For i As Integer = 0 To length - 1
+                                tmpRole.Xwerte(i) = tmpRole.Xwerte(i) * hedgeFactor
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+                Next
+
+                For Each tmpCost As clsKostenart In phase.kostenListe
+
+                    If tmpCost.Xwerte.Sum > 0 Then
+                        Try
+                            Dim length As Integer = tmpCost.Xwerte.Length
+
+                            For i As Integer = 0 To length - 1
+                                tmpCost.Xwerte(i) = tmpCost.Xwerte(i) * hedgeFactor
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+                Next
+
+                ' now handle invoices and penalties of milestones
+                For Each ms As clsMeilenstein In phase.meilensteinListe
+                    Try
+                        If Not IsNothing(ms.invoice) Then
+                            If ms.invoice.Key > 0 Then
+                                Dim hedgedValue As Double = ms.invoice.Key * hedgeFactor
+                                Dim zahlungsziel As Integer = ms.invoice.Value
+
+                                ms.invoice = New KeyValuePair(Of Double, Integer)(hedgedValue, zahlungsziel)
+
+                            End If
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        If Not IsNothing(ms.penalty) Then
+                            If ms.penalty.Value > 0 Then
+                                Dim hedgedValue As Double = ms.penalty.Value * hedgeFactor
+                                Dim penaltyDate As Date = ms.penalty.Key
+
+                                ms.penalty = New KeyValuePair(Of Date, Double)(penaltyDate, hedgedValue)
+                            End If
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+                Next
+
+                ' now handle invoices and penalties of phase
+                Try
+                    If Not IsNothing(phase.invoice) Then
+                        If phase.invoice.Key > 0 Then
+                            Dim hedgedValue As Double = phase.invoice.Key * hedgeFactor
+                            Dim zahlungsziel As Integer = phase.invoice.Value
+
+                            phase.invoice = New KeyValuePair(Of Double, Integer)(hedgedValue, zahlungsziel)
+
+                        End If
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    If Not IsNothing(phase.penalty) Then
+                        If phase.penalty.Value > 0 Then
+                            Dim hedgedValue As Double = phase.penalty.Value * hedgeFactor
+                            Dim penaltyDate As Date = phase.penalty.Key
+
+                            phase.penalty = New KeyValuePair(Of Date, Double)(penaltyDate, hedgedValue)
+                        End If
+
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+            Next
+
+        End If
+
+    End Sub
+
+
+    ''' <summary>
     ''' creates a hedged Variant according probability rate
     ''' </summary>
     ''' <param name="hedgeFactor"></param>
