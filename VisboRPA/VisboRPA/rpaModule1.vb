@@ -344,6 +344,36 @@ Module rpaModule1
                     allOk = True
                     Call logger(ptErrLevel.logError, "Import Zeuss-Capacities Telair", " not yet integrated !")
 
+                Case CInt(PTRpa.visboFindfeasiblePortfolio)
+
+                    allOk = readListIntoStorage(PTRpa.visboFindfeasiblePortfolio)
+
+                    If allOk Then
+                        allOk = defineFeasiblePortfolio()
+                    End If
+
+                Case CInt(PTRpa.visboAutoAdjust)
+
+                    allOk = processAutoAdjustPortfolio()
+
+                Case CInt(PTRpa.visboSuggestResourceAllocation)
+
+                    allOk = processAutoAllocatePortfolio()
+
+                Case CInt(PTRpa.visboCreateHedgedVariant)
+
+                    allOk = readListIntoStorage(PTRpa.visboCreateHedgedVariant)
+
+                    If allOk Then
+                        allOk = processCreateHedgedVariants()
+                    Else
+
+                    End If
+
+                Case CInt(PTRpa.visboFindProjectStart)
+
+                    allOk = processFindProjectStart(myName, myActivePortfolio)
+
                 Case Else
                     Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
 
