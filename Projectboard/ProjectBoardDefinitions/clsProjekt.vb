@@ -3601,6 +3601,41 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' deletes all empty roles within a given project 
+    ''' empty role is a role where all resource needs sum up to 0 
+    ''' </summary>
+    Public Sub eliminateEmptyRoles()
+        Dim deleteRoleNameIDS As New Collection
+
+        For Each phase As clsPhase In AllPhases
+
+            For Each tmpRole As clsRolle In phase.rollenListe
+
+                If tmpRole.Xwerte.Sum = 0 Then
+                    Try
+                        deleteRoleNameIDS.Add(RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID))
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Next
+
+            ' now eliminate
+            For Each roleNameID As String In deleteRoleNameIDS
+                Try
+                    phase.removeRoleByNameID(roleNameID)
+                Catch ex As Exception
+
+                End Try
+            Next
+
+
+        Next
+    End Sub
+
+    ''' <summary>
     ''' create hedgedVersion
     ''' </summary>
     ''' <param name="hedgeFactor"></param>
