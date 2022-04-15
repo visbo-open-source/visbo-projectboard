@@ -3600,6 +3600,28 @@ Public Class clsProjekt
         ensureStableIDs = newproj
     End Function
 
+    ''' <summary>
+    ''' creates a hedged Variant according probability rate
+    ''' </summary>
+    ''' <param name="hedgeFactor"></param>
+    ''' <returns></returns>
+    Public Function createHedgedVariant(ByVal hedgeFactor As Double) As clsProjekt
+
+        Dim newproj As clsProjekt = Nothing
+
+        If Not hasActualValues And hedgeFactor > 0 And hedgeFactor <= 1.0 Then
+
+            Dim variantText As String = "Probability-Rated: " & hedgeFactor.ToString("P")
+
+            newproj = Me.createVariant("hedged", variantText)
+            Call newproj.hedgeValues(hedgeFactor)
+
+        End If
+
+        createHedgedVariant = newproj
+
+    End Function
+
 
     Public Function createVariant(ByVal variantName As String, ByVal variantDescription As String) As clsProjekt
 

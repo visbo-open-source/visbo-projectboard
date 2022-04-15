@@ -670,6 +670,56 @@ Module rpaModule1
         readOrganisations = result
 
     End Function
+
+    Private Function storeConstellationFromProjectList(ByVal projectList As clsProjekteAlle,
+                                                    ByVal portfolioName As String, ByVal variantName As String) As Boolean
+
+        Dim result = True
+
+        Try
+
+            AlleProjekte.Clear()
+            ' now make sure all projects are in AlleProjekte
+            For Each ppair As KeyValuePair(Of String, clsProjekt) In projectList.liste
+                If Not AlleProjekte.Containskey(ppair.Key) Then
+                    AlleProjekte.Add(ppair.Value)
+                End If
+            Next
+
+            ShowProjekte.Clear()
+            For Each ppair As KeyValuePair(Of String, clsProjekt) In projectList.liste
+
+                If Not ShowProjekte.contains(ppair.Value.name) Then
+                    ShowProjekte.Add(ppair.Value)
+                End If
+
+            Next
+
+
+            ' currentSessionConstellation is build by alle the Showprojekte.add and AlleProjekte.add Commands ...
+            ' create form that a portfolio, only containing the show-Elements 
+            Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                            cName:=portfolioName, vName:=variantName)
+
+            ' now store the Portfolio , with name portfolioName
+            Dim errMsg As New clsErrorCodeMsg
+            Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+
+            Dim outputCollection As New Collection
+            Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, dbPortfolioNames)
+
+            ' then empty ShowProjekte again 
+            ShowProjekte.Clear()
+
+        Catch ex As Exception
+            result = False
+            Call logger(ptErrLevel.logError, "failure in store Portfolio: " & portfolioName & vbLf & ex.Message, PTRpa.visboProjectList.ToString)
+        End Try
+
+        storeConstellationFromProjectList = result
+
+    End Function
+
     ''' <summary>
     ''' stores all projects in ImportProjekte, then clears ImportProjekte
     ''' returns true, if all went ok

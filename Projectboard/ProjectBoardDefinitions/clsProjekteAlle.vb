@@ -990,6 +990,37 @@ Public Class clsProjekteAlle
         End Get
     End Property
 
+    ''' <summary>
+    ''' retrieves the first project within the set of projects which has the name of pName
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getProjectByName(ByVal pName As String) As clsProjekt
+        Get
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+
+            ' Positioniere position auf das erste Vorkommen von pName in der Liste 
+            While i < _allProjects.Count And Not found
+
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+
+            End While
+
+
+            If found Then
+                getProjectByName = _allProjects.ElementAt(i).Value
+            Else
+                getProjectByName = Nothing
+            End If
+
+
+        End Get
+    End Property
 
 
 

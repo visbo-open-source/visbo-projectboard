@@ -3605,95 +3605,260 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
+    ''' does an automatic new distribution of resource values over time according needed sum for that particular role and phase  
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="errMsg"></param>
+    Public Sub autoDistribute(ByVal pName As String, ByVal variantName As String, ByRef errMsg As String)
+
+        ' first auto-distribute all existing person values according free capacities , remember load which can't be done by person for summary role 
+        ' apply methodology used in mass Edit 
+
+        Dim hproj As clsProjekt = Nothing
+
+        Try
+            ' 1. create a variant, if variantName is provided 
+            If variantName <> "" Then
+                Dim baseProject As clsProjekt = getProject(pName)
+                If baseProject.variantName = variantName Then
+                    hproj = baseProject
+                Else
+                    hproj = baseProject.createVariant(variantName, "created for auto-allocation")
+                End If
+            Else
+                hproj = getProject(pName)
+            End If
+
+            Dim roleStack As New Collection
+
+            ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
+            ' for this just go over each phase 
+            For p = 1 To hproj.CountPhases
+
+                Dim cPhase As clsPhase = hproj.getPhase(p)
+
+                Dim xStartDate As Date = cPhase.getStartDate
+                Dim xEndDate As Date = cPhase.getEndDate
+
+                roleStack.Clear()
+
+                ' first wave: consider all people ... 
+                For Each tmpRole As clsRolle In cPhase.rollenListe
+
+                    Dim uid As Integer = tmpRole.uid
+                    If Not RoleDefinitions.getRoleDefByID(uid).isSummaryRole Then
+
+
+                        Dim xValues As Double()
+                        Dim laenge As Integer = tmpRole.Xwerte.Length
+                        ReDim xValues(laenge - 1)
+
+                        For i As Integer = 0 To laenge - 1
+                            xValues(i) = tmpRole.Xwerte(i)
+                            tmpRole.Xwerte(i) = 0
+                        Next
+
+                        If xValues.Sum > 0 Then
+                            ' now check and verify whether this is feasible with given capacity 
+                            tmpRole.Xwerte = ShowProjekte.adjustToCapacity(tmpRole.uid, tmpRole.teamID, False, xValues, xStartDate, tmpRole.Xwerte)
+
+                            ' now, if not all requested resource need is available 
+                            If tmpRole.Xwerte.Sum < xValues.Sum Then
+                                Dim addOn As Double = xValues.Sum - tmpRole.Xwerte.Sum
+                                Dim aggregationRole As clsRollenDefinition = RoleDefinitions.getAggregationRoleOf(tmpRole.uid)
+
+                                ' now check whether or not this role;skill summary role is already within phase
+                                Dim arNameID As String = RoleDefinitions.bestimmeRoleNameID(aggregationRole.UID, tmpRole.teamID)
+
+                                Dim pRole As clsRolle = New clsRolle(cPhase.relEnde - cPhase.relStart)
+                                With pRole
+                                    .uid = aggregationRole.UID
+                                    .teamID = tmpRole.teamID
+                                End With
+
+                                ' calculate a distribution of values over months, dependent of months and number days / per Months
+                                Dim vpSum() As Double
+                                ReDim vpSum(0)
+                                vpSum(0) = addOn
+
+                                Dim xpValues() As Double = cPhase.berechneBedarfeNew(xStartDate,
+                                                                                        xEndDate, vpSum, 1)
+
+                                xpValues = ShowProjekte.adjustToCapacity(aggregationRole.UID, tmpRole.teamID, True, xpValues, xStartDate, pRole.Xwerte)
+
+
+
+                                pRole.Xwerte = xpValues
+
+                                roleStack.Add(pRole)
+
+
+                            End If
+
+                        End If
+                    End If
+
+                Next
+
+                ' second wave: add additional summary roles 
+                For Each pRole As clsRolle In roleStack
+                    ' if it already exists, values are added to existing.. 
+                    cPhase.addRole(pRole)
+                Next
+
+                ' third wave_ consider all summary roles 
+                For Each tmpRole As clsRolle In cPhase.rollenListe
+
+                    Dim uid As Integer = tmpRole.uid
+                    If RoleDefinitions.getRoleDefByID(uid).isSummaryRole Then
+
+                        Dim oldValues As Double()
+                        Dim laenge As Integer = tmpRole.Xwerte.Length
+                        ReDim oldValues(laenge - 1)
+
+                        For i As Integer = 0 To laenge - 1
+                            oldValues(i) = tmpRole.Xwerte(i)
+                            tmpRole.Xwerte(i) = 0
+                        Next
+
+                        If oldValues.Sum > 0 Then
+                            ' now check and verify whether this is feasible with given capacity 
+                            tmpRole.Xwerte = ShowProjekte.adjustToCapacity(tmpRole.uid, tmpRole.teamID, True, oldValues, xStartDate, tmpRole.Xwerte)
+                        End If
+                    End If
+
+                Next
+
+            Next
+
+
+        Catch ex As Exception
+            errMsg = ex.Message
+        End Try
+
+
+    End Sub
+
+
+
+    ''' <summary>
     ''' does an automatic allocation of people for all summary Roles / Skills  
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <param name="variantName"></param>
     ''' <param name="errMsg"></param>
     Public Sub autoAllocate(ByVal pName As String, ByVal variantName As String,
-                            ByVal allowOvertime As Boolean, ByRef errMsg As String)
+                            ByVal allowOvertime As Boolean, ByRef errMsg As String,
+                            Optional ByVal suggestedIDs As SortedList(Of String, Double) = Nothing)
 
         Dim hproj As clsProjekt = Nothing
         Dim placeHolderNeeds As New SortedList(Of String, Double())
 
-        Dim projectScopeCandidates As SortedList(Of Double, Integer) = Nothing
 
-        ' 1. create a variant, if variantName is provided 
-        If variantName <> "" Then
-            Dim baseProject As clsProjekt = getProject(pName)
-            hproj = baseProject.createVariant(variantName, "created for auto-allocation")
-        Else
-            hproj = getProject(pName)
-        End If
+        Try
+            Dim projectScopeCandidates As SortedList(Of Double, Integer) = Nothing
 
-
-        ' get a list of summary roles used in hproj 
-        Dim placeholderIDs As SortedList(Of String, Double) = hproj.getPlaceholderRoles
-
-
-
-        ' now define freeAmount of capacity over the whole project scope ...
-        Dim projectPhase As clsPhase = hproj.getPhase(1)
-
-
-        ' now checkout the resource needs and available capacities
-        For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
-
-            Dim myCollection As New Collection From {
-                kvp.Key
-            }
-            Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
-
-            If Not placeHolderNeeds.ContainsKey(kvp.Key) Then
-                placeHolderNeeds.Add(kvp.Key, bedarf)
+            ' 1. create a variant, if variantName is provided 
+            If variantName <> "" Then
+                Dim baseProject As clsProjekt = getProject(pName)
+                If baseProject.variantName = variantName Then
+                    hproj = baseProject
+                Else
+                    hproj = baseProject.createVariant(variantName, "created for auto-allocation")
+                End If
             Else
-                ' kann eigentlich nicht sein ,,
-                Call MsgBox("unexpected Error 3522 cP")
+                hproj = getProject(pName)
             End If
 
-        Next
 
-        ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
-        ' for this just go over each phase 
-        For p = 1 To hproj.CountPhases
+            ' get a list of summary roles used in hproj 
+            Dim placeholderIDs As SortedList(Of String, Double) = hproj.getPlaceholderRoles
 
-            Dim cPhase As clsPhase = hproj.getPhase(p)
-            Dim phasePlaceHolderNeeds As SortedList(Of String, Double) = cPhase.getRoleNameIDsAndValues(onlySummaryRoles:=True)
 
-            ' who is already on the team ? 
-            Dim peopleIDs As SortedList(Of String, Double) = hproj.getPeople()
 
-            For Each phasePlaceHolder As KeyValuePair(Of String, Double) In phasePlaceHolderNeeds
+            ' now define freeAmount of capacity over the whole project scope ...
+            Dim projectPhase As clsPhase = hproj.getPhase(1)
 
-                Dim myCurrentSkillID As Integer = -1
-                Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
 
-                Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5, phasePlaceHolder.Value)
-                projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2, phasePlaceHolder.Value)
+            ' now checkout the resource needs and available capacities
+            For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
 
-                Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
+                Dim myCollection As New Collection From {
+                kvp.Key
+            }
+                Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
+
+                If Not placeHolderNeeds.ContainsKey(kvp.Key) Then
+                    placeHolderNeeds.Add(kvp.Key, bedarf)
+                Else
+                    ' kann eigentlich nicht sein ,,
+                    Call MsgBox("unexpected Error 3522 cP")
+                End If
+
+            Next
+
+            ' check whether or not 
+
+            ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
+            ' for this just go over each phase 
+            For p = 1 To hproj.CountPhases
+
+                Dim cPhase As clsPhase = hproj.getPhase(p)
+                Dim phasePlaceHolderNeeds As SortedList(Of String, Double) = cPhase.getRoleNameIDsAndValues(onlySummaryRoles:=True)
+
+                ' who is already on the team ? 
+                Dim peopleIDs As SortedList(Of String, Double) = hproj.getPeople()
+
+                If Not IsNothing(suggestedIDs) Then
+                    For Each kvp As KeyValuePair(Of String, Double) In suggestedIDs
+                        If Not peopleIDs.ContainsKey(kvp.Key) Then
+                            peopleIDs.Add(kvp.Key, kvp.Value)
+                        Else
+                            peopleIDs.Item(kvp.Key) = peopleIDs.Item(kvp.Key) + kvp.Value
+                        End If
+                    Next
+                End If
+
+                For Each phasePlaceHolder As KeyValuePair(Of String, Double) In phasePlaceHolderNeeds
+
+                    Dim myCurrentSkillID As Integer = -1
+                    Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
+
+                    Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5, phasePlaceHolder.Value)
+                    projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2, phasePlaceHolder.Value)
+
+                    Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
                                                                                           myCurrentSkillID,
                                                                                             candidates,
                                                                                             projectScopeCandidates,
                                                                                             phasePlaceHolder.Value)
 
-                ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
-                For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
-                    Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
-                    Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, allowOvertime, substitution.Key)
-                    If Not ok Then
-                        Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
-                        Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
-                    End If
+                    ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
+                    For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
+                        Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
+                        Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, allowOvertime, substitution.Key)
+                        If Not ok Then
+                            Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
+                            Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
+                        End If
+                    Next
+
                 Next
 
             Next
 
-        Next
+            ' now eliminate all empty summary roles 
+            Call hproj.eliminateEmptyRoles()
 
-        ' ok, Done ! 
+            ' ok, Done ! 
+        Catch ex As Exception
+            errMsg = ex.Message
+        End Try
+
 
     End Sub
+
 
 
 
