@@ -1262,12 +1262,193 @@ Module rpaModule1
 
         If verifiedStructure Then
             result = PTRpa.visboFindProjectStart
+
+            Dim mymessages As New Collection
+            Dim infomsg As String = "File to find best start dates detected: " & currentWB.Name
+            Call logger(ptErrLevel.logInfo, infomsg, mymessages)
+            'Console.WriteLine(infomsg)
         Else
             result = PTRpa.visboUnknown
         End If
 
         checkFindBestStarts = result
     End Function
+
+    Private Function checkAutoAllocate(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim blattName0 As String = "VISBO Auto-Allocate"
+        Dim blattName1 As String = "Parameters"
+
+        Dim blattExist(1) As Boolean
+        blattExist(0) = False
+        blattExist(1) = False
+
+
+        Try
+
+            For Each ws As xlns.Worksheet In currentWB.Worksheets
+                If (ws.Name = blattName0) Then
+                    blattExist(0) = True
+                End If
+
+                If (ws.Name = blattName1) Then
+                    blattExist(1) = True
+                End If
+
+            Next
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If blattExist(0) And blattExist(1) Then
+            result = PTRpa.visboSuggestResourceAllocation
+        End If
+
+        checkAutoAllocate = result
+    End Function
+
+    Private Function checkAutoAdjustPortfolio(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim blattName0 As String = "Exception List"
+        Dim blattName1 As String = "Parameters"
+        Dim blattName2 As String = "Ranking List"
+
+        Dim blattExist(1) As Boolean
+        blattExist(0) = False
+        blattExist(1) = False
+
+        Try
+
+            For Each ws As xlns.Worksheet In currentWB.Worksheets
+                If (ws.Name = blattName0) Then
+                    blattExist(0) = True
+                End If
+
+                If (ws.Name = blattName1) Then
+                    blattExist(1) = True
+                End If
+
+            Next
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If blattExist(0) And blattExist(1) Then
+            result = PTRpa.visboAutoAdjust
+        End If
+
+        checkAutoAdjustPortfolio = result
+    End Function
+
+
+    ''' <summary>
+    ''' checks whether or not the file is a findFeasiblePortfolio file
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkfeasiblePortfolio(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim blattName1 As String = "VISBO"
+        Dim blattName2 As String = "Parameters"
+
+        Dim hasVISBO As Boolean = False
+        Dim hasParameters As Boolean = False
+
+        Try
+
+            For Each ws As xlns.Worksheet In currentWB.Worksheets
+                If (ws.Name = blattName1) Then
+
+                    Dim ersteZeile As xlns.Range = CType(ws.Rows.Item(1), xlns.Range)
+                    Try
+                        hasVISBO = ersteZeile.Cells(1, 1).value.trim = "Name" And
+                        CStr(ersteZeile.Cells(1, 2).value).Trim = "Variant"
+                    Catch ex As Exception
+
+                    End Try
+                End If
+
+                If (ws.Name = blattName2) Then
+                    hasParameters = True
+                End If
+
+            Next
+
+            If (hasVISBO And hasParameters) Then
+                result = PTRpa.visboFindfeasiblePortfolio
+
+                Dim mymessages As New Collection
+                Dim infomsg As String = "File to define feasible portfolio detected: " & currentWB.Name
+                Call logger(ptErrLevel.logInfo, infomsg, mymessages)
+                'Console.WriteLine(infomsg)
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkfeasiblePortfolio = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' creates hedged variants for all the sales Pipeline projects
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkCreateHedgedVariants(ByVal currentWB As xlns.Workbook) As PTRpa
+
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattPartName As String = "Pipeline"
+
+        Try
+
+            For Each ws As xlns.Worksheet In currentWB.Worksheets
+                If (ws.Name.Contains(blattPartName)) Then
+
+                    Dim ersteZeile As xlns.Range = CType(ws.Rows.Item(2), xlns.Range)
+                    Try
+                        If Not IsNothing(ersteZeile.Cells(1, 3).value) Then
+                            If IsNumeric(ersteZeile.Cells(1, 3).value) Then
+                                Dim tstValue As Double = CDbl(ersteZeile.Cells(1, 3).value)
+                                Dim tstDate As Date = CDate(ersteZeile.Cells(1, 4).value)
+                                If tstValue > 0 And tstValue <= 1.0 And tstDate <> Date.MinValue Then
+                                    verifiedStructure = True
+                                    Exit For
+                                End If
+                            End If
+                        End If
+                    Catch ex As Exception
+                        verifiedStructure = False
+                    End Try
+                End If
+
+
+            Next
+
+            If verifiedStructure Then
+
+                result = PTRpa.visboCreateHedgedVariant
+                Dim mymessages As New Collection
+                Dim infomsg As String = "File to create hedged variants detected: " & currentWB.Name
+                Call logger(ptErrLevel.logInfo, infomsg, mymessages)
+                Console.WriteLine(infomsg)
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkCreateHedgedVariants = result
+
+    End Function
+
+
+
 
     ''' <summary>
     ''' checks whether or not a file is a visbo project list 
@@ -2126,6 +2307,626 @@ Module rpaModule1
         processProjectList = allOk
 
     End Function
+
+
+    ''' <summary>
+    ''' creates hedged variants for existing projects
+    ''' projects need to be imported already with readListIntoStorage
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function processCreateHedgedVariants() As Boolean
+
+        Dim result As Boolean = False
+        Dim Err As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+
+
+        Try
+
+            ' now get Portfolio Name and Variante-NAme 
+            Dim params() As String = getPortfolioNames()
+            Dim portfolioName As String = params(0)
+            Dim portfolioVariantName As String = params(1)
+
+            If portfolioName = "" Then
+                portfolioName = myActivePortfolio
+            End If
+
+            Dim rankingList As SortedList(Of Integer, clsRankingParameters) = getRanking(PTRpa.visboCreateHedgedVariant)
+
+            Dim projectVariantName As String = "hedged"
+            If params(2) <> "" Then
+                projectVariantName = params(2).Trim
+            End If
+
+            Dim outPutCollection As New Collection
+
+            For Each kvp As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
+
+                Dim projectstoreRequired As Boolean = False
+                Dim variantStoreRequired As Boolean = False
+
+                Dim key As String = calcProjektKey(kvp.Value.projectName, kvp.Value.projectVariantName)
+                Dim hproj As clsProjekt = ImportProjekte.getProject(key)
+                If Not IsNothing(hproj) Then
+                    ' now move the project 
+                    If hproj.vpStatus = "initial" Or hproj.vpStatus = "initialized" Or hproj.vpStatus = "vorgeschlagen" Or hproj.vpStatus = "proposed" Then
+
+                        Dim newStartDate As Date = kvp.Value.newStartDate
+                        Dim deltaInDays As Integer = DateDiff(DateInterval.Day, hproj.startDate, newStartDate)
+
+                        If deltaInDays <> 0 Then
+                            Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
+                            Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+
+                            If Not IsNothing(tmpProj) Then
+                                hproj = tmpProj
+                                projectstoreRequired = True
+                            Else
+                                msgTxt = "project could not be moved"
+                            End If
+                        End If
+
+                        ' now create the variant with appropriate hedgeFactor 
+                        Dim variantProj As clsProjekt = hproj.createHedgedVariant(kvp.Value.hedgeFactor)
+                        If Not IsNothing(variantProj) Then
+                            variantStoreRequired = True
+                        End If
+
+                        If projectstoreRequired Then
+                            outPutCollection.Clear()
+
+                            msgTxt = hproj.getShapeText & " : " & hproj.startDate.ToShortDateString
+
+                            ' make sure it is in AlleProjekte, becaue store Method requires it being in AlleProjekte 
+                            Dim didExist As Boolean = AlleProjekte.Containskey(calcProjektKey(hproj))
+                            If Not didExist Then
+                                AlleProjekte.Add(hproj, False)
+                            End If
+
+                            If storeSingleProjectToDB(hproj, outPutCollection) Then
+                                Call logger(ptErrLevel.logInfo, "project with new startDate stored: ", msgTxt)
+                                Console.WriteLine("project with new startDate stored: " & msgTxt)
+                                If Not setWriteProtection(hproj, False) Then
+                                    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
+                                End If
+                            Else
+                                Call logger(ptErrLevel.logError, "project store with new startDate failed: " & msgTxt, outPutCollection)
+                                Console.WriteLine("!! ... project store with new startDate failed: " & msgTxt)
+                            End If
+
+                            If Not didExist Then
+                                AlleProjekte.Remove(calcProjektKey(hproj), False)
+                            End If
+
+                        End If
+
+                        If variantStoreRequired Then
+                            outPutCollection.Clear()
+
+                            msgTxt = variantProj.getShapeText & " : " & variantProj.variantDescription
+
+                            Dim didExist As Boolean = AlleProjekte.Containskey(calcProjektKey(variantProj))
+                            If Not didExist Then
+                                AlleProjekte.Add(variantProj, False)
+                            End If
+                            If storeSingleProjectToDB(variantProj, outPutCollection) Then
+                                Call logger(ptErrLevel.logInfo, "hedged variant stored: ", msgTxt)
+                                Console.WriteLine("hedged variant stored: " & msgTxt)
+                                If Not setWriteProtection(variantProj, False) Then
+                                    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", variantProj.getShapeText)
+                                End If
+                            Else
+                                Call logger(ptErrLevel.logError, "hedged variant store failed: " & msgTxt, outPutCollection)
+                                Console.WriteLine("!! ... hedged variant store failed: " & msgTxt)
+                            End If
+
+                            If Not didExist Then
+                                AlleProjekte.Remove(calcProjektKey(variantProj), False)
+                            End If
+
+                        End If
+
+                    End If
+
+                End If
+
+            Next
+
+            ' now read the new portfolios 
+            Dim myPortfolioVariants As clsPortfolioDefinitions = getPortfolioDefinitions(PTRpa.visboCreateHedgedVariant)
+
+            If myPortfolioVariants.portfolioListe.Count > 0 Then
+
+                ' get all projects of Active Portfolio , put them into AlleActiveProjects
+                Dim activePortfolioProjects As New clsProjekteAlle
+                If putPortfolioIntoSession(myActivePortfolio, "", activePortfolioProjects) Then
+
+                    ' 2: now for each portfolio Variant : 
+                    ' get all projects of AlleActiveProjects , put them into AlleProjekte and in ShowProjekte 
+
+
+
+                    For Each kvp As KeyValuePair(Of String, List(Of String)) In myPortfolioVariants.portfolioListe
+
+                        Try
+                            AlleProjekte.Clear()
+                            ShowProjekte.Clear()
+
+                            For Each activeKVP As KeyValuePair(Of String, clsProjekt) In activePortfolioProjects.liste
+
+                                AlleProjekte.Add(activeKVP.Value)
+                                If Not ShowProjekte.contains(activeKVP.Value.name) Then
+                                    ShowProjekte.Add(activeKVP.Value)
+                                End If
+
+                            Next
+
+                            ' get all projects referenced in a PortfolioVariantList , put them into AlleProjekte , ShowProjekte 
+                            For Each tmpKey As String In kvp.Value
+                                Dim hproj As clsProjekt = ImportProjekte.getProject(tmpKey)
+                                If Not IsNothing(hproj) Then
+                                    AlleProjekte.Add(hproj)
+                                    ShowProjekte.AddAnyway(hproj)
+                                End If
+                            Next
+
+                            ' create the Portfolio and store it 
+                            Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                         cName:=portfolioName, vName:=kvp.Key)
+
+                            outPutCollection.Clear()
+                            Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation, Nothing)
+
+                            msgTxt = toStoreConstellation.constellationName & " ( " & toStoreConstellation.variantName & " )"
+
+                            Console.WriteLine("Portfolio Variant stored: " & msgTxt)
+                            Call logger(ptErrLevel.logInfo, "Portfolio Variant stored: ", msgTxt)
+
+
+                        Catch ex As Exception
+                            Call logger(ptErrLevel.logError, "Failure when preparing store of portfolio ", ex.Message)
+                        End Try
+
+
+                    Next
+
+                    result = True
+
+                End If
+
+
+            Else
+                result = True
+                Call logger(ptErrLevel.logInfo, "no Portfolio Variants created because no Portfolio Name for results was provided", "")
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+
+
+        ' now empty the complete session  
+        Call emptyRPASession()
+
+        processCreateHedgedVariants = result
+
+    End Function
+
+    Private Function processAutoAllocatePortfolio() As Boolean
+
+        Dim result As Boolean = True
+        Dim Err As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+
+        Dim atleastOneError As Boolean = False
+
+        Dim outputCollection As New Collection
+
+        Dim heute As Date = Date.Now
+
+        Dim saveShowRangeLeft As Integer = showRangeLeft
+        Dim saveShowRangeRight As Integer = showRangeRight
+
+        ' set it back to undefined
+        showRangeLeft = 0
+        showRangeRight = 0
+
+        Try
+
+            ' now get Portfolio Name and Variante-NAme 
+            Dim params() As String = getPortfolioNames()
+
+            Dim rankingList As SortedList(Of Integer, clsRankingParameters) = getRanking(PTRpa.visboSuggestResourceAllocation)
+
+
+            Dim portfolioName As String = params(0)
+            Dim variantName As String = params(1)
+
+            Dim projectVariantName As String = "auto"
+            If params(2) <> "" Then
+                projectVariantName = params(2).Trim
+            End If
+
+            Dim autoAllocate As Boolean = True
+
+            ShowProjekte.Clear()
+            AlleProjekte.Clear()
+            ImportProjekte.Clear()
+            projectConstellations.Clear()
+
+            ' now load the the portfolio and all projects of portfolio 
+            ' hole Portfolio (pName,vName) aus der db
+            Dim cTime As Date = heute
+            Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(portfolioName,
+                                                                                               "", cTime, Err, variantName:=variantName, storedAtOrBefore:=heute)
+
+
+            If Not IsNothing(myConstellation) Then
+
+                Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & myActivePortfolio, " start of Operation ... ")
+                ' tmpname in die Session-Liste wieder aufnehmen
+
+                projectConstellations.Add(myConstellation)
+
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
+
+                    Dim pName As String = getPnameFromKey(kvp.Key)
+                    Dim vName As String = getVariantnameFromKey(kvp.Key)
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+
+                    If Not IsNothing(hproj) Then
+
+                        ' now Create a Variant from that , if it is not already the very same variant
+                        If hproj.variantName <> projectVariantName Then
+                            hproj = hproj.createVariant(projectVariantName, "auto-created variant")
+                        End If
+
+                        ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                    Else
+                        Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
+                        Console.WriteLine("Loading " & kvp.Key & " failed ..", " Operation continued ...")
+                        atleastOneError = True
+                    End If
+
+                Next
+
+                ' now do the operation 
+
+                For Each kvp As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
+
+                    Dim myProj As clsProjekt = ImportProjekte.getProjectbyName(kvp.Value.projectName)
+                    Dim fmsg As String = ""
+
+                    If Not IsNothing(myProj) Then
+
+                        AlleProjekte.Add(myProj)
+                        ShowProjekte.AddAnyway(myProj)
+
+                        Call ShowProjekte.autoAllocate(myProj.name, "", False, fmsg, suggestedIDs:=kvp.Value.peopleSuggestions)
+
+                        If fmsg = "" Then
+
+                            outputCollection.Clear()
+                            Dim storeProj As clsProjekt = ShowProjekte.getProject(myProj.name)
+
+                            If Not IsNothing(storeProj) Then
+                                If Not atleastOneError Then
+                                    If storeSingleProjectToDB(storeProj, outputCollection) Then
+                                        Call logger(ptErrLevel.logInfo, "project team allocated and stored: ", storeProj.getShapeText)
+                                        Console.WriteLine("project team allocated and stored: " & storeProj.getShapeText)
+
+                                        If Not setWriteProtection(storeProj, False) Then
+                                            Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", storeProj.getShapeText)
+                                        End If
+                                    Else
+                                        Call logger(ptErrLevel.logError, "store project failed : " & storeProj.getShapeText, outputCollection)
+                                        Console.WriteLine("!! ... store project team allocation failed : " & storeProj.getShapeText)
+                                        atleastOneError = True
+                                    End If
+                                Else
+                                    Call logger(ptErrLevel.logInfo, "because former Error occurred , no store happened : " & storeProj.getShapeText, outputCollection)
+                                    Console.WriteLine("!! ... because former Error occurred , no store happened: " & storeProj.getShapeText)
+                                    atleastOneError = True
+                                End If
+
+                            End If
+
+                        Else
+                            ' failure 
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Auto-Allocation failure: " & kvp.Key & " " & fmsg, " ... Operation continued ...")
+                            Console.WriteLine("!! ... Auto-Allocation failure : " & myProj.getShapeText)
+                        End If
+                    Else
+                        ' failure 
+                        atleastOneError = True
+                        Call logger(ptErrLevel.logError, "Auto-Allocation failure: could not read " & kvp.Value.projectName & " " & kvp.Value.projectVariantName, " ... Operation continued ...")
+                        Console.WriteLine("Auto-Allocation failure: could not read " & kvp.Value.projectName & " " & kvp.Value.projectVariantName)
+
+                    End If
+
+
+                Next
+
+                Call logger(ptErrLevel.logInfo, "Auto-Allocating Projects from Portfolio " & myActivePortfolio, " End of Operation ... ")
+
+                ' now create the according Portfolio
+
+
+            Else
+                atleastOneError = True
+                msgTxt = "Load Portfolio " & myActivePortfolio & " failed .."
+                Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
+                Console.WriteLine(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio & " failed ..")
+                Throw New ArgumentException(msgTxt)
+            End If
+
+            If Not atleastOneError Then
+
+                Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                            cName:=portfolioName, vName:=projectVariantName)
+
+                outputCollection.Clear()
+                Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
+
+                If outputCollection.Count > 0 Then
+                    Call logger(ptErrLevel.logInfo, "Project List with Active Portfolio: ", outputCollection)
+                    Console.WriteLine("Portfolio created " & portfolioName & " ( " & projectVariantName & " )")
+                End If
+
+            Else
+                Call logger(ptErrLevel.logInfo, "no store of portfolio because of former Error .. ", "")
+                Console.WriteLine("no store of portfolio because of former Error .. ")
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+        ' restore values 
+        showRangeLeft = saveShowRangeLeft
+        showRangeRight = saveShowRangeRight
+
+        Call emptyRPASession()
+
+        processAutoAllocatePortfolio = result
+
+    End Function
+
+    ''' <summary>
+    ''' create a Portfolio Variant and according project variants in a way that there are no more any bottlenecks at people base
+    ''' all projects, except those in the exception list will be handeld; i.e values distributed so that no person is being overloaded, 
+    ''' values geing beyond that are assigned the according summary role and in a second step being auto-Allocated 
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function processAutoAdjustPortfolio() As Boolean
+
+        Dim result As Boolean = True
+        Dim Err As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+
+
+
+        Dim outputCollection As New Collection
+
+        Dim heute As Date = Date.Now
+
+        Dim saveShowRangeLeft As Integer = showRangeLeft
+        Dim saveShowRangeRight As Integer = showRangeRight
+
+        ' set it back to undefined
+        showRangeLeft = 0
+        showRangeRight = 0
+
+        Try
+
+            ' now get Portfolio Name and Variante-NAme 
+            Dim params() As String = getPortfolioNames()
+            Dim exceptionList As Collection = getNameList("Exception List")
+
+            Dim portfolioName As String = params(0)
+            Dim variantName As String = params(1)
+
+            Dim projectVariantName As String = "auto"
+            If params(2) <> "" Then
+                projectVariantName = params(2).Trim
+            End If
+
+            Dim autoAllocate As Boolean = True
+
+            ShowProjekte.Clear()
+            AlleProjekte.Clear()
+            projectConstellations.Clear()
+
+            ' now load the the portfolio and all projects of portfolio 
+            ' hole Portfolio (pName,vName) aus der db
+            Dim cTime As Date = heute
+            Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(portfolioName,
+                                                                                               "", cTime, Err, variantName:=variantName, storedAtOrBefore:=heute)
+
+
+            If Not IsNothing(myConstellation) Then
+
+                Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & myActivePortfolio, " start of Operation ... ")
+                ' tmpname in die Session-Liste wieder aufnehmen
+
+                projectConstellations.Add(myConstellation)
+
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
+
+                    Dim pName As String = getPnameFromKey(kvp.Key)
+                    Dim vName As String = getVariantnameFromKey(kvp.Key)
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+
+                    If Not IsNothing(hproj) Then
+
+                        ' now Create a Variant from that , if it is not in the exception list 
+                        If Not exceptionList.Contains(hproj.name) Then
+                            If hproj.variantName <> projectVariantName Then
+                                hproj = hproj.createVariant(projectVariantName, "auto-created variant")
+                            End If
+                        End If
+
+                        AlleProjekte.Add(hproj)
+
+                        ' if it is already in ShowProjekte: remove it , then add this one 
+                        ShowProjekte.AddAnyway(hproj)
+
+                    Else
+                        Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
+                    End If
+
+                Next
+
+                ' now do the operation 
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    If Not exceptionList.Contains(kvp.Value.name) And Not kvp.Value.hasActualValues Then
+                        Dim fmsg As String = ""
+                        Call ShowProjekte.autoDistribute(kvp.Value.name, "", fmsg)
+
+                        If fmsg = "" Then
+                            ' success
+                            Call logger(ptErrLevel.logInfo, "Adjustment successful: " & kvp.Key, " ... Operation continued ...")
+
+                            Call ShowProjekte.autoAllocate(kvp.Value.name, "", True, fmsg)
+
+                            If fmsg = "" Then
+
+                                outputCollection.Clear()
+
+                                If storeSingleProjectToDB(kvp.Value, outputCollection) Then
+                                    Call logger(ptErrLevel.logInfo, "project variant adjusted and stored: ", kvp.Value.getShapeText)
+                                    Console.WriteLine("project stored: " & kvp.Value.getShapeText)
+
+                                    If Not setWriteProtection(kvp.Value, False) Then
+                                        Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", kvp.Value.getShapeText)
+                                    End If
+                                Else
+                                    Call logger(ptErrLevel.logError, "project variant store failed: " & kvp.Value.getShapeText, outputCollection)
+                                    Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+                                End If
+
+                                Call logger(ptErrLevel.logInfo, "Auto-Allocation successful: " & kvp.Key, " ... Operation continued ...")
+                            Else
+                                ' failure 
+                                Call logger(ptErrLevel.logError, "Auto-Allocation failure: " & kvp.Key & " " & fmsg, " ... Operation continued ...")
+                            End If
+                        Else
+                            ' failure 
+                            Call logger(ptErrLevel.logError, "Adjustment failure: " & kvp.Key & " " & fmsg, " ... Operation continued ...")
+                        End If
+                    Else
+                        ' 
+                        Call logger(ptErrLevel.logInfo, "not adjusted because it is in Exception List or is having actual values: " & kvp.Key, " Operation continued ...")
+                    End If
+                Next
+
+                Call logger(ptErrLevel.logInfo, "Adjusting Projects from Portfolio " & myActivePortfolio, " End of Operation ... ")
+
+                ' now create the according Portfolio
+
+
+            Else
+                msgTxt = "Load Portfolio " & myActivePortfolio & " failed .."
+                Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
+                Throw New ArgumentException(msgTxt)
+            End If
+
+            Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                            cName:=portfolioName, vName:=projectVariantName)
+
+            outputCollection.Clear()
+            Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
+
+            If outputCollection.Count > 0 Then
+                Call logger(ptErrLevel.logInfo, "Project List with Active Portfolio: ", outputCollection)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+
+
+        ' restore values 
+        showRangeLeft = saveShowRangeLeft
+        showRangeRight = saveShowRangeRight
+
+        Call emptyRPASession()
+
+        processAutoAdjustPortfolio = result
+    End Function
+
+
+    ''' <summary>
+    ''' reads all projects of a given Portfolio into storage: all projects are then within clsProjekteAlle 'sessionListe'
+    ''' updateCurrentConstellation is by default set to false, i.e a currentSessionConstellation is not defined by that in Default. 
+    ''' </summary>
+    ''' <param name="myPortfolioName"></param>
+    ''' <param name="myPortfolioVName"></param>
+    ''' <param name="sessionListe"></param>
+    ''' <returns></returns>
+    Private Function putPortfolioIntoSession(ByVal myPortfolioName As String, ByVal myPortfolioVName As String, ByRef sessionListe As clsProjekteAlle,
+                                             Optional ByVal upDateCurrentConstellation As Boolean = False) As Boolean
+
+        Dim allOk As Boolean = False
+        Dim Err As New clsErrorCodeMsg
+
+
+        Try
+            sessionListe.Clear(upDateCurrentConstellation)
+
+            If myPortfolioName = "" Then
+                myPortfolioName = myActivePortfolio
+                myPortfolioVName = ""
+            End If
+
+            Dim heute As Date = Date.Now
+            Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myPortfolioName,
+                                                                                           "", heute, Err, variantName:=myPortfolioVName, storedAtOrBefore:=heute)
+
+
+            If Not IsNothing(myConstellation) Then
+
+                ' tmpname in die Session-Liste wieder aufnehmen
+                projectConstellations.Add(myConstellation)
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
+
+                    Dim pName As String = getPnameFromKey(kvp.Key)
+                    Dim vName As String = getVariantnameFromKey(kvp.Key)
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, sessionListe, heute)
+                    If Not IsNothing(hproj) Then
+
+                        sessionListe.Add(hproj, upDateCurrentConstellation)
+
+                    End If
+                Next
+
+                allOk = True
+            Else
+                Dim msgTxt As String = "Load Portfolio " & myPortfolioName & " failed .."
+                Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
+                allOk = False
+            End If
+
+        Catch ex As Exception
+            allOk = False
+        End Try
+
+        putPortfolioIntoSession = allOk
+
+    End Function
+
+
+
+
 
     ''' <summary>
     ''' in ImportProjekte sind alle aktuell eingelesenen Projekte 
