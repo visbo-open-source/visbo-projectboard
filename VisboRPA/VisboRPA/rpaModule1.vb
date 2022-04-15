@@ -2578,6 +2578,37 @@ Module rpaModule1
 
     End Function
 
+    Private Function readListIntoStorage(ByVal kennung As PTRpa) As Boolean
+        Dim allOk As Boolean = False
+        ' jetzt alle Projekte aus der Liste holen und die OverloadParams holen 
+
+        Try
+            Call logger(ptErrLevel.logInfo, "start Processing: " & kennung.ToString, "Read Projects")
+
+            Dim listOfProjs As SortedList(Of Integer, String) = getRanking()
+
+            For Each kvp As KeyValuePair(Of Integer, String) In listOfProjs
+
+                Dim pname As String = getPnameFromKey(kvp.Value)
+                Dim vname As String = getVariantnameFromKey(kvp.Value)
+                Dim today As Date = Date.Now
+                Dim hproj As clsProjekt = getProjektFromSessionOrDB(pname, vname, AlleProjekte, today)
+
+                If Not IsNothing(hproj) Then
+                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                End If
+
+            Next
+            allOk = True
+
+        Catch ex As Exception
+            allOk = False
+        End Try
+        readListIntoStorage = allOk
+
+    End Function
+
+
     Private Function processFindProjectStart(ByVal myName As String, ByVal myActivePortfolio As String) As Boolean
 
         Dim allOk As Boolean = False
@@ -3768,6 +3799,335 @@ Module rpaModule1
         processProjectListWithActivePortfolio = result
 
     End Function
+
+
+    ''' <summary>
+    ''' all projects need to be read alrady in ImportProjekte
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function defineFeasiblePortfolio() As Boolean
+
+        Dim result As Boolean = True
+        Dim saveShowRangeLeft As Integer = showRangeLeft
+        Dim saveShowRangeRight As Integer = showRangeRight
+
+        Dim overloadAllowedinMonths As Double = 1.05
+        Dim overloadAllowedTotal As Double = 1.0
+
+
+        Try
+            ' now get the aggregation Roles
+            Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles()
+            Dim aggregationList As New List(Of String)
+
+            Dim teamID As Integer = -1
+
+            Dim exceptionList As Collection = getConsiderationList(excludedNames:=True)
+
+            ' checkout aggregation Roles
+            For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
+                Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
+                If Not aggregationList.Contains(tmpStrID) And Not exceptionList.Contains(tmpStrID) Then
+                    aggregationList.Add(tmpStrID)
+                End If
+            Next
+
+            ' Get the Ranking out of Excel List , it is just the ordering of the rows 
+            ' value holds the AllProjekte.Key, i.e name#variantName
+            Dim rankingList As SortedList(Of Integer, String) = getRanking()
+
+            ' takes all the projects which could not be considered first time ... 
+            Dim rankingList2 As New SortedList(Of Integer, String)
+            Dim missingList As New clsProjekteAlle
+
+            Dim abbruchDate As Date = New Date(2023, 3, 31)
+
+            Dim tmpValues As Double() = getOverloadParams()
+            Dim tmpNames As String() = getPortfolioNames()
+
+
+            Dim portfolioName As String = tmpNames(0)
+            Dim variantName As String = tmpNames(1)
+
+
+            Try
+                abbruchDate = CDate(tmpNames(2))
+            Catch ex As Exception
+                abbruchDate = New Date(2023, 3, 31)
+            End Try
+
+
+            overloadAllowedinMonths = tmpValues(0)
+            overloadAllowedTotal = tmpValues(1)
+
+
+            AlleProjekte.Clear()
+            ' now make sure all projects are in AlleProjekte
+            For Each ppair As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
+                If Not AlleProjekte.Containskey(ppair.Key) Then
+                    AlleProjekte.Add(ppair.Value)
+                End If
+
+            Next
+
+            ' then empty ShowProjekte again 
+            ShowProjekte.Clear()
+
+            ' rankingList keeps the sequence within the Excel file. So user adds some fields important to him for prioritization , he add these fields , sorts it in th eExcel. 
+            ' It then represents the sequence: Row1 is the most important project , Row2 the scond, and so forth
+            For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
+
+                Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
+                If ShowProjekte.contains(hproj.name) Then
+                    ShowProjekte.Remove(hproj.name)
+                End If
+
+                ShowProjekte.Add(hproj)
+
+                Dim skillIDs As Collection = hproj.getSkillNameIds
+                Dim skillList As New List(Of String)
+
+                For Each si As String In skillIDs
+                    If Not skillList.Contains(si) And Not exceptionList.Contains(si) Then
+                        skillList.Add(si)
+                    End If
+                Next
+
+
+                ' now consider the tiemFrame this project occupies ..
+                showRangeLeft = getColumnOfDate(hproj.startDate)
+                showRangeRight = getColumnOfDate(hproj.endeDate)
+
+
+                Dim overutilizationFound As Boolean = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+
+                ' before checking for utilization , do the auto-distribution, that is according to freecapacity try to distribute it in the timeframe that all fits
+                ' example: with a normalized distribution it may come to a bootleneck: 15 PT in JAn, 15 PT in Feb. But there is 12 PT in Jan, 18 PT in Feb free capacity , so this works out. 
+                Dim myMessages As New Collection
+                Dim storeRequired As Boolean = False
+
+                If overutilizationFound Then
+                    Dim infomsg As String = "try out variant with optimized distribution according to resource needs:  " & hproj.getShapeText
+                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+
+                    hproj = hproj.createVariant(variantName, "consider requested sum - distribute according free capacity ")
+                    Dim errorMsg As String = ""
+
+                    ' put it into AlleProjekte
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.AddAnyway(hproj)
+
+                    Call ShowProjekte.autoDistribute(hproj.name, "", errorMsg)
+
+
+                    ' now calculate again ... 
+                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+
+                    ' to trigger saving of the new variant , if there was first a bottleneck, then no more ...
+                    storeRequired = Not overutilizationFound
+
+                End If
+
+
+                If overutilizationFound Then
+
+                    ' take it out again, because there was no solution
+                    ShowProjekte.Remove(hproj.name)
+                    Dim infomsg As String = "with default start-Date & end-Date not considered because of bottlenecks, will be tried out later ... " & hproj.name
+                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                    Console.WriteLine(infomsg)
+
+                    rankingList2.Add(rankingPair.Key, rankingPair.Value)
+
+                Else
+                    ' all ok, just continue
+                    Dim infomsg As String = " ... considered " & hproj.getShapeText
+                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                    Console.WriteLine(infomsg)
+
+                    ' now if there was created the variant
+                    If storeRequired Then
+
+                        Dim tmpMessages As New Collection
+                        If storeSingleProjectToDB(hproj, tmpMessages) Then
+                            Dim mymsg As String = "tried out new value distribution:  worked out to find solution for  " & hproj.getShapeText
+                            Call logger(ptErrLevel.logInfo, mymsg, myMessages)
+                            Console.WriteLine(mymsg)
+
+                            If Not setWriteProtection(hproj, False) Then
+                                Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
+                            End If
+                        End If
+                    End If
+                End If
+
+
+
+            Next
+
+            ' now the second wave is going to come ... 
+
+
+            For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList2
+
+                Dim anzLoops As Integer = 1
+
+                Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
+                If Not ShowProjekte.contains(hproj.name) Then
+                    ShowProjekte.Add(hproj)
+                End If
+
+                Dim skillIDs As Collection = hproj.getSkillNameIds
+                Dim skillList As New List(Of String)
+
+                For Each si As String In skillIDs
+                    If Not skillList.Contains(si) And Not exceptionList.Contains(si) Then
+                        skillList.Add(si)
+                    End If
+                Next
+
+                ' now consider the timeFrame this project occupies ..
+
+                Dim key As String = calcProjektKey(hproj)
+                ' create variant if not already done
+                If hproj.variantName <> variantName Then
+                    hproj = hproj.createVariant(variantName, "variant was created and moved to avoid resource bottlenecks")
+                    ' bring that into AlleProjekte
+                    key = calcProjektKey(hproj)
+                    If AlleProjekte.Containskey(key) Then
+                        AlleProjekte.Remove(key)
+                    End If
+                    AlleProjekte.Add(hproj)
+                End If
+
+                Dim deltaInDays As Integer = 7
+
+                Dim iterations As Integer = 0
+
+                Dim newStartDate As Date = hproj.startDate.AddDays(deltaInDays)
+                Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
+
+                Dim overutilizationFound As Boolean = True
+
+                Do While overutilizationFound And newEndDate <= abbruchDate
+                    ' move project by deltaIndays
+
+                    Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+
+                    If Not IsNothing(tmpProj) Then
+
+                        hproj = tmpProj
+
+                        showRangeLeft = getColumnOfDate(tmpProj.startDate)
+                        showRangeRight = getColumnOfDate(tmpProj.endeDate)
+
+
+                        ' now replace in ShowProjekte 
+                        AlleProjekte.Remove(key)
+                        ShowProjekte.Remove(tmpProj.name)
+                        ' add the new, altered version 
+                        AlleProjekte.Add(tmpProj)
+                        ShowProjekte.Add(tmpProj)
+
+                        overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+
+                        If overutilizationFound Then
+                            Dim fmsg As String = ""
+                            Call ShowProjekte.autoDistribute(hproj.name, "", fmsg)
+                            overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+                        End If
+
+                        If overutilizationFound Then
+                            newStartDate = newStartDate.AddDays(deltaInDays)
+                            newEndDate = newEndDate.AddDays(deltaInDays)
+
+                            anzLoops = anzLoops + 1
+                        End If
+
+                    Else
+                        ' Error occurred 
+                        Exit Do
+                    End If
+
+                Loop
+
+                If Not overutilizationFound Then
+                    ' it is already in there ... but now needed to be stored
+                    Dim myMessages As New Collection
+                    If storeSingleProjectToDB(hproj, myMessages) Then
+                        Dim infomsg As String = "tried out " & anzLoops & " different start/ends to avoid bottlenecks, found solution for  " & hproj.getShapeText
+                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                        Console.WriteLine(infomsg)
+
+                        If Not setWriteProtection(hproj, False) Then
+                            Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
+                        End If
+                    Else
+                        ' take it out again , because there was no solution
+                        ShowProjekte.Remove(hproj.name)
+
+                        Dim mlKEy As String = calcProjektKey(hproj.name, "")
+                        hproj = ImportProjekte.getProject(mlKEy)
+                        missingList.Add(hproj)
+
+                        Dim infomsg As String = "... failure: could not store " & hproj.getShapeText
+                        Call logger(ptErrLevel.logError, infomsg, myMessages)
+                        Console.WriteLine(infomsg)
+                    End If
+
+
+                Else
+                    ' take it out again , because there was no solution
+                    AlleProjekte.Remove(key)
+                    ShowProjekte.Remove(hproj.name)
+
+                    ' take it out again , because there was no solution
+                    Dim infomsg As String = "... could finally not be considered  " & hproj.name
+                    Dim myMessages As New Collection
+                    Call logger(ptErrLevel.logError, infomsg, myMessages)
+                    Console.WriteLine(infomsg)
+
+                    Dim mlKEy As String = calcProjektKey(hproj.name, "")
+                    hproj = ImportProjekte.getProject(mlKEy)
+                    missingList.Add(hproj)
+
+                End If
+
+            Next
+
+            ' ----------------
+
+
+            ' now create the portfolio Variant from ShowProjekte 
+            ' now create the Portfolio from ShowProjekte content 
+
+            Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                                                                                            cName:=portfolioName, vName:=variantName)
+            Dim errMsg As New clsErrorCodeMsg
+            Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+
+            Dim outputCollection As New Collection
+            Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, dbPortfolioNames)
+
+            If outputCollection.Count > 0 Then
+                Call logger(ptErrLevel.logInfo, "feasible Portfolio definition, ", outputCollection)
+            End If
+
+            ' now Store Constellation 
+            If missingList.Count > 0 Then
+                Dim ok As Boolean = storeConstellationFromProjectList(missingList, portfolioName, variantName & " missing")
+            End If
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "feasible Portfolio definition, unexpected failure:", ex.Message)
+            result = False
+        End Try
+
+        defineFeasiblePortfolio = result
+
+    End Function
+
 
     ''' <summary>
     ''' performs creation and optimization when no activePortfolio is defined or does exist
