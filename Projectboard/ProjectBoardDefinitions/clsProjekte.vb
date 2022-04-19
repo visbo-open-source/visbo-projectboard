@@ -2060,6 +2060,142 @@ Public Class clsProjekte
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' returns an array with frequency of milestones in timeframe showrangeLeft to showrangeRight
+    ''' </summary>
+    ''' <param name="msNames"></param>
+    ''' <returns></returns>
+    Public Function getMilestonesFrequency(ByVal msNames As List(Of String)) As Double()
+        Dim milestoneArray As Double()
+
+        If showRangeLeft <= 0 Or showRangeRight < showRangeLeft Then
+            ' nothing to do 
+            Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
+        Else
+            ReDim milestoneArray(showRangeRight - showRangeLeft)
+
+            For Each msName As String In msNames
+                ' check whether or not this is causing overloads, meaning if there are in any month more elements than allowed(msLimit)
+                ' it is only checked whether there are any overloads caused by the new calculation. If referece value is over the limit , bust has been 
+                ' over the limit already in referenceValues then it is still allowed
+                Dim breadCrumb As String = ""
+                Dim typ As Integer = -1
+                Dim pvName As String = ""
+                Dim tmpMilestoneArray As Double(,) = getCountMilestonesInMonth(msName, breadCrumb, -1, pvName)
+
+                For ix As Integer = 0 To showRangeRight - showRangeLeft
+                    For mx As Integer = 0 To 3
+                        milestoneArray(ix) = milestoneArray(ix) + tmpMilestoneArray(mx, ix)
+                    Next
+                Next
+            Next
+
+        End If
+
+        getMilestonesFrequency = milestoneArray
+
+    End Function
+
+    Public Function getPhaseFrequency(ByVal phNames As List(Of String)) As Double()
+        Dim phaseArray As Double()
+
+        If showRangeLeft <= 0 Or showRangeRight < showRangeLeft Then
+            ' nothing to do 
+            Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
+        Else
+            ReDim phaseArray(showRangeRight - showRangeLeft)
+
+            For Each phName As String In phNames
+                Dim breadCrumb As String = ""
+                Dim typ As Integer = -1
+                Dim pvName As String = ""
+
+                Dim tmpPhaseArray As Double() = getCountPhasesInMonth(phName, breadCrumb, typ, pvName)
+
+                For ix As Integer = 0 To showRangeRight - showRangeLeft
+                    phaseArray(ix) = phaseArray(ix) + tmpPhaseArray(ix)
+                Next
+
+            Next
+
+        End If
+
+        getPhaseFrequency = phaseArray
+
+    End Function
+    ''' <summary>
+    ''' returns true if there are too much milestones or phases parallel within one given month
+    ''' and the situation has worsened with respect to referenceValues 
+    ''' </summary>
+    ''' <param name="msNames"></param>
+    ''' <param name="msLimit"></param>
+    ''' <param name="referenceMsValues"></param>
+    ''' <param name="phNames"></param>
+    ''' <param name="phLimit"></param>
+    ''' <param name="referencePhValues"></param>
+    ''' <returns></returns>
+    Public Function overLoadMSPhasesFound(ByVal msNames As List(Of String), ByVal msLimit As Integer,
+                                          ByVal referenceMsValues As Double(),
+                                          ByVal phNames As List(Of String), ByVal phLimit As Integer,
+                                          ByVal referencePhValues As Double()) As Boolean
+
+        Dim overloadFound As Boolean = False
+        Dim heuteCol As Integer = getColumnOfDate(Date.Now)
+
+        If showRangeLeft <= 0 Or showRangeRight < showRangeLeft Then
+            ' nothing to do 
+            Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
+        Else
+
+
+            Try
+                Dim milestoneArray As Double()
+                Dim phaseArray As Double()
+                ReDim milestoneArray(showRangeRight - showRangeLeft)
+                ReDim phaseArray(showRangeRight - showRangeLeft)
+
+                milestoneArray = getMilestonesFrequency(msNames)
+
+
+                ' now check whether or not there are any overloads 
+                For ix As Integer = 0 To showRangeRight - showRangeLeft
+                    If milestoneArray(ix) > msLimit Then
+                        ' only when value is greater than before ...
+                        overloadFound = (milestoneArray(ix) > referenceMsValues(ix))
+                    End If
+                    If overloadFound Then
+                        Exit For
+                    End If
+                Next
+
+                If Not overloadFound Then
+
+                    phaseArray = getPhaseFrequency(phNames)
+
+                    ' now check whether or not there are any overloads 
+                    For ix As Integer = 0 To showRangeRight - showRangeLeft
+                        If phaseArray(ix) > phLimit Then
+                            ' only when value is greater than before ...
+                            overloadFound = (phaseArray(ix) > referencePhValues(ix))
+                        End If
+                        If overloadFound Then
+                            Exit For
+                        End If
+                    Next
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
+        End If
+
+        overLoadMSPhasesFound = overloadFound
+
+    End Function
     ''' <summary>
     ''' returns true if in any month there is a overutilization of more than three time overloadCriterion
     ''' 

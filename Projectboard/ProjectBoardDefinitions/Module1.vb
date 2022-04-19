@@ -1017,7 +1017,8 @@ Public Module Module1
         ' create hedged variants 
         visboCreateHedgedVariant = 25
 
-
+        ' visbo Find Project Starts with regard of frequency Phases, milestones
+        visboFindProjectStartPM = 26
 
     End Enum
 

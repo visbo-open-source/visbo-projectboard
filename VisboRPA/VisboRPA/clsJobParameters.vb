@@ -1,0 +1,224 @@
+﻿Imports ProjectBoardDefinitions
+Public Class clsJobParameters
+
+    Public kennung As PTRPA
+
+
+    Private _allowedOverloadMonth As Double
+    Public Property allowedOverloadMonth As Double
+        Get
+            allowedOverloadMonth = _allowedOverloadMonth
+        End Get
+        Set(value As Double)
+            If value > 0.1 Then
+                _allowedOverloadMonth = value
+            End If
+        End Set
+    End Property
+
+    Private _allowedOverloadTotal As Double
+    Public Property allowedOverloadTotal As Double
+        Get
+            allowedOverloadTotal = _allowedOverloadTotal
+        End Get
+        Set(value As Double)
+            If value > 0.1 Then
+                _allowedOverloadTotal = value
+            End If
+        End Set
+    End Property
+
+    Private _limitPhases As Integer
+    Public Property limitPhases As Integer
+        Get
+            limitPhases = _limitPhases
+        End Get
+        Set(value As Integer)
+            If value > 0 Then
+                _limitPhases = value
+            End If
+        End Set
+    End Property
+
+    Private _limitMilestones As Integer
+    Public Property limitMilestones As Integer
+        Get
+            limitMilestones = _limitMilestones
+        End Get
+        Set(value As Integer)
+            If value > 0 Then
+                _limitMilestones = value
+            End If
+        End Set
+    End Property
+
+    Private _phases As Collection
+    Public Property phases As Collection
+        Get
+            phases = _phases
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _phases = value
+            End If
+        End Set
+    End Property
+
+    Public ReadOnly Property getPhaseNames() As List(Of String)
+        Get
+            Dim result As New List(Of String)
+            For Each phName As String In _phases
+                result.Add(phName)
+            Next
+            getPhaseNames = result
+        End Get
+    End Property
+
+    Public Sub AddPhase(ByVal myPhase As String)
+        If myPhase <> "" Then
+            If Not _phases.Contains(myPhase) Then
+                _phases.Add(myPhase, myPhase)
+            End If
+        End If
+    End Sub
+
+    Private _milestones As Collection
+    Public Property milestones As Collection
+        Get
+            milestones = _milestones
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _milestones = value
+            End If
+        End Set
+    End Property
+
+    Public ReadOnly Property getMilestoneNames() As List(Of String)
+        Get
+            Dim result As New List(Of String)
+            For Each msName As String In _milestones
+                result.Add(msName)
+            Next
+            getMilestoneNames = result
+        End Get
+    End Property
+    Public Sub AddMilestone(ByVal myMilestone As String)
+        If myMilestone <> "" Then
+            If Not _milestones.Contains(myMilestone) Then
+                _milestones.Add(myMilestone, myMilestone)
+            End If
+        End If
+    End Sub
+
+    Private _considerRoleSkills As Collection
+    Public Property considerRoleSkills As Collection
+        Get
+            considerRoleSkills = _considerRoleSkills
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _considerRoleSkills = value
+            End If
+        End Set
+    End Property
+    Public Sub addRoleSkill(ByVal myRSName As String)
+        If myRSName <> "" Then
+            If RoleDefinitions.containsName(myRSName) Then
+                If Not _considerRoleSkills.Contains(myRSName) Then
+                    _considerRoleSkills.Add(myRSName, myRSName)
+                End If
+            End If
+        End If
+    End Sub
+
+    Private _donotConsiderRoleSkills As Collection
+
+    Public Property donotConsiderRoleSkills As Collection
+        Get
+            donotConsiderRoleSkills = _donotConsiderRoleSkills
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _donotConsiderRoleSkills = value
+            End If
+        End Set
+    End Property
+
+    Public Sub minusRoleSkill(ByVal myRSName As String)
+        If myRSName <> "" Then
+            If RoleDefinitions.containsName(myRSName) Then
+                If Not _donotConsiderRoleSkills.Contains(myRSName) Then
+                    _donotConsiderRoleSkills.Add(myRSName, myRSName)
+                End If
+            End If
+        End If
+    End Sub
+
+    Private _portfolioName As String
+    Public Property portfolioName As String
+        Get
+            portfolioName = _portfolioName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _portfolioName = value
+            End If
+        End Set
+    End Property
+
+    Private _portfolioVariantName As String
+    Public Property portfolioVariantName As String
+        Get
+            portfolioVariantName = _portfolioVariantName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _portfolioVariantName = value
+            End If
+        End Set
+    End Property
+
+    Private _projectVariantName As String
+    Public Property projectVariantName As String
+        Get
+            projectVariantName = _projectVariantName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _projectVariantName = value
+            End If
+        End Set
+    End Property
+
+    Private _defaultLatestEnd As Date
+    Public Property defaultLatestEnd As Date
+        Get
+            defaultLatestEnd = _defaultLatestEnd
+        End Get
+        Set(value As Date)
+            If value > StartofCalendar Then
+                _defaultLatestEnd = value
+            End If
+        End Set
+    End Property
+
+
+    Sub New()
+
+        _allowedOverloadMonth = 1.05
+        _allowedOverloadTotal = 1.0
+        _limitPhases = 1
+        _limitMilestones = 1
+        _milestones = New Collection
+        _phases = New Collection
+        kennung = PTRpa.visboUnknown
+
+        _projectVariantName = "Var1"
+        _portfolioName = ""
+        _portfolioVariantName = "Var1"
+        _defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
+
+    End Sub
+
+End Class

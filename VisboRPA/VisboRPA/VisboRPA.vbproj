@@ -138,6 +138,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsJobParameters.vb" />
     <Compile Include="clsPortfolioDefinitions.vb" />
     <Compile Include="clsRankingParameters.vb" />
     <Compile Include="clsRPASetting.vb" />
