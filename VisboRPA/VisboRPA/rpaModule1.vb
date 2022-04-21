@@ -261,11 +261,11 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboFindProjectStart)
 
-                    allOk = processFindProjectStart(myName, myActivePortfolio)
+                    allOk = processFindProjectStart(myName)
 
                 Case CInt(PTRpa.visboFindProjectStartPM)
 
-                    allOk = processFindProjectStart(myName, myActivePortfolio, PTRpa.visboFindProjectStartPM)
+                    allOk = processFindProjectStart(myName, PTRpa.visboFindProjectStartPM)
 
                 Case CInt(PTRpa.visboMPP)
 
@@ -1336,55 +1336,66 @@ Module rpaModule1
         Try
 
             Dim currentWS As xlns.Worksheet = Nothing
-            If Not IsNothing(CType(currentWB.Worksheets.Item(blattName1), xlns.Worksheet)) Then
+
+            Try
                 currentWS = CType(currentWB.Worksheets.Item(blattName1), xlns.Worksheet)
-            ElseIf Not IsNothing(CType(currentWB.Worksheets.Item(blattName1A), xlns.Worksheet)) Then
+            Catch ex As Exception
+                currentWS = Nothing
+            End Try
+
+            Try
                 currentWS = CType(currentWB.Worksheets.Item(blattName1A), xlns.Worksheet)
-            End If
+            Catch ex As Exception
+                currentWS = Nothing
+            End Try
 
-            Dim paramWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName2), xlns.Worksheet)
+            If Not IsNothing(currentWS) Then
 
-            If IsNothing(currentWS) Or IsNothing(paramWS) Then
-                result = PTRpa.visboUnknown
-            Else
-                Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
-                Try
+                Dim paramWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName2), xlns.Worksheet)
 
-                    verifiedStructure = ersteZeile.Cells(1, 1).value.trim = "Name" And
-                        CStr(ersteZeile.Cells(1, 2).value).Trim = "Variant"
-
-                Catch ex As Exception
-                    verifiedStructure = False
-                End Try
-
-
-                If verifiedStructure Then
-
-                    If currentWS.Name = blattName1 Then
-                        result = PTRpa.visboFindProjectStart
-                    Else
-                        result = PTRpa.visboFindProjectStartPM
-                    End If
-
-
-                    ' Aktiviere das Worksheet 
-                    If CType(currentWB.ActiveSheet, xlns.Worksheet).Name <> currentWS.Name Then
-                        currentWS.Activate()
-                    End If
-
-                    Dim mymessages As New Collection
-                    Dim infomsg As String = "File to find best start dates Phases/Milestones detected: " & currentWB.Name
-                    If currentWS.Name = blattName1 Then
-                        infomsg = "File to find best start dates Roles/Skills detected: " & currentWB.Name
-                    End If
-                    Call logger(ptErrLevel.logInfo, infomsg, mymessages)
-                    'Console.WriteLine(infomsg)
-                Else
+                If IsNothing(currentWS) Or IsNothing(paramWS) Then
                     result = PTRpa.visboUnknown
+                Else
+                    Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+                    Try
+
+                        verifiedStructure = ersteZeile.Cells(1, 1).value.trim = "Name" And
+                            CStr(ersteZeile.Cells(1, 2).value).Trim = "Variant"
+
+                    Catch ex As Exception
+                        verifiedStructure = False
+                    End Try
+
+
+                    If verifiedStructure Then
+
+                        If currentWS.Name = blattName1 Then
+                            result = PTRpa.visboFindProjectStart
+                        Else
+                            result = PTRpa.visboFindProjectStartPM
+                        End If
+
+
+                        ' Aktiviere das Worksheet 
+                        If CType(currentWB.ActiveSheet, xlns.Worksheet).Name <> currentWS.Name Then
+                            currentWS.Activate()
+                        End If
+
+                        Dim mymessages As New Collection
+                        Dim infomsg As String = "File to find best start dates Phases/Milestones detected: " & currentWB.Name
+                        If currentWS.Name = blattName1 Then
+                            infomsg = "File to find best start dates Roles/Skills detected: " & currentWB.Name
+                        End If
+                        Call logger(ptErrLevel.logInfo, infomsg, mymessages)
+                        'Console.WriteLine(infomsg)
+                    Else
+                        result = PTRpa.visboUnknown
+                    End If
+
+
                 End If
-
-
             End If
+
         Catch ex As Exception
             result = PTRpa.visboUnknown
         End Try
@@ -2044,14 +2055,26 @@ Module rpaModule1
 
                             If Not IsNothing(.Cells(5, 2).value) Then
                                 result.portfolioName = CStr(.Cells(5, 2).value).Trim
+                            Else
+                                result.portfolioName = ""
                             End If
 
                             If Not IsNothing(.Cells(6, 2).value) Then
                                 result.portfolioVariantName = CStr(.Cells(6, 2).value).Trim
+                            Else
+                                result.portfolioVariantName = "new projects"
                             End If
 
                             If Not IsNothing(.Cells(7, 2).value) Then
-                                result.defaultLatestEnd = CDate(.Cells(7, 2).value)
+                                result.projectVariantName = CStr(.Cells(7, 2).value).Trim
+                            Else
+                                result.projectVariantName = "fbs"
+                            End If
+
+                            If Not IsNothing(.Cells(8, 2).value) Then
+                                result.defaultLatestEnd = CDate(.Cells(8, 2).value)
+                            Else
+                                result.defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
                             End If
 
                         Case PTRpa.visboFindProjectStartPM
@@ -2066,14 +2089,26 @@ Module rpaModule1
 
                             If Not IsNothing(.Cells(5, 2).value) Then
                                 result.portfolioName = CStr(.Cells(5, 2).value).Trim
+                            Else
+                                result.portfolioName = ""
                             End If
 
                             If Not IsNothing(.Cells(6, 2).value) Then
                                 result.portfolioVariantName = CStr(.Cells(6, 2).value).Trim
+                            Else
+                                result.portfolioVariantName = "new projects"
                             End If
 
                             If Not IsNothing(.Cells(7, 2).value) Then
-                                result.defaultLatestEnd = CDate(.Cells(7, 2).value)
+                                result.projectVariantName = CStr(.Cells(7, 2).value).Trim
+                            Else
+                                result.projectVariantName = "fbs"
+                            End If
+
+                            If Not IsNothing(.Cells(8, 2).value) Then
+                                result.defaultLatestEnd = CDate(.Cells(8, 2).value)
+                            Else
+                                result.defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
                             End If
 
                         Case PTRpa.visboSuggestResourceAllocation
@@ -2839,21 +2874,26 @@ Module rpaModule1
     End Function
 
 
-    Private Function processFindProjectStart(ByVal myName As String, ByVal myActivePortfolio As String, Optional ByVal myKennung As PTRpa = PTRpa.visboFindProjectStart) As Boolean
+    Private Function processFindProjectStart(ByVal myName As String, Optional ByVal myKennung As PTRpa = PTRpa.visboFindProjectStart) As Boolean
 
         Dim allOk As Boolean = False
 
         Try
             Dim jobParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
 
+            If jobParameters.portfolioName = "" Then
+                jobParameters.portfolioName = myActivePortfolio
+            End If
+
             Dim portfolioName As String = jobParameters.portfolioName
+
             Dim aggregationList As New List(Of String)
             Dim skillList As New List(Of String)
 
             If myKennung = PTRpa.visboFindProjectStart Then
-                Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboFindProjectStart.ToString, myName)
+                Call logger(ptErrLevel.logInfo, "start Processing find best Start with regard to roles & skills: ", myName)
             Else
-                Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboFindProjectStartPM.ToString, myName)
+                Call logger(ptErrLevel.logInfo, "start Processing Find best Start with regard to Phases , Milestones: ", myName)
             End If
 
 
@@ -2861,6 +2901,7 @@ Module rpaModule1
             Dim createdProjects As Integer = 0
             'Dim importedProjects As Integer = ImportProjekte.Count
 
+            Dim outPutCollection As New Collection
 
 
 
@@ -2869,19 +2910,31 @@ Module rpaModule1
                 'Dim listOfProjs As SortedList(Of Integer, String) = getRanking()
                 Dim listOfProjs As SortedList(Of Integer, clsRankingParameters) = getRanking(myKennung)
 
-                For Each kvp As KeyValuePair(Of Integer, String) In listOfProjs
+                If listOfProjs.Count > 0 Then
+                    allOk = True
+                Else
+                    Dim msgTxt As String = "no new project names were given "
+                    outPutCollection.Add(msgTxt)
+                    allOk = False
+                End If
+                For Each kvp As KeyValuePair(Of Integer, clsRankingParameters) In listOfProjs
 
-                    Dim pname As String = getPnameFromKey(kvp.Value)
-                    Dim vname As String = getVariantnameFromKey(kvp.Value)
+                    Dim pname As String = getPnameFromKey(kvp.Value.projectName)
+                    Dim vname As String = getVariantnameFromKey(kvp.Value.projectVariantName)
                     Dim today As Date = Date.Now
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(pname, vname, AlleProjekte, today)
 
                     If Not IsNothing(hproj) Then
                         ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                        allOk = allOk And True
+                    Else
+                        Dim msgTxt As String = "could not find " & hproj.getShapeText
+                        outPutCollection.Add(msgTxt)
+                        allOk = False
                     End If
 
                 Next
-                allOk = True
+
             Catch ex As Exception
                 allOk = False
             End Try
@@ -2890,31 +2943,29 @@ Module rpaModule1
             If allOk Then
                 Call logger(ptErrLevel.logInfo, "Project List imported: " & myName, ImportProjekte.Count & " read; ")
             Else
-                Call logger(ptErrLevel.logError, "failure in Processing: " & myName, PTRpa.visboFindProjectStart.ToString)
+                Call logger(ptErrLevel.logError, "failure in reading new projects: " & myName, outPutCollection)
             End If
 
             If allOk Then
-
-
 
                 Dim noActivePortfolio As Boolean = True
                 Dim dbPortfolioNames As New SortedList(Of String, String)
 
                 ' if Portfolio with active Projects is given and exists:  
                 ' then we probably do have a brownfield
-                If myActivePortfolio <> "" Then
+                If portfolioName <> "" Then
 
                     Dim errMsg As New clsErrorCodeMsg
                     dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
-                    noActivePortfolio = Not dbPortfolioNames.ContainsKey(myActivePortfolio)
+                    noActivePortfolio = Not dbPortfolioNames.ContainsKey(portfolioName)
                 End If
 
                 If noActivePortfolio Then
-                    Call logger(ptErrLevel.logError, "no active Portfolio: " & myActivePortfolio, PTRpa.visboFindProjectStart.ToString)
+                    Call logger(ptErrLevel.logError, "no active Portfolio: " & portfolioName, myKennung.ToString)
                 Else
                     ' check whether and how projects are fitting to the already existing Portfolio 
-                    allOk = processProjectListWithActivePortfolio(jobParameters,
-                                                                     myActivePortfolio, dbPortfolioNames(myActivePortfolio), portfolioName, overloadAllowedinMonths, overloadAllowedTotal)
+                    allOk = processProjectListWithActivePortfolio(jobParameters, myKennung)
+
                 End If
 
             Else
@@ -2924,10 +2975,10 @@ Module rpaModule1
 
             ' now empty the complete session  
             Call emptyRPASession()
-            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProjectList.ToString, myName)
+            Call logger(ptErrLevel.logInfo, "end Processing: " & myKennung.ToString, myName)
 
         Catch ex As Exception
-            Call logger(ptErrLevel.logError, "errors occurred when processing: " & PTRpa.visboProjectList.ToString, myName & ": " & ex.Message)
+            Call logger(ptErrLevel.logError, "errors occurred when processing: " & myKennung.ToString, myName & ": " & ex.Message)
         End Try
 
         processFindProjectStart = allOk
@@ -3637,47 +3688,54 @@ Module rpaModule1
         Dim myActivePortfolio As String = jobParameters.portfolioName
         Dim portfolioVariantName As String = jobParameters.portfolioVariantName
 
-        ' build aggregation List
-        ' now get the aggregation Roles
-        Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles()
-        Dim teamID As Integer = -1
+
         Dim aggregationList As New List(Of String)
-
-        ' currently only Exclude of Roles & Skills is supported ..
-        ' checkout aggregation Roles
-        For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
-            Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
-            If Not aggregationList.Contains(tmpStrID) Then
-                If jobParameters.donotConsiderRoleSkills.Count = 0 Then
-                    aggregationList.Add(tmpStrID)
-                Else
-                    If Not jobParameters.donotConsiderRoleSkills.Contains(ar.Value) Then
-                        aggregationList.Add(tmpStrID)
-                    End If
-                End If
-            End If
-        Next
-
-        ' build Skill List 
-        Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
         Dim skillList As New List(Of String)
 
-        For Each si As String In skillIDs
-            If Not skillList.Contains(si) Then
-                skillList.Add(si)
-            End If
+        If myKennung = PTRpa.visboFindProjectStart Then
+            ' build aggregation List
+            ' now get the aggregation Roles
+            Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles()
+            Dim teamID As Integer = -1
 
-            ' new  
-            If Not skillList.Contains(si) Then
-                If jobParameters.donotConsiderRoleSkills.Count = 0 Then
-                    skillList.Add(si)
-                Else
-                    If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
-                        skillList.Add(si)
+
+            ' currently only Exclude of Roles & Skills is supported ..
+            ' checkout aggregation Roles
+            For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
+                Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
+                If Not aggregationList.Contains(tmpStrID) Then
+                    If jobParameters.donotConsiderRoleSkills.Count = 0 Then
+                        aggregationList.Add(tmpStrID)
+                    Else
+                        If Not jobParameters.donotConsiderRoleSkills.Contains(ar.Value) Then
+                            aggregationList.Add(tmpStrID)
+                        End If
                     End If
                 End If
-            End If
-        Next
+            Next
+
+            ' build Skill List 
+            Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
+
+
+            For Each si As String In skillIDs
+                If Not skillList.Contains(si) Then
+                    skillList.Add(si)
+                End If
+
+                ' new  
+                If Not skillList.Contains(si) Then
+                    If jobParameters.donotConsiderRoleSkills.Count = 0 Then
+                        skillList.Add(si)
+                    Else
+                        If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
+                            skillList.Add(si)
+                        End If
+                    End If
+                End If
+            Next
+        End If
+
 
 
         Try
@@ -3734,7 +3792,8 @@ Module rpaModule1
             Dim outputCollection As New Collection
 
             For Each rankingPair As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
-                Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value.projectName)
+                Dim key As String = calcProjektKey(rankingPair.Value.projectName, rankingPair.Value.projectVariantName)
+                Dim hproj As clsProjekt = ImportProjekte.getProject(key)
                 If Not IsNothing(hproj) Then
 
                     If first Then
@@ -3815,21 +3874,21 @@ Module rpaModule1
                 Dim stopValue As Integer = showRangeRight
 
                 Dim overutilizationFound As Boolean = False
-
+                Dim referenceMSValues As Double() = Nothing
+                Dim referencePHValues As Double() = Nothing
 
                 If myKennung = PTRpa.visboFindProjectStart Then
                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
+
                 ElseIf myKennung = PTRpa.visboFindProjectStartPM Then
 
-                    ' here now get the reference about Frequency of Milestones and phases 
-                    'overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
-                    '                                                          Nothing,
-                    '                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
-                    '                                                          Nothing)
+                    referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
+                    referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
+
                 End If
 
 
-                If overutilizationFound Then
+                If overutilizationFound And myKennung = PTRpa.visboFindProjectStart Then
                     msgTxt = "there are already resource bottlenecks in the starting portfolio " & myActivePortfolio
                     Call logger(ptErrLevel.logError, msgTxt, " please solve this first before considering new projects ... calculation stopped ..")
                     result = False
@@ -3844,6 +3903,7 @@ Module rpaModule1
                     ' It then represents the sequence: Row1 is the most important project 
                     For Each rankingPair As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
 
+                        Dim key As String = calcProjektKey(rankingPair.Value.projectName, rankingPair.Value.projectVariantName)
                         Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value.projectName)
 
                         If Not IsNothing(hproj) Then
@@ -3858,7 +3918,6 @@ Module rpaModule1
 
                             Dim newStartDate As Date
                             Dim newEndDate As Date
-                            Dim key As String = calcProjektKey(hproj)
 
                             If getColumnOfDate(hproj.startDate) < showRangeLeft Then
 
@@ -3890,21 +3949,39 @@ Module rpaModule1
                             AlleProjekte.Add(hproj)
                             ShowProjekte.AddAnyway(hproj)
 
-                            ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration 
-                            skillList.Clear()
-                            Dim skillIDs As Collection = hproj.getSkillNameIds
+                            ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration
+                            If myKennung = PTRpa.visboFindProjectStart Then
 
-                            For Each si As String In skillIDs
-                                If Not skillList.Contains(si) Then
-                                    skillList.Add(si)
-                                End If
-                            Next
+                                skillList.Clear()
+                                Dim skillIDs As Collection = hproj.getSkillNameIds
+
+                                For Each si As String In skillIDs
+                                    If Not skillList.Contains(si) Then
+                                        If jobParameters.donotConsiderRoleSkills.Count = 0 Then
+                                            skillList.Add(si)
+                                        Else
+                                            If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
+                                                skillList.Add(si)
+                                            End If
+                                        End If
+                                    End If
+                                Next
+                            End If
+
 
                             ' now define showrangeLeft and showrangeRight from hproj 
                             showRangeLeft = getColumnOfDate(hproj.startDate)
                             showRangeRight = getColumnOfDate(hproj.endeDate)
 
-                            overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                            If myKennung = PTRpa.visboFindProjectStart Then
+                                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
+                            Else
+                                overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
+                                                                                          referenceMSValues,
+                                                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
+                                                                                          referencePHValues)
+                            End If
+
                             Dim sumIterations As Integer = 0
                             Dim endIterations As Integer = 0
                             Dim durationIterations As Integer = 0
@@ -3915,11 +3992,11 @@ Module rpaModule1
                                 If hproj.variantName <> "arb" Then
                                     hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
 
-                                    key = calcProjektKey(hproj)
                                     AlleProjekte.Add(hproj)
                                 End If
 
                                 deltaInDays = 7
+                                ' now modify this one ...
                                 Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
                                 Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
 
@@ -3956,7 +4033,15 @@ Module rpaModule1
                                                 Dim myMessages As New Collection
                                                 Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
-                                                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                                                If myKennung = PTRpa.visboFindProjectStart Then
+                                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
+                                                Else
+                                                    overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
+                                                                                          referenceMSValues,
+                                                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
+                                                                                          referencePHValues)
+                                                End If
+
 
                                                 If overutilizationFound Then
                                                     durationIterations = durationIterations + 1
@@ -3994,7 +4079,15 @@ Module rpaModule1
                                                 Dim myMessages As New Collection
                                                 Call logger(ptErrLevel.logInfo, infomsg, myMessages)
 
-                                                overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedInMonths, overloadAllowedTotal)
+                                                If myKennung = PTRpa.visboFindProjectStart Then
+                                                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
+                                                Else
+                                                    overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
+                                                                                          referenceMSValues,
+                                                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
+                                                                                          referencePHValues)
+                                                End If
+
 
                                                 If overutilizationFound Then
                                                     endIterations = endIterations + 1
@@ -4049,13 +4142,22 @@ Module rpaModule1
                                 'Console.WriteLine(infomsg)
                             End If
                         Else
-                            Call logger(ptErrLevel.logInfo, "processProjectListWithActivePortfolio", "project '" & rankingPair.Value & "' does not exist so far")
+                            Dim infomsg As String = "processProjectListWithActivePortfolio project " & rankingPair.Value.projectName & " does not exist so far"
+                            Dim myMessages As New Collection
+                            Call logger(ptErrLevel.logInfo, infomsg, myMessages)
                         End If
+
+                        If myKennung = PTRpa.visboFindProjectStartPM Then
+                            ' now define the reference Values for Phases and Milestones 
+                            referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
+                            referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
+                        End If
+
 
                     Next
 
                     toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
-                                                                                                cName:=myActivePortfolio, vName:=listName & "-arb")
+                                                                                                cName:=myActivePortfolio, vName:=jobParameters.portfolioVariantName & "-arb")
 
                     outputCollection.Clear()
                     Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)

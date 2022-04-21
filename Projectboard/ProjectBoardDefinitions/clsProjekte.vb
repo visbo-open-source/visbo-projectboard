@@ -2075,22 +2075,25 @@ Public Class clsProjekte
         Else
             ReDim milestoneArray(showRangeRight - showRangeLeft)
 
-            For Each msName As String In msNames
-                ' check whether or not this is causing overloads, meaning if there are in any month more elements than allowed(msLimit)
-                ' it is only checked whether there are any overloads caused by the new calculation. If referece value is over the limit , bust has been 
-                ' over the limit already in referenceValues then it is still allowed
-                Dim breadCrumb As String = ""
-                Dim typ As Integer = -1
-                Dim pvName As String = ""
-                Dim tmpMilestoneArray As Double(,) = getCountMilestonesInMonth(msName, breadCrumb, -1, pvName)
+            If Not IsNothing(msNames) Then
 
-                For ix As Integer = 0 To showRangeRight - showRangeLeft
-                    For mx As Integer = 0 To 3
-                        milestoneArray(ix) = milestoneArray(ix) + tmpMilestoneArray(mx, ix)
+                For Each msName As String In msNames
+                    ' check whether or not this is causing overloads, meaning if there are in any month more elements than allowed(msLimit)
+                    ' it is only checked whether there are any overloads caused by the new calculation. If referece value is over the limit , bust has been 
+                    ' over the limit already in referenceValues then it is still allowed
+                    Dim breadCrumb As String = ""
+                    Dim typ As Integer = -1
+                    Dim pvName As String = ""
+                    Dim tmpMilestoneArray As Double(,) = getCountMilestonesInMonth(msName, breadCrumb, -1, pvName)
+
+                    For ix As Integer = 0 To showRangeRight - showRangeLeft
+                        For mx As Integer = 0 To 3
+                            milestoneArray(ix) = milestoneArray(ix) + tmpMilestoneArray(mx, ix)
+                        Next
                     Next
                 Next
-            Next
 
+            End If
         End If
 
         getMilestonesFrequency = milestoneArray
@@ -2106,19 +2109,22 @@ Public Class clsProjekte
         Else
             ReDim phaseArray(showRangeRight - showRangeLeft)
 
-            For Each phName As String In phNames
-                Dim breadCrumb As String = ""
-                Dim typ As Integer = -1
-                Dim pvName As String = ""
+            If Not IsNothing(phNames) Then
 
-                Dim tmpPhaseArray As Double() = getCountPhasesInMonth(phName, breadCrumb, typ, pvName)
+                For Each phName As String In phNames
+                    Dim breadCrumb As String = ""
+                    Dim typ As Integer = -1
+                    Dim pvName As String = ""
 
-                For ix As Integer = 0 To showRangeRight - showRangeLeft
-                    phaseArray(ix) = phaseArray(ix) + tmpPhaseArray(ix)
+                    Dim tmpPhaseArray As Double() = getCountPhasesInMonth(phName, breadCrumb, typ, pvName)
+
+                    For ix As Integer = 0 To showRangeRight - showRangeLeft
+                        phaseArray(ix) = phaseArray(ix) + tmpPhaseArray(ix)
+                    Next
+
                 Next
 
-            Next
-
+            End If
         End If
 
         getPhaseFrequency = phaseArray
@@ -2155,34 +2161,47 @@ Public Class clsProjekte
                 ReDim milestoneArray(showRangeRight - showRangeLeft)
                 ReDim phaseArray(showRangeRight - showRangeLeft)
 
-                milestoneArray = getMilestonesFrequency(msNames)
+
+                If Not IsNothing(msNames) And Not IsNothing(referenceMsValues) Then
+                    If msNames.Count > 0 Then
+
+                        milestoneArray = getMilestonesFrequency(msNames)
+
+                        ' now check whether or not there are any overloads 
+                        For ix As Integer = 0 To showRangeRight - showRangeLeft
+                            If milestoneArray(ix) > msLimit Then
+                                ' only when value is greater than before ...
+                                overloadFound = (milestoneArray(ix) > referenceMsValues(ix))
+                            End If
+                            If overloadFound Then
+                                Exit For
+                            End If
+                        Next
+
+                    End If
+                End If
 
 
-                ' now check whether or not there are any overloads 
-                For ix As Integer = 0 To showRangeRight - showRangeLeft
-                    If milestoneArray(ix) > msLimit Then
-                        ' only when value is greater than before ...
-                        overloadFound = (milestoneArray(ix) > referenceMsValues(ix))
-                    End If
-                    If overloadFound Then
-                        Exit For
-                    End If
-                Next
 
                 If Not overloadFound Then
 
-                    phaseArray = getPhaseFrequency(phNames)
+                    If Not IsNothing(phNames) And Not IsNothing(referencePhValues) Then
+                        If phNames.Count > 0 Then
+                            phaseArray = getPhaseFrequency(phNames)
 
-                    ' now check whether or not there are any overloads 
-                    For ix As Integer = 0 To showRangeRight - showRangeLeft
-                        If phaseArray(ix) > phLimit Then
-                            ' only when value is greater than before ...
-                            overloadFound = (phaseArray(ix) > referencePhValues(ix))
+                            ' now check whether or not there are any overloads 
+                            For ix As Integer = 0 To showRangeRight - showRangeLeft
+                                If phaseArray(ix) > phLimit Then
+                                    ' only when value is greater than before ...
+                                    overloadFound = (phaseArray(ix) > referencePhValues(ix))
+                                End If
+                                If overloadFound Then
+                                    Exit For
+                                End If
+                            Next
+
                         End If
-                        If overloadFound Then
-                            Exit For
-                        End If
-                    Next
+                    End If
 
                 End If
 
