@@ -1896,9 +1896,9 @@ Module rpaModule1
 
         ' project brief do not need any template
 
-        'If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
-        lastReadingOrganisation = readOrganisations()
-        'End If
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
 
 
         'read Project Brief and put it into ImportProjekte
@@ -2069,7 +2069,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -2983,7 +2983,7 @@ Module rpaModule1
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboJira.ToString, myName)
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -3074,7 +3074,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -3212,10 +3212,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
-            lastReadingOrganisation = readOrganisations()
-        End If
-        'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
+        lastReadingOrganisation = readOrganisations()
         lastReadingCustomization = readCustomizations()
         If lastReadingCustomization <= Date.MinValue Then
             Call logger(ptErrLevel.logError, "processVisboActualData1", "the import of actual data requires the existence of a customization setting")
@@ -3316,7 +3313,7 @@ Module rpaModule1
         Dim result0 As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
         'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
@@ -3513,14 +3510,12 @@ Module rpaModule1
 
                     ' jetzt kommt die zweite Bearbeitungs-Welle
 
-
                     ' jetzt wird hier überprüft 
                     ' gibt es Projekte im Referenz-Portfolio, die keine Ist-Daten erhalten haben - dann sollte jetzt ggf. hier ein Nuller Eintrag im array für diese Projekte erfolgen 
-                    ' 
-                    ' 
 
                     ' was hier noch überprüft werden sollte: 
-                    ' welche internen Rollen, die im besagten Zeitraum relevant,  haben keine Ist-Daten ? 
+                    ' welche internen Rollen, die im besagten Zeitraum relevant,  haben keine Ist-Daten ?
+
                     Dim startFiscalYearTelair As Date
                     Dim endFiscalYearTelair As Date
 
@@ -3567,13 +3562,12 @@ Module rpaModule1
                     If missingTimeSheets.Count > 0 Then
 
                         ' es fehlen timeSheets von manchen Mitarbeitern
-                        allOk = allOk And False
                         For Each roleName As String In missingTimeSheets
                             ReDim logArray(5)
                             ' ins Protokoll eintragen 
                             logArray(0) = " Mitarbeiter ohne TimeSheet: "
                             If awinSettings.englishLanguage Then
-                                logArray(0) = "Employee wothout TimeSheet: "
+                                logArray(0) = "Employee without TimeSheet: "
                             End If
                             logArray(1) = ""
                             logArray(2) = roleName
@@ -3875,7 +3869,7 @@ Module rpaModule1
                     ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                     Try
                         Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=False, fileFrom3rdParty:=False,
-                                             getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True)
+                                             getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True, calledFromRPA:=True)
 
 
                         ' ImportDatei ins archive-Directory schieben
@@ -3913,6 +3907,8 @@ Module rpaModule1
                     End Try
 
                 Else
+
+
                     For Each errImp As String In listOfErrorImportFilesAllg
                         Dim errImpName As String = My.Computer.FileSystem.GetName(errImp)
                         Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, errImpName)
@@ -3930,7 +3926,7 @@ Module rpaModule1
                                                                                     & "Look for more details in the Failure-Folder", errMsgCode)
                     ' Fehler erfolgt
                     ' Dateien müssen in failure-Directory verschoben werden
-                    Call MsgBox("TODO")
+                    'Call MsgBox("TODO")
 
                 End If
 
@@ -3971,7 +3967,7 @@ Module rpaModule1
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
 
         'check the pre-conditions
-        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 24 Then
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
 
@@ -4026,7 +4022,7 @@ Module rpaModule1
                     Try
                         ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
                         ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
 
                     Catch ex As Exception
                         If awinSettings.englishLanguage Then
@@ -4199,7 +4195,7 @@ Module rpaModule1
             ' TODO: löschen des Timesheet-compl
             If result Then
                 Dim newDestination As String = My.Computer.FileSystem.CombinePath(successFolder, myName)
-                My.Computer.FileSystem.MoveFile(myName, newDestination, True)
+                My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
                 Call logger(ptErrLevel.logInfo, "success: ", myName)
 
                 ' wieder in das normale logfile schreiben
@@ -4210,81 +4206,141 @@ Module rpaModule1
                 Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
                 If My.Computer.FileSystem.FileExists(fullFileName) Then
                     My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                    Call logger(ptErrLevel.logError, "failed: ", fullFileName)
-                    Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
-                    Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
-                    My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
+                    'Call logger(ptErrLevel.logError, "failed: ", fullFileName)
+                    'Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
+                    'Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
+                    'My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
 
                     ' wieder in das normale logfile schreiben
-                    logfileNamePath = createLogfileName(rpaFolder)
-                    errMsgCode = New clsErrorCodeMsg
-                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                & myName & ": with errors ..." & vbCrLf _
-                                                                                & "Look for more details in the Failure-Folder", errMsgCode)
+                    'logfileNamePath = createLogfileName(rpaFolder)
+                    'errMsgCode = New clsErrorCodeMsg
+                    'result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                    '                                                            & myName & ": with errors ..." & vbCrLf _
+                    '                                                            & "Look for more details in the Failure-Folder", errMsgCode)
                 End If
             End If
-        End If
+        Else
+            If My.Computer.FileSystem.FileExists(fullFileName) And Not fullFileName.Contains("~$") Then
 
+                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was created at: " & Date.Now().ToLongDateString)
 
-        If My.Computer.FileSystem.FileExists(fullFileName) And Not fullFileName.Contains("~$") Then
+                'FileExtension ansehen
+                Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
+                Select Case fileExt
+                    Case ".xlsx"
 
-            Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was created at: " & Date.Now().ToLongDateString)
+                        myName = My.Computer.FileSystem.GetName(fullFileName)
 
-            'FileExtension ansehen
-            Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
-            Select Case fileExt
-                Case ".xlsx"
+                        ' Bestimme den Import-Typ der zu importierenden Daten
+                        rpaCategory = bestimmeRPACategory(fullFileName)
 
-                    myName = My.Computer.FileSystem.GetName(fullFileName)
+                        If rpaCategory = PTRpa.visboUnknown Then
+                            ' move file to unknown Folder ... 
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                        Else
+                            result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                            If result Then
+                                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                            End If
+                        End If
+                    Case ".mpp"
 
-                    ' Bestimme den Import-Typ der zu importierenden Daten
-                    rpaCategory = bestimmeRPACategory(fullFileName)
+                        myName = My.Computer.FileSystem.GetName(fullFileName)
 
-                    If rpaCategory = PTRpa.visboUnknown Then
-                        ' move file to unknown Folder ... 
-                        Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-                        My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                        Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
-                    Else
+                        ' Import Typ ist Microsoft Project File
+                        rpaCategory = PTRpa.visboMPP
+
+                        ' Import wird durchgeführt
                         result = importOneProject(fullFileName, rpaCategory, Date.Now())
                         If result Then
                             Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
                         End If
-                    End If
-                Case ".mpp"
 
-                    myName = My.Computer.FileSystem.GetName(fullFileName)
+                    Case Else
+                        myName = My.Computer.FileSystem.GetName(fullFileName)
+                        rpaCategory = PTRpa.visboUnknown
+                        ' move file to unknown Folder ... 
+                        Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
 
-                    ' Import Typ ist Microsoft Project File
-                    rpaCategory = PTRpa.visboMPP
+                        Try
+                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                        Catch ex As Exception
+                            Call MsgBox("try catch watch.created" & ex.Message)
+                        End Try
 
-                    ' Import wird durchgeführt
-                    result = importOneProject(fullFileName, rpaCategory, Date.Now())
-                    If result Then
-                        Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
-                    End If
+                        Call logger(ptErrLevel.logInfo, "unknown file / category: unknown", myName)
 
-                Case Else
-                    myName = My.Computer.FileSystem.GetName(fullFileName)
-                    rpaCategory = PTRpa.visboUnknown
-                    ' move file to unknown Folder ... 
-                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-
-                    Try
-                        My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                    Catch ex As Exception
-                        Call MsgBox("try catch watch.created" & ex.Message)
-                    End Try
-
-                    Call logger(ptErrLevel.logInfo, "unknown file / category: unknown", myName)
-
-                    errMsgCode = New clsErrorCodeMsg
-                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-                                                                                & myName & vbCrLf & " unknown file / category ...", errMsgCode)
-            End Select
-        Else
-            Dim a As String = ""
+                        errMsgCode = New clsErrorCodeMsg
+                        result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+                                                                                    & myName & vbCrLf & " unknown file / category ...", errMsgCode)
+                End Select
+            Else
+                Dim a As String = ""
+            End If
         End If
+
+
+        'If My.Computer.FileSystem.FileExists(fullFileName) And Not fullFileName.Contains("~$") Then
+
+        '    Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was created at: " & Date.Now().ToLongDateString)
+
+        '    'FileExtension ansehen
+        '    Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
+        '    Select Case fileExt
+        '        Case ".xlsx"
+
+        '            myName = My.Computer.FileSystem.GetName(fullFileName)
+
+        '            ' Bestimme den Import-Typ der zu importierenden Daten
+        '            rpaCategory = bestimmeRPACategory(fullFileName)
+
+        '            If rpaCategory = PTRpa.visboUnknown Then
+        '                ' move file to unknown Folder ... 
+        '                Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+        '                My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+        '                Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+        '            Else
+        '                result = importOneProject(fullFileName, rpaCategory, Date.Now())
+        '                If result Then
+        '                    Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+        '                End If
+        '            End If
+        '        Case ".mpp"
+
+        '            myName = My.Computer.FileSystem.GetName(fullFileName)
+
+        '            ' Import Typ ist Microsoft Project File
+        '            rpaCategory = PTRpa.visboMPP
+
+        '            ' Import wird durchgeführt
+        '            result = importOneProject(fullFileName, rpaCategory, Date.Now())
+        '            If result Then
+        '                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+        '            End If
+
+        '        Case Else
+        '            myName = My.Computer.FileSystem.GetName(fullFileName)
+        '            rpaCategory = PTRpa.visboUnknown
+        '            ' move file to unknown Folder ... 
+        '            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+
+        '            Try
+        '                My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+        '            Catch ex As Exception
+        '                Call MsgBox("try catch watch.created" & ex.Message)
+        '            End Try
+
+        '            Call logger(ptErrLevel.logInfo, "unknown file / category: unknown", myName)
+
+        '            errMsgCode = New clsErrorCodeMsg
+        '            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
+        '                                                                        & myName & vbCrLf & " unknown file / category ...", errMsgCode)
+        '    End Select
+        'Else
+        '    Dim a As String = ""
+        'End If
 
         processNewImportFile = result
 
