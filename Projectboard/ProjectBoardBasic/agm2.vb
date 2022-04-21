@@ -21741,18 +21741,17 @@ Public Module agm2
 
                     'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
 
-                    nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, True, True, True)
-                    If nextOrga.count > 0 Then
-                        validOrganisations.addOrga(nextOrga)
-                        tsOfnextOrga = nextOrga.validFrom
-
-                    End If
+                    'nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, True, True, True)
+                    'If nextOrga.count > 0 Then
+                    '    validOrganisations.addOrga(nextOrga)
+                    '    tsOfnextOrga = nextOrga.validFrom
+                    'End If
 
                     If currentOrga.count > 0 Then
 
                         If currentOrga.count > 0 Then
                             validOrganisations.addOrga(currentOrga)
-                            tsOfcurrentOrga = currentOrga.validFrom
+                            tsOfUsedOrga = currentOrga.validFrom
                         End If
 
                         CostDefinitions = currentOrga.allCosts

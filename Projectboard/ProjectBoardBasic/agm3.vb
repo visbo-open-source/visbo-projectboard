@@ -1612,14 +1612,14 @@ Public Module agm3
                                             result = False
                                         Else
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to given Name: " & vbCrLf & "Spreadsheet '" & currentWS.Name & "' in File '" & tmpDatei & "' contains: " &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zum angegebenen Namen: " & vbCrLf & "Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' enthält: " &
                                                 personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
 
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
@@ -1627,14 +1627,14 @@ Public Module agm3
                                         If hrole.name <> personalName Then
                                             ' Warning: name and personal Number do not match ...
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personell number does not match to given Name: " & vbCrLf & "Spreadsheet '" & currentWS.Name & "' in File '" & tmpDatei & "' contains: " &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             Else
-                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                outputline = "Warning: Personal Nummer passt nicht zum angegebenen Namen: " & vbCrLf & "Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' enthält: " &
                                                 personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
                                             End If
 
-                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
                                     End If
                                     'Dim identical As Boolean = (personalName = hrole.name)
@@ -1736,7 +1736,12 @@ Public Module agm3
 
                                             Dim pvkey As String
                                             If Not IsNothing(projektName) Then
-                                                pvkey = calcProjektKey(projektName, "")
+                                                Try
+                                                    pvkey = calcProjektKey(projektName, "")
+                                                Catch ex As Exception
+                                                    pvkey = ""
+                                                End Try
+
                                             Else
                                                 pvkey = ""
                                             End If
@@ -2509,6 +2514,7 @@ Public Module agm3
             Dim absenceDay As Date
             Dim absenceType As String = ""
             Dim input_ok As Boolean = True
+            Dim reading_ok As Boolean = True
             Dim regexpression As Regex
 
             Dim outPutCollection As New Collection
@@ -2558,32 +2564,52 @@ Public Module agm3
                                 For ix As Integer = firstRow To lastRow
 
                                     input_ok = True                   ' Initialise
-                                    rolename = CType(currentWS.Cells(ix, roleCol).value, String).Trim
-                                    If IsNothing(rolename) Then
-                                        input_ok = False
-                                    End If
 
-                                    absenceDay = CDate(currentWS.Cells(ix, dateCol).value)
-                                    If IsNothing(absenceDay) Then
+                                    Try
+                                        rolename = CType(currentWS.Cells(ix, roleCol).value, String)
+                                        'ur: 08.04.2022:rolename = CType(currentWS.Cells(ix, roleCol).value, String).Trim
+                                        If IsNothing(rolename) Then
+                                            input_ok = False
+                                        Else
+                                            rolename = rolename.Trim
+                                        End If
+                                    Catch ex As Exception
                                         input_ok = False
-                                    End If
+                                    End Try
 
-                                    absenceType = CStr(currentWS.Cells(ix, absenceCol).value).Trim
-                                    If IsNothing(absenceType) Then
+                                    Try
+                                        absenceDay = CDate(currentWS.Cells(ix, dateCol).value)
+                                        If IsNothing(absenceDay) Then
+                                            input_ok = False
+                                        End If
+                                    Catch ex As Exception
+                                        absenceDay = Nothing
                                         input_ok = False
-                                    Else
-                                        If kapaConfig("absence type").regex = "RegEx" Then
-                                            'regexpression = New Regex("[0-9]{4}")
-                                            regexpression = New Regex(kapaConfig("absence type").content)
-                                            Dim match As Match = regexpression.Match(absenceType)
-                                            If match.Success Then
-                                                absenceType = match.Value
-                                            Else
-                                                absenceType = ""
-                                                input_ok = False
+                                    End Try
+
+                                    Try
+                                        absenceType = CStr(currentWS.Cells(ix, absenceCol).value)
+                                        'ur: 08.04.2022:absenceType = CStr(currentWS.Cells(ix, absenceCol).value).Trim
+                                        If IsNothing(absenceType) Then
+                                            input_ok = False
+                                        Else
+                                            absenceType = absenceType.Trim
+                                            If kapaConfig("absence type").regex = "RegEx" Then
+                                                'regexpression = New Regex("[0-9]{4}")
+                                                regexpression = New Regex(kapaConfig("absence type").content)
+                                                Dim match As Match = regexpression.Match(absenceType)
+                                                If match.Success Then
+                                                    absenceType = match.Value
+                                                Else
+                                                    absenceType = Nothing
+                                                    input_ok = False
+                                                End If
                                             End If
                                         End If
-                                    End If
+                                    Catch ex As Exception
+                                        input_ok = False
+                                    End Try
+
 
                                     If input_ok Then        ' alle drei Angabe dieser Zeile sind soweit passend
 
@@ -2624,14 +2650,15 @@ Public Module agm3
                                         addOnHolidays.Add(rolename, roleCapa)
 
                                     Else
-                                        If Not IsNothing(absenceType) And Not absenceType = "" Then
+                                        If IsNothing(rolename) And (absenceDay <= Date.MinValue) And IsNothing(absenceType) Then
                                             If awinSettings.englishLanguage Then
-                                                msgtxt = "Error in Line: " & ix & " not matching input " & vbLf & kapaFileName
+                                                msgtxt = "Error in Line: " & ix & " input does not match the configuration" & vbLf & kapaFileName
                                             Else
-                                                msgtxt = "Fehler in Zeile: " & ix & " Input passt nicht zusammen " & vbLf & kapaFileName
+                                                msgtxt = "Fehler in Zeile: " & ix & " Input passt nicht mit der Konfiguration zusammen " & vbLf & kapaFileName
                                             End If
                                             'oPCollection.Add(msgtxt)
                                             Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+                                            reading_ok = False
                                         Else
                                             ' Zeile überlesen ohne Fehlermeldung
                                             Dim a As Integer = 0
@@ -2645,52 +2672,62 @@ Public Module agm3
                             'End If
                         Next
                     Catch ex As Exception
-
+                        reading_ok = False
                     End Try
 
                 Catch ex As Exception
-
+                    reading_ok = False
                 End Try
 
                 ' Übertragen der Urlaubstage in die Kapazität der Organisations-mitglieder
+                If reading_ok Then
 
-                For Each kvp As KeyValuePair(Of String, clsDefaultCalendar) In addOnHolidays
-                    rolename = kvp.Key
-                    roleCapa = kvp.Value
+                    For Each kvp As KeyValuePair(Of String, clsDefaultCalendar) In addOnHolidays
+                        rolename = kvp.Key
+                        roleCapa = kvp.Value
 
-                    ' bereits in orga vorhandene Kapa holen
-                    hrole = RoleDefinitions.getRoledef(rolename)
-                    If Not IsNothing(hrole) Then
-                        For Each kvpCapa As KeyValuePair(Of Integer, clsBusinessDays) In roleCapa.defCal
-                            ' default BusinessDays im Monat kvpCapa.key
-                            Dim colofDate As Integer = kvpCapa.Key
-                            ' Anzahl Arbeitstage, errechnet gemäß DefaultKalender
-                            Dim defaultDays As Integer = defaultCal.defCal(kvpCapa.Key).noOfBusinessDays
-                            ' nur die Tage, die kein Feiertag und kein WE sind
-                            Dim Urlaubsdays As Integer = kvpCapa.Value.noOfNonBusinessDays
-                            Dim anzArbTage As Integer = defaultDays - Urlaubsdays
-                            ' capa = Kapazität, die für Projektarbeit bleibt
-                            Dim capa As Double = anzArbTage * hrole.defaultDayCapa / 8
-                            'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
-                            If colofDate >= getColumnOfDate(hrole.entryDate) And
-                                colofDate < getColumnOfDate(hrole.exitDate) Then
+                        ' bereits in orga vorhandene Kapa holen
+                        hrole = RoleDefinitions.getRoledef(rolename)
+                        If Not IsNothing(hrole) Then
+                            For Each kvpCapa As KeyValuePair(Of Integer, clsBusinessDays) In roleCapa.defCal
+                                ' default BusinessDays im Monat kvpCapa.key
+                                Dim colofDate As Integer = kvpCapa.Key
+                                ' Anzahl Arbeitstage, errechnet gemäß DefaultKalender
+                                Dim defaultDays As Integer = defaultCal.defCal(kvpCapa.Key).noOfBusinessDays
+                                ' nur die Tage, die kein Feiertag und kein WE sind
+                                Dim Urlaubsdays As Integer = kvpCapa.Value.noOfNonBusinessDays
+                                Dim anzArbTage As Integer = defaultDays - Urlaubsdays
+                                ' capa = Kapazität, die für Projektarbeit bleibt
+                                Dim capa As Double = anzArbTage * hrole.defaultDayCapa / 8
+                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                If colofDate >= getColumnOfDate(hrole.entryDate) And
+                                    colofDate < getColumnOfDate(hrole.exitDate) Then
 
-                                hrole.kapazitaet(colofDate) = capa
-                            Else
-                                hrole.kapazitaet(colofDate) = 0
-                            End If
-                        Next
-                    Else
-                        If awinSettings.englishLanguage Then
-                            msgtxt = "Warning: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
+                                    hrole.kapazitaet(colofDate) = capa
+                                Else
+                                    hrole.kapazitaet(colofDate) = 0
+                                End If
+                            Next
                         Else
-                            msgtxt = "Warning: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Warning: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
+                            Else
+                                msgtxt = "Warning: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
+                            End If
+                            'oPCollection.Add(msgtxt)
+                            Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                         End If
-                        'oPCollection.Add(msgtxt)
-                        Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
-                    End If
 
-                Next
+                    Next
+                Else
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Error:  Input does not match the configuration" & vbLf & kapaFileName
+                    Else
+                        msgtxt = "Fehler: Input passt nicht mit der Konfiguration zusammen " & vbLf & kapaFileName
+                    End If
+                    oPCollection.Add(msgtxt)
+                    Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+                End If
 
                 Dim halt As Boolean = True
 

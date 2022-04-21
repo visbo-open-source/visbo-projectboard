@@ -119,7 +119,7 @@ Public Class clsTSORoleDefinitionWeb
         roleDef.employeeNr = Me.employeeNr
 
         roleDef.entryDate = Me.entryDate.ToLocalTime
-        If roleDef.entryDate <= Date.MinValue Then
+        If roleDef.entryDate <= StartofCalendar Then
             entryColOfDate = 1
         Else
             entryColOfDate = getColumnOfDate(roleDef.entryDate)
