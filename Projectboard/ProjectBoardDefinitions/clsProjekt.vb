@@ -2002,6 +2002,123 @@ Public Class clsProjekt
         End Get
     End Property
 
+    Public Function getPhasenDetailBedarf(phaseName As String) As Double(,)
+
+        Dim result As Double(,)
+        ReDim result(_Dauer - 1, 31)
+        Dim a As Integer = dauerInDays
+
+        Dim daysPMonth(12) As Integer
+
+        daysPMonth(0) = 31
+        daysPMonth(1) = 31
+        daysPMonth(2) = 28
+        daysPMonth(3) = 31
+        daysPMonth(4) = 30
+        daysPMonth(5) = 31
+        daysPMonth(6) = 30
+        daysPMonth(7) = 31
+        daysPMonth(8) = 31
+        daysPMonth(9) = 30
+        daysPMonth(10) = 31
+        daysPMonth(11) = 30
+        daysPMonth(12) = 31
+
+
+        Dim anzPhasen As Integer
+        Dim i As Integer, p As Integer
+        Dim phase As clsPhase
+        Dim phaseStart As Date, phaseEnd As Date
+        'Dim numberOfDays As Integer
+
+
+        If _Dauer > 0 Then
+
+
+
+            anzPhasen = AllPhases.Count
+            If anzPhasen > 0 Then
+
+                For p = 0 To anzPhasen - 1
+                    phase = AllPhases.Item(p)
+
+
+                    If phase.name = phaseName Then
+
+                        phaseStart = phase.getStartDate
+                        phaseEnd = phase.getEndDate
+
+                        Try
+                            With phase
+
+                                If .relEnde = .relStart Then
+                                    For dx As Integer = phaseStart.Day To phaseEnd.Day
+                                        result(.relStart - 1, dx) = 1
+                                    Next
+
+                                Else
+                                    ' Phase covers at least two or more months
+                                    For i = 0 To .relEnde - .relStart
+
+                                        If i = 0 Then
+                                            ' in dem Monat wo die Phase beginnt 
+                                            Try
+                                                For dx As Integer = phaseStart.Day To daysPMonth(phaseStart.Month)
+                                                    result(.relStart - 1 + i, dx) = 1
+                                                Next
+                                            Catch ex As Exception
+                                                Dim xx As Integer = 0
+                                            End Try
+
+
+                                        ElseIf i = .relEnde - .relStart Then
+                                            ' in dem Monat, wo die Phase endet 
+                                            Try
+                                                For dx As Integer = 1 To phaseEnd.Day
+                                                    result(.relStart - 1 + i, dx) = 1
+                                                Next
+                                            Catch ex As Exception
+                                                Dim xx As Integer = 0
+                                            End Try
+
+
+                                        Else
+                                            ' in einem Monat , der vollstätnig von der Phase überdeckt ist 
+                                            Dim endIX As Integer = daysPMonth(startDate.AddMonths(.relStart - 1 + i).Month)
+                                            Try
+                                                For dx As Integer = 1 To endIX
+                                                    result(.relStart - 1 + i, dx) = 1
+                                                Next
+                                            Catch ex As Exception
+                                                Dim xx As Integer = 0
+                                            End Try
+
+                                        End If
+
+
+                                    Next
+                                End If
+                            End With
+                        Catch ex As Exception
+                            Dim sev As Integer = 2
+                        End Try
+
+
+                    End If
+
+                Next p ' Loop über alle Phasen
+            Else
+                Throw New ArgumentException("Project has no phases")
+            End If
+
+        Else
+            Throw New ArgumentException("Project has no duration")
+
+        End If
+
+        getPhasenDetailBedarf = result
+
+    End Function
     ''' <summary>
     ''' diese Routine berücksichtigt, wieviel von der phase im Start- bzw End Monat liegt; 
     ''' es wird für Start und Ende Monat nicht automatisch 1 gesetzt, sondern ein anteiliger Wert, der sich daran bemisst, 

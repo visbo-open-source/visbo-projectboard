@@ -1866,7 +1866,11 @@ Public Class clsProjekte
                                                    ByVal type As Integer, pvName As String) As Double()
 
         Get
-            Dim phasevalues() As Double
+            Dim result As Double()
+            Dim phasevalues As Double(,)
+
+            ' it now is calculated how many phases do overlap per day ...  
+            awinSettings.phasesProzentual = False
 
             'Dim anzPhasen As Integer
             Dim zeitraum As Integer
@@ -1878,7 +1882,7 @@ Public Class clsProjekte
             Dim hproj As clsProjekt
             'Dim lookforIndex As Boolean
             'Dim phasenStart As Integer, phasenEnde As Integer
-            Dim tempArray() As Double
+            'Dim tempArray() As Double
             Dim prAnfang As Integer, prEnde As Integer, phAnfang As Integer, phEnde As Integer
             Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
 
@@ -1886,7 +1890,8 @@ Public Class clsProjekte
 
             'lookforIndex = IsNumeric(phaseId)
             zeitraum = showRangeRight - showRangeLeft
-            ReDim phasevalues(zeitraum)
+            ReDim result(zeitraum)
+            ReDim phasevalues(zeitraum, 31)
 
             anzProjekte = _allProjects.Count
 
@@ -1934,13 +1939,16 @@ Public Class clsProjekte
 
                                 If anzLoops > 0 Then
 
-                                    'ReDim tempArray(phEnde - phAnfang)
-                                    tempArray = hproj.getPhasenBedarf(phaseName)
+                                    Dim tmpArray As Double(,) = hproj.getPhasenDetailBedarf(phaseName)
+                                    'tempArray = hproj.getPhasenBedarf(phaseName)
 
                                     For i = 0 To anzLoops - 1
                                         ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
                                         ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
-                                        phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
+                                        For dx As Integer = 1 To 31
+                                            phasevalues(ixZeitraum + i, dx) = phasevalues(ixZeitraum + i, dx) + tmpArray(ix + i + ixKorrektur, dx)
+                                        Next
+
                                     Next i
 
                                 End If
@@ -1956,8 +1964,17 @@ Public Class clsProjekte
 
             Next kvp
 
+            ' now get the maximum number of parallel phases for each month ... 
 
-            getCountPhasesInMonth = phasevalues
+            For px As Integer = 0 To zeitraum
+                Dim monthMax As Double = -1
+                For dx As Integer = 1 To 31
+                    monthMax = System.Math.Max(phasevalues(px, dx), monthMax)
+                Next
+                result(px) = monthMax
+            Next
+
+            getCountPhasesInMonth = result
 
         End Get
 
@@ -2082,6 +2099,17 @@ Public Class clsProjekte
                     ' it is only checked whether there are any overloads caused by the new calculation. If referece value is over the limit , bust has been 
                     ' over the limit already in referenceValues then it is still allowed
                     Dim breadCrumb As String = ""
+
+                    If msName.Contains("#") Then
+                        Dim tmpStr As String() = msName.Split(New Char() {CChar("#")})
+                        breadCrumb = tmpStr(0)
+                        For ix As Integer = 1 To tmpStr.Length - 2
+                            breadCrumb = breadCrumb & "#" & tmpStr(ix)
+                        Next
+                        msName = tmpStr(tmpStr.Length - 1)
+                    End If
+
+
                     Dim typ As Integer = -1
                     Dim pvName As String = ""
                     Dim tmpMilestoneArray As Double(,) = getCountMilestonesInMonth(msName, breadCrumb, -1, pvName)
@@ -2112,7 +2140,18 @@ Public Class clsProjekte
             If Not IsNothing(phNames) Then
 
                 For Each phName As String In phNames
-                    Dim breadCrumb As String = ""
+                    ' now check whether or not there are given any breadcrumbs ..
+                    Dim breadcrumb As String = ""
+
+                    If phName.Contains("#") Then
+                        Dim tmpStr As String() = phName.Split(New Char() {CChar("#")})
+                        breadcrumb = tmpStr(0)
+                        For ix As Integer = 1 To tmpStr.Length - 2
+                            breadcrumb = breadcrumb & "#" & tmpStr(ix)
+                        Next
+                        phName = tmpStr(tmpStr.Length - 1)
+                    End If
+
                     Dim typ As Integer = -1
                     Dim pvName As String = ""
 

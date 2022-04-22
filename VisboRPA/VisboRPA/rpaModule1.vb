@@ -132,8 +132,6 @@ Module rpaModule1
         watchDialog = New VisboRPAStart
 
 
-        '' FileNamen für logging zusammenbauen
-        'logfileNamePath = createLogfileName(rpaFolder, "")
 
 
         Dim err As New clsErrorCodeMsg
@@ -414,9 +412,9 @@ Module rpaModule1
         Catch ex As Exception
 
             If awinSettings.englishLanguage Then
-                msgTxt = "Error importing: "
+                msgTxt = "Error importing: " & ex.Message
             Else
-                msgTxt = "Fehler beim Import von: "
+                msgTxt = "Fehler beim Import von: " & ex.Message
             End If
             Call logger(ptErrLevel.logsevereError, msgTxt, myName & "/" & rpaCat.ToString)
         End Try
@@ -753,11 +751,11 @@ Module rpaModule1
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                         ok = ok And True
                         Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
-                        Console.WriteLine("project stored: " & kvp.Value.getShapeText)
+                        'Console.WriteLine("project stored: " & kvp.Value.getShapeText)
                     Else
                         ok = ok And False
                         Call logger(ptErrLevel.logError, "project store failed: ", outputCollection)
-                        Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+                        'Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
                     End If
 
                 Else
@@ -772,11 +770,11 @@ Module rpaModule1
                     If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                         ok = ok And True
                         Call logger(ptErrLevel.logInfo, "project updated: ", kvp.Value.getShapeText)
-                        Console.WriteLine("project updated: " & kvp.Value.getShapeText)
+                        'Console.WriteLine("project updated: " & kvp.Value.getShapeText)
                     Else
                         ok = ok And False
                         Call logger(ptErrLevel.logError, "project update failed: ", outputCollection)
-                        Console.WriteLine("!! ... project update failed: " & kvp.Value.getShapeText)
+                        'Console.WriteLine("!! ... project update failed: " & kvp.Value.getShapeText)
                     End If
 
                 End If
@@ -786,7 +784,7 @@ Module rpaModule1
         Catch ex As Exception
             ok = False
             Call logger(ptErrLevel.logError, "Store Projects from List failed", ex.Message)
-            Console.WriteLine("!!!! Store Projects from List failed" & ex.Message)
+            'Console.WriteLine("!!!! Store Projects from List failed" & ex.Message)
         End Try
 
         storeImportProjekte = ok
@@ -1565,7 +1563,7 @@ Module rpaModule1
                 Dim mymessages As New Collection
                 Dim infomsg As String = "File to create hedged variants detected: " & currentWB.Name
                 Call logger(ptErrLevel.logInfo, infomsg, mymessages)
-                Console.WriteLine(infomsg)
+                'Console.WriteLine(infomsg)
             End If
 
         Catch ex As Exception
@@ -2587,6 +2585,7 @@ Module rpaModule1
         Dim shortestDuration As Double = 1.0
         Dim longestDuration As Double = 1.0
 
+        Dim aktDateTime As Date = Date.Now
         If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
             lastReadingOrganisation = readOrganisations()
         End If
@@ -2634,6 +2633,14 @@ Module rpaModule1
                                 myCurrentParams.newStartDate = CStr(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             Case PTRpa.visboFindProjectStart
+
+                                myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.shortestDuration = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                myCurrentParams.longestDuration = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+
+                            Case PTRpa.visboFindProjectStartPM
 
                                 myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                 myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -3133,13 +3140,13 @@ Module rpaModule1
 
                             If storeSingleProjectToDB(hproj, outPutCollection) Then
                                 Call logger(ptErrLevel.logInfo, "project with new startDate stored: ", msgTxt)
-                                Console.WriteLine("project with new startDate stored: " & msgTxt)
+                                'Console.WriteLine("project with new startDate stored: " & msgTxt)
                                 If Not setWriteProtection(hproj, False) Then
                                     Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
                                 End If
                             Else
                                 Call logger(ptErrLevel.logError, "project store with new startDate failed: " & msgTxt, outPutCollection)
-                                Console.WriteLine("!! ... project store with new startDate failed: " & msgTxt)
+                                'Console.WriteLine("!! ... project store with new startDate failed: " & msgTxt)
                             End If
 
                             If Not didExist Then
@@ -3159,13 +3166,13 @@ Module rpaModule1
                             End If
                             If storeSingleProjectToDB(variantProj, outPutCollection) Then
                                 Call logger(ptErrLevel.logInfo, "hedged variant stored: ", msgTxt)
-                                Console.WriteLine("hedged variant stored: " & msgTxt)
+                                'Console.WriteLine("hedged variant stored: " & msgTxt)
                                 If Not setWriteProtection(variantProj, False) Then
                                     Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", variantProj.getShapeText)
                                 End If
                             Else
                                 Call logger(ptErrLevel.logError, "hedged variant store failed: " & msgTxt, outPutCollection)
-                                Console.WriteLine("!! ... hedged variant store failed: " & msgTxt)
+                                'Console.WriteLine("!! ... hedged variant store failed: " & msgTxt)
                             End If
 
                             If Not didExist Then
@@ -3227,7 +3234,7 @@ Module rpaModule1
 
                             msgTxt = toStoreConstellation.constellationName & " ( " & toStoreConstellation.variantName & " )"
 
-                            Console.WriteLine("Portfolio Variant stored: " & msgTxt)
+                            'Console.WriteLine("Portfolio Variant stored: " & msgTxt)
                             Call logger(ptErrLevel.logInfo, "Portfolio Variant stored: ", msgTxt)
 
 
@@ -3335,7 +3342,7 @@ Module rpaModule1
 
                     Else
                         Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
-                        Console.WriteLine("Loading " & kvp.Key & " failed ..", " Operation continued ...")
+                        'Console.WriteLine("Loading " & kvp.Key & " failed ..", " Operation continued ...")
                         atleastOneError = True
                     End If
 
@@ -3364,19 +3371,19 @@ Module rpaModule1
                                 If Not atleastOneError Then
                                     If storeSingleProjectToDB(storeProj, outputCollection) Then
                                         Call logger(ptErrLevel.logInfo, "project team allocated and stored: ", storeProj.getShapeText)
-                                        Console.WriteLine("project team allocated and stored: " & storeProj.getShapeText)
+                                        'Console.WriteLine("project team allocated and stored: " & storeProj.getShapeText)
 
                                         If Not setWriteProtection(storeProj, False) Then
                                             Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", storeProj.getShapeText)
                                         End If
                                     Else
                                         Call logger(ptErrLevel.logError, "store project failed : " & storeProj.getShapeText, outputCollection)
-                                        Console.WriteLine("!! ... store project team allocation failed : " & storeProj.getShapeText)
+                                        'Console.WriteLine("!! ... store project team allocation failed : " & storeProj.getShapeText)
                                         atleastOneError = True
                                     End If
                                 Else
                                     Call logger(ptErrLevel.logInfo, "because former Error occurred , no store happened : " & storeProj.getShapeText, outputCollection)
-                                    Console.WriteLine("!! ... because former Error occurred , no store happened: " & storeProj.getShapeText)
+                                    'Console.WriteLine("!! ... because former Error occurred , no store happened: " & storeProj.getShapeText)
                                     atleastOneError = True
                                 End If
 
@@ -3386,13 +3393,13 @@ Module rpaModule1
                             ' failure 
                             atleastOneError = True
                             Call logger(ptErrLevel.logError, "Auto-Allocation failure: " & kvp.Key & " " & fmsg, " ... Operation continued ...")
-                            Console.WriteLine("!! ... Auto-Allocation failure : " & myProj.getShapeText)
+                            'Console.WriteLine("!! ... Auto-Allocation failure : " & myProj.getShapeText)
                         End If
                     Else
                         ' failure 
                         atleastOneError = True
                         Call logger(ptErrLevel.logError, "Auto-Allocation failure: could not read " & kvp.Value.projectName & " " & kvp.Value.projectVariantName, " ... Operation continued ...")
-                        Console.WriteLine("Auto-Allocation failure: could not read " & kvp.Value.projectName & " " & kvp.Value.projectVariantName)
+                        'Console.WriteLine("Auto-Allocation failure: could not read " & kvp.Value.projectName & " " & kvp.Value.projectVariantName)
 
                     End If
 
@@ -3408,7 +3415,7 @@ Module rpaModule1
                 atleastOneError = True
                 msgTxt = "Load Portfolio " & myActivePortfolio & " failed .."
                 Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
-                Console.WriteLine(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio & " failed ..")
+                'Console.WriteLine(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio & " failed ..")
                 Throw New ArgumentException(msgTxt)
             End If
 
@@ -3422,12 +3429,12 @@ Module rpaModule1
 
                 If outputCollection.Count > 0 Then
                     Call logger(ptErrLevel.logInfo, "Project List with Active Portfolio: ", outputCollection)
-                    Console.WriteLine("Portfolio created " & portfolioName & " ( " & projectVariantName & " )")
+                    'Console.WriteLine("Portfolio created " & portfolioName & " ( " & projectVariantName & " )")
                 End If
 
             Else
                 Call logger(ptErrLevel.logInfo, "no store of portfolio because of former Error .. ", "")
-                Console.WriteLine("no store of portfolio because of former Error .. ")
+                'Console.WriteLine("no store of portfolio because of former Error .. ")
             End If
 
 
@@ -3549,14 +3556,14 @@ Module rpaModule1
 
                                 If storeSingleProjectToDB(kvp.Value, outputCollection) Then
                                     Call logger(ptErrLevel.logInfo, "project variant adjusted and stored: ", kvp.Value.getShapeText)
-                                    Console.WriteLine("project stored: " & kvp.Value.getShapeText)
+                                    'Console.WriteLine("project stored: " & kvp.Value.getShapeText)
 
                                     If Not setWriteProtection(kvp.Value, False) Then
                                         Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", kvp.Value.getShapeText)
                                     End If
                                 Else
                                     Call logger(ptErrLevel.logError, "project variant store failed: " & kvp.Value.getShapeText, outputCollection)
-                                    Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+                                    'Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
                                 End If
 
                                 Call logger(ptErrLevel.logInfo, "Auto-Allocation successful: " & kvp.Key, " ... Operation continued ...")
@@ -3694,6 +3701,10 @@ Module rpaModule1
         Dim myActivePortfolio As String = jobParameters.portfolioName
         Dim portfolioVariantName As String = jobParameters.portfolioVariantName
 
+        Dim projectVariantName As String = jobParameters.projectVariantName
+        If projectVariantName = "" Then
+            projectVariantName = "arb"
+        End If
 
         Dim aggregationList As New List(Of String)
         Dim skillList As New List(Of String)
@@ -3883,14 +3894,10 @@ Module rpaModule1
                 Dim referenceMSValues As Double() = Nothing
                 Dim referencePHValues As Double() = Nothing
 
+                Dim sumIterations As Integer = 0
+
                 If myKennung = PTRpa.visboFindProjectStart Then
                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
-
-                ElseIf myKennung = PTRpa.visboFindProjectStartPM Then
-
-                    referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
-                    referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
-
                 End If
 
 
@@ -3904,60 +3911,46 @@ Module rpaModule1
                 If result = True Then
 
 
+
                     ' create variant , if necessary
                     ' rankingList keeps the sequence within the Excel file. So user adds some fields important to him for prioritization , he add these fields , sorts it in th eExcel. 
                     ' It then represents the sequence: Row1 is the most important project 
                     For Each rankingPair As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
 
+                        sumIterations = 0
                         Dim key As String = calcProjektKey(rankingPair.Value.projectName, rankingPair.Value.projectVariantName)
-                        Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value.projectName)
+                        Dim hproj As clsProjekt = ImportProjekte.getProject(key)
 
                         If Not IsNothing(hproj) Then
 
                             Dim stdDuration As Integer = hproj.dauerInDays
                             Dim myDuration As Integer = stdDuration
-                            Dim minDuration As Integer = CInt(stdDuration * 0.7)
+                            'Dim minDuration As Integer = CInt(stdDuration * 0.7)
+                            Dim minDuration As Integer = CInt(stdDuration * rankingPair.Value.shortestDuration)
+                            Dim latestEndDate As Date = rankingPair.Value.latestEnd
+                            Dim biggestOffsettoEnd As Integer = 0
 
-
+                            If DateDiff(DateInterval.Day, hproj.endeDate, latestEndDate) > 0 Then
+                                biggestOffsettoEnd = DateDiff(DateInterval.Day, hproj.endeDate, latestEndDate)
+                            End If
 
                             Dim storeRequired As Boolean = False
 
-                            Dim newStartDate As Date
-                            Dim newEndDate As Date
-
-                            If getColumnOfDate(hproj.startDate) < showRangeLeft Then
-
-                                ' create variant if not already done
-                                If hproj.variantName <> "arb" Then
-                                    hproj = hproj.createVariant("arb", "variant was created and moved to avoid resource bottlenecks")
-                                    ' bring that into AlleProjekte
-                                    key = calcProjektKey(hproj)
-                                    deltaInDays = DateDiff(DateInterval.Day, hproj.startDate, getDateofColumn(showRangeLeft, False))
-
-                                    newStartDate = hproj.startDate.AddDays(deltaInDays)
-                                    newEndDate = hproj.endeDate.AddDays(deltaInDays)
-
-                                    Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
-
-                                    If Not IsNothing(tmpProj) Then
-                                        hproj = tmpProj
-                                        storeRequired = True
-                                    Else
-                                        msgTxt = "project could be moved"
-                                    End If
-
-                                End If
-
-                            End If
+                            Dim newStartDate As Date = hproj.startDate
+                            Dim newEndDate As Date = hproj.endeDate
 
 
-                            ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
-                            AlleProjekte.Add(hproj)
-                            ShowProjekte.AddAnyway(hproj)
+                            ' now define showrangeLeft and showrangeRight from hproj 
+                            showRangeLeft = getColumnOfDate(hproj.startDate)
+                            showRangeRight = getColumnOfDate(hproj.endeDate)
 
-                            ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration
-                            If myKennung = PTRpa.visboFindProjectStart Then
-
+                            ' have to happen here because just before hproj is added to ShowProjekte, find out what the situation is before ...
+                            If myKennung = PTRpa.visboFindProjectStartPM Then
+                                ' now define the reference Values for Phases and Milestones 
+                                referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
+                                referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
+                            Else
+                                ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration
                                 skillList.Clear()
                                 Dim skillIDs As Collection = hproj.getSkillNameIds
 
@@ -3975,9 +3968,10 @@ Module rpaModule1
                             End If
 
 
-                            ' now define showrangeLeft and showrangeRight from hproj 
-                            showRangeLeft = getColumnOfDate(hproj.startDate)
-                            showRangeRight = getColumnOfDate(hproj.endeDate)
+                            ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
+                            AlleProjekte.Add(hproj)
+                            ShowProjekte.AddAnyway(hproj)
+
 
                             If myKennung = PTRpa.visboFindProjectStart Then
                                 overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
@@ -3988,23 +3982,24 @@ Module rpaModule1
                                                                                           referencePHValues)
                             End If
 
-                            Dim sumIterations As Integer = 0
-                            Dim endIterations As Integer = 0
-                            Dim durationIterations As Integer = 0
+
 
                             If overutilizationFound Then
 
                                 ' create variant if not already done
-                                If hproj.variantName <> "arb" Then
-                                    hproj = hproj.createVariant("arb", "variant to avoid resource bottlenecks")
-
+                                If hproj.variantName <> projectVariantName Then
+                                    hproj = hproj.createVariant(projectVariantName, "variant to avoid resource bottlenecks")
                                     AlleProjekte.Add(hproj)
                                 End If
 
-                                deltaInDays = 7
+                                deltaInDays = 3
                                 ' now modify this one ...
-                                Dim maxEndIterations As Integer = CInt(182 / deltaInDays)
-                                Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays) + 1
+
+                                Dim endIterations As Integer = 0
+                                Dim durationIterations As Integer = 0
+
+                                Dim maxEndIterations As Integer = CInt(biggestOffsettoEnd / deltaInDays)
+                                Dim maxDurationIterations As Integer = CInt((stdDuration - minDuration) / deltaInDays)
 
                                 Dim rememberStartDate As Date = hproj.startDate
                                 Dim rememberEndDate As Date = hproj.endeDate
@@ -4015,29 +4010,38 @@ Module rpaModule1
                                         ' move project by deltaIndays
 
                                         newStartDate = rememberStartDate.AddDays(deltaInDays)
+                                        durationIterations = 1
 
                                         Do While overutilizationFound And durationIterations <= maxDurationIterations
 
                                             newEndDate = rememberEndDate
                                             tmpProj = moveProject(hproj, newStartDate, newEndDate)
-
+                                            sumIterations = sumIterations + 1
 
                                             If Not IsNothing(tmpProj) Then
 
                                                 hproj = tmpProj
 
-                                                ' now replace in AlleProjekte, ShowProjekte 
-                                                AlleProjekte.Add(tmpProj)
-                                                ShowProjekte.AddAnyway(tmpProj)
-
                                                 ' now define showrangeLeft and showrangeRight from hproj 
                                                 showRangeLeft = getColumnOfDate(hproj.startDate)
                                                 showRangeRight = getColumnOfDate(hproj.endeDate)
 
+                                                If myKennung = PTRpa.visboFindProjectStartPM Then
+                                                    ' aus ShowProjekte rausnehmen, um ReferenzValues zu bestimmen 
+                                                    If ShowProjekte.contains(hproj.name) Then
+                                                        ShowProjekte.Remove(hproj.name, False)
+                                                    End If
+                                                    referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
+                                                    referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
+                                                End If
+
+                                                ' now replace in AlleProjekte, ShowProjekte 
+                                                AlleProjekte.Add(hproj)
+                                                ShowProjekte.AddAnyway(hproj)
+
                                                 Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                                Console.WriteLine(infomsg)
-                                                Dim myMessages As New Collection
-                                                Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                                                'Console.WriteLine(infomsg)
+                                                Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
 
                                                 If myKennung = PTRpa.visboFindProjectStart Then
                                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
@@ -4049,9 +4053,6 @@ Module rpaModule1
                                                 End If
 
 
-                                                If overutilizationFound Then
-                                                    durationIterations = durationIterations + 1
-                                                End If
 
                                             Else
                                                 ' Error occurred 
@@ -4059,6 +4060,7 @@ Module rpaModule1
                                             End If
 
                                             newStartDate = newStartDate.AddDays(deltaInDays)
+                                            durationIterations = durationIterations + 1
                                         Loop
 
                                         If overutilizationFound Then
@@ -4067,23 +4069,35 @@ Module rpaModule1
                                             rememberEndDate = rememberEndDate.AddDays(deltaInDays)
 
                                             tmpProj = moveProject(hproj, rememberStartDate, rememberEndDate)
+                                            ' 
+
+                                            sumIterations = sumIterations + 1
 
                                             If Not IsNothing(tmpProj) Then
 
                                                 hproj = tmpProj
 
-                                                ' now replace in AlleProjekte, ShowProjekte 
-                                                AlleProjekte.Add(tmpProj)
-                                                ShowProjekte.AddAnyway(tmpProj)
-
                                                 ' now define showrangeLeft and showrangeRight from hproj 
                                                 showRangeLeft = getColumnOfDate(hproj.startDate)
                                                 showRangeRight = getColumnOfDate(hproj.endeDate)
 
+                                                If myKennung = PTRpa.visboFindProjectStartPM Then
+                                                    ' aus ShowProjekte rausnehmen, um ReferenzValues zu bestimmen 
+                                                    If ShowProjekte.contains(hproj.name) Then
+                                                        ShowProjekte.Remove(hproj.name, False)
+                                                    End If
+                                                    referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
+                                                    referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
+                                                End If
+
+
+                                                ' now replace in AlleProjekte, ShowProjekte 
+                                                AlleProjekte.Add(hproj)
+                                                ShowProjekte.AddAnyway(hproj)
+
                                                 Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                                Console.WriteLine(infomsg)
-                                                Dim myMessages As New Collection
-                                                Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                                                Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
+
 
                                                 If myKennung = PTRpa.visboFindProjectStart Then
                                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
@@ -4094,24 +4108,18 @@ Module rpaModule1
                                                                                           referencePHValues)
                                                 End If
 
-
-                                                If overutilizationFound Then
-                                                    endIterations = endIterations + 1
-                                                End If
-
                                             Else
                                                 ' Error occurred 
                                                 Throw New ArgumentException("tmpProj is Nothing")
                                             End If
                                         End If
 
-
+                                        endIterations = endIterations + 1
                                     Loop
 
                                 Catch ex As Exception
-                                    Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText
-                                    Dim myMessages As New Collection
-                                    Call logger(ptErrLevel.logError, infomsg, myMessages)
+                                    Dim infomsg As String = "failure: could not create project-variant " & hproj.getShapeText & ex.Message
+                                    Call logger(ptErrLevel.logError, "find best start ", infomsg)
                                     overutilizationFound = True
                                 End Try
 
@@ -4131,45 +4139,40 @@ Module rpaModule1
                             If storeRequired Then
                                 Dim myMessages As New Collection
                                 If storeSingleProjectToDB(hproj, myMessages) Then
-                                    Dim infomsg As String = "success: created " & endIterations & " variants to avoid bottlenecks " & hproj.getShapeText
-                                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                                    'Console.WriteLine(infomsg)
+                                    Dim infomsg As String = "success: created " & sumIterations & " variants to avoid bottlenecks " & hproj.getShapeText
+                                    Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
                                 Else
                                     ' take it out again , because there was no solution
                                     ShowProjekte.Remove(hproj.name)
-                                    Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
-                                    Call logger(ptErrLevel.logError, infomsg, myMessages)
-                                    'Console.WriteLine(infomsg)
+                                    Dim infomsg As String = "... failed to store variant to avoid bottlenecks " & hproj.getShapeText
+                                    Call logger(ptErrLevel.logError, "find best start ", infomsg)
                                 End If
                             Else
-                                Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
-                                Dim myMessages As New Collection
-                                Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                                'Console.WriteLine(infomsg)
+                                If overutilizationFound Then
+                                    Dim infomsg As String = "unsuccessful : tried out " & sumIterations & " variants for " & hproj.name
+                                    Call logger(ptErrLevel.logWarning, "find best start ", infomsg)
+                                Else
+                                    Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
+                                    Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
+                                End If
+
                             End If
                         Else
-                            Dim infomsg As String = "processProjectListWithActivePortfolio project " & rankingPair.Value.projectName & " does not exist so far"
-                            Dim myMessages As New Collection
-                            Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                            Dim infomsg As String = rankingPair.Value.projectName & " does not exist so far"
+                            Call logger(ptErrLevel.logError, "find best start ", infomsg)
                         End If
-
-                        If myKennung = PTRpa.visboFindProjectStartPM Then
-                            ' now define the reference Values for Phases and Milestones 
-                            referenceMSValues = ShowProjekte.getMilestonesFrequency(jobParameters.getMilestoneNames)
-                            referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
-                        End If
-
 
                     Next
 
+                    Dim pfVariantName As String = jobParameters.portfolioVariantName & " - " & projectVariantName
                     toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
-                                                                                                cName:=myActivePortfolio, vName:=jobParameters.portfolioVariantName & "-arb")
+                                                                                                cName:=myActivePortfolio, vName:=pfVariantName)
 
                     outputCollection.Clear()
                     Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
 
                     If outputCollection.Count > 0 Then
-                        Call logger(ptErrLevel.logInfo, "Project List Import, Store Portfolio-Variant arb:", outputCollection)
+                        Call logger(ptErrLevel.logInfo, "Project List Import, Store Portfolio-Variant: ", outputCollection)
                     End If
 
                 End If
@@ -4326,7 +4329,7 @@ Module rpaModule1
                     ShowProjekte.Remove(hproj.name)
                     Dim infomsg As String = "with default start-Date & end-Date not considered because of bottlenecks, will be tried out later ... " & hproj.name
                     Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    Console.WriteLine(infomsg)
+                    'Console.WriteLine(infomsg)
 
                     rankingList2.Add(rankingPair.Key, rankingPair.Value)
 
@@ -4334,7 +4337,7 @@ Module rpaModule1
                     ' all ok, just continue
                     Dim infomsg As String = " ... considered " & hproj.getShapeText
                     Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    Console.WriteLine(infomsg)
+                    'Console.WriteLine(infomsg)
 
                     ' now if there was created the variant
                     If storeRequired Then
@@ -4343,7 +4346,7 @@ Module rpaModule1
                         If storeSingleProjectToDB(hproj, tmpMessages) Then
                             Dim mymsg As String = "tried out new value distribution:  worked out to find solution for  " & hproj.getShapeText
                             Call logger(ptErrLevel.logInfo, mymsg, myMessages)
-                            Console.WriteLine(mymsg)
+                            'Console.WriteLine(mymsg)
 
                             If Not setWriteProtection(hproj, False) Then
                                 Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
@@ -4448,7 +4451,7 @@ Module rpaModule1
                     If storeSingleProjectToDB(hproj, myMessages) Then
                         Dim infomsg As String = "tried out " & anzLoops & " different start/ends to avoid bottlenecks, found solution for  " & hproj.getShapeText
                         Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
 
                         If Not setWriteProtection(hproj, False) Then
                             Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
@@ -4463,7 +4466,7 @@ Module rpaModule1
 
                         Dim infomsg As String = "... failure: could not store " & hproj.getShapeText
                         Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
                     End If
 
 
@@ -4476,7 +4479,7 @@ Module rpaModule1
                     Dim infomsg As String = "... could finally not be considered  " & hproj.name
                     Dim myMessages As New Collection
                     Call logger(ptErrLevel.logError, infomsg, myMessages)
-                    Console.WriteLine(infomsg)
+                    'Console.WriteLine(infomsg)
 
                     Dim mlKEy As String = calcProjektKey(hproj.name, "")
                     hproj = ImportProjekte.getProject(mlKEy)
@@ -4657,13 +4660,13 @@ Module rpaModule1
                         If storeSingleProjectToDB(hproj, myMessages) Then
                             Dim infomsg As String = "created variant to avoid bottlenecks " & hproj.getShapeText
                             Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                            Console.WriteLine(infomsg)
+                            'Console.WriteLine(infomsg)
                         Else
                             ' take it out again , because there was no solution
                             ShowProjekte.Remove(hproj.name)
                             Dim infomsg As String = "... failed to create variant to avoid bottlenecks " & hproj.getShapeText
                             Call logger(ptErrLevel.logError, infomsg, myMessages)
-                            Console.WriteLine(infomsg)
+                            'Console.WriteLine(infomsg)
                         End If
 
 
@@ -4857,7 +4860,7 @@ Module rpaModule1
                 If result = True Then
                     allOK = True
                     msgTxt = "ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ..."
-                    Console.WriteLine(msgTxt)
+                    'Console.WriteLine(msgTxt)
                     Call logger(ptErrLevel.logInfo, PTRpa.visboInitialOrga.ToString, msgTxt)
                 Else
                     allOK = False
@@ -5414,7 +5417,7 @@ Module rpaModule1
                         txtMsg = "no Portfolio selected - Cancelled ..."
                     End If
                     Call logger(ptErrLevel.logError, "processVisboActualData2", txtMsg)
-                    Console.WriteLine(txtMsg)
+                    'Console.WriteLine(txtMsg)
 
                     processVisboActualData2 = False
 
@@ -5436,7 +5439,7 @@ Module rpaModule1
                         txtMsg = referenzPortfolioName & ": Portfolio does not exist - Cancelled ..."
                     End If
                     Call logger(ptErrLevel.logError, "processVisboActualData2", txtMsg)
-                    Console.WriteLine(txtMsg)
+                    'Console.WriteLine(txtMsg)
 
                     processVisboActualData2 = False
 

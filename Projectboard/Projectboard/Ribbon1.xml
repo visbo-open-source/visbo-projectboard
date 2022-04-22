@@ -80,7 +80,7 @@
             <menu id="PT4G1M" imageMso="Import" size ="large" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
               <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="Organisation"-->
-                <!--<button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>-->
+                <button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
                 <!--label="Kapazitäten"-->
                 <button id="PT4G1B13" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportKapas" supertip ="Es werden die Kapazitätsdateien für interne / externe Mitarbeiter eingelesen"/>
                 <!--label="Custom User Roles"-->

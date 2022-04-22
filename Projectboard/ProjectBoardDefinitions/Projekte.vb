@@ -28290,6 +28290,9 @@ Public Module Projekte
 
         End Try
 
+        ' to make sure there is a correct duration in months ... 
+        Dim a As Integer = resultingProject.dauerInDays
+
         moveProject = resultingProject
     End Function
 
