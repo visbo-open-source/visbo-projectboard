@@ -4473,6 +4473,7 @@ Public Module agm3
                             pkDefinition.column.bis = pkDefinition.column.von + offsets(1) + arrayDimension
                             pkDefinition.row.von = myRowNr + offsets(0)
 
+
                             anzZeilen = 0
                             myValue = ""
 
@@ -4580,6 +4581,7 @@ Public Module agm3
                                     'myValue = trennZeichen
                                 End If
                             Loop
+
 
                             zpDefinition.row.bis = zpDefinition.row.von + anzZeilen - 1
                         Catch ex As Exception
@@ -4791,6 +4793,7 @@ Public Module agm3
                             myCost = ""
                             myPhaseName = "."
                             Dim skipProcessingThisLine As Boolean = False
+
 
                             ' now read the Cost 
 
