@@ -1242,9 +1242,29 @@ Module rpaModule1
                             result = checkFindBestStarts(currentWB)
                         End If
 
+                        ' Check auf define Feasible Portfolio 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkfeasiblePortfolio(currentWB)
+                        End If
+
+                        ' Check auf Auto-Allocate 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkAutoAllocate(currentWB)
+                        End If
+
+                        ' Check auf Sales Pipeline 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkCreateHedgedVariants(currentWB)
+                        End If
+
                         ' Check auf VISBO Project Brief
                         If result = PTRpa.visboUnknown Then
                             result = checkProjectBrief(currentWB)
+                        End If
+
+                        ' Check auf Auto Adjust Resource Bottlenecks
+                        If result = PTRpa.visboUnknown Then
+                            result = checkAutoAdjustPortfolio(currentWB)
                         End If
 
                         ' Check auf Organisation 
@@ -3141,9 +3161,9 @@ Module rpaModule1
                             If storeSingleProjectToDB(hproj, outPutCollection) Then
                                 Call logger(ptErrLevel.logInfo, "project with new startDate stored: ", msgTxt)
                                 'Console.WriteLine("project with new startDate stored: " & msgTxt)
-                                If Not setWriteProtection(hproj, False) Then
-                                    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
-                                End If
+                                'If Not setWriteProtection(hproj, False) Then
+                                '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
+                                'End If
                             Else
                                 Call logger(ptErrLevel.logError, "project store with new startDate failed: " & msgTxt, outPutCollection)
                                 'Console.WriteLine("!! ... project store with new startDate failed: " & msgTxt)
@@ -3167,9 +3187,9 @@ Module rpaModule1
                             If storeSingleProjectToDB(variantProj, outPutCollection) Then
                                 Call logger(ptErrLevel.logInfo, "hedged variant stored: ", msgTxt)
                                 'Console.WriteLine("hedged variant stored: " & msgTxt)
-                                If Not setWriteProtection(variantProj, False) Then
-                                    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", variantProj.getShapeText)
-                                End If
+                                'If Not setWriteProtection(variantProj, False) Then
+                                '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", variantProj.getShapeText)
+                                'End If
                             Else
                                 Call logger(ptErrLevel.logError, "hedged variant store failed: " & msgTxt, outPutCollection)
                                 'Console.WriteLine("!! ... hedged variant store failed: " & msgTxt)
@@ -3373,9 +3393,9 @@ Module rpaModule1
                                         Call logger(ptErrLevel.logInfo, "project team allocated and stored: ", storeProj.getShapeText)
                                         'Console.WriteLine("project team allocated and stored: " & storeProj.getShapeText)
 
-                                        If Not setWriteProtection(storeProj, False) Then
-                                            Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", storeProj.getShapeText)
-                                        End If
+                                        'If Not setWriteProtection(storeProj, False) Then
+                                        '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", storeProj.getShapeText)
+                                        'End If
                                     Else
                                         Call logger(ptErrLevel.logError, "store project failed : " & storeProj.getShapeText, outputCollection)
                                         'Console.WriteLine("!! ... store project team allocation failed : " & storeProj.getShapeText)
@@ -3558,9 +3578,9 @@ Module rpaModule1
                                     Call logger(ptErrLevel.logInfo, "project variant adjusted and stored: ", kvp.Value.getShapeText)
                                     'Console.WriteLine("project stored: " & kvp.Value.getShapeText)
 
-                                    If Not setWriteProtection(kvp.Value, False) Then
-                                        Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", kvp.Value.getShapeText)
-                                    End If
+                                    'If Not setWriteProtection(kvp.Value, False) Then
+                                    '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", kvp.Value.getShapeText)
+                                    'End If
                                 Else
                                     Call logger(ptErrLevel.logError, "project variant store failed: " & kvp.Value.getShapeText, outputCollection)
                                     'Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
@@ -4233,7 +4253,7 @@ Module rpaModule1
             Dim rankingList2 As New SortedList(Of Integer, String)
             Dim missingList As New clsProjekteAlle
 
-            Dim abbruchDate As Date = New Date(2023, 3, 31)
+            Dim abbruchDate As Date = New Date(2023, 6, 30)
 
             Dim tmpValues As Double() = getOverloadParams()
             Dim tmpNames As String() = getPortfolioNames()
@@ -4246,7 +4266,7 @@ Module rpaModule1
             Try
                 abbruchDate = CDate(tmpNames(2))
             Catch ex As Exception
-                abbruchDate = New Date(2023, 3, 31)
+                abbruchDate = New Date(2023, 6, 30)
             End Try
 
 
@@ -4300,27 +4320,28 @@ Module rpaModule1
                 Dim myMessages As New Collection
                 Dim storeRequired As Boolean = False
 
-                If overutilizationFound Then
-                    Dim infomsg As String = "try out variant with optimized distribution according to resource needs:  " & hproj.getShapeText
-                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
+                ' tk 24.4. Auto-Distribute : take it out , because it changes too much in the monthly needs 
+                'If overutilizationFound Then
+                '    Dim infomsg As String = "try out variant with optimized distribution according to resource needs:  " & hproj.getShapeText
+                '    Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
 
-                    hproj = hproj.createVariant(variantName, "consider requested sum - distribute according free capacity ")
-                    Dim errorMsg As String = ""
+                '    hproj = hproj.createVariant(variantName, "consider requested sum - distribute according free capacity ")
+                '    Dim errorMsg As String = ""
 
-                    ' put it into AlleProjekte
-                    AlleProjekte.Add(hproj)
-                    ShowProjekte.AddAnyway(hproj)
+                '    ' put it into AlleProjekte
+                '    AlleProjekte.Add(hproj)
+                '    ShowProjekte.AddAnyway(hproj)
 
-                    Call ShowProjekte.autoDistribute(hproj.name, "", errorMsg)
+                '    Call ShowProjekte.autoDistribute(hproj.name, "", errorMsg)
 
 
-                    ' now calculate again ... 
-                    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+                '    ' now calculate again ... 
+                '    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
 
-                    ' to trigger saving of the new variant , if there was first a bottleneck, then no more ...
-                    storeRequired = Not overutilizationFound
+                '    ' to trigger saving of the new variant , if there was first a bottleneck, then no more ...
+                '    storeRequired = Not overutilizationFound
 
-                End If
+                'End If
 
 
                 If overutilizationFound Then
@@ -4328,16 +4349,18 @@ Module rpaModule1
                     ' take it out again, because there was no solution
                     ShowProjekte.Remove(hproj.name)
                     Dim infomsg As String = "with default start-Date & end-Date not considered because of bottlenecks, will be tried out later ... " & hproj.name
-                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    'Console.WriteLine(infomsg)
+                    Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
+
+                    Console.WriteLine(infomsg)
 
                     rankingList2.Add(rankingPair.Key, rankingPair.Value)
 
                 Else
                     ' all ok, just continue
                     Dim infomsg As String = " ... considered " & hproj.getShapeText
-                    Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                    'Console.WriteLine(infomsg)
+                    Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
+
+                    Console.WriteLine(infomsg)
 
                     ' now if there was created the variant
                     If storeRequired Then
@@ -4345,13 +4368,16 @@ Module rpaModule1
                         Dim tmpMessages As New Collection
                         If storeSingleProjectToDB(hproj, tmpMessages) Then
                             Dim mymsg As String = "tried out new value distribution:  worked out to find solution for  " & hproj.getShapeText
-                            Call logger(ptErrLevel.logInfo, mymsg, myMessages)
-                            'Console.WriteLine(mymsg)
+                            Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", mymsg)
 
-                            If Not setWriteProtection(hproj, False) Then
-                                Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
-                            End If
+                            Console.WriteLine(mymsg)
+
                         End If
+                    Else
+                        Dim mymsg As String = "could be considered unchanged: " & hproj.getShapeText
+                        Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", mymsg)
+
+                        Console.WriteLine(mymsg)
                     End If
                 End If
 
@@ -4416,20 +4442,21 @@ Module rpaModule1
                         showRangeRight = getColumnOfDate(tmpProj.endeDate)
 
 
-                        ' now replace in ShowProjekte 
-                        AlleProjekte.Remove(key)
-                        ShowProjekte.Remove(tmpProj.name)
+                        '' now replace in ShowProjekte 
+                        'AlleProjekte.Remove(key)
+                        'ShowProjekte.Remove(tmpProj.name)
                         ' add the new, altered version 
-                        AlleProjekte.Add(tmpProj)
-                        ShowProjekte.Add(tmpProj)
+                        AlleProjekte.Add(hproj)
+                        ShowProjekte.AddAnyway(hproj)
 
                         overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
 
-                        If overutilizationFound Then
-                            Dim fmsg As String = ""
-                            Call ShowProjekte.autoDistribute(hproj.name, "", fmsg)
-                            overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
-                        End If
+                        ' tk 24.4.22 takte it out again , autoDistribute changes too much
+                        'If overutilizationFound Then
+                        '    Dim fmsg As String = ""
+                        '    Call ShowProjekte.autoDistribute(hproj.name, "", fmsg)
+                        '    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+                        'End If
 
                         If overutilizationFound Then
                             newStartDate = newStartDate.AddDays(deltaInDays)
@@ -4450,12 +4477,10 @@ Module rpaModule1
                     Dim myMessages As New Collection
                     If storeSingleProjectToDB(hproj, myMessages) Then
                         Dim infomsg As String = "tried out " & anzLoops & " different start/ends to avoid bottlenecks, found solution for  " & hproj.getShapeText
-                        Call logger(ptErrLevel.logInfo, infomsg, myMessages)
-                        'Console.WriteLine(infomsg)
+                        Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
 
-                        If Not setWriteProtection(hproj, False) Then
-                            Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
-                        End If
+                        Console.WriteLine(infomsg)
+
                     Else
                         ' take it out again , because there was no solution
                         ShowProjekte.Remove(hproj.name)
@@ -4465,8 +4490,9 @@ Module rpaModule1
                         missingList.Add(hproj)
 
                         Dim infomsg As String = "... failure: could not store " & hproj.getShapeText
-                        Call logger(ptErrLevel.logError, infomsg, myMessages)
-                        'Console.WriteLine(infomsg)
+                        Call logger(ptErrLevel.logError, "define feasible portfolio: ", infomsg)
+
+                        Console.WriteLine(infomsg)
                     End If
 
 
@@ -4477,9 +4503,10 @@ Module rpaModule1
 
                     ' take it out again , because there was no solution
                     Dim infomsg As String = "... could finally not be considered  " & hproj.name
-                    Dim myMessages As New Collection
-                    Call logger(ptErrLevel.logError, infomsg, myMessages)
-                    'Console.WriteLine(infomsg)
+
+                    Call logger(ptErrLevel.logWarning, "define feasible portfolio: ", infomsg)
+
+                    Console.WriteLine(infomsg)
 
                     Dim mlKEy As String = calcProjektKey(hproj.name, "")
                     hproj = ImportProjekte.getProject(mlKEy)
