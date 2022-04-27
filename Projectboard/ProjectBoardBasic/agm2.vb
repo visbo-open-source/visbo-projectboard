@@ -26548,7 +26548,7 @@ Public Module agm2
 
                             ' write protocol
                             For Each capa As clsCapa In dbCapasOfOneRole.liste
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Re-set to Default values for " & roledef.name & " in Year " & capa.startOfYear.Year.ToString)
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Re-set to Default values for " & roledef.name & " in Year " & capa.startOfYear.ToLocalTime.Year.ToString)
                             Next
                         Else
                             Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in all Years ")
@@ -26570,14 +26570,14 @@ Public Module agm2
                             End Try
 
                             If resultOne Then
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "changed Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.Year.ToString)
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "changed Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.ToLocalTime.Year.ToString)
                             Else
-                                Call logger(ptErrLevel.logError, "storeCapasOfRoles", "failed to change Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.Year.ToString & vbLf & err.errorMsg)
+                                Call logger(ptErrLevel.logError, "storeCapasOfRoles", "failed to change Capa for RoleID = " & roledef.name & " in Year = " & capa.startOfYear.ToLocalTime.Year.ToString & vbLf & err.errorMsg)
                             End If
 
                             functionResult = functionResult And resultOne
                         Else
-                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "no capa changes (identical) for Role =" & roledef.name & " in Year = " & capa.startOfYear.Year.ToString)
+                            Call logger(ptErrLevel.logInfo, "storeCapasOfRoles ", "no capa changes (identical) for Role =" & roledef.name & " in Year = " & capa.startOfYear.ToLocalTime.Year.ToString)
                         End If
 
                     Next
@@ -26590,7 +26590,7 @@ Public Module agm2
 
                             ' write protocol
                             For Each capa As clsCapa In delCapasOfOneRole.liste
-                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.Year.ToString)
+                                Call logger(ptErrLevel.logInfo, "storeCapasOfRoles", "Default values for " & roledef.name & " in Year " & capa.startOfYear.ToLocalTime.Year.ToString)
                             Next
 
                         End If
