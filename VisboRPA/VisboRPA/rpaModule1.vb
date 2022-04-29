@@ -660,9 +660,19 @@ Module rpaModule1
                         Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
                         Console.WriteLine("project stored: " & kvp.Value.getShapeText)
                     Else
-                        ok = ok And False
-                        Call logger(ptErrLevel.logError, "project store failed: ", outputCollection)
-                        Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+                        Call logger(ptErrLevel.logWarning, "baseline couldn't be created: ", outputCollection)
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+                        If storeSingleProjectToDB(kvp.Value, outputCollection) Then
+                            ok = ok And True
+                            Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
+                            Console.WriteLine("project stored: " & kvp.Value.getShapeText)
+                        Else
+                            ok = ok And False
+                            Call logger(ptErrLevel.logError, "project store failed: ", outputCollection)
+                            Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+                        End If
+
                     End If
 
                 Else
