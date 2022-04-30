@@ -7440,7 +7440,7 @@ Public Module awinDiagrams
         ' über das pstart und plen ist bereits sichergesteltl, dass beide bzw alle Projekte in den Array-Bereich passen
         ' es muss nur jeweils sichergestellt werden, dass die , falls eines der Projekte kürzer ist, beim richtigen Index loslegen ..
         Dim tmpTdatenreihe() As Double
-        ReDim tmpTdatenreihe(0)
+        ReDim tmpTdatenreihe(plen - 1)
         Dim tmpVdatenreihe() As Double
         ReDim tmpVdatenreihe(0)
 
@@ -7641,21 +7641,35 @@ Public Module awinDiagrams
 
                     Dim prcName As String = ""
                     If scInfo.q2 <> "" Then
-                        Call splitHryFullnameTo2(scInfo.q2, prcName, breadcrumb, type, pvName)
 
-
-                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvName)
-                        For i = 0 To plen - 1
-                            tmpTdatenreihe(i) = 0
-                            For c = 0 To 3
-                                tmpTdatenreihe(i) = tmpTdatenreihe(i) + msdatenreihe(c, i)
+                        ' now this can be even a series of element-Names, separaed by "?" 
+                        Dim trennZeichen As Char = CChar("?")
+                        Dim myTmpCollection As New Collection
+                        If scInfo.q2.Contains(trennZeichen) Then
+                            Dim tmpStr() As String = scInfo.q2.Split(New Char() {trennZeichen})
+                            For p As Integer = 0 To tmpStr.Length - 1
+                                If Not myTmpCollection.Contains(tmpStr(p)) Then
+                                    myTmpCollection.Add(tmpStr(p))
+                                End If
                             Next
+                        Else
+                            myTmpCollection.Add(scInfo.q2)
+                        End If
+
+                        For Each fullName As String In myTmpCollection
+                            Call splitHryFullnameTo2(fullName, prcName, breadcrumb, type, pvName)
+
+
+                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvName)
+                            For i = 0 To plen - 1
+                                For c = 0 To 3
+                                    tmpTdatenreihe(i) = tmpTdatenreihe(i) + msdatenreihe(c, i)
+                                Next
+                            Next
+
                         Next
 
-                        Dim myCollection As New Collection From {
-                            prcName
-                        }
-                        tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
+                        tmpVdatenreihe = ShowProjekte.getMilestoneSchwellWerteInMonth(myTmpCollection)
 
                     End If
                 End If
@@ -7673,14 +7687,33 @@ Public Module awinDiagrams
 
                     Dim prcName As String = ""
                     If scInfo.q2 <> "" Then
-                        Call splitHryFullnameTo2(scInfo.q2, prcName, breadcrumb, type, pvName)
 
-                        tmpTdatenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
+                        ' now this can be even a series of element-Names, separaed by "?" 
+                        Dim trennZeichen As Char = CChar("?")
+                        Dim myTmpCollection As New Collection
+                        If scInfo.q2.Contains(trennZeichen) Then
+                            Dim tmpStr() As String = scInfo.q2.Split(New Char() {trennZeichen})
+                            For p As Integer = 0 To tmpStr.Length - 1
+                                If Not myTmpCollection.Contains(tmpStr(p)) Then
+                                    myTmpCollection.Add(tmpStr(p))
+                                End If
+                            Next
+                        Else
+                            myTmpCollection.Add(scInfo.q2)
+                        End If
 
-                        Dim myCollection As New Collection From {
-                            prcName
-                        }
-                        tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
+                        For Each fullName As String In myTmpCollection
+                            Call splitHryFullnameTo2(fullName, prcName, breadcrumb, type, pvName)
+
+                            Dim phDatenreihe As Double() = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
+
+                            For i = 0 To plen - 1
+                                tmpTdatenreihe(i) = tmpTdatenreihe(i) + phDatenreihe(i)
+                            Next
+
+                        Next
+
+                        tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myTmpCollection)
 
                     End If
                 End If
@@ -7870,8 +7903,8 @@ Public Module awinDiagrams
 
             End If
 
-            '
-            ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+
+
             Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
 
             Dim considerIstDaten As Boolean = False
@@ -7919,6 +7952,8 @@ Public Module awinDiagrams
                 Next
 
             End If
+
+
         End If
 
 
@@ -8067,6 +8102,14 @@ Public Module awinDiagrams
                     tmpResult = "Summe interner Mitarbeiter"
                     'tmpResult = "interne Kapa"
                 End If
+
+            Case "Nr" ' just Number 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Monthly Sum"
+                Else
+                    tmpResult = "Summe pro Monat"
+                    'tmpResult = "interne Kapa"
+                End If
             Case Else
 
                 tmpResult = kennz
@@ -8175,17 +8218,18 @@ Public Module awinDiagrams
 
         Dim tmpResult As String = ""
         Dim bezeichner As String = ""
+        Dim trennzeichen As String = "?"
         Dim zaehlEinheit = " PT"
         Dim leadingAddOn As String = ""
         Dim vergleichslinieExists As Boolean = False
 
         Dim qualifier2 As String = scInfo.q2
 
-        Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf"}
+        Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf", "Häufigkeit"}
 
         If awinSettings.englishLanguage Then
             zaehlEinheit = " PD "
-            repmsg = {"Total Cost", "Personnel Cost", "Other Cost", "Personnel Requirements"}
+            repmsg = {"Total Cost", "Personnel Cost", "Other Cost", "Personnel Requirements", "Frequency"}
         End If
 
         If scInfo.chartTyp = PTChartTypen.CurveCumul Then
@@ -8199,6 +8243,11 @@ Public Module awinDiagrams
             ' ist bereits richtig gesetzt 
         Else
             zaehlEinheit = " T€"
+        End If
+
+        If scInfo.elementTyp = ptElementTypen.phases Or
+                scInfo.elementTyp = ptElementTypen.milestones Then
+            zaehlEinheit = ""
         End If
 
         If scInfo.prPF = ptPRPFType.project Then
@@ -8271,10 +8320,34 @@ Public Module awinDiagrams
                     qualifier2 = scInfo.q2
 
                 Case ptElementTypen.phases
-                    qualifier2 = splitHryFullnameTo1(scInfo.q2)
+
+                    If awinSettings.englishLanguage Then
+                        qualifier2 = "Phases"
+                        leadingAddOn = "Frequency "
+                    Else
+                        qualifier2 = "Phasen"
+                        leadingAddOn = "Häufigkeit "
+                    End If
+
+                    If Not scInfo.q2.Contains(trennzeichen) Then
+                        qualifier2 = splitHryFullnameTo1(scInfo.q2)
+                    End If
+
 
                 Case ptElementTypen.milestones
-                    qualifier2 = splitHryFullnameTo1(scInfo.q2)
+
+                    If awinSettings.englishLanguage Then
+                        qualifier2 = "Milestones"
+                        leadingAddOn = "Frequency "
+                    Else
+                        qualifier2 = "Meilensteine"
+                        leadingAddOn = "Häufigkeit "
+                    End If
+
+                    If Not scInfo.q2.Contains(trennzeichen) Then
+                        qualifier2 = splitHryFullnameTo1(scInfo.q2)
+                    End If
+
 
                 Case ptElementTypen.cashflow
                     If awinSettings.englishLanguage Then
@@ -8292,81 +8365,87 @@ Public Module awinDiagrams
 
         If tmpResult = "" Then
             ' dann ist noch alles in Ordnung 
-            qualifier2 = leadingAddOn & qualifier2
-
-            startRed = 0
-            lengthRed = tsum.ToString("##,##0.").Length
-            If vergleichslinieExists And (tsum > 1.025 * vsum Or tsum < 0.975 * vsum) Then
-                startRed = qualifier2.Length + 3
+            If (scInfo.elementTyp = ptElementTypen.milestones Or scInfo.elementTyp = ptElementTypen.phases) Then
+                tmpResult = leadingAddOn & qualifier2
             Else
-                ' keine Farbe anzeigen
-                lengthRed = 0
-            End If
+                qualifier2 = leadingAddOn & qualifier2
 
-            If scInfo.prPF = ptPRPFType.portfolio Then
-                Dim txt As String() = {"Bedarf", "Kapa", "Summe"}
-                startRed = startRed + 7
-                If awinSettings.englishLanguage Then
-                    startRed = startRed - 1
-                    txt = {"Needs", "Capa", "Sum"}
-                End If
-
-                If scInfo.elementTyp = ptElementTypen.cashflow Then
-                    qualifier2 = qualifier2 & " (" & txt(2) & "="
-                    startRed = qualifier2.Length + 1
-                    lengthRed = tsum.ToString("##,##0.").Length
-                    tmpResult = qualifier2 & tsum.ToString("##,##0.") & zaehlEinheit & ")"
+                startRed = 0
+                lengthRed = tsum.ToString("##,##0.").Length
+                If vergleichslinieExists And (tsum > 1.025 * vsum Or tsum < 0.975 * vsum) Then
+                    startRed = qualifier2.Length + 3
                 Else
-                    tmpResult = qualifier2 & " (" & txt(0) & "=" & tsum.ToString("##,##0.") & "/" & txt(1) & "=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                    ' keine Farbe anzeigen
+                    lengthRed = 0
                 End If
 
-            Else
-                If startRed > 0 Then
-                    startRed = startRed + 4
-                End If
-                If awinSettings.meCompareVsLastPlan And
+                If scInfo.prPF = ptPRPFType.portfolio Then
+                    Dim txt As String() = {"Bedarf", "Kapa", "Summe"}
+                    startRed = startRed + 7
+                    If awinSettings.englishLanguage Then
+                        startRed = startRed - 1
+                        txt = {"Needs", "Capa", "Sum"}
+                    End If
+
+                    If scInfo.elementTyp = ptElementTypen.cashflow Then
+                        qualifier2 = qualifier2 & " (" & txt(2) & "="
+                        startRed = qualifier2.Length + 1
+                        lengthRed = tsum.ToString("##,##0.").Length
+                        tmpResult = qualifier2 & tsum.ToString("##,##0.") & zaehlEinheit & ")"
+                    Else
+                        tmpResult = qualifier2 & " (" & txt(0) & "=" & tsum.ToString("##,##0.") & "/" & txt(1) & "=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                    End If
+
+                Else
+                    If startRed > 0 Then
+                        startRed = startRed + 4
+                    End If
+                    If awinSettings.meCompareVsLastPlan And
                     (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                    startRed = startRed + 1
-                    tmpResult = qualifier2 & " (EAC1=" & tsum.ToString("##,##0.") & " / EAC0=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
-                Else
-                    tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
-                End If
-
-            End If
-            ' tk 18.1 20 alt .. 
-            'tmpResult = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
-            ' tk 18.120 Ende alt
-
-            If calledFromMassEdit Then
-
-                Dim modifiedTitle As String = ""
-                Dim projectPhaseName As String = scInfo.hproj.name
-
-                If restrictedToPhaseNameID.Length > 0 Then
-                    projectPhaseName = elemNameOfElemID(restrictedToPhaseNameID)
-                End If
-
-                If projectPhaseName.Length > 15 Then
-                    projectPhaseName = projectPhaseName.Substring(0, 13) & "..."
-                End If
-
-                If scInfo.vergleichsArt = PTVergleichsArt.beauftragung Then
-                    modifiedTitle = "Soll-Ist-Vergleich " & projectPhaseName & vbLf & tmpResult
-                    If awinSettings.englishLanguage Then
-                        modifiedTitle = "Target-Actual Comparison " & projectPhaseName & vbLf & tmpResult
+                        startRed = startRed + 1
+                        tmpResult = qualifier2 & " (EAC1=" & tsum.ToString("##,##0.") & " / EAC0=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                    Else
+                        tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
                     End If
-                Else
-                    modifiedTitle = "Aktuell-Vorher-Vergleich " & projectPhaseName & vbLf & tmpResult
-                    If awinSettings.englishLanguage Then
-                        modifiedTitle = "Current-Before Comparison " & projectPhaseName & vbLf & tmpResult
-                    End If
+
                 End If
+                ' tk 18.1 20 alt .. 
+                'tmpResult = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                ' tk 18.120 Ende alt
+
+                If calledFromMassEdit Then
+
+                    Dim modifiedTitle As String = ""
+                    Dim projectPhaseName As String = scInfo.hproj.name
+
+                    If restrictedToPhaseNameID.Length > 0 Then
+                        projectPhaseName = elemNameOfElemID(restrictedToPhaseNameID)
+                    End If
+
+                    If projectPhaseName.Length > 15 Then
+                        projectPhaseName = projectPhaseName.Substring(0, 13) & "..."
+                    End If
+
+                    If scInfo.vergleichsArt = PTVergleichsArt.beauftragung Then
+                        modifiedTitle = "Soll-Ist-Vergleich " & projectPhaseName & vbLf & tmpResult
+                        If awinSettings.englishLanguage Then
+                            modifiedTitle = "Target-Actual Comparison " & projectPhaseName & vbLf & tmpResult
+                        End If
+                    Else
+                        modifiedTitle = "Aktuell-Vorher-Vergleich " & projectPhaseName & vbLf & tmpResult
+                        If awinSettings.englishLanguage Then
+                            modifiedTitle = "Current-Before Comparison " & projectPhaseName & vbLf & tmpResult
+                        End If
+                    End If
 
 
-                Dim offset As Integer = modifiedTitle.Length - tmpResult.Length
-                startRed = startRed + offset
-                tmpResult = modifiedTitle
+                    Dim offset As Integer = modifiedTitle.Length - tmpResult.Length
+                    startRed = startRed + offset
+                    tmpResult = modifiedTitle
+                End If
             End If
+
+
         End If
 
         bestimmeChartDiagramTitle = tmpResult

@@ -4291,6 +4291,8 @@ Module rpaModule1
             ' It then represents the sequence: Row1 is the most important project , Row2 the scond, and so forth
             For Each rankingPair As KeyValuePair(Of Integer, String) In rankingList
 
+                ' check whether or not there is already such a project-variant in the DB
+
                 Dim hproj As clsProjekt = ImportProjekte.getProject(rankingPair.Value)
                 If ShowProjekte.contains(hproj.name) Then
                     ShowProjekte.Remove(hproj.name)
@@ -4351,7 +4353,7 @@ Module rpaModule1
                     Dim infomsg As String = "with default start-Date & end-Date not considered because of bottlenecks, will be tried out later ... " & hproj.name
                     Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
 
-                    Console.WriteLine(infomsg)
+                    'Console.WriteLine(infomsg)
 
                     rankingList2.Add(rankingPair.Key, rankingPair.Value)
 
@@ -4360,7 +4362,7 @@ Module rpaModule1
                     Dim infomsg As String = " ... considered " & hproj.getShapeText
                     Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
 
-                    Console.WriteLine(infomsg)
+                    'Console.WriteLine(infomsg)
 
                     ' now if there was created the variant
                     If storeRequired Then
@@ -4370,14 +4372,14 @@ Module rpaModule1
                             Dim mymsg As String = "tried out new value distribution:  worked out to find solution for  " & hproj.getShapeText
                             Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", mymsg)
 
-                            Console.WriteLine(mymsg)
+                            'Console.WriteLine(mymsg)
 
                         End If
                     Else
                         Dim mymsg As String = "could be considered unchanged: " & hproj.getShapeText
                         Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", mymsg)
 
-                        Console.WriteLine(mymsg)
+                        'Console.WriteLine(mymsg)
                     End If
                 End If
 
@@ -4420,7 +4422,7 @@ Module rpaModule1
                     AlleProjekte.Add(hproj)
                 End If
 
-                Dim deltaInDays As Integer = 7
+                Dim deltaInDays As Integer = 3
 
                 Dim iterations As Integer = 0
 
@@ -4452,11 +4454,11 @@ Module rpaModule1
                         overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
 
                         ' tk 24.4.22 takte it out again , autoDistribute changes too much
-                        'If overutilizationFound Then
-                        '    Dim fmsg As String = ""
-                        '    Call ShowProjekte.autoDistribute(hproj.name, "", fmsg)
-                        '    overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
-                        'End If
+                        If overutilizationFound Then
+                            Dim fmsg As String = ""
+                            Call ShowProjekte.autoDistribute(hproj.name, "", fmsg)
+                            overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, overloadAllowedinMonths, overloadAllowedTotal)
+                        End If
 
                         If overutilizationFound Then
                             newStartDate = newStartDate.AddDays(deltaInDays)
@@ -4479,7 +4481,7 @@ Module rpaModule1
                         Dim infomsg As String = "tried out " & anzLoops & " different start/ends to avoid bottlenecks, found solution for  " & hproj.getShapeText
                         Call logger(ptErrLevel.logInfo, "define feasible portfolio: ", infomsg)
 
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
 
                     Else
                         ' take it out again , because there was no solution
@@ -4492,7 +4494,7 @@ Module rpaModule1
                         Dim infomsg As String = "... failure: could not store " & hproj.getShapeText
                         Call logger(ptErrLevel.logError, "define feasible portfolio: ", infomsg)
 
-                        Console.WriteLine(infomsg)
+                        'Console.WriteLine(infomsg)
                     End If
 
 
@@ -4506,7 +4508,7 @@ Module rpaModule1
 
                     Call logger(ptErrLevel.logWarning, "define feasible portfolio: ", infomsg)
 
-                    Console.WriteLine(infomsg)
+                    'Console.WriteLine(infomsg)
 
                     Dim mlKEy As String = calcProjektKey(hproj.name, "")
                     hproj = ImportProjekte.getProject(mlKEy)

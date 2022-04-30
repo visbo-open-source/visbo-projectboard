@@ -3488,6 +3488,51 @@ Public Module testModule
     End Function
 
     ''' <summary>
+    ''' bestimmt aus dem qualifier2 bzw der Collection mit Phase bzw Milestone Namen den Ergebnis String als Folge von 
+    ''' TeilStrings, die jeweils durch das Trennzeichen getrennt sind
+    ''' Wenn in Qualifier2 bereits etwas enthalten ist, dann werden die in der Collection befindlichen Elementen angehängt
+    ''' </summary>
+    ''' <param name="qualifier2"></param>
+    ''' <param name="selectedPhMs"></param>
+    ''' <returns></returns>
+    Public Function bestimmeMsPhQ2(ByVal qualifier2 As String, ByVal selectedPhMs As Collection,
+                                   Optional ByVal trennzeichen As String = "?") As String
+
+        Dim result As String = qualifier2
+
+
+        If Not IsNothing(selectedPhMs) Then
+
+            If selectedPhMs.Count > 0 Then
+                ' now check whether qualifier contained something, 
+                ' then add a trennzeichen before appending elements from the Collection
+                If result <> "" Then
+                    result = result & trennzeichen
+                End If
+
+                For i As Integer = 1 To selectedPhMs.Count
+                    Dim msFullName As String = selectedPhMs.Item(i)
+                    If i < selectedPhMs.Count Then
+                        result = result & msFullName & trennzeichen
+                    Else
+                        result = result & msFullName
+                    End If
+                Next
+
+            Else
+                ' consider only qualifier2 content
+                result = qualifier2
+            End If
+        Else
+            ' consider qualifier2 content
+            result = qualifier2
+        End If
+
+        bestimmeMsPhQ2 = result
+
+    End Function
+
+    ''' <summary>
     ''' wird in createSlidesFromProject immer wieder gebraucht; bestimmt den qualifier2 role, auch wenn er als RoleID;nameID angegeben ist
     ''' gibt eine RoleNameID zurück 
     ''' </summary>

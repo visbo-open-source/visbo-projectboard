@@ -391,7 +391,7 @@
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
           <!--<separator id="PT0G1s9" getVisible="chckVisibility" />-->
           <!--label="Optimieren"-->
-          <!--<button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>-->
+          <button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>
           <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
           <!--<separator id="PT0G1s8"/>-->
           <!--- Cockpit--><!--

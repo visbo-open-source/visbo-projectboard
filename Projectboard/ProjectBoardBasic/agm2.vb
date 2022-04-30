@@ -19153,7 +19153,7 @@ Public Module agm2
                                 hasForecastMonths = cphase.hasForecastMonths
                             End If
 
-                            summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
+                            summeEditierenErlaubt = (awinSettings.allowSumEditing And actualDataRelColumn < 0)
 
 
                             Dim indentlevelPhMS As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)

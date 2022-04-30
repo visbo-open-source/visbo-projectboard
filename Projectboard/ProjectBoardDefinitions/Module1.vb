@@ -588,6 +588,7 @@ Public Module Module1
         personentage = 0
         euro = 1
         hrs = 2
+        anzahl = 3
     End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 

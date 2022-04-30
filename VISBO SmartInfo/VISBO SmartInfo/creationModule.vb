@@ -15,7 +15,7 @@ Module creationModule
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
-    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "Rolle", "Skill"}
+    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "Portfolio-Name", "Meilenstein", "Phase", "Rolle", "Skill"}
 
     ' hier ist  projectboardCustomization.xlsx zu finden
     Friend customizationPath As String = ""
@@ -224,31 +224,34 @@ Module creationModule
             If Not noDBAccessInPPT Then
 
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                    Try
-                        ' ic retrieveProjectHistoryFromDB both baseline and planning versions are retrieved 
+                    If Not isPortfolio Then
+
+                        Try
+                            ' ic retrieveProjectHistoryFromDB both baseline and planning versions are retrieved 
 
 
-                        If Not aktprojekthist Then
-                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
-                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
-                        End If
+                            If Not aktprojekthist Then
+                                projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
+                                                                                storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
+                            End If
 
 
-                        ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
+                            ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
 
 
-                        ' ur: alt: bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
-                        bproj = projekthistorie.beauftragung
+                            ' ur: alt: bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+                            bproj = projekthistorie.beauftragung
 
-                        ' tk 19.1.19 das darf hier nicht mehr gemacht werden. Eine letzte Vorgabe kann später gemacht sein als der Planungsstand ... 
-                        'Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        ' ur: alt: lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=Date.Now, err:=err)
-                        lproj = projekthistorie.lastBeauftragung(Date.Now)
+                            ' tk 19.1.19 das darf hier nicht mehr gemacht werden. Eine letzte Vorgabe kann später gemacht sein als der Planungsstand ... 
+                            'Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
+                            ' ur: alt: lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=Date.Now, err:=err)
+                            lproj = projekthistorie.lastBeauftragung(Date.Now)
 
 
-                    Catch ex As Exception
-                        projekthistorie.clear()
-                    End Try
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+                    End If
                 Else
                     msgTxt = "no database connection ... network problem !? -> Exit"
                     msgCollection.Add(msgTxt)
@@ -266,13 +269,19 @@ Module creationModule
             Exit Sub
         End Try
 
-        Try
-            lastElem = projekthistorie.Count - 1
-            lastproj = projekthistorie.ElementAt(lastElem - 1)
-        Catch ex As Exception
+        If isPortfolio Then
             lastElem = -1
             lastproj = Nothing
-        End Try
+        Else
+            Try
+                lastElem = projekthistorie.Count - 1
+                lastproj = projekthistorie.ElementAt(lastElem - 1)
+            Catch ex As Exception
+                lastElem = -1
+                lastproj = Nothing
+            End Try
+        End If
+
 
 
         ' tk 4.10.19 aktuell wird nur eine Slide behandelt ... 
@@ -400,12 +409,17 @@ Module creationModule
                         kennzeichnung = "Swimlanes2" Or
                         kennzeichnung = "Multiprojektsicht" Or
                         kennzeichnung = "TableMilestoneAPVCV" Or
+                        kennzeichnung = "Meilenstein" Or
+                        kennzeichnung = "Phase" Or
                         kennzeichnung = "PortfolioRoadmap" Then
 
                     phMSSelNeeded(0) = True
 
                 ElseIf kennzeichnung = "TableBudgetCostAPVCV" Or
-                    kennzeichnung = "ProjektBedarfsChart" Then
+                       kennzeichnung = "Rolle" Or
+                       kennzeichnung = "Skill" Or
+                       kennzeichnung = "Kostenart" Or
+                       kennzeichnung = "ProjektBedarfsChart" Then
 
                     roleCostSelNeeded(0) = True
                 End If
@@ -476,9 +490,6 @@ Module creationModule
                     Next
                 End If
 
-                '' jetzt muss für den Multiprojekt Report noch showrangeLeft und Right gesetzt werden 
-                'showRangeLeft = ShowProjekte.getMinMonthColumn - 1
-                'showRangeRight = ShowProjekte.getMaxMonthColumn + 3
 
             End If
 
@@ -1089,6 +1100,212 @@ Module creationModule
 
                                 End Try
 
+                            Case "Meilenstein"
+
+                                Try
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+                                    If qualifier <> "" Then
+                                        ' is it: %All -> all given Milestones from selectedMilestones in that chart 
+                                        ' is it %1 -> the first item in that chart
+                                        ' is it %2 -> the second item in that chart
+                                        ' is it just the name of a milestone
+                                        Dim msCollection As New Collection
+                                        If qualifier.StartsWith("%") Then
+                                            qualifier = qualifier.Substring(1)
+
+                                            If qualifier = "" Or qualifier = "All" Then
+                                                ' consider all milestones 
+                                                qualifier = ""
+                                                msCollection = selectedMilestones
+
+                                            ElseIf IsNumeric(qualifier) Then
+
+                                                If CInt(qualifier) > 0 And CInt(qualifier) < selectedMilestones.Count Then
+                                                    qualifier = CStr(selectedMilestones.Item(CInt(qualifier)))
+                                                Else
+                                                    qualifier = "?"
+                                                End If
+                                            Else
+                                                ' qualifier enthält alles 
+                                            End If
+                                        End If
+
+                                        Dim smartChartInfo As New clsSmartPPTChartInfo
+                                        With smartChartInfo
+
+                                            If showRangeLeft > 0 Then
+                                                .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                            End If
+                                            If showRangeRight > 0 Then
+                                                .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                            End If
+
+                                            .einheit = PTEinheiten.personentage
+                                            .elementTyp = ptElementTypen.milestones
+                                            .pName = getPnameFromKey(currentConstellationPvName)
+                                            .vName = getVariantnameFromKey(currentConstellationPvName)
+                                            .vpid = currentSessionConstellation.vpID
+                                            .prPF = ptPRPFType.portfolio
+                                            .q2 = bestimmeMsPhQ2(qualifier, msCollection)
+                                            .bigType = ptReportBigTypes.charts
+
+                                            ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                            .hproj = Nothing
+                                            .vglProj = Nothing
+
+
+                                        End With
+
+                                        If smartChartInfo.q2 <> "" Then
+
+
+                                            Dim noLegend As Boolean = False
+                                            If qualifier2 = "noLegend" Then
+                                                noLegend = True
+                                            End If
+                                            Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
+
+
+                                        End If
+
+                                    End If
+
+
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                End Try
+
+
+                            Case "Phase"
+
+
+                                Try
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+
+                                    If qualifier <> "" Then
+                                        ' is it: %All -> all given Milestones from selectedMilestones in that chart 
+                                        ' is it %1 -> the first item in that chart
+                                        ' is it %2 -> the second item in that chart
+                                        ' is it just the name of a milestone
+                                        Dim phCollection As New Collection
+                                        If qualifier.StartsWith("%") Then
+                                            qualifier = qualifier.Substring(1)
+
+                                            If qualifier = "" Or qualifier = "All" Then
+                                                ' consider all milestones 
+                                                qualifier = ""
+                                                phCollection = selectedPhases
+
+                                            ElseIf IsNumeric(qualifier) Then
+
+                                                If CInt(qualifier) > 0 And CInt(qualifier) < selectedPhases.Count Then
+                                                    qualifier = CStr(selectedPhases.Item(CInt(qualifier)))
+                                                Else
+                                                    qualifier = "?"
+                                                End If
+                                            Else
+                                                ' qualifier enthält alles 
+                                            End If
+                                        End If
+
+                                        Dim smartChartInfo As New clsSmartPPTChartInfo
+                                        With smartChartInfo
+
+                                            If showRangeLeft > 0 Then
+                                                .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                            End If
+                                            If showRangeRight > 0 Then
+                                                .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                            End If
+
+                                            .einheit = PTEinheiten.personentage
+                                            .elementTyp = ptElementTypen.phases
+                                            .pName = getPnameFromKey(currentConstellationPvName)
+                                            .vName = getVariantnameFromKey(currentConstellationPvName)
+                                            .vpid = currentSessionConstellation.vpID
+                                            .prPF = ptPRPFType.portfolio
+                                            .q2 = bestimmeMsPhQ2(qualifier, phCollection)
+                                            .bigType = ptReportBigTypes.charts
+
+                                            ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                            .hproj = Nothing
+                                            .vglProj = Nothing
+
+
+                                        End With
+
+                                        If smartChartInfo.q2 <> "" Then
+
+
+                                            Dim noLegend As Boolean = False
+                                            If qualifier2 = "noLegend" Then
+                                                noLegend = True
+                                            End If
+                                            Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
+
+
+                                        End If
+
+                                    End If
+
+
+                                    ' old 
+
+                                    If qualifier <> "" Then
+                                        Dim smartChartInfo As New clsSmartPPTChartInfo
+                                        With smartChartInfo
+
+                                            If showRangeLeft > 0 Then
+                                                .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                            End If
+                                            If showRangeRight > 0 Then
+                                                .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                            End If
+
+                                            .einheit = PTEinheiten.personentage
+                                            .elementTyp = ptElementTypen.phases
+                                            .pName = getPnameFromKey(currentConstellationPvName)
+                                            .vName = getVariantnameFromKey(currentConstellationPvName)
+                                            .vpid = currentSessionConstellation.vpID
+                                            .prPF = ptPRPFType.portfolio
+                                            .q2 = bestimmeRoleQ2(qualifier, selectedPhases)
+                                            .bigType = ptReportBigTypes.charts
+
+                                            ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                            .hproj = Nothing
+                                            .vglProj = Nothing
+
+
+                                        End With
+
+                                        If smartChartInfo.q2 <> "" Then
+
+                                            Dim noLegend As Boolean = False
+                                            If qualifier2 = "noLegend" Then
+                                                noLegend = True
+                                            End If
+                                            Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
+
+
+                                        End If
+
+                                    End If
+
+
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                End Try
+
+
+                            Case "Skill"
+
+
                             Case "Rolle"
 
 
@@ -1648,7 +1865,9 @@ Module creationModule
         Dim actualDataIX As Integer = -1
 
         ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
-        If sCInfo.prPF = ptPRPFType.portfolio Then
+        If sCInfo.prPF = ptPRPFType.portfolio And
+            Not (sCInfo.elementTyp = ptElementTypen.milestones Or sCInfo.elementTyp = ptElementTypen.phases) Then
+
             considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
             If considerIstDaten Then
                 actualDataIX = getColumnOfDate(ShowProjekte.actualDataUntil) - getColumnOfDate(StartofCalendar.AddMonths(showRangeLeft))
@@ -1707,7 +1926,6 @@ Module creationModule
         Dim found As Boolean = False
 
         Dim pname As String = sCInfo.pName
-
 
 
         '
@@ -1772,9 +1990,7 @@ Module creationModule
 
             If Not IsNothing(newPPTChart.Chart.ChartData) Then
 
-
                 With newPPTChart.Chart.ChartData
-
                     .Workbook.Application.Visible = False
                     .Workbook.Application.Width = 50
                     .Workbook.Application.Height = 15
@@ -1949,43 +2165,52 @@ Module creationModule
 
                 ' Beauftragung bzw. Vergleichsdaten
                 If sCInfo.prPF = ptPRPFType.portfolio Then
+
+                    ' show only when not phases / milestones 
+                    Dim weiterMachen As Boolean = True
+                    If sCInfo.elementTyp = ptElementTypen.phases Or sCInfo.elementTyp = ptElementTypen.milestones Then
+                        weiterMachen = vdatenreihe.Sum > 0
+                    End If
                     'series
-                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-
-                        .Name = bestimmeLegendNameIPB("C")
-                        .Values = vdatenreihe
-                        .XValues = Xdatenreihe
-
-                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                            .ForeColor.RGB = visboFarbeRed
-                            .Weight = 2
-                        End With
-
-
-                    End With
-
-                    Dim tmpSum As Double = internKapaDatenreihe.Sum
-                    If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
-                        ' es gibt geplante externe Ressourcen ... 
+                    If weiterMachen Then
                         With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                            .HasDataLabels = False
-                            '.name = "Kapazität incl. Externe"
-                            .Name = bestimmeLegendNameIPB("CI")
-                            '.Name = repMessages.getmsg(118)
 
-                            .Values = internKapaDatenreihe
+                            .Name = bestimmeLegendNameIPB("C")
+                            .Values = vdatenreihe
                             .XValues = Xdatenreihe
+
                             .ChartType = Microsoft.Office.Core.XlChartType.xlLine
                             With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
-                                .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                                .ForeColor.RGB = visboFarbeRed
                                 .Weight = 2
                             End With
 
+
                         End With
+
+                        Dim tmpSum As Double = internKapaDatenreihe.Sum
+                        If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                            ' es gibt geplante externe Ressourcen ... 
+                            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                                .HasDataLabels = False
+                                '.name = "Kapazität incl. Externe"
+                                .Name = bestimmeLegendNameIPB("CI")
+                                '.Name = repMessages.getmsg(118)
+
+                                .Values = internKapaDatenreihe
+                                .XValues = Xdatenreihe
+                                .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
+                                    .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
+                                    .Weight = 2
+                                End With
+
+                            End With
+                        End If
                     End If
+
 
                 Else
                     If Not IsNothing(sCInfo.vglProj) Then
@@ -2069,12 +2294,16 @@ Module creationModule
                     .HasTitle = False
                     .MinimumScale = 0
 
+                    If sCInfo.elementTyp = ptElementTypen.phases Or
+                            sCInfo.elementTyp = ptElementTypen.milestones Then
+                        .MajorUnit = 1
+                    End If
+
                     If titleFontSize - 4 >= 6 Then
                         .TickLabels.Font.Size = titleFontSize - 4
                     Else
                         .TickLabels.Font.Size = 6
                     End If
-
 
                 End With
             Catch ex As Exception

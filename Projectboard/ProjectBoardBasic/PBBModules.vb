@@ -932,6 +932,8 @@ Public Module PBBModules
                     End If
                     Call MsgBox(errMsg)
                 Else
+                    Dim firstTime As Boolean = True
+
                     While zaehler <= nameCollection.Count And Not abbruch
 
                         ' jetzt die Aktion durchführen ...
@@ -959,40 +961,23 @@ Public Module PBBModules
                             .newVariant.Text = neuerVariantenName
                         End With
 
-                        resultat = neueVariante.ShowDialog
-                        If resultat = DialogResult.OK Then
+                        If firstTime Then
+                            firstTime = False
+                            resultat = neueVariante.ShowDialog
+                            If resultat = DialogResult.OK Then
+                                With neueVariante
+                                    neuerVariantenName = .newVariant.Text
+                                    variantDescription = .txtDescription.Text
+                                End With
+                            Else
+                                ok = False
+                                abbruch = True
+                            End If
+                        End If
 
-                            With neueVariante
-                                neuerVariantenName = .newVariant.Text
-                                variantDescription = .txtDescription.Text
-                            End With
+                        If ok Then
 
                             newproj = hproj.createVariant(neuerVariantenName, variantDescription)
-                            ' alt - wurde ersetzt durch obigen Aufruf ..
-                            ''newproj = New clsProjekt
-                            ''hproj.copyTo(newproj)
-
-                            ''If newproj.dauerInDays <> hproj.dauerInDays Then
-                            ''    'Call MsgBox("ungleich: " & newproj.dauerInDays & " versus " & hproj.dauerInDays)
-                            ''End If
-
-                            ''With neueVariante
-                            ''    neuerVariantenName = .newVariant.Text
-                            ''    variantDescription = .txtDescription.Text
-                            ''End With
-
-
-                            ''With newproj
-                            ''    .name = hproj.name
-                            ''    .variantName = neuerVariantenName
-                            ''    .variantDescription = variantDescription
-                            ''    .ampelErlaeuterung = hproj.ampelErlaeuterung
-                            ''    .ampelStatus = hproj.ampelStatus
-                            ''    .timeStamp = Date.Now
-                            ''    .shpUID = hproj.shpUID
-                            ''    .tfZeile = hproj.tfZeile
-
-                            ''End With
 
                             If currentConstellationPvName <> calcLastSessionScenarioName() Then
                                 currentConstellationPvName = calcLastSessionScenarioName()
