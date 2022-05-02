@@ -333,16 +333,16 @@ Module rpaModule1
                     Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
-                    allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
-                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet of Instart", " not yet integrated !")
+                    'allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet Telair", " not yet integrated !")
+                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboZeussCapacity)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities Telair", " not yet integrated !")
+                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
 
                 Case Else
                     Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
@@ -1808,7 +1808,7 @@ Module rpaModule1
         End Try
 
         If verifiedStructure Then
-            result = PTRpa.visboProposal
+            result = PTRpa.visboInstartProposal
         Else
             result = PTRpa.visboUnknown
         End If
