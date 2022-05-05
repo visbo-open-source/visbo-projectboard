@@ -90,9 +90,6 @@ Public Class Ribbon1
         ' 
         ' Ende alte Version; vor dem 26.10.14
 
-
-
-
         enableOnUpdate = True
 
     End Sub

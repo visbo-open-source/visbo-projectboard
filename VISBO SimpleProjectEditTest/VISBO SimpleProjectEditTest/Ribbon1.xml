@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
+  <ribbon>
+    <tabs>
+	  <tab idMso="TabAddIns" />		
+      <tab id="PTVISBO" label="VISBO">
+		  <group id ="PT6G6" label="VISBO Simple Project Edit">
+			  <button id="Pt6G6B0" label="Laden" size ="large" imageMso="MindMapExportData" onAction="PTProjectLoad" />
+			  <button id="Pt6G6B1" label="Speichern" size ="large" imageMso="MindMapImportData"  onAction="PTProjectSave" />
+			  <button id="Pt6G6B2" label="Löschen" size ="large" imageMso="Delete" onAction="PTProjectDelete" />
+			  <separator id="PT2G1s2"/>
+			  <button id="Pt6G6B3" label="Cost" size ="large"  onAction="PTProjectCost" />
+			  <button id="Pt6G6B4" label="Time" size ="large"   onAction="PTProjectTime" />
+			  <button id="Pt6G6B5" label="Resources" size ="large"  onAction="PTProjectResources" />
+		  </group>
+      </tab>
+	</tabs>
+  </ribbon>
+</customUI>
+

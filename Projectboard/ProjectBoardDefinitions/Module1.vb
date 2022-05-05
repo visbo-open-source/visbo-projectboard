@@ -1202,6 +1202,7 @@ Public Module Module1
 
     Public fehlerBeimLoad As Boolean = False
     Public awinsetTypen_Performed As Boolean = False
+    Public speSetTypen_Performed As Boolean = False
 
 
     Private Declare Function OpenClipboard& Lib "user32" (ByVal hwnd As Long)
