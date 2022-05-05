@@ -14392,6 +14392,24 @@ Public Module Projekte
 
             End Try
 
+        ElseIf erloes > 0 Then
+            ' wenn es einen Meilenstein am Ende gibt, der Invoice heisst: dort anhängen und den Betrag des Erloeses ranhängen
+            Try
+                If newprojekt.getInvoicesPenalties.Sum = 0 Then
+                    Dim myInvoiceMilestone As clsMeilenstein = newprojekt.getMilestone("Invoice")
+                    If Not IsNothing(myInvoiceMilestone) Then
+                        If DateDiff(DateInterval.Day, myInvoiceMilestone.getDate, newprojekt.endeDate) <= 0 Then
+                            myInvoiceMilestone.invoice = New KeyValuePair(Of Double, Integer)(erloes, 0)
+                            If DateDiff(DateInterval.Day, myInvoiceMilestone.getDate, newprojekt.endeDate) < 0 Then
+                                myInvoiceMilestone.setDate = newprojekt.endeDate
+                            End If
+                        End If
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+
         End If
 
         ' Workaround: 

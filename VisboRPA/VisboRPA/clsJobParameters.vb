@@ -203,6 +203,20 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _defaultDeltaInDays As Integer
+    Public Property defaultDeltaInDays As Integer
+        Get
+            defaultDeltaInDays = _defaultDeltaInDays
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                If value > 0 Then
+                    _defaultDeltaInDays = value
+                End If
+            End If
+        End Set
+    End Property
+
 
     Sub New()
 
@@ -210,6 +224,7 @@ Public Class clsJobParameters
         _allowedOverloadTotal = 1.0
         _limitPhases = 1
         _limitMilestones = 1
+        _defaultDeltaInDays = 7
         _milestones = New Collection
         _phases = New Collection
         kennung = PTRpa.visboUnknown

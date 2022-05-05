@@ -52,6 +52,22 @@
 
     End Sub
 
+    Public Function getMaxRowNumber() As Integer
+        Dim result As Integer = 2
+        If _sortType = 1 Then
+
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                If kvp.Value.zeile > result Then
+                    result = kvp.Value.zeile
+                End If
+            Next
+        Else
+            result = _allItems.Count + 2
+        End If
+
+        getMaxRowNumber = result
+    End Function
+
     Public Property timestamp As Date
         Get
             timestamp = _timestamp

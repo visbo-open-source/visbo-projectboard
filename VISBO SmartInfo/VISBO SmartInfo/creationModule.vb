@@ -1123,7 +1123,7 @@ Module creationModule
 
                                             ElseIf IsNumeric(qualifier) Then
 
-                                                If CInt(qualifier) > 0 And CInt(qualifier) < selectedMilestones.Count Then
+                                                If CInt(qualifier) > 0 And CInt(qualifier) <= selectedMilestones.Count Then
                                                     qualifier = CStr(selectedMilestones.Item(CInt(qualifier)))
                                                 Else
                                                     qualifier = "?"
@@ -1204,7 +1204,7 @@ Module creationModule
 
                                             ElseIf IsNumeric(qualifier) Then
 
-                                                If CInt(qualifier) > 0 And CInt(qualifier) < selectedPhases.Count Then
+                                                If CInt(qualifier) > 0 And CInt(qualifier) <= selectedPhases.Count Then
                                                     qualifier = CStr(selectedPhases.Item(CInt(qualifier)))
                                                 Else
                                                     qualifier = "?"
@@ -2296,7 +2296,7 @@ Module creationModule
 
                     If sCInfo.elementTyp = ptElementTypen.phases Or
                             sCInfo.elementTyp = ptElementTypen.milestones Then
-                        .MajorUnit = 1
+                        .MajorUnitIsAuto = True
                     End If
 
                     If titleFontSize - 4 >= 6 Then
@@ -3347,7 +3347,7 @@ Module creationModule
 
                         Try
                             .Line.ForeColor.RGB = hproj.farbe
-                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Then
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or hproj.vpStatus = VProjectStatus(PTVPStati.proposed) Then
                                 .Line.DashStyle = MsoLineDashStyle.msoLineDash
                             Else
                                 .Line.DashStyle = MsoLineDashStyle.msoLineSolid
@@ -3376,12 +3376,7 @@ Module creationModule
                                             hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
                                             hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
 
-                            'Call addSmartPPTMsPhInfo(copiedShape, hproj,
-                            '               fullBreadCrumb, hproj.name, shortText, originalName,
-                            '                bestShortName, bestLongName,
-                            '                hproj.startDate, hproj.endeDate,
-                            '                hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
-                            '                hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
                         End If
 
 

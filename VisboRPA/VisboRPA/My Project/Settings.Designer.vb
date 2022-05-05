@@ -134,7 +134,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("https://staging.visbo.net/api")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
         Public ReadOnly Property VisboURL() As String
             Get
                 Return CType(Me("VisboURL"),String)
