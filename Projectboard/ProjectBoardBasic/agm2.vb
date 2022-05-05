@@ -7167,7 +7167,6 @@ Public Module agm2
 
     End Sub
 
-
     ''' <summary>
     ''' prüft, ob es sich beim Namen/der Email um eine bekannte Email Adresse handelt. 
     ''' Bei Erfolg wird das Werte-Paar in mappingNameID eingetragen
