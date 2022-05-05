@@ -2085,6 +2085,8 @@ Public Class clsRollen
                             ' ist die RoleUID auch Kind des Teams ? 
                             If getRoleDefByID(teamID).getSubRoleIDs.ContainsKey(roleUID) Then
                                 tmpResult = True
+                            Else
+                                tmpResult = getRoleDefByID(roleUID).isCombinedRole
                             End If
                         End If
 

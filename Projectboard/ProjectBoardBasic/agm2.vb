@@ -12632,11 +12632,10 @@ Public Module agm2
 
 
     End Sub
-
     ''' <summary>
     ''' berechnet rekursiv den Monatsbedarf
     ''' </summary>
-    ''' <param name="roleCostName">der Name der Orga-Einheit bzw. Kostenart </param>
+    ''' <param name="roleCostNameID">der Name der Orga-Einheit bzw. Kostenart </param>
     ''' <param name="breadCrumb">wenn es den Phasen-Namen mehrfach gibt: der Breadcrumb, wenn leer, dann wird das erste Auftreten genommen</param>
     ''' <param name="phaseName">der Phasen-Name, wenn es den mehrfach gibt, muss über BreadCrumb parent#parent#.. der eindeutige Name bestimmt sein </param>
     ''' <param name="value">der Wert in Tausend Euro bz. Personen-Tage</param>
@@ -12645,7 +12644,7 @@ Public Module agm2
     ''' <param name="phNameIDs">gibt die Liste der PhNameIDs zurück </param>
     ''' <param name="rolePhaseValues">enthält die Werte für die Orga-Units, immer in PT</param>
     ''' <param name="costPhaseValues">enthält die Werte der Kostenarten, immer in T€</param>
-    Private Sub setRolePhaseValues(ByVal roleCostName As String, ByVal phaseName As String, ByVal breadCrumb As String,
+    Private Sub setRolePhaseValues(ByVal roleCostNameID As String, ByVal phaseName As String, ByVal breadCrumb As String,
                                    ByVal value As Double, ByVal einheitISEuro As Boolean,
                                    ByVal hproj As clsProjekt, ByVal phNameIDs As String(),
                                    ByRef rolePhaseValues As SortedList(Of String, Double()),
@@ -12664,20 +12663,21 @@ Public Module agm2
             ' es ist sichergestellt, dass cphase existiert 
 
             ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
-            If RoleDefinitions.containsName(roleCostName) Then
+            If RoleDefinitions.containsNameOrID(roleCostNameID) Then
 
 
-                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleCostName, "")
+
+
                 ' is bereits ein Wert in rolePhaseValues eingetragen ... nur wenn es die überhaupt gibt, weitermachen 
 
-                If (roleNameID.Length > 0) And (phaseNameID.Length > 0) Then
+                If (roleCostNameID.Length > 0) And (phaseNameID.Length > 0) Then
 
                     ' bestimme jetzt anhand phaseNameID den Index in der Integer
                     Dim found As Boolean = False
                     Dim ix As Integer = -1 ' wqird zu Beginn der Schleife erhöht, deshalb beginnen mit -1
 
                     Dim tagessatz As Double = 0.0
-                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostName)
+                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostNameID)
                     If Not IsNothing(curRole) Then
                         tagessatz = curRole.tagessatzIntern
                         If tagessatz > 0 And einheitISEuro Then
@@ -12691,9 +12691,9 @@ Public Module agm2
                     Loop
 
                     If found Then
-                        If rolePhaseValues.ContainsKey(roleNameID) Then
+                        If rolePhaseValues.ContainsKey(roleCostNameID) Then
 
-                            phValues = rolePhaseValues.Item(roleNameID)
+                            phValues = rolePhaseValues.Item(roleCostNameID)
 
                             If phValues(ix) > 0 Then
                                 phValues(ix) = phValues(ix) + value
@@ -12704,15 +12704,15 @@ Public Module agm2
                         Else
                             ReDim phValues(anzPhases - 1)
                             phValues(ix) = value
-                            rolePhaseValues.Add(roleNameID, phValues)
+                            rolePhaseValues.Add(roleCostNameID, phValues)
                         End If
                     End If
 
                 End If
 
-            ElseIf CostDefinitions.containsName(roleCostName) Then
+            ElseIf CostDefinitions.containsName(roleCostNameID) Then
                 ' es handelt sich um eine Kostenart ..
-                Dim costName As String = roleCostName
+                Dim costName As String = roleCostNameID
                 ' is bereits ein Wert in rolePhaseValues eingetragen ... nur wenn es die überhaupt gibt, weitermachen 
 
                 If (costName.Length > 0) And (phaseNameID.Length > 0) Then
