@@ -251,6 +251,9 @@ Module rpaModule1
                 currentWB = appInstance.Workbooks.Open(fname)
             End If
 
+            ' now clear Session 
+            Call emptyAllVISBOStructures()
+
             logfileNamePath = createLogfileName(rpaFolder, myName)
             Select Case rpaCat
                 Case CInt(PTRpa.visboProjectList)
@@ -2129,6 +2132,10 @@ Module rpaModule1
                                 result.defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
                             End If
 
+                            If Not IsNothing(.Cells(9, 2).value) Then
+                                result.defaultDeltaInDays = CInt(.Cells(9, 2).value)
+                            End If
+
                         Case PTRpa.visboSuggestResourceAllocation
                             ' same as feasible Portfolio , except Line 7: project variantName
                             result.allowedOverloadMonth = CDbl(.Cells(1, 2).value)
@@ -3779,30 +3786,48 @@ Module rpaModule1
             ShowProjekte.Clear()
             AlleProjekte.Clear()
 
-            ' now load the the portfolio and all projects of portfolio 
+            ' now load the existing portfolio and all projects of portfolio 
             ' hole Portfolio (pName,vName) aus der db
             Dim cTime As Date = heute
             Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myActivePortfolio,
                                                                                                "", cTime, Err, variantName:="", storedAtOrBefore:=heute)
 
+
+            ' tk 1.5. 
+            Dim nextLineNumber As Integer = myConstellation.getMaxRowNumber + 1
+
             If Not IsNothing(myConstellation) Then
                 Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & myActivePortfolio, " start of Operation ... ")
                 ' tmpname in die Session-Liste wieder aufnehmen
                 projectConstellations.Add(myConstellation)
+
+                ' rowNr ist needed to use it definietion of Portfolio sorting / sequence
+
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
 
                     Dim pName As String = getPnameFromKey(kvp.Key)
                     Dim vName As String = getVariantnameFromKey(kvp.Key)
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+
+                    Try
+                        hproj.tfZeile = myConstellation.getBoardZeile(pName)
+                        If hproj.tfZeile > nextLineNumber Then
+                            nextLineNumber = hproj.tfZeile + 1
+                        End If
+                    Catch ex As Exception
+                        hproj.tfZeile = 2
+                    End Try
+
                     If Not IsNothing(hproj) Then
 
-                        AlleProjekte.Add(hproj)
+                        AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                         ' removes hproj from ShowProjekte, if already in there
                         ShowProjekte.AddAnyway(hproj)
 
                     Else
                         Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
                     End If
+
                 Next
 
                 Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & myActivePortfolio, " End of Operation ... ")
@@ -3816,7 +3841,7 @@ Module rpaModule1
             ' get the ranking list 
             'Dim rankingList As SortedList(Of Integer, String) = getRanking()
             Dim rankingList As SortedList(Of Integer, clsRankingParameters) = getRanking(myKennung)
-            Dim deltaInDays As Integer
+
 
             ' now create a Portfolio variant with unchanged new projects ...
             Dim removeSPList As New List(Of String)
@@ -3828,10 +3853,14 @@ Module rpaModule1
 
             Dim outputCollection As New Collection
 
+            Dim myRowNr As Integer = nextLineNumber
             For Each rankingPair As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
                 Dim key As String = calcProjektKey(rankingPair.Value.projectName, rankingPair.Value.projectVariantName)
                 Dim hproj As clsProjekt = ImportProjekte.getProject(key)
                 If Not IsNothing(hproj) Then
+
+                    ' bestimme die Line Number 
+                    hproj.tfZeile = myRowNr
 
                     If first Then
                         first = False
@@ -3853,12 +3882,12 @@ Module rpaModule1
                         outputCollection.Add(hproj.getShapeText)
                     End If
 
-                    If Not AlleProjekte.Containskey(rankingPair.Value.projectName) Then
-                        AlleProjekte.Add(hproj)
-                        removeAPList.Add(rankingPair.Value.projectName)
+                    If Not AlleProjekte.Containskey(key) Then
+                        AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
+                        removeAPList.Add(key)
                     Else
                         ' bring updated hproj into AlleProjekte
-                        AlleProjekte.Add(hproj)
+                        AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                     End If
 
                     If Not ShowProjekte.contains(hproj.name) Then
@@ -3870,6 +3899,8 @@ Module rpaModule1
 
 
                 End If
+
+                myRowNr = myRowNr + 1
             Next
 
             ' now Check whether or not minMonthCol ist in Future, if not end it , because that is not allowed 
@@ -3882,6 +3913,7 @@ Module rpaModule1
             End If
 
             If result = True Then
+
 
                 Dim toStoreConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
                                                                                 cName:=myActivePortfolio, vName:=portfolioVariantName)
@@ -3901,6 +3933,10 @@ Module rpaModule1
                 For Each tmpName As String In removeSPList
                     ShowProjekte.Remove(tmpName)
                 Next
+
+                ' nach dem Remove ist evtl wieder das SortCriteria zurückgesetzt
+                ' die Sortierung wieder nach Zeile herstellen 
+                currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
 
                 ' now check whether there are overutilizations 
@@ -3935,6 +3971,9 @@ Module rpaModule1
                     ' create variant , if necessary
                     ' rankingList keeps the sequence within the Excel file. So user adds some fields important to him for prioritization , he add these fields , sorts it in th eExcel. 
                     ' It then represents the sequence: Row1 is the most important project 
+
+                    myRowNr = nextLineNumber
+
                     For Each rankingPair As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
 
                         sumIterations = 0
@@ -3942,6 +3981,12 @@ Module rpaModule1
                         Dim hproj As clsProjekt = ImportProjekte.getProject(key)
 
                         If Not IsNothing(hproj) Then
+
+                            Try
+                                hproj.tfZeile = myRowNr
+                            Catch ex As Exception
+
+                            End Try
 
                             Dim stdDuration As Integer = hproj.dauerInDays
                             Dim myDuration As Integer = stdDuration
@@ -3989,7 +4034,7 @@ Module rpaModule1
 
 
                             ' check auf Exists is not necessary with AlleProjekte, because it will be replaced if it already exists 
-                            AlleProjekte.Add(hproj)
+                            AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                             ShowProjekte.AddAnyway(hproj)
 
 
@@ -4009,10 +4054,10 @@ Module rpaModule1
                                 ' create variant if not already done
                                 If hproj.variantName <> projectVariantName Then
                                     hproj = hproj.createVariant(projectVariantName, "variant to avoid resource bottlenecks")
-                                    AlleProjekte.Add(hproj)
+                                    AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                 End If
 
-                                deltaInDays = 3
+                                Dim deltaInDays As Integer = jobParameters.defaultDeltaInDays
                                 ' now modify this one ...
 
                                 Dim endIterations As Integer = 0
@@ -4056,7 +4101,7 @@ Module rpaModule1
                                                 End If
 
                                                 ' now replace in AlleProjekte, ShowProjekte 
-                                                AlleProjekte.Add(hproj)
+                                                AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                                 ShowProjekte.AddAnyway(hproj)
 
                                                 Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
@@ -4112,7 +4157,7 @@ Module rpaModule1
 
 
                                                 ' now replace in AlleProjekte, ShowProjekte 
-                                                AlleProjekte.Add(hproj)
+                                                AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                                 ShowProjekte.AddAnyway(hproj)
 
                                                 Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
@@ -4148,7 +4193,7 @@ Module rpaModule1
                                     storeRequired = True
                                 Else
                                     ' take it out again , because there was no solution
-                                    AlleProjekte.Remove(key)
+                                    AlleProjekte.Remove(calcProjektKey(hproj))
                                     ShowProjekte.Remove(hproj.name)
                                 End If
 
@@ -4159,6 +4204,9 @@ Module rpaModule1
                             If storeRequired Then
                                 Dim myMessages As New Collection
                                 If storeSingleProjectToDB(hproj, myMessages) Then
+                                    ' now for the sake of sequence in Constellation 
+                                    myRowNr = myRowNr + 1
+
                                     Dim infomsg As String = "success: created " & sumIterations & " variants to avoid bottlenecks " & hproj.getShapeText
                                     Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
                                 Else
@@ -4172,6 +4220,9 @@ Module rpaModule1
                                     Dim infomsg As String = "unsuccessful : tried out " & sumIterations & " variants for " & hproj.name
                                     Call logger(ptErrLevel.logWarning, "find best start ", infomsg)
                                 Else
+                                    ' now for the sake of sequence in Constellation 
+                                    myRowNr = myRowNr + 1
+
                                     Dim infomsg As String = "success: could be added to portfolio variant as-is " & hproj.getShapeText
                                     Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
                                 End If
@@ -4184,20 +4235,92 @@ Module rpaModule1
 
                     Next
 
+                    ' now consider to sort it again 
+                    If myKennung = PTRpa.visboFindProjectStartPM Then
+                        ' do the sorting according the very first phase , or if there is no phase according the first milestones 
+                        ' start , then duration 
+                        Dim isMilestone As Boolean = False
+                        Dim sortItem As String = ""
+                        If jobParameters.getPhaseNames.Count > 0 Then
+                            sortItem = jobParameters.getPhaseNames.Item(0)
+                        ElseIf jobParameters.getMilestoneNames.Count > 0 Then
+                            sortItem = jobParameters.getMilestoneNames.Item(0)
+                            isMilestone = True
+                        End If
+
+                        Dim myNewSortlist As New SortedList(Of Double, String)
+                        Try
+
+                            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                                Dim sortKrit As Double = 100000000.0
+
+                                If Not isMilestone Then
+                                    ' sort Kriterium is phase start and duration 
+                                    Dim elemName As String = ""
+                                    Dim breadCrumb As String = ""
+                                    Dim lfdNr As Integer = 1
+                                    Dim type As Integer = -1
+                                    Dim pvName As String = ""
+                                    Call splitHryFullnameTo2(sortItem, elemName, breadCrumb, type, pvName)
+                                    Dim cPhase As clsPhase = kvp.Value.getPhase(elemName, lfdNr:=1)
+                                    sortKrit = DateDiff(DateInterval.Day, StartofCalendar, cPhase.getStartDate) + 1 / cPhase.dauerInDays
+
+                                    Dim kritDelta As Double = 0.00001
+                                    Do While myNewSortlist.ContainsKey(sortKrit)
+                                        sortKrit = sortKrit + kritDelta
+                                    Loop
+
+                                Else
+                                    ' sort Kriterium is phase start and duration 
+                                    Dim elemName As String = ""
+                                    Dim breadCrumb As String = ""
+                                    Dim lfdNr As Integer = 1
+                                    Dim type As Integer = -1
+                                    Dim pvName As String = ""
+                                    Call splitHryFullnameTo2(sortItem, elemName, breadCrumb, type, pvName)
+                                    Dim cMilestone As clsMeilenstein = kvp.Value.getMilestone(elemName, lfdNr:=1)
+                                    sortKrit = DateDiff(DateInterval.Day, StartofCalendar, cMilestone.getDate)
+
+                                    Dim kritDelta As Double = 0.00001
+                                    Do While myNewSortlist.ContainsKey(sortKrit)
+                                        sortKrit = sortKrit + kritDelta
+                                    Loop
+                                End If
+                                ' jetzt enthält die Sortierte Liste den Eintrag nicht mehr 
+                                myNewSortlist.Add(sortKrit, kvp.Value.name)
+
+                            Next
+
+                            ' now re-define the sorting in the constellation
+                            Dim tmpSortListe As New SortedList(Of String, String)
+                            Dim zeile As Integer = 2
+                            Dim formatStr As String = "00000000"
+                            For Each kvp2 As KeyValuePair(Of Double, String) In myNewSortlist
+                                tmpSortListe.Add(zeile.ToString(formatStr), kvp2.Value)
+                                zeile = zeile + 1
+                            Next
+
+                            ' jetzt das als die Sort-Liste der Konstellation übernehmen 
+                            currentSessionConstellation.sortListe(ptSortCriteria.customTF) = tmpSortListe
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
                     Dim pfVariantName As String = jobParameters.portfolioVariantName & " - " & projectVariantName
-                    toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                        toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
                                                                                                 cName:=myActivePortfolio, vName:=pfVariantName)
 
-                    outputCollection.Clear()
-                    Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
+                        outputCollection.Clear()
+                        Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
 
-                    If outputCollection.Count > 0 Then
-                        Call logger(ptErrLevel.logInfo, "Project List Import, Store Portfolio-Variant: ", outputCollection)
+                        If outputCollection.Count > 0 Then
+                            Call logger(ptErrLevel.logInfo, "Project List Import, Store Portfolio-Variant: ", outputCollection)
+                        End If
+
                     End If
 
                 End If
-
-            End If
 
 
 
