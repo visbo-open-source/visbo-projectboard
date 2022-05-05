@@ -12493,7 +12493,15 @@ Public Module agm2
 
             Try
                 Dim weitermachen As Boolean = False
-                Dim roleCostName As String = CStr(CType(ws.Cells(iz, colRoleCostName), Excel.Range).Value).Trim
+                Dim roleCostName As String = ""
+
+                Try
+                    If Not IsNothing(CType(ws.Cells(iz, colRoleCostName), Excel.Range).Value) Then
+                        roleCostName = CStr(CType(ws.Cells(iz, colRoleCostName), Excel.Range).Value).Trim
+                    End If
+                Catch ex As Exception
+                    roleCostName = ""
+                End Try
 
                 If RoleDefinitions.containsName(roleCostName) Then
                     weitermachen = True
@@ -12549,7 +12557,26 @@ Public Module agm2
 
                     If Not IsNothing(cphase) Then
 
-                        Call setRolePhaseValues(roleCostName, phaseName, breadCrumb, value, einheitIsEuro, hproj, phNameIDs, rolePhaseValues, costPhaseValues)
+                        Dim roleNameID As String = ""
+
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostName)
+                        If Not IsNothing(tmpRole) Then
+                            If tmpRole.isSkill Then
+                                Dim containingRole As clsRollenDefinition = RoleDefinitions.getContainingRoleOfSkillMembers(tmpRole.UID)
+                                If Not IsNothing(containingRole) Then
+                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(containingRole.UID, tmpRole.UID)
+                                End If
+                            Else
+                                roleNameID = roleCostName
+                            End If
+
+                        Else
+                            ' is Cost 
+                            roleNameID = roleCostName
+                        End If
+
+                        ' tk 25.1.22 roleNameID: roleID;skillID übergeben
+                        Call setRolePhaseValues(roleNameID, phaseName, breadCrumb, value, einheitIsEuro, hproj, phNameIDs, rolePhaseValues, costPhaseValues)
                         ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
 
                     Else
@@ -12580,14 +12607,15 @@ Public Module agm2
             hproj = hproj.merge(rolePhaseValues, costPhaseValues, phNameIDs, True)
 
             ' tk test 
-            For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
-                Dim teilErgebnis As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
-                If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
-                    logmessage = kvp.Key & ": TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
-                    outputcollection.Add(logmessage)
-                End If
+            ' in case there is a mixture between pure roles and roles;skills then there is a mismatch whcih is Correct ! 
+            'For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+            '    Dim teilErgebnis As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
+            '    If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
+            '        logmessage = kvp.Key & ": TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
+            '        outputcollection.Add(logmessage)
+            '    End If
 
-            Next
+            'Next
 
             For Each kvp As KeyValuePair(Of String, Double()) In costPhaseValues
                 Dim teilErgebnis As Double = hproj.getKostenBedarf(kvp.Key).Sum
@@ -12604,7 +12632,6 @@ Public Module agm2
 
 
     End Sub
-
 
     ''' <summary>
     ''' berechnet rekursiv den Monatsbedarf
