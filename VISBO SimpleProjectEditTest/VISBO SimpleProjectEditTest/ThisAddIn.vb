@@ -16,7 +16,8 @@ Public Class ThisAddIn
         'Dim cbar As CommandBar
 
 
-        visboClient = "VISBO Simple Project Edit / "
+        'visboClient = "VISBO Simple Project Edit / "
+        visboClient = "VISBO SPE"
 
         ' Refresh von Projekte im Cache  in Minuten
         cacheUpdateDelay = 10
@@ -41,7 +42,9 @@ Public Class ThisAddIn
 
         'magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
-        visboClient = "VISBO SPE"
+        appInstance = Application
+
+
         logfileNamePath = createLogfileName()
 
         'Try

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load" loadImage="getImage">
   <ribbon>
     <tabs>
 	  <tab idMso="TabAddIns" />		
@@ -9,9 +9,9 @@
 			  <button id="Pt6G6B1" label="Speichern" size ="large" imageMso="MindMapImportData"  onAction="PTProjectSave" />
 			  <button id="Pt6G6B2" label="Löschen" size ="large" imageMso="Delete" onAction="PTProjectDelete" />
 			  <separator id="PT2G1s2"/>
-			  <button id="Pt6G6B3" label="Cost" size ="large"  onAction="PTProjectCost" />
-			  <button id="Pt6G6B4" label="Time" size ="large"   onAction="PTProjectTime" />
-			  <button id="Pt6G6B5" label="Resources" size ="large"  onAction="PTProjectResources" />
+			  <button id="Pt6G6B3" label="Cost" size ="large"  getImage="imageSuper_GetImage" onAction="PTProjectCost" />
+			  <button id="Pt6G6B5" label="Resources" size ="large"  getImage="imageSuper_GetImage" onAction="PTProjectResources"  supertip ="hier können die Ressourcen-Bedarfe zu den ausgewählten Projekten bearbeitet werden"/>
+			  <button id="Pt6G6B4" label="Time" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectTime" />
 		  </group>
       </tab>
 	</tabs>

@@ -214,7 +214,7 @@
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <EmbeddedResource Include="My Project\Resources.resx">
-      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <Generator>PublicVbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
@@ -237,6 +237,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Ribbon1.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun_bottleneck_366717.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-money-1061584.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-stop-watch-2010575.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
