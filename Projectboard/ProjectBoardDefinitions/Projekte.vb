@@ -26642,27 +26642,26 @@ Public Module Projekte
             ' die  Variante wird aufgenommen
             ShowProjekte.Add(newProj)
 
+            If Not visboClient.Contains("VISBO SPE") Then
+                ' neu zeichnen des Projekts 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)
 
-            ' neu zeichnen des Projekts 
-            Dim tmpCollection As New Collection
-            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)
+                If selectIT Then
 
-            If selectIT Then
+                    Try
+                        CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
+                    Catch ex As Exception
 
-                Try
-                    CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
-                Catch ex As Exception
+                    End Try
 
-                End Try
-
+                End If
             End If
+
 
         Else
             'Throw New ArgumentException("Projektvariante existiert nicht")
         End If
-
-
-
 
 
     End Sub

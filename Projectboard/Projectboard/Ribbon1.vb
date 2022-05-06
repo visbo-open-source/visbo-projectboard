@@ -2465,7 +2465,7 @@ Public Class Ribbon1
     ''' </summary>
     ''' <param name="modus"></param>
     ''' <remarks></remarks>
-    Private Sub enableControls(ByVal modus As ptModus)
+    Public Sub enableControls(ByVal modus As ptModus)
 
         If modus = ptModus.graficboard Then
             visboZustaende.projectBoardMode = modus

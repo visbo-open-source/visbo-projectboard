@@ -20948,7 +20948,13 @@ Public Module agm2
 
 
         Dim cfgs As New configuration
-        Dim cfgFile As String = path & "\ProjectboardConfig.xml"
+        Dim cfgFile As String = ""
+        If visboClient.Contains("VISBO SPE") Then
+            cfgFile = path & "\VISBO SimpleProjectEditTestConfig.xml"
+        Else
+            cfgFile = path & "\ProjectboardConfig.xml"
+        End If
+
 
         Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
 
