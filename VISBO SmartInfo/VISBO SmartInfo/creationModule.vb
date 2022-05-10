@@ -2156,7 +2156,12 @@ Module creationModule
                             .Interior.Color = visboFarbeBlau
                         End If
 
-                        .Values = prognoseDatenReihe
+                        If sCInfo.elementTyp = ptElementTypen.phases Or sCInfo.elementTyp = ptElementTypen.milestones Then
+                            .Values = tdatenreihe
+                        Else
+                            .Values = prognoseDatenReihe
+                        End If
+
                         .XValues = Xdatenreihe
                         .ChartType = PlanChartType
 
@@ -2241,7 +2246,7 @@ Module creationModule
 
 
                 ' jetzt kommt der Neu-Aufbau der Series-Collections
-                If considerIstDaten Then
+                If considerIstDaten And Not (sCInfo.elementTyp = ptElementTypen.phases Or sCInfo.elementTyp = ptElementTypen.milestones) Then
 
                     ' jetzt die Istdaten zeichnen 
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)

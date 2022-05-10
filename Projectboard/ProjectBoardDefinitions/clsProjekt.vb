@@ -137,29 +137,21 @@ Public Class clsProjekt
             movable = _movable
         End Get
         Set(value As Boolean)
-            If value = True Then
-                'If _Status = ProjektStatus(PTProjektStati.geplant) Or
-                '_Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
-                '(_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
-                'value = False Then
-                If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
-                (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Or
-                value = False Then
-                    _movable = value
+            If Not IsNothing(value) Then
+                If value = True Then
+
+                    If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
+                    (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Then
+                        _movable = True
+                    Else
+                        _movable = False
+                    End If
 
                 Else
-                    Dim errmsg As String
-                    If awinSettings.englishLanguage Then
-                        errmsg = "project status does not allow movement!"
-                    Else
-                        errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
-                    End If
-                    Throw New ArgumentException(errmsg)
+                    _movable = False
                 End If
-
-            Else
-                _movable = value
             End If
+
 
         End Set
     End Property
@@ -2381,10 +2373,11 @@ Public Class clsProjekt
             Dim olddate As Date = _startDate
             Dim differenzInTagen As Integer = CInt(DateDiff(DateInterval.Day, olddate, value))
             Dim updatePhases As Boolean = False
+            ' tk 6.5.22 - das funktioniert nur wenn die Bedingungen erfüllt sind .. 
+            movable = True ' dieses Statement funktioniert nur , wenn die Bedingungen frü Movable erfüllt sind 
 
-            ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
-            ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-            If (differenzInTagen <> 0 And Me.movable) And (_vpStatus = VProjectStatus(PTVPStati.initialized) Or _variantName <> "") Then
+            'If (differenzInTagen <> 0 And Me.movable) And (_vpStatus = VProjectStatus(PTVPStati.initialized) Or _variantName <> "") Then
+            If (differenzInTagen <> 0 And Me.movable) Then
                 'ur:211202: If (differenzInTagen <> 0 And Me.movable) And  (_Status = ProjektStatus(0) Or _variantName <> "") Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
@@ -2399,7 +2392,7 @@ Public Class clsProjekt
 
 
                 'ur: 211202ElseIf _Status <> ProjektStatus(0) And _variantName = "" And Not Me.movable Then
-            ElseIf _vpStatus <> vprojectStatus(PTVPStati.initialized) And _variantName = "" And Not Me.movable Then
+            ElseIf _vpStatus <> VProjectStatus(PTVPStati.initialized) And _variantName = "" And Not Me.movable Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
 
 

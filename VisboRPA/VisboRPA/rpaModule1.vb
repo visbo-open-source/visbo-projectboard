@@ -1364,11 +1364,13 @@ Module rpaModule1
                 currentWS = Nothing
             End Try
 
-            Try
-                currentWS = CType(currentWB.Worksheets.Item(blattName1A), xlns.Worksheet)
-            Catch ex As Exception
-                currentWS = Nothing
-            End Try
+            If IsNothing(currentWS) Then
+                Try
+                    currentWS = CType(currentWB.Worksheets.Item(blattName1A), xlns.Worksheet)
+                Catch ex As Exception
+                    currentWS = Nothing
+                End Try
+            End If
 
             If Not IsNothing(currentWS) Then
 
@@ -2656,8 +2658,28 @@ Module rpaModule1
 
                             Case PTRpa.visboCreateHedgedVariant
 
-                                myCurrentParams.hedgeFactor = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.newStartDate = CStr(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Try
+                                    Dim tmpHedgeFactor As Double = CDbl(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If tmpHedgeFactor >= 0 And tmpHedgeFactor <= 1.0 Then
+                                        myCurrentParams.hedgeFactor = tmpHedgeFactor
+                                    Else
+                                        myCurrentParams.hedgeFactor = 0.0
+                                    End If
+                                Catch ex As Exception
+                                    myCurrentParams.hedgeFactor = 0.0
+                                End Try
+
+                                Try
+                                    Dim tmpStartDate As Date = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If DateDiff(DateInterval.Day, tmpStartDate, Date.Now) > 0 Then
+                                        myCurrentParams.newStartDate = Date.MinValue
+                                    Else
+                                        myCurrentParams.newStartDate = tmpStartDate
+                                    End If
+                                Catch ex As Exception
+                                    myCurrentParams.newStartDate = Date.MinValue
+                                End Try
+
 
                             Case PTRpa.visboFindProjectStart
 
@@ -2930,6 +2952,7 @@ Module rpaModule1
             Dim aggregationList As New List(Of String)
             Dim skillList As New List(Of String)
 
+
             If myKennung = PTRpa.visboFindProjectStart Then
                 Call logger(ptErrLevel.logInfo, "start Processing find best Start with regard to roles & skills: ", myName)
             Else
@@ -3134,82 +3157,111 @@ Module rpaModule1
                     If hproj.vpStatus = "initial" Or hproj.vpStatus = "initialized" Or hproj.vpStatus = "vorgeschlagen" Or hproj.vpStatus = "proposed" Then
 
                         Dim newStartDate As Date = kvp.Value.newStartDate
-                        Dim deltaInDays As Integer = DateDiff(DateInterval.Day, hproj.startDate, newStartDate)
+                        If DateDiff(DateInterval.Day, Date.Now, newStartDate) >= 0 Then
 
-                        If deltaInDays <> 0 Then
-                            Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
-                            Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+                            Dim deltaInDays As Integer = DateDiff(DateInterval.Day, hproj.startDate, newStartDate)
 
-                            If Not IsNothing(tmpProj) Then
-                                hproj = tmpProj
-                                projectstoreRequired = True
-                            Else
-                                msgTxt = "project could not be moved"
+                            If deltaInDays <> 0 Then
+                                Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
+                                If hproj.movable And Not hproj.hasActualValues Then
+                                    Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+                                        If (DateDiff(DateInterval.Day, tmpProj.startDate, newStartDate) + DateDiff(DateInterval.Day, tmpProj.endeDate, newEndDate)) = 0 Then
+                                            hproj = tmpProj
+                                            projectstoreRequired = True
+                                            msgTxt = "project moved to: " & newStartDate.ToShortDateString & " - " & newEndDate.ToShortDateString
+                                            Call logger(ptErrLevel.logInfo, "process Create Hedged Variants, ", msgTxt)
+                                        Else
+                                            msgTxt = "project could not be moved correctly: " & hproj.getShapeText
+                                            Call logger(ptErrLevel.logWarning, "process Create Hedged Variants, ", msgTxt)
+                                        End If
+                                    Else
+                                        msgTxt = "project could not be moved at all"
+                                    End If
+                                Else
+                                    If hproj.hasActualValues Then
+                                        msgTxt = "Project with actual data can not be moved " & hproj.getShapeText
+                                    Else
+                                        msgTxt = "Project with Status other than initial or proposed can not be moved " & hproj.getShapeText
+                                    End If
+
+                                    Call logger(ptErrLevel.logWarning, "process Create Hedged Variants, ", msgTxt)
+                                End If
+
                             End If
+
+                            ' now create the variant with appropriate hedgeFactor 
+                            Dim variantProj As clsProjekt = Nothing
+                            If kvp.Value.hedgeFactor > 0 And kvp.Value.hedgeFactor < 1 Then
+                                variantProj = hproj.createHedgedVariant(kvp.Value.hedgeFactor)
+                                If Not IsNothing(variantProj) Then
+                                    variantStoreRequired = True
+                                End If
+                            End If
+
+
+                            If projectstoreRequired Then
+                                outPutCollection.Clear()
+
+                                msgTxt = hproj.getShapeText & " : " & hproj.startDate.ToShortDateString
+
+                                ' make sure it is in AlleProjekte, becaue store Method requires it being in AlleProjekte 
+                                Dim didExist As Boolean = AlleProjekte.Containskey(calcProjektKey(hproj))
+                                If Not didExist Then
+                                    AlleProjekte.Add(hproj, False)
+                                End If
+
+                                If storeSingleProjectToDB(hproj, outPutCollection) Then
+                                    Call logger(ptErrLevel.logInfo, "project with new startDate stored: ", msgTxt)
+                                    'Console.WriteLine("project with new startDate stored: " & msgTxt)
+                                    'If Not setWriteProtection(hproj, False) Then
+                                    '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
+                                    'End If
+                                Else
+                                    Call logger(ptErrLevel.logError, "project store with new startDate failed: " & msgTxt, outPutCollection)
+                                    'Console.WriteLine("!! ... project store with new startDate failed: " & msgTxt)
+                                End If
+
+                                If Not didExist Then
+                                    AlleProjekte.Remove(calcProjektKey(hproj), False)
+                                End If
+
+                            End If
+
+                            If variantStoreRequired Then
+                                outPutCollection.Clear()
+
+                                msgTxt = variantProj.getShapeText & " : " & variantProj.variantDescription & vbLf & " hedgeFactor: " & kvp.Value.hedgeFactor * 100 & "%"
+
+                                Dim didExist As Boolean = AlleProjekte.Containskey(calcProjektKey(variantProj))
+                                If Not didExist Then
+                                    AlleProjekte.Add(variantProj, False)
+                                End If
+                                If storeSingleProjectToDB(variantProj, outPutCollection) Then
+                                    Call logger(ptErrLevel.logInfo, "hedged variant stored: ", msgTxt)
+                                Else
+                                    Call logger(ptErrLevel.logError, "hedged variant store failed: " & msgTxt, outPutCollection)
+                                    'Console.WriteLine("!! ... hedged variant store failed: " & msgTxt)
+                                End If
+
+                                If Not didExist Then
+                                    AlleProjekte.Remove(calcProjektKey(variantProj), False)
+                                End If
+
+                            End If
+                        Else
+                            msgTxt = "not a appropriate new Startdate : " & hproj.getShapeText & newStartDate.ToShortDateString
+                            Call logger(ptErrLevel.logInfo, "process Create Hedged Variants, ", msgTxt)
                         End If
 
-                        ' now create the variant with appropriate hedgeFactor 
-                        Dim variantProj As clsProjekt = hproj.createHedgedVariant(kvp.Value.hedgeFactor)
-                        If Not IsNothing(variantProj) Then
-                            variantStoreRequired = True
-                        End If
-
-                        If projectstoreRequired Then
-                            outPutCollection.Clear()
-
-                            msgTxt = hproj.getShapeText & " : " & hproj.startDate.ToShortDateString
-
-                            ' make sure it is in AlleProjekte, becaue store Method requires it being in AlleProjekte 
-                            Dim didExist As Boolean = AlleProjekte.Containskey(calcProjektKey(hproj))
-                            If Not didExist Then
-                                AlleProjekte.Add(hproj, False)
-                            End If
-
-                            If storeSingleProjectToDB(hproj, outPutCollection) Then
-                                Call logger(ptErrLevel.logInfo, "project with new startDate stored: ", msgTxt)
-                                'Console.WriteLine("project with new startDate stored: " & msgTxt)
-                                'If Not setWriteProtection(hproj, False) Then
-                                '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", hproj.getShapeText)
-                                'End If
-                            Else
-                                Call logger(ptErrLevel.logError, "project store with new startDate failed: " & msgTxt, outPutCollection)
-                                'Console.WriteLine("!! ... project store with new startDate failed: " & msgTxt)
-                            End If
-
-                            If Not didExist Then
-                                AlleProjekte.Remove(calcProjektKey(hproj), False)
-                            End If
-
-                        End If
-
-                        If variantStoreRequired Then
-                            outPutCollection.Clear()
-
-                            msgTxt = variantProj.getShapeText & " : " & variantProj.variantDescription
-
-                            Dim didExist As Boolean = AlleProjekte.Containskey(calcProjektKey(variantProj))
-                            If Not didExist Then
-                                AlleProjekte.Add(variantProj, False)
-                            End If
-                            If storeSingleProjectToDB(variantProj, outPutCollection) Then
-                                Call logger(ptErrLevel.logInfo, "hedged variant stored: ", msgTxt)
-                                'Console.WriteLine("hedged variant stored: " & msgTxt)
-                                'If Not setWriteProtection(variantProj, False) Then
-                                '    Call logger(ptErrLevel.logWarning, "Aufheben Write PRotection did not work ...  ", variantProj.getShapeText)
-                                'End If
-                            Else
-                                Call logger(ptErrLevel.logError, "hedged variant store failed: " & msgTxt, outPutCollection)
-                                'Console.WriteLine("!! ... hedged variant store failed: " & msgTxt)
-                            End If
-
-                            If Not didExist Then
-                                AlleProjekte.Remove(calcProjektKey(variantProj), False)
-                            End If
-
-                        End If
-
+                    Else
+                        msgTxt = "Project with Status other than initial or proposed can not be moved " & hproj.getShapeText
+                        Call logger(ptErrLevel.logWarning, "process Create Hedged Variants, ", msgTxt)
                     End If
-
+                Else
+                    msgTxt = "Project does not exist " & kvp.Value.projectName
+                    Call logger(ptErrLevel.logWarning, "process Create Hedged Variants, ", msgTxt)
                 End If
 
             Next
@@ -3736,6 +3788,9 @@ Module rpaModule1
         Dim aggregationList As New List(Of String)
         Dim skillList As New List(Of String)
 
+        ' for showing which projects could not be considered
+        Dim missingList As New clsProjekteAlle
+
         If myKennung = PTRpa.visboFindProjectStart Then
             ' build aggregation List
             ' now get the aggregation Roles
@@ -4217,6 +4272,8 @@ Module rpaModule1
                                 End If
                             Else
                                 If overutilizationFound Then
+                                    ' for showing which projects could not be considered
+                                    missingList.Add(hproj)
                                     Dim infomsg As String = "unsuccessful : tried out " & sumIterations & " variants for " & hproj.name
                                     Call logger(ptErrLevel.logWarning, "find best start ", infomsg)
                                 Else
@@ -4308,19 +4365,26 @@ Module rpaModule1
                     End If
 
                     Dim pfVariantName As String = jobParameters.portfolioVariantName & " - " & projectVariantName
-                        toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
+                    toStoreConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True,
                                                                                                 cName:=myActivePortfolio, vName:=pfVariantName)
 
-                        outputCollection.Clear()
-                        Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
+                    outputCollection.Clear()
+                    Call storeSingleConstellationToDB(outputCollection, toStoreConstellation, Nothing)
 
-                        If outputCollection.Count > 0 Then
-                            Call logger(ptErrLevel.logInfo, "Project List Import, Store Portfolio-Variant: ", outputCollection)
-                        End If
-
+                    If outputCollection.Count > 0 Then
+                        Call logger(ptErrLevel.logInfo, "Project List Import, Store Portfolio-Variant: ", outputCollection)
                     End If
 
                 End If
+
+
+                ' now Store Constellation 
+                If missingList.Count > 0 Then
+                    Dim portfolioName As String = jobParameters.portfolioName
+                    Dim pfVariantName As String = jobParameters.portfolioVariantName & " - " & jobParameters.projectVariantName
+                    Dim ok As Boolean = storeConstellationFromProjectList(missingList, portfolioName, pfVariantName & " missing")
+                End If
+            End If
 
 
 
