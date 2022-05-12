@@ -32,6 +32,7 @@ Public Module Module1
 
     'Name des VisboClient
     'Public visboClient As String = divClients(client.Projectboard)
+
     Public visboClient As String = "VISBO Projectboard / "
 
     'Cache - Infos

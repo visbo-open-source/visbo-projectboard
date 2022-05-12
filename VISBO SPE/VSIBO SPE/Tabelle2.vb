@@ -317,20 +317,20 @@ Public Class Tabelle2
 
                                 '
 
-                                ' aktualisieren der Charts 
-                                Try
+                                '' aktualisieren der Charts 
+                                'Try
 
-                                    If Not IsNothing(formProjectInfo1) Then
-                                        Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
-                                    End If
-                                    ' tk 18.1.20
-                                    Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+                                '    If Not IsNothing(formProjectInfo1) Then
+                                '        Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
+                                '    End If
+                                '    ' tk 18.1.20
+                                '    Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
-                                    Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                                '    Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
 
-                                Catch ex As Exception
+                                'Catch ex As Exception
 
-                                End Try
+                                'End Try
 
                                 ' Blattschutz wieder setzen wie zuvor
                                 With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
@@ -1393,25 +1393,25 @@ Public Class Tabelle2
                     visboZustaende.oldValue = ""
                 End If
 
-                ' aktualisieren der Charts 
-                Try
-                    If auslastungChanged Or summenChanged Or kostenChanged Then
-                        If Not IsNothing(formProjectInfo1) Then
-                            Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
-                        End If
-                        ' tk 18.1.20
+                '' aktualisieren der Charts 
+                'Try
+                '    If auslastungChanged Or summenChanged Or kostenChanged Then
+                '        If Not IsNothing(formProjectInfo1) Then
+                '            Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
+                '        End If
+                '        ' tk 18.1.20
 
-                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+                '        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
-                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                '        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
 
-                    End If
+                '    End If
 
-                Catch ex As Exception
+                'Catch ex As Exception
 
-                    End Try
+                'End Try
 
-                ElseIf Target.Rows.Count > 1 Then
+            ElseIf Target.Rows.Count > 1 Then
 
                     'appInstance.Undo()
                     'Call MsgBox("bitte nur eine Zelle selektieren ...")
@@ -1796,33 +1796,33 @@ Public Class Tabelle2
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
 
-            If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
+            'If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
 
-                ' umgesetzte timeZone
-                Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+            '    ' umgesetzte timeZone
+            '    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
-                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+            '    Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
-                If pNameChanged Then
-                    selectedProjekte.Clear(False)
-                    selectedProjekte.Add(.currentProject, False)
-                End If
+            '    If pNameChanged Then
+            '        selectedProjekte.Clear(False)
+            '        selectedProjekte.Add(.currentProject, False)
+            '    End If
 
-                If Not IsNothing(rcNameID) Then
+            '    If Not IsNothing(rcNameID) Then
 
-                    If rcNameID <> "" Then
-                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
-                    End If
-                End If
-
-
-                If Not IsNothing(formProjectInfo1) Then
-                    Call updateProjectInfo1(.currentProject, .currentProjectinSession)
-                    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
-                End If
+            '        If rcNameID <> "" Then
+            '            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+            '        End If
+            '    End If
 
 
-            End If
+            '    If Not IsNothing(formProjectInfo1) Then
+            '        Call updateProjectInfo1(.currentProject, .currentProjectinSession)
+            '        ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+            '    End If
+
+
+            'End If
 
 
         End With

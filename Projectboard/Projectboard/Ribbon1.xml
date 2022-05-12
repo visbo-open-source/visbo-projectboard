@@ -482,13 +482,13 @@
         </group>
       </tab>
       <!--label="Lizenzen"-->
-      <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
             <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
             <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
             <button id="Pt6G6B2" label="Create RepMsg"  onAction="PTCreateReportMessages" />
           </group>
-      </tab>-->       
+      </tab>       
       <!--label="zurück zur Multiprojekt-Tafel"-->
       <tab id="PTzurück" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTzurück1" getVisible="chckVisibility" >

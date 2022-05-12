@@ -18900,11 +18900,21 @@ Public Module agm2
             Dim currentWB As Excel.Workbook
             Dim ressCostColumn As Integer
             Dim tmpName As String
-
+            Dim i As Integer
 
             Try
+
+                '' ur:220506:  ThisWorkbook.Sheets("Tabelle3").Copy after:=ActiveWorkbook.Sheets(ActiveWorkbook.Sheets.Count)
                 currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
-                currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+
+                For i = 1 To currentWB.Worksheets.Count
+                    currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets.Item(i), Excel.Worksheet)
+                    Dim wsname As String = currentWS.Name
+                    If wsname = arrWsNames(ptTables.meRC).ToString Then
+                        Exit For
+                    End If
+                Next
+
 
                 Try
                     ' off setzen des AutoFilter Modus ... 
