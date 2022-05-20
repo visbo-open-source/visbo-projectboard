@@ -55,14 +55,18 @@ Public Class Ribbon1
     End Sub
     Public Function imageSuper_GetImage(control As IRibbonControl) As Bitmap
 
-        imageSuper_GetImage = My.Resources.noun_money
+        imageSuper_GetImage = My.Resources.noun_money_100x100
         Select Case control.Id
             Case "Pt6G6B3"
-                imageSuper_GetImage = My.Resources.noun_money
+                imageSuper_GetImage = My.Resources.noun_money_100x100
             Case "Pt6G6B4"
-                imageSuper_GetImage = My.Resources.noun_stop_watch
+                imageSuper_GetImage = My.Resources.noun_stop_watch_100x100
             Case "Pt6G6B5"
-                imageSuper_GetImage = My.Resources.noun_bottleneck
+                imageSuper_GetImage = My.Resources.noun_bottleneck_100x100
+            Case "Pt6G6B6"
+                imageSuper_GetImage = My.Resources.visbo_icon_transparent_Bild
+            Case "Pt6G6B7"
+                imageSuper_GetImage = My.Resources.noun_settings_100x100
         End Select
     End Function
 
@@ -78,7 +82,7 @@ Public Class Ribbon1
 
             If Not speSetTypen_Performed Then
 
-                'appInstance.ScreenUpdating = False
+                appInstance.ScreenUpdating = False
 
                 ' hier werden die Settings aus der Datei ProjectboardConfig.xml ausgelesen.
                 ' falls die nicht funktioniert, so werden die My.Settings ausgelesen und verwendet.
@@ -125,23 +129,23 @@ Public Class Ribbon1
                 ' Refresh von Projekte im Cache  in Minuten
                 cacheUpdateDelay = 30
 
-                'appInstance.EnableEvents = False
+                appInstance.EnableEvents = False
                 Call speSetTypen()
-                'appInstance.EnableEvents = True
+                appInstance.EnableEvents = True
 
-                'appInstance.Visible = True
+                appInstance.Visible = True
 
             End If
         Catch ex As Exception
 
-            'appInstance.EnableEvents = True
+            appInstance.EnableEvents = True
 
             '   Call MsgBox(ex.Message)
-            'appInstance.Quit()
+            appInstance.Quit()
         Finally
-            '    appInstance.ScreenUpdating = True
-            '    appInstance.ShowChartTipNames = True
-            '    appInstance.ShowChartTipValues = True
+            appInstance.ScreenUpdating = True
+            appInstance.ShowChartTipNames = True
+            appInstance.ShowChartTipValues = True
         End Try
 
 
@@ -149,8 +153,9 @@ Public Class Ribbon1
         Call PBBDatenbankLoadProjekte(Control, False)
 
         If AlleProjekte.Count > 0 Then
-            ' Ressourcen edit aufschalten
-
+            ' Termine edit aufschalten
+            'all MsgBox(currentProjektTafelModus)
+            Call massEditRcTeAt(currentProjektTafelModus)
         End If
 
     End Sub
@@ -159,6 +164,33 @@ Public Class Ribbon1
 
     Public Sub PTProjectSave(control As Office.IRibbonControl)
         Call MsgBox("Save")
+        If AlleProjekte.Count > 0 Then
+            ' Mouse auf Wartemodus setzen
+            appInstance.Cursor = Excel.XlMousePointer.xlWait
+            'Projekte speichern
+            Call StoreAllProjectsinDB()
+            ' delete all projects from cache
+            'AlleProjekte.Clear()
+            'Try
+            '    Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
+
+            '    Select Case currentProjektTafelModus
+            '        Case ptModus.massEditTermine
+            '            Call massEditRcTeAt(ptModus.massEditTermine)
+            '        Case ptModus.massEditRessSkills
+            '            Call massEditRcTeAt(ptModus.massEditRessSkills)
+            '        Case ptModus.massEditCosts
+            '            Call massEditRcTeAt(ptModus.massEditCosts)
+
+            '    End Select
+
+            'Catch ex As Exception
+
+            'End Try
+
+            ' Mouse wieder auf Normalmodus setzen
+            appInstance.Cursor = Excel.XlMousePointer.xlDefault
+        End If
     End Sub
 
 
@@ -168,370 +200,100 @@ Public Class Ribbon1
 
 
     Public Sub PTProjectCost(control As Office.IRibbonControl)
-        Call MsgBox("Cost")
+        currentProjektTafelModus = ptModus.massEditCosts
+        ' Call MsgBox(ptModus.massEditCosts.ToString)
 
         Call massEditRcTeAt(ptModus.massEditCosts)
     End Sub
 
     Public Sub PTProjectTime(control As Office.IRibbonControl)
-        Call MsgBox("Time")
+        currentProjektTafelModus = ptModus.massEditTermine
+        'Call MsgBox(ptModus.massEditTermine.ToString)
+
         Call massEditRcTeAt(ptModus.massEditTermine)
     End Sub
 
     Public Sub PTProjectResources(control As Office.IRibbonControl)
-        Call MsgBox("Resources")
+        currentProjektTafelModus = ptModus.massEditRessSkills
+        'Call MsgBox(ptModus.massEditRessSkills.ToString)
+
         Call massEditRcTeAt(ptModus.massEditRessSkills)
     End Sub
 
 
-    ''' <summary>
-    ''' aktiviert , je nach Modus die entsprechenden Ribbon Controls 
-    ''' </summary>
-    ''' <param name="modus"></param>
-    ''' <remarks></remarks>
-    Public Sub enableControls(ByVal modus As ptModus)
+    Public Sub PTProjectSettings(control As Office.IRibbonControl)
+        Call MsgBox("Settings")
+    End Sub
 
-        If modus = ptModus.graficboard Then
-            visboZustaende.projectBoardMode = modus
+    Public Sub PTProjectGoToWebUI(control As Office.IRibbonControl)
+
+        Dim pname As String = ""
+        Dim vname As String = ""
+        Dim view As String = "Capacity"
+
+        pname = visboZustaende.currentProject.name
+        vname = visboZustaende.currentProject.variantName
+
+        Select Case currentProjektTafelModus
+            Case ptModus.massEditCosts
+                view = "Cost"
+            Case ptModus.massEditRessSkills
+                view = "Capacity"
+            Case ptModus.massEditTermine
+                view = "Deadline"
+        End Select
+
+        Call FollowHyperlinkToWebsite(visboZustaende.currentProject, view)
 
 
-        Else
-            visboZustaende.projectBoardMode = modus
-
-        End If
-
-        Me.ribbon.Invalidate()
-
+        'Call MsgBox("GoToWebUI for " & pname & ":" & vname)
     End Sub
 
 
-    ''' <summary>
-    ''' es werden nur Projekte an MassEdit übergeben ... sollten Summary Projekte in der Selection sein, werden die erst durch ihre Projekte, die im Show sind, ersetzt 
-    ''' </summary>
-    ''' <param name="meModus"></param>
-    Private Sub massEditRcTeAt(ByVal meModus As ptModus)
-        Dim todoListe As New Collection
-        Dim projektTodoliste As New Collection
-        Dim outputFenster As New frmOutputWindow
-        Dim outputCollection As New Collection
-        Dim outPutLine As String = ""
 
 
-        '' now set visbozustaende
-        '' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
-        'visboZustaende.projectBoardMode = meModus
+    'Public Sub ImportWorksheet()
+    '    ' This macro will import a file into this workbook 
+    '    Dim ControlFile As String = appInstance.ActiveWorkbook.Name
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    '    Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
 
-        ' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
-        ' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
+    '    Dim wb As Excel.Workbook = appInstance.Workbooks.Open(Filename:="C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\Projectboard\Projectboard\bin\Debug\" & "Projectboard.xlsx")
 
-        ''ur: 220506:  Call projektTafelInit()
 
-        ''ur: 220506: enableOnUpdate = False
-        ' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
-        ''ur: 220506: projectboardWindows(PTwindows.mpt).Activate()
+    '    ' Private Sub Application_WorkbookBeforeSave(
+    '    'ByVal Wb As Microsoft.Office.Interop.Excel.Workbook
+    '    'ByVal SaveAsUI As Boolean
+    '    'ByRef Cancel As Boolean) Handles Application.WorkbookBeforeSave
 
-        If ShowProjekte.Count > 0 Then
+    '    If Globals.Factory.HasVstoObject(wb) = True Then
+    '        For Each interopSheet As Excel.Worksheet In wb.Worksheets
+    '            If Globals.Factory.HasVstoObject(interopSheet) = True Then
+    '                Dim vstoSheet As Worksheet = Globals.Factory.GetVstoObject(interopSheet)
+    '                If vstoSheet.Controls.Count > 0 Then
+    '                    System.Windows.Forms.MessageBox.Show(
+    '                        "The VSTO controls are not persisted when you" _
+    '                        + " save and close this workbook.",
+    '                        "Controls Persistence",
+    '                        System.Windows.Forms.MessageBoxButtons.OK,
+    '                        System.Windows.Forms.MessageBoxIcon.Warning)
+    '                    Exit For
+    '                End If
+    '            End If
+    '        Next
+    '    End If
 
-            ' neue Methode 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                If Not todoListe.Contains(kvp.Key) Then
-                    todoListe.Add(kvp.Key, kvp.Key)
-                End If
-            Next
 
+    '    myProjektTafel = wb.Name
 
-            ' check, ob wirklich alle Projekte editiert werden sollen ... 
-            If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
-                Dim yesNo As Integer
-                yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
-                If yesNo = MsgBoxResult.No Then
-                    enableOnUpdate = True
-                    Exit Sub
-                End If
-            End If
+    '    Dim newWS As Excel.Worksheet = wb.Worksheets.Item("meRC")
+    '    Dim newWSName As String = newWS.Name
+    '    appInstance.ActiveWorkbook.Worksheets.Item("meRC").Copy(After:=currentws)
 
-
-
-            If todoListe.Count > 0 Then
-
-                ' jetzt muss ggf noch showrangeLeft und showrangeRight gesetzt werden  
-
-                Call enableControls(meModus)
-
-                ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
-                ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
-                'Call saveProjectsToBackup(todoListe)
-
-                ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
-                'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
-
-                ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
-                'appInstance.ScreenUpdating = False
-
-                Try
-                    enableOnUpdate = False
-
-                    If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
-
-                        If showRangeLeft = 0 Then
-                            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                            '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                        Else
-                            ' beim alten ShowRangeLeft lassen, wenn es Überlappungen gibt ..
-                            Dim newLeft As Integer = ShowProjekte.getMinMonthColumn(todoListe)
-                            Dim newRight As Integer = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                            If newLeft >= showRangeRight Or newRight <= showRangeLeft Then
-                                ' neu bestimmen 
-                                '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, False)
-
-                                showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                                showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                                '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-
-                            End If
-                        End If
-
-                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
-                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
-                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
-
-                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
-                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
-
-
-
-                        Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight, meModus)
-
-
-                    ElseIf meModus = ptModus.massEditTermine Then
-                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
-                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
-                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
-
-                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
-                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
-
-                        Call writeOnlineMassEditTermine(projektTodoliste)
-
-                    ElseIf meModus = ptModus.massEditAttribute Then
-                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
-                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
-                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
-
-                        ' jetzt aufbauen der dbCacheProjekte, names are pNames
-                        Call buildCacheProjekte(todoListe, namesArePvNames:=False)
-
-                        Call writeOnlineMassEditAttribute(projektTodoliste)
-                    Else
-                        Exit Sub
-                    End If
-
-                    appInstance.EnableEvents = True
-
-
-
-                    'Try
-
-                    '    If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
-                    '        projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
-                    '    Else
-                    '        projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-                    '    End If
-
-                    'Catch ex As Exception
-                    '    projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-                    'End Try
-
-                    ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
-                    Dim tableTyp As Integer = ptTables.meRC
-
-                    If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
-                        tableTyp = ptTables.meRC
-                    ElseIf meModus = ptModus.massEditTermine Then
-                        tableTyp = ptTables.meTE
-                    ElseIf meModus = ptModus.massEditAttribute Then
-                        tableTyp = ptTables.meAT
-                    Else
-                        tableTyp = ptTables.meRC
-                    End If
-
-                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
-                        .Activate()
-                    End With
-
-
-                    'With projectboardWindows(PTwindows.massEdit)
-                    '    'With appInstance.ActiveWindow
-
-                    '    Try
-                    '        .FreezePanes = False
-                    '        .Split = False
-
-                    '        If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
-
-                    '            If awinSettings.meExtendedColumnsView = True Then
-                    '                .SplitRow = 1
-                    '                .SplitColumn = 7
-                    '                .FreezePanes = True
-                    '            Else
-                    '                .SplitRow = 1
-                    '                .SplitColumn = 6
-                    '                .FreezePanes = True
-                    '            End If
-                    '            .DisplayHeadings = False
-
-                    '        ElseIf meModus = ptModus.massEditTermine Then
-                    '            .SplitRow = 1
-                    '            .SplitColumn = 6
-                    '            .FreezePanes = True
-                    '            .DisplayHeadings = True
-
-                    '        ElseIf meModus = ptModus.massEditAttribute Then
-                    '            .SplitRow = 1
-                    '            .SplitColumn = 5
-                    '            .FreezePanes = True
-                    '            .DisplayHeadings = True
-
-                    '        Else
-                    '            Exit Sub
-                    '        End If
-
-                    '        .DisplayFormulas = False
-                    '        .DisplayGridlines = True
-                    '        '.GridlineColor = RGB(220, 220, 220)
-                    '        .GridlineColor = Excel.XlRgbColor.rgbBlack
-                    '        .DisplayWorkbookTabs = False
-                    '        .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
-                    '        .WindowState = Excel.XlWindowState.xlMaximized
-                    '        .Activate()
-                    '    Catch ex As Exception
-                    '        Call MsgBox("Fehler in massEditRcTeAt")
-                    '    End Try
-
-
-                    'End With
-
-
-                    ' tk 4.3.19 
-                    ' jetzt das Multiprojekt Window ausblenden ...
-                    'projectboardWindows(PTwindows.mpt).Visible = False
-
-                    '' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
-                    'Try
-                    '    If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-                    '        projectboardWindows(PTwindows.mptpf).Visible = False
-                    '    End If
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    'Try
-                    '    If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-                    '        projectboardWindows(PTwindows.mptpr).Visible = False
-                    '    End If
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    ' Ende Ausblenden 
-
-
-
-
-
-
-                Catch ex As Exception
-                    Call MsgBox("Fehler: " & ex.Message)
-                    If appInstance.EnableEvents = False Then
-                        appInstance.EnableEvents = True
-                    End If
-
-                End Try
-
-            Else
-                enableOnUpdate = True
-                If appInstance.EnableEvents = False Then
-                    appInstance.EnableEvents = True
-                End If
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("no projects apply to criterias ...")
-                Else
-                    Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
-                End If
-            End If
-
-
-        Else
-            enableOnUpdate = True
-            If appInstance.EnableEvents = False Then
-                appInstance.EnableEvents = True
-            End If
-
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no active projects ...")
-            Else
-                Call MsgBox("Es gibt keine aktiven Projekte ...")
-            End If
-
-        End If
-
-
-        'appInstance.ScreenUpdating = True
-        'If appInstance.ScreenUpdating = False Then
-        '    appInstance.ScreenUpdating = True
-        'End If
-
-
-    End Sub
-
-    Public Sub ImportWorksheet()
-        ' This macro will import a file into this workbook 
-        Dim ControlFile As String = appInstance.ActiveWorkbook.Name
-
-        Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
-
-        Dim wb As Excel.Workbook = appInstance.Workbooks.Open(Filename:="C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\Projectboard\Projectboard\bin\Debug\" & "Projectboard.xlsx")
-
-
-        ' Private Sub Application_WorkbookBeforeSave(
-        'ByVal Wb As Microsoft.Office.Interop.Excel.Workbook
-        'ByVal SaveAsUI As Boolean
-        'ByRef Cancel As Boolean) Handles Application.WorkbookBeforeSave
-
-        If Globals.Factory.HasVstoObject(wb) = True Then
-            For Each interopSheet As Excel.Worksheet In wb.Worksheets
-                If Globals.Factory.HasVstoObject(interopSheet) = True Then
-                    Dim vstoSheet As Worksheet = Globals.Factory.GetVstoObject(interopSheet)
-                    If vstoSheet.Controls.Count > 0 Then
-                        System.Windows.Forms.MessageBox.Show(
-                            "The VSTO controls are not persisted when you" _
-                            + " save and close this workbook.",
-                            "Controls Persistence",
-                            System.Windows.Forms.MessageBoxButtons.OK,
-                            System.Windows.Forms.MessageBoxIcon.Warning)
-                        Exit For
-                    End If
-                End If
-            Next
-        End If
-
-
-        myProjektTafel = wb.Name
-
-        Dim newWS As Excel.Worksheet = wb.Worksheets.Item("meRC")
-        Dim newWSName As String = newWS.Name
-        appInstance.ActiveWorkbook.Worksheets.Item("meRC").Copy(After:=currentws)
-
-        'appInstance.Windows("Projectboard").Activate()
-        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-        'appInstance.Windows(ControlFile).Activate()
-    End Sub
+    '    'appInstance.Windows("Projectboard").Activate()
+    '    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    '    'appInstance.Windows(ControlFile).Activate()
+    'End Sub
 #End Region
 
 #Region "Hilfsprogramme"

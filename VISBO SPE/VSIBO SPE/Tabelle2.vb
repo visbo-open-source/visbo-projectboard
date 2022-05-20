@@ -17,12 +17,11 @@ Public Class Tabelle2
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
 
-
-
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
-
         Try
+
+            Try
             Application.DisplayFormulaBar = False
         Catch ex As Exception
 
@@ -41,11 +40,11 @@ Public Class Tabelle2
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
-                .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
-                .meColRC = CType(meWS.Range("RoleCost"), Excel.Range).Column
-                .meColSD = CType(meWS.Range("StartData"), Excel.Range).Column
-                .meColED = CType(meWS.Range("EndData"), Excel.Range).Column
-                .meColpName = 2
+                visboZustaende.meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
+                visboZustaende.meColRC = CType(meWS.Range("RoleCost"), Excel.Range).Column
+                visboZustaende.meColSD = CType(meWS.Range("StartData"), Excel.Range).Column
+                visboZustaende.meColED = CType(meWS.Range("EndData"), Excel.Range).Column
+                visboZustaende.meColpName = 2
                 columnRC = .meColRC
                 columnStartData = .meColSD
                 columnEndData = .meColED
@@ -104,13 +103,13 @@ Public Class Tabelle2
                              AllowSorting:=True,
                              AllowFiltering:=True)
                     .EnableSelection = XlEnableSelection.xlNoRestrictions
-                    .EnableAutoFilter = True
+                    meWS.EnableAutoFilter = True
                 End With
             End If
 
 
         Catch ex As Exception
-
+            Call MsgBox("set autofilter in tabelle2 activateEvent")
         End Try
 
         Application.EnableEvents = formerEE
@@ -143,6 +142,9 @@ Public Class Tabelle2
 
         Dim a As Boolean = appInstance.ScreenUpdating
 
+        Catch ex As Exception
+            Call MsgBox("in catch von activateEvent ")
+        End Try
 
     End Sub
 
@@ -2298,7 +2300,7 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_Startup(sender As Object, e As EventArgs) Handles Me.Startup
         If visboClient.Contains("VISBO SPE") Then
-            Call MsgBox("bin im meRC")
+            'Call MsgBox("bin im meRC")
         End If
     End Sub
 End Class

@@ -243,6 +243,33 @@
       <DependentUpon>Tabelle4.vb</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-bottleneck-100x100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-settings-100x100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-stop-watch-100x100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-money-100x100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon_transparent_flat.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon_transparent_flat 64x64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon_transparent_flat 64x64_Test.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon_transparent_flat Bild.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visbo_icon_transparent_Bild.png" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

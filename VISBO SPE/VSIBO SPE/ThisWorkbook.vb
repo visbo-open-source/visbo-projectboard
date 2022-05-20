@@ -25,6 +25,9 @@ Public Class ThisWorkbook
         'visboClient = "VISBO Simple Project Edit / "
         visboClient = "VISBO SPE / "
 
+        ' currentProjektTafelModus auf beginnend mit massEditTermine setzend
+        currentProjektTafelModus = ptModus.massEditRessSkills
+
 
         ' Refresh von Projekte im Cache  in Minuten
         cacheUpdateDelay = 10
@@ -35,7 +38,7 @@ Public Class ThisWorkbook
         logfileNamePath = createLogfileName()
 
         ' nicht visible setzen
-        'appInstance.Visible = False
+        appInstance.Visible = False
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
 
@@ -104,20 +107,19 @@ Public Class ThisWorkbook
                 awinSettings.userNamePWD = ""
             End If
 
-            'appInstance.EnableEvents = False
+            appInstance.EnableEvents = False
             Call speSetTypen()
-            'appInstance.EnableEvents = True
+            appInstance.EnableEvents = True
 
-            'appInstance.Visible = True
+            appInstance.Visible = True
 
             speSetTypen_Performed = True
-
 
         Catch ex As Exception
 
             appInstance.EnableEvents = True
 
-            '   Call MsgBox(ex.Message)
+            Call MsgBox(ex.Message)
             appInstance.Quit()
         Finally
             appInstance.ScreenUpdating = True
@@ -162,6 +164,129 @@ Public Class ThisWorkbook
                 End If
             End If
         End If
+    End Sub
+
+    Private Sub ThisWorkbook_BeforeClose(ByRef Cancel As Boolean) Handles Me.BeforeClose
+
+
+        Dim projektespeichern As New frmProjekteSpeichern
+        Dim returnValue As DialogResult
+        Dim cancelAbbruch As Boolean = False
+        Dim err As New clsErrorCodeMsg
+
+        If loginErfolgreich Then
+
+
+            ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
+            Try
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    ' um die Settings abzuspeichern
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
+                My.Settings.Save()
+
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    ' um die Settings abzuspeichern
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
+                My.Settings.Save()
+
+
+                If Not noDB Then
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        ' nicht fragen - das führt nur zu sehr unangenehmen Überraschungen 
+
+                    Else
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
+                            returnValue = projektespeichern.ShowDialog
+
+                            If returnValue = DialogResult.Yes Then
+
+                                Call StoreAllProjectsinDB()
+
+                            ElseIf returnValue = DialogResult.Cancel Then
+
+                                cancelAbbruch = True
+                            End If
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("no projects to store ...")
+                            Else
+                                Call MsgBox("keine Projekte zu speichern ...")
+                            End If
+
+
+                        End If
+                    End If
+
+
+                    ' ur:19.06.2019
+                    If Not cancelAbbruch Then
+                        ' die temporären Schutz
+                        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err) Then
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                            End If
+                        End If
+                    End If
+
+
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
+
+            If cancelAbbruch Then
+                Cancel = True
+            Else
+
+            End If
+
+        End If
+
+        If Not cancelAbbruch Then
+            'Call awinKontextReset()
+            ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+            'appInstance.EnableEvents = False
+
+            ' ur:2020-11-23: hier sollte Logfile geschlossen werden.
+            ' ''Call logfileSchliessen()
+
+            Dim WB As Workbook
+            For Each WB In Application.Workbooks
+                If WB.Name = myProjektTafel Then
+                    Try
+                        WB.Saved = True
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Next
+
+            Application.DisplayAlerts = False
+            ' Application.Quit()
+
+        End If
+
+    End Sub
+
+
+    Private Sub ThisWorkbook_BeforeSave(SaveAsUI As Boolean, ByRef Cancel As Boolean) Handles Me.BeforeSave
+
+        Cancel = True
     End Sub
 
 End Class

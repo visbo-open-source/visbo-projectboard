@@ -63,9 +63,9 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property noun_bottleneck() As System.Drawing.Bitmap
+        Friend ReadOnly Property noun_bottleneck_100x100() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("noun_bottleneck", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("noun_bottleneck_100x100", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -73,9 +73,9 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property noun_money() As System.Drawing.Bitmap
+        Friend ReadOnly Property noun_money_100x100() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("noun_money", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("noun_money_100x100", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -83,9 +83,19 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property noun_stop_watch() As System.Drawing.Bitmap
+        Friend ReadOnly Property noun_settings_100x100() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("noun_stop_watch", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("noun_settings_100x100", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property noun_stop_watch_100x100() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("noun_stop_watch_100x100", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -97,6 +107,36 @@ Namespace My.Resources
             Get
                 Dim obj As Object = ResourceManager.GetObject("visbo_icon", resourceCulture)
                 Return CType(obj,System.Drawing.Icon)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property visbo_icon_transparent_Bild() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("visbo_icon_transparent_Bild", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property visbo_icon_transparent_flat() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("visbo_icon_transparent_flat", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property visbo_icon_transparent_flat_64x64() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("visbo_icon_transparent_flat_64x64", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
     End Module
