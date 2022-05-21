@@ -1862,6 +1862,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
     ''' <remarks></remarks>
+
     Public ReadOnly Property getCountPhasesInMonth(phaseName As String, ByVal breadcrumb As String,
                                                    ByVal type As Integer, pvName As String) As Double()
 
@@ -1939,7 +1940,7 @@ Public Class clsProjekte
 
                                 If anzLoops > 0 Then
 
-                                    Dim tmpArray As Double(,) = hproj.getPhasenDetailBedarf(phaseName)
+                                    Dim tmpArray As Double(,) = hproj.getPhasenDetailBedarf(phaseName, breadcrumb)
                                     'tempArray = hproj.getPhasenBedarf(phaseName)
 
                                     For i = 0 To anzLoops - 1
@@ -1975,6 +1976,114 @@ Public Class clsProjekte
             Next
 
             getCountPhasesInMonth = result
+
+        End Get
+
+    End Property
+    Public ReadOnly Property getCountPhasesInMonth2(ByVal phaseName As String, ByVal breadcrumb As String,
+                                                   ByVal type As Integer, pvName As String) As Double(,)
+
+        Get
+            Dim result As Double()
+            Dim phasevalues As Double(,)
+
+            ' it now is calculated how many phases do overlap per day ...  
+            awinSettings.phasesProzentual = False
+
+            'Dim anzPhasen As Integer
+            Dim zeitraum As Integer
+            'Dim projektstart As Integer
+            Dim anzProjekte As Integer
+            'Dim found As Boolean
+            Dim i As Integer ', pr As Integer, ph As Integer
+            Dim hphase As clsPhase
+            Dim hproj As clsProjekt
+            'Dim lookforIndex As Boolean
+            'Dim phasenStart As Integer, phasenEnde As Integer
+            'Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer, phAnfang As Integer, phEnde As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            'lookforIndex = IsNumeric(phaseId)
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim result(zeitraum)
+            ReDim phasevalues(zeitraum, 31)
+
+            anzProjekte = _allProjects.Count
+
+            ' anzPhasen = AllPhases.Count
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                If type = -1 Or
+                    (type = PTItemType.vorlage) Or
+                    (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Then
+                    ' Aktion machen
+
+                    Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+
+                    For px As Integer = 0 To phaseIndices.Length - 1
+
+                        If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                            hphase = hproj.getPhase(phaseIndices(px))
+                        Else
+                            hphase = Nothing
+                        End If
+
+
+                        If Not hphase Is Nothing Then
+
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                            End With
+
+
+                            If istBereichInTimezone(prAnfang, prEnde) Then
+                                'projektstart = hproj.Start
+
+                                With hphase
+                                    phAnfang = prAnfang + .relStart - 1
+                                    phEnde = prAnfang + .relEnde - 1
+                                End With
+
+                                Dim ixKorrektur As Integer = hphase.relStart - 1
+
+                                Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
+
+                                If anzLoops > 0 Then
+
+                                    Dim tmpArray As Double(,) = hproj.getPhasenDetailBedarf(phaseName, breadcrumb)
+                                    'tempArray = hproj.getPhasenBedarf(phaseName)
+
+                                    For i = 0 To anzLoops - 1
+                                        ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
+                                        ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
+                                        For dx As Integer = 1 To 31
+                                            phasevalues(ixZeitraum + i, dx) = phasevalues(ixZeitraum + i, dx) + tmpArray(ix + i + ixKorrektur, dx)
+                                        Next
+
+                                    Next i
+
+                                End If
+
+
+                            End If
+                        End If
+                    Next
+
+
+                End If
+
+
+            Next kvp
+
+
+            getCountPhasesInMonth2 = phasevalues
 
         End Get
 
@@ -2135,7 +2244,11 @@ Public Class clsProjekte
             ' nothing to do 
             Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
         Else
-            ReDim phaseArray(showRangeRight - showRangeLeft)
+            Dim zeitraum As Integer = showRangeRight - showRangeLeft
+            ReDim phaseArray(zeitraum)
+
+            Dim phasevalues As Double(,)
+            ReDim phasevalues(zeitraum, 31)
 
             If Not IsNothing(phNames) Then
 
@@ -2155,13 +2268,39 @@ Public Class clsProjekte
                     Dim typ As Integer = -1
                     Dim pvName As String = ""
 
-                    Dim tmpPhaseArray As Double() = getCountPhasesInMonth(phName, breadCrumb, typ, pvName)
+                    Dim tmpPhaseArray As Double(,) = getCountPhasesInMonth2(phName, breadcrumb, typ, pvName)
 
-                    For ix As Integer = 0 To showRangeRight - showRangeLeft
-                        phaseArray(ix) = phaseArray(ix) + tmpPhaseArray(ix)
-                    Next
+                    Try
+
+                        For i = 0 To zeitraum
+
+                            For dx As Integer = 1 To 31
+                                phasevalues(i, dx) = phasevalues(i, dx) + tmpPhaseArray(i, dx)
+                            Next
+
+                        Next i
+
+                    Catch ex As Exception
+                        Call logger(ptErrLevel.logError, "getPhaseFrequency", "Try 1 " & ex.Message)
+                    End Try
 
                 Next
+
+
+                Try
+
+                    For px As Integer = 0 To zeitraum
+                        Dim monthMax As Double = -1
+                        For dx As Integer = 1 To 31
+                            monthMax = System.Math.Max(phasevalues(px, dx), monthMax)
+                        Next
+                        phaseArray(px) = monthMax
+                    Next
+
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logError, "bestimmeXtipvDatenreihen", "Try 2 " & ex.Message)
+                End Try
+
 
             End If
         End If

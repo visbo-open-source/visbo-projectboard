@@ -2100,6 +2100,10 @@ Module rpaModule1
                                 result.defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
                             End If
 
+                            If Not IsNothing(.Cells(9, 2).value) Then
+                                result.defaultDeltaInDays = CInt(.Cells(9, 2).value)
+                            End If
+
                         Case PTRpa.visboFindProjectStartPM
 
                             result.limitPhases = CDbl(.Cells(1, 2).value)
@@ -3163,7 +3167,9 @@ Module rpaModule1
 
                             If deltaInDays <> 0 Then
                                 Dim newEndDate As Date = hproj.endeDate.AddDays(deltaInDays)
-                                If hproj.movable And Not hproj.hasActualValues Then
+                                ' try to set it to movable, will only be successful if conditions are met ...
+                                hproj.movable = True
+                                If hproj.movable Then
                                     Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
 
                                     If Not IsNothing(tmpProj) Then
@@ -4029,6 +4035,11 @@ Module rpaModule1
 
                     myRowNr = nextLineNumber
 
+
+                    '
+                    '
+                    ' now iterate through all the projects 
+                    ' ####################################
                     For Each rankingPair As KeyValuePair(Of Integer, clsRankingParameters) In rankingList
 
                         sumIterations = 0
@@ -4043,10 +4054,59 @@ Module rpaModule1
 
                             End Try
 
+                            ' now first check whether or not hproj is already positioned on earliest StartDate
+                            ' if not then move it towards the earliest startdate
+                            Dim newStartDate As Date = hproj.startDate
+                            Dim newEndDate As Date = hproj.endeDate
+
                             Dim stdDuration As Integer = hproj.dauerInDays
                             Dim myDuration As Integer = stdDuration
                             'Dim minDuration As Integer = CInt(stdDuration * 0.7)
                             Dim minDuration As Integer = CInt(stdDuration * rankingPair.Value.shortestDuration)
+                            Dim maxDuration As Integer = CInt(stdDuration * rankingPair.Value.longestDuration)
+
+                            If minDuration = maxDuration And minDuration > 0 Then
+                                If minDuration <> stdDuration Then
+                                    ' neue Projekt-Länge machen
+                                    ' create variant if not already done
+                                    If hproj.variantName <> projectVariantName Then
+                                        hproj = hproj.createVariant(projectVariantName, "variant to avoid bottlenecks")
+                                        AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
+                                    End If
+
+                                    newEndDate = hproj.startDate.AddDays(minDuration - 1)
+                                    Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+                                        hproj = tmpProj
+                                    End If
+
+                                End If
+                            End If
+
+                            If DateDiff(DateInterval.Day, StartofCalendar, rankingPair.Value.earliestStart) > 0 Then
+
+
+                                Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, rankingPair.Value.earliestStart)
+                                If startOffset <> 0 Then
+
+                                    ' create variant if not already done
+                                    If hproj.variantName <> projectVariantName Then
+                                        hproj = hproj.createVariant(projectVariantName, "variant to avoid bottlenecks")
+                                        AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
+                                    End If
+
+                                    newStartDate = hproj.startDate.AddDays(startOffset)
+                                    newEndDate = hproj.endeDate.AddDays(startOffset)
+                                    Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+                                        hproj = tmpProj
+                                    End If
+                                End If
+
+                            End If
+
                             Dim latestEndDate As Date = rankingPair.Value.latestEnd
                             Dim biggestOffsettoEnd As Integer = 0
 
@@ -4055,10 +4115,6 @@ Module rpaModule1
                             End If
 
                             Dim storeRequired As Boolean = False
-
-                            Dim newStartDate As Date = hproj.startDate
-                            Dim newEndDate As Date = hproj.endeDate
-
 
                             ' now define showrangeLeft and showrangeRight from hproj 
                             showRangeLeft = getColumnOfDate(hproj.startDate)
@@ -4097,9 +4153,9 @@ Module rpaModule1
                                 overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
                             Else
                                 overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
-                                                                                          referenceMSValues,
-                                                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
-                                                                                          referencePHValues)
+                                                                                              referenceMSValues,
+                                                                                              jobParameters.getPhaseNames, jobParameters.limitPhases,
+                                                                                              referencePHValues)
                             End If
 
 
@@ -4108,12 +4164,14 @@ Module rpaModule1
 
                                 ' create variant if not already done
                                 If hproj.variantName <> projectVariantName Then
-                                    hproj = hproj.createVariant(projectVariantName, "variant to avoid resource bottlenecks")
+                                    hproj = hproj.createVariant(projectVariantName, "variant to avoid bottlenecks")
                                     AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                 End If
 
                                 Dim deltaInDays As Integer = jobParameters.defaultDeltaInDays
                                 ' now modify this one ...
+
+
 
                                 Dim endIterations As Integer = 0
                                 Dim durationIterations As Integer = 0
@@ -4126,6 +4184,10 @@ Module rpaModule1
 
                                 Try
                                     Dim tmpProj As clsProjekt = Nothing
+
+                                    Dim tmpMsg As String = "try out max " & maxEndIterations * maxDurationIterations & "variants for project .." & hproj.getShapeText
+                                    Call logger(ptErrLevel.logInfo, "find best start ", tmpMsg)
+
                                     Do While overutilizationFound And endIterations <= maxEndIterations
                                         ' move project by deltaIndays
 
@@ -4159,17 +4221,14 @@ Module rpaModule1
                                                 AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                                 ShowProjekte.AddAnyway(hproj)
 
-                                                Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                                'Console.WriteLine(infomsg)
-                                                Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
 
                                                 If myKennung = PTRpa.visboFindProjectStart Then
                                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
                                                 Else
                                                     overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
-                                                                                          referenceMSValues,
-                                                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
-                                                                                          referencePHValues)
+                                                                                              referenceMSValues,
+                                                                                              jobParameters.getPhaseNames, jobParameters.limitPhases,
+                                                                                              referencePHValues)
                                                 End If
 
 
@@ -4215,17 +4274,17 @@ Module rpaModule1
                                                 AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                                 ShowProjekte.AddAnyway(hproj)
 
-                                                Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-                                                Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
+                                                'Dim infomsg As String = "... trying out " & hproj.getShapeText & hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                                                'Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
 
 
                                                 If myKennung = PTRpa.visboFindProjectStart Then
                                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
                                                 Else
                                                     overutilizationFound = ShowProjekte.overLoadMSPhasesFound(jobParameters.getMilestoneNames, jobParameters.limitMilestones,
-                                                                                          referenceMSValues,
-                                                                                          jobParameters.getPhaseNames, jobParameters.limitPhases,
-                                                                                          referencePHValues)
+                                                                                              referenceMSValues,
+                                                                                              jobParameters.getPhaseNames, jobParameters.limitPhases,
+                                                                                              referencePHValues)
                                                 End If
 
                                             Else

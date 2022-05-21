@@ -106,7 +106,7 @@
         End Get
         Set(value As Double)
             If Not IsNothing(value) Then
-                If value > 1.0 Then
+                If value > 0.0 Then
                     _longestDuration = value
                 Else
                     _longestDuration = 1.0
@@ -134,6 +134,7 @@
             End If
         End Set
     End Property
+
 
 
     Public Sub New()

@@ -139,13 +139,17 @@ Public Class clsProjekt
         Set(value As Boolean)
             If Not IsNothing(value) Then
                 If value = True Then
-
-                    If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
-                    (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Then
-                        _movable = True
+                    If Not hasActualValues Then
+                        If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
+                            (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Then
+                            _movable = True
+                        Else
+                            _movable = False
+                        End If
                     Else
                         _movable = False
                     End If
+
 
                 Else
                     _movable = False
@@ -1994,7 +1998,7 @@ Public Class clsProjekt
         End Get
     End Property
 
-    Public Function getPhasenDetailBedarf(phaseName As String) As Double(,)
+    Public Function getPhasenDetailBedarf(ByVal phaseName As String, ByVal breadCrumb As String) As Double(,)
 
         Dim result As Double(,)
         ReDim result(_Dauer - 1, 31)
@@ -2031,11 +2035,18 @@ Public Class clsProjekt
             anzPhasen = AllPhases.Count
             If anzPhasen > 0 Then
 
-                For p = 0 To anzPhasen - 1
-                    phase = AllPhases.Item(p)
+                Dim phaseIndices() As Integer = hierarchy.getPhaseIndices(phaseName, breadCrumb)
+
+                For px As Integer = 0 To phaseIndices.Length - 1
+
+                    If phaseIndices(px) > 0 And phaseIndices(px) <= CountPhases Then
+                        phase = getPhase(phaseIndices(px))
+                    Else
+                        phase = Nothing
+                    End If
 
 
-                    If phase.name = phaseName Then
+                    If Not IsNothing(phase) Then
 
                         phaseStart = phase.getStartDate
                         phaseEnd = phase.getEndDate
@@ -2045,7 +2056,7 @@ Public Class clsProjekt
 
                                 If .relEnde = .relStart Then
                                     For dx As Integer = phaseStart.Day To phaseEnd.Day
-                                        result(.relStart - 1, dx) = 1
+                                        result(.relStart - 1, dx) = result(.relStart - 1, dx) + 1
                                     Next
 
                                 Else
@@ -2056,7 +2067,7 @@ Public Class clsProjekt
                                             ' in dem Monat wo die Phase beginnt 
                                             Try
                                                 For dx As Integer = phaseStart.Day To daysPMonth(phaseStart.Month)
-                                                    result(.relStart - 1 + i, dx) = 1
+                                                    result(.relStart - 1 + i, dx) = result(.relStart - 1 + i, dx) + 1
                                                 Next
                                             Catch ex As Exception
                                                 Dim xx As Integer = 0
@@ -2067,7 +2078,7 @@ Public Class clsProjekt
                                             ' in dem Monat, wo die Phase endet 
                                             Try
                                                 For dx As Integer = 1 To phaseEnd.Day
-                                                    result(.relStart - 1 + i, dx) = 1
+                                                    result(.relStart - 1 + i, dx) = result(.relStart - 1 + i, dx) + 1
                                                 Next
                                             Catch ex As Exception
                                                 Dim xx As Integer = 0
@@ -2079,7 +2090,7 @@ Public Class clsProjekt
                                             Dim endIX As Integer = daysPMonth(startDate.AddMonths(.relStart - 1 + i).Month)
                                             Try
                                                 For dx As Integer = 1 To endIX
-                                                    result(.relStart - 1 + i, dx) = 1
+                                                    result(.relStart - 1 + i, dx) = result(.relStart - 1 + i, dx) + 1
                                                 Next
                                             Catch ex As Exception
                                                 Dim xx As Integer = 0
@@ -2098,7 +2109,10 @@ Public Class clsProjekt
 
                     End If
 
-                Next p ' Loop über alle Phasen
+
+                Next
+
+
             Else
                 Throw New ArgumentException("Project has no phases")
             End If
@@ -2373,8 +2387,6 @@ Public Class clsProjekt
             Dim olddate As Date = _startDate
             Dim differenzInTagen As Integer = CInt(DateDiff(DateInterval.Day, olddate, value))
             Dim updatePhases As Boolean = False
-            ' tk 6.5.22 - das funktioniert nur wenn die Bedingungen erfüllt sind .. 
-            movable = True ' dieses Statement funktioniert nur , wenn die Bedingungen frü Movable erfüllt sind 
 
             'If (differenzInTagen <> 0 And Me.movable) And (_vpStatus = VProjectStatus(PTVPStati.initialized) Or _variantName <> "") Then
             If (differenzInTagen <> 0 And Me.movable) Then
@@ -2392,7 +2404,7 @@ Public Class clsProjekt
 
 
                 'ur: 211202ElseIf _Status <> ProjektStatus(0) And _variantName = "" And Not Me.movable Then
-            ElseIf _vpStatus <> VProjectStatus(PTVPStati.initialized) And _variantName = "" And Not Me.movable Then
+            ElseIf (_vpStatus <> VProjectStatus(PTVPStati.initialized) Or _vpStatus <> VProjectStatus(PTVPStati.proposed)) And _variantName = "" And Not Me.movable Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
 
 
@@ -8255,6 +8267,8 @@ Public Class clsProjekt
         '_relStart = 1
         _leadPerson = ""
 
+        _movable = False
+
         _StartOffset = 0
         _Start = 0
         _startDate = NullDatum
@@ -8297,6 +8311,8 @@ Public Class clsProjekt
 
         _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, startDatum) + 1)
         _startDate = startDatum
+
+        _movable = False
 
         AllPhases = New List(Of clsPhase)
         Dim cphase As New clsPhase(parent:=Me)
@@ -8360,6 +8376,8 @@ Public Class clsProjekt
         '_relStart = 1
         _leadPerson = ""
 
+        _movable = False
+
         _StartOffset = 0
 
         _Start = projektStart
@@ -8399,6 +8417,8 @@ Public Class clsProjekt
         extendedView = False
         '_relStart = 1
         _leadPerson = ""
+
+        _movable = False
 
         _StartOffset = 0
 

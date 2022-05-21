@@ -7702,16 +7702,47 @@ Public Module awinDiagrams
                             myTmpCollection.Add(scInfo.q2)
                         End If
 
+                        Dim zeitraum As Integer = showRangeRight - showRangeLeft
+                        ' check whether or not plen-1 = zeitraum
+                        If plen - 1 <> zeitraum Then
+                            Call logger(ptErrLevel.logError, "bestimmeXtipvDatenreihen", "timeFrame not corect ...")
+                        End If
+                        Dim phasevalues As Double(,)
+                        ReDim phasevalues(plen - 1, 31)
+
                         For Each fullName As String In myTmpCollection
                             Call splitHryFullnameTo2(fullName, prcName, breadcrumb, type, pvName)
 
-                            Dim phDatenreihe As Double() = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
+                            Dim phDatenreihe As Double(,) = ShowProjekte.getCountPhasesInMonth2(prcName, breadcrumb, type, pvName)
 
-                            For i = 0 To plen - 1
-                                tmpTdatenreihe(i) = tmpTdatenreihe(i) + phDatenreihe(i)
+                            Try
+
+                                For i = 0 To plen - 1
+
+                                    For dx As Integer = 1 To 31
+                                        phasevalues(i, dx) = phasevalues(i, dx) + phDatenreihe(i, dx)
+                                    Next
+
+                                Next i
+
+                            Catch ex As Exception
+                                Call logger(ptErrLevel.logError, "bestimmeXtipvDatenreihen", "Try 1 " & ex.Message)
+                            End Try
+                        Next
+
+                        Try
+
+                            For px As Integer = 0 To plen - 1
+                                Dim monthMax As Double = -1
+                                For dx As Integer = 1 To 31
+                                    monthMax = System.Math.Max(phasevalues(px, dx), monthMax)
+                                Next
+                                tmpTdatenreihe(px) = monthMax
                             Next
 
-                        Next
+                        Catch ex As Exception
+                            Call logger(ptErrLevel.logError, "bestimmeXtipvDatenreihen", "Try 2 " & ex.Message)
+                        End Try
 
                         tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myTmpCollection)
 

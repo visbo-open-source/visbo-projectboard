@@ -217,9 +217,22 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _sortItem As String
+    Public Property sortItem As String
+        Get
+            sortItem = _sortItem
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _sortItem = value
+            End If
+        End Set
+    End Property
+
 
     Sub New()
 
+        _sortItem = ""
         _allowedOverloadMonth = 1.05
         _allowedOverloadTotal = 1.0
         _limitPhases = 1
