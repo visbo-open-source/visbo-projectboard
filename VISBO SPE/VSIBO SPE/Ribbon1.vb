@@ -152,6 +152,8 @@ Public Class Ribbon1
         Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
         Call PBBDatenbankLoadProjekte(Control, False)
 
+        appInstance.EnableEvents = True
+
         If AlleProjekte.Count > 0 Then
             ' Termine edit aufschalten
             'all MsgBox(currentProjektTafelModus)
@@ -195,7 +197,31 @@ Public Class Ribbon1
 
 
     Public Sub PTProjectDelete(control As Office.IRibbonControl)
-        Call MsgBox("Delete")
+
+        'delete all projects from cache
+        AlleProjekte.Clear()
+        ShowProjekte.Clear()
+        Try
+            Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
+
+            Select Case currentProjektTafelModus
+                Case ptModus.massEditTermine
+                    Call massEditRcTeAt(ptModus.massEditTermine)
+                Case ptModus.massEditRessSkills
+                    Call massEditRcTeAt(ptModus.massEditRessSkills)
+                Case ptModus.massEditCosts
+                    Call massEditRcTeAt(ptModus.massEditCosts)
+
+            End Select
+
+        Catch ex As Exception
+
+        End Try
+
+        'Call MsgBox("Delete")
+        ' Mouse wieder auf Normalmodus setzen
+        'appInstance.Cursor = Excel.XlMousePointer.xlDefault
+
     End Sub
 
 
