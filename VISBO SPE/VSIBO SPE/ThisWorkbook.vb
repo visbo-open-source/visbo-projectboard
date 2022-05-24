@@ -21,12 +21,29 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_Startup() Handles Me.Startup
         'Dim cbar As CommandBar
+        Dim hstr() As String
+        Dim xxx As Long = GetCommandLine
+        Dim cline As String = CmdToSTr(xxx)
+        Call MsgBox(cline)
+
+        hstr = cline.Split("""")
+        'Call MsgBox(hstr(0), hstr(1), hstr(2))
 
         'visboClient = "VISBO Simple Project Edit / "
         visboClient = "VISBO SPE / "
 
         ' currentProjektTafelModus auf beginnend mit massEditTermine setzend
-        currentProjektTafelModus = ptModus.massEditRessSkills
+        Select Case My.Settings.startModus
+            Case "Time"
+                currentProjektTafelModus = ptModus.massEditTermine
+            Case "Resources"
+                currentProjektTafelModus = ptModus.massEditRessSkills
+            Case "Cost"
+                currentProjektTafelModus = ptModus.massEditCosts
+            Case Else
+                currentProjektTafelModus = ptModus.massEditTermine
+        End Select
+
 
 
         ' Refresh von Projekte im Cache  in Minuten
@@ -52,9 +69,10 @@ Public Class ThisWorkbook
         '    If cbar.Type = MsoBarType.msoBarTypePopup Then
         '        cbar.Enabled = False
         '    End If
-        'Next
+        ''Next
 
-        magicBoardCmdBar.cmdbars = appInstance.CommandBars
+        'ur:220523: Test if esc is no longer necessary
+        'magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
 
 
@@ -289,4 +307,30 @@ Public Class ThisWorkbook
         Cancel = True
     End Sub
 
+    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineW" () As Long
+    Declare Function lstrlenW Lib "kernel32" (ByVal lpString As Long) As Long
+    Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (MyDest As Byte(), MySource As Long, ByVal MySize As Long)
+    Function CmdToSTr(Cmd As Long) As String
+        Dim Buffer() As Byte
+        Dim StrLen As Long
+
+        If Cmd Then
+            StrLen = lstrlenW(Cmd) * 2
+
+            If StrLen Then
+                ReDim Buffer(StrLen - 1)
+                CopyMemory(Buffer, Cmd, StrLen)
+                CmdToSTr = UnicodeBytesToString(Buffer)
+            Else
+                CmdToSTr = ""
+            End If
+        Else
+            CmdToSTr = ""
+        End If
+    End Function
+    Private Function UnicodeBytesToString(
+    ByVal bytes() As Byte) As String
+
+        Return System.Text.Encoding.Unicode.GetString(bytes)
+    End Function
 End Class
