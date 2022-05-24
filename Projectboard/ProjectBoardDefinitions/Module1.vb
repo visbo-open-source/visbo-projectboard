@@ -8168,28 +8168,51 @@ Public Module Module1
                 End If
 
             Case PTwindows.massEdit
-
-                Select Case tableTyp
-                    Case ptTables.meRC
-                        If awinSettings.englishLanguage Then
-                            tmpResult = "Modify Resource and Cost Needs"
-                        Else
-                            tmpResult = "Personal- und Kostenbedarfe ändern"
-                        End If
-                    Case ptTables.meTE
-                        If awinSettings.englishLanguage Then
-                            tmpResult = "Modify Tasks and Milestones"
-                        Else
-                            tmpResult = "Meilensteine und Vorgänge ändern"
-                        End If
-                    Case ptTables.meAT
-                        If awinSettings.englishLanguage Then
-                            tmpResult = "Modify Attributes"
-                        Else
-                            tmpResult = "Attribute ändern"
-                        End If
-                End Select
-
+                If visboClient.Contains("VISBO SPE") And ShowProjekte.Count = 1 Then
+                    Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
+                    Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    Select Case tableTyp
+                        Case ptTables.meRC
+                            If awinSettings.englishLanguage Then
+                                tmpResult = "Modify Resource and Cost Needs: " & printProjName
+                            Else
+                                tmpResult = "Personal- und Kostenbedarfe ändern: " & printProjName
+                            End If
+                        Case ptTables.meTE
+                            If awinSettings.englishLanguage Then
+                                tmpResult = "Modify Tasks and Milestones: " & printProjName
+                            Else
+                                tmpResult = "Meilensteine und Vorgänge ändern: " & printProjName
+                            End If
+                        Case ptTables.meAT
+                            If awinSettings.englishLanguage Then
+                                tmpResult = "Modify Attributes: " & printProjName
+                            Else
+                                tmpResult = "Attribute ändern: " & printProjName
+                            End If
+                    End Select
+                Else
+                    Select Case tableTyp
+                        Case ptTables.meRC
+                            If awinSettings.englishLanguage Then
+                                tmpResult = "Modify Resource and Cost Needs"
+                            Else
+                                tmpResult = "Personal- und Kostenbedarfe ändern"
+                            End If
+                        Case ptTables.meTE
+                            If awinSettings.englishLanguage Then
+                                tmpResult = "Modify Tasks and Milestones"
+                            Else
+                                tmpResult = "Meilensteine und Vorgänge ändern"
+                            End If
+                        Case ptTables.meAT
+                            If awinSettings.englishLanguage Then
+                                tmpResult = "Modify Attributes"
+                            Else
+                                tmpResult = "Attribute ändern"
+                            End If
+                    End Select
+                End If
 
         End Select
 
