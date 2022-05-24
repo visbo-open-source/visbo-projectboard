@@ -18879,7 +18879,8 @@ Public Module agm2
         Dim maxRCLengthAbsolut As Integer = 0
         Dim maxRCLengthVorkommen As Integer = 0
 
-        If todoListe.Count = 0 Then
+        If todoListe.Count = 0 And Not visboClient.Contains("VISBO SPE") Then
+
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
             Else
@@ -18889,6 +18890,7 @@ Public Module agm2
             Exit Sub
         End If
 
+
         Try
 
             appInstance.EnableEvents = False
@@ -18896,7 +18898,7 @@ Public Module agm2
             ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
             selectedProjekte.Clear(False)
 
-            Dim currentWS As Excel.Worksheet
+            Dim currentWS As Excel.Worksheet = Nothing
             Dim currentWB As Excel.Workbook
             Dim ressCostColumn As Integer
             Dim tmpName As String
@@ -18906,6 +18908,7 @@ Public Module agm2
 
                 '' ur:220506:  ThisWorkbook.Sheets("Tabelle3").Copy after:=ActiveWorkbook.Sheets(ActiveWorkbook.Sheets.Count)
                 currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+                'currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets.Item(i), Excel.Worksheet)
 
                 For i = 1 To currentWB.Worksheets.Count
                     currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets.Item(i), Excel.Worksheet)
@@ -18939,7 +18942,7 @@ Public Module agm2
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit RessCost Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -19013,6 +19016,10 @@ Public Module agm2
 
                 End If
 
+
+
+                Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", " vor massEditZeile1Appearance")
+
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
                 Call massEditZeile1Appearance(ptTables.meRC)
 
@@ -19085,12 +19092,18 @@ Public Module agm2
 
                 For Each pvName As String In todoListe
 
+                    Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " wird bearbeitet")
+
                     Dim hproj As clsProjekt = Nothing
                     If AlleProjekte.Containskey(pvName) Then
                         hproj = AlleProjekte.getProject(pvName)
                     End If
 
+                    Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?")
+
                     If Not IsNothing(hproj) Then
+
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, yes")
 
                         ' if setup, that one person is haviing exactly one role then make sure that each person has its role applied ...
                         If awinSettings.onePersonOneRole Then
@@ -19113,14 +19126,19 @@ Public Module agm2
                         'Dim wpItem As clsWriteProtectionItem
                         Dim isProtectedbyOthers As Boolean
 
+
+
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " vor check isProtectedbyOthers")
+
                         ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                            If awinSettings.visboServer Then
-                                isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                            Else
-                                isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                            End If
+                            ' ur:20220520: versuchsweise herausgenommen
+                            'If awinSettings.visboServer Then
+                            '    isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                            'Else
+                            '    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                            'End If
 
                         ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                             isProtectedbyOthers = True
@@ -19132,22 +19150,25 @@ Public Module agm2
                             End If
 
                         Else
-
-                            ' er kann es nur ändern, wenn er es für sich schützen kann 
-                            Dim vNameToProtect As String = hproj.variantName
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                                If hproj.variantName <> "" Then
-                                    vNameToProtect = hproj.variantName
-                                Else
-                                    vNameToProtect = ptVariantFixNames.pfv.ToString
-                                End If
-                            End If
-                            isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
+                            ' ur:20220520: versuchsweise herausgenommen
+                            '' er kann es nur ändern, wenn er es für sich schützen kann 
+                            'Dim vNameToProtect As String = hproj.variantName
+                            'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            '    If hproj.variantName <> "" Then
+                            '        vNameToProtect = hproj.variantName
+                            '    Else
+                            '        vNameToProtect = ptVariantFixNames.pfv.ToString
+                            '    End If
+                            'End If
+                            'isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
                         End If
 
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " nach check isProtectedbyOthers")
 
                         ' tk 19.1.20 ist doch gar nicht mehr notwendig ? 
                         If isProtectedbyOthers Then
+
+                            Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "ist von jemand anderen gelockt")
 
                             ' nicht erfolgreich, weil durch anderen geschützt ... 
                             ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
@@ -19155,9 +19176,12 @@ Public Module agm2
                             'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                             'writeProtections.upsert(wpItem)
 
+                            ' ur:20220520: versuchsweise herausgenommen
                             protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
                         End If
+
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "vor if actualDataRelColumn")
 
                         If actualDataRelColumn >= 0 And Not isProtectedbyOthers Then
                             If awinSettings.englishLanguage Then
@@ -19179,6 +19203,8 @@ Public Module agm2
                             Dim phaseName As String = cphase.name
                             Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                            Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "phase " & phaseNameID & " wurd gerade bearbeitet")
+
                             ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
                             Dim hasActualData As Boolean = cphase.hasActualData
                             Dim hasForecastMonths As Boolean = True
@@ -19194,6 +19220,8 @@ Public Module agm2
 
                             If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                                 ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                                Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Phase " & phaseNameID & " im Zeitraum enthalten")
 
                                 ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
                                 Dim ixZeitraum As Integer
@@ -19407,22 +19435,31 @@ Public Module agm2
                                         lockText = protectionText
                                     End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", False,
+                                    Try
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", False,
                                                                             lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 0)
+                                        If ok Then
+                                            zeile = zeile + 1
+                                        Else
+                                            Call MsgBox("not ok")
+                                        End If
 
-                                    If ok Then
-                                        zeile = zeile + 1
-                                    Else
-                                        Call MsgBox("not ok")
-                                    End If
+                                    Catch ex As Exception
+                                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "leere Projekt-Phase-Info")
+                                    End Try
+
+
 
                                 End If
 
                             End If
 
                         Next p
+
+                    Else
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, no")
 
                     End If
 
@@ -19546,6 +19583,11 @@ Public Module agm2
             Catch ex As Exception
 
             End Try
+
+            ' löschen des ganzen Blattes
+            If todoListe.Count = 0 Then
+                infoDatablock.Clear()
+            End If
 
 
             appInstance.EnableEvents = True
@@ -19808,16 +19850,16 @@ Public Module agm2
 
                 End Try
 
-                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
-                Try
-                    currentWS.UsedRange.Clear()
-                Catch ex As Exception
+                '' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                'Try
+                '    currentWS.UsedRange.Clear()
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Termine Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -19916,12 +19958,12 @@ Public Module agm2
                             protectionText = "Orga-Admin may only view data ..."
                         End If
                     Else
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                        If isProtectedbyOthers Then
+                        ''isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        'If isProtectedbyOthers Then
 
-                            protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+                        '    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
-                        End If
+                        'End If
                     End If
 
 
@@ -20441,7 +20483,7 @@ Public Module agm2
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Attribute Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
