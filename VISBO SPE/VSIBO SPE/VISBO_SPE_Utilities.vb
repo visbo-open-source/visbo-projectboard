@@ -350,18 +350,10 @@ Module VISBO_SPE_Utilities
         '' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
         visboZustaende.projectBoardMode = meModus
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-        ' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
-        ' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
-
-        ''ur: 220506:  Call projektTafelInit()
 
         enableOnUpdate = False
-        ' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
-        ''ur: 220506: projectboardWindows(PTwindows.mpt).Activate()
 
-        If ShowProjekte.Count > 0 Then
+        If ShowProjekte.Count >= 0 Then
 
             Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & ShowProjekte.Count)
 
@@ -385,7 +377,7 @@ Module VISBO_SPE_Utilities
 
 
 
-            If todoListe.Count > 0 Then
+            If todoListe.Count >= 0 Then
 
                 ' jetzt muss ggf noch showrangeLeft und showrangeRight gesetzt werden  
 
@@ -450,7 +442,7 @@ Module VISBO_SPE_Utilities
 
                         Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
 
-                        Call writeOnlineMassEditTermine(projektTodoliste)
+                        Call writeOnlineMassEditTermineSPE(projektTodoliste)
 
                     ElseIf meModus = ptModus.massEditAttribute Then
                         ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
@@ -511,26 +503,49 @@ Module VISBO_SPE_Utilities
                             If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
                                 If awinSettings.meExtendedColumnsView = True Then
+                                    If ShowProjekte.Count = 1 Then
+                                        .SplitRow = 1
+                                        .SplitColumn = 5
+                                        .FreezePanes = True
+                                    Else
+                                        .SplitRow = 1
+                                        .SplitColumn = 8
+                                        .FreezePanes = True
+                                    End If
+                                Else
+                                    If ShowProjekte.Count = 1 Then
+                                        .SplitRow = 1
+                                        .SplitColumn = 4
+                                        .FreezePanes = True
+                                    Else
+                                        .SplitRow = 1
+                                        .SplitColumn = 7
+                                        .FreezePanes = True
+                                    End If
+                                End If
+                                .DisplayHeadings = False
+
+                            ElseIf meModus = ptModus.massEditTermine Then
+                                If ShowProjekte.Count = 1 Then
                                     .SplitRow = 1
-                                    .SplitColumn = 7
+                                    .SplitColumn = 3
                                     .FreezePanes = True
                                 Else
                                     .SplitRow = 1
                                     .SplitColumn = 6
                                     .FreezePanes = True
                                 End If
-                                .DisplayHeadings = False
-
-                            ElseIf meModus = ptModus.massEditTermine Then
-                                .SplitRow = 1
-                                .SplitColumn = 6
-                                .FreezePanes = True
-                                .DisplayHeadings = True
 
                             ElseIf meModus = ptModus.massEditAttribute Then
-                                .SplitRow = 1
-                                .SplitColumn = 5
-                                .FreezePanes = True
+                                If ShowProjekte.Count = 1 Then
+                                    .SplitRow = 1
+                                    .SplitColumn = 2
+                                    .FreezePanes = True
+                                Else
+                                    .SplitRow = 1
+                                    .SplitColumn = 5
+                                    .FreezePanes = True
+                                End If
                                 .DisplayHeadings = True
 
                             Else
@@ -553,33 +568,7 @@ Module VISBO_SPE_Utilities
                     End With
 
 
-                    ' tk 4.3.19 
-                    ' jetzt das Multiprojekt Window ausblenden ...
-                    'projectboardWindows(PTwindows.mpt).Visible = False
-
-                    '' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
-                    'Try
-                    '    If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-                    '        projectboardWindows(PTwindows.mptpf).Visible = False
-                    '    End If
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    'Try
-                    '    If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-                    '        projectboardWindows(PTwindows.mptpr).Visible = False
-                    '    End If
-                    'Catch ex As Exception
-
-                    'End Try
-
                     ' Ende Ausblenden 
-
-
-
-
-
 
                 Catch ex As Exception
                     Call MsgBox("Fehler: " & ex.Message)
@@ -590,15 +579,16 @@ Module VISBO_SPE_Utilities
                 End Try
 
             Else
+
                 enableOnUpdate = True
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("no projects apply to criterias ...")
-                Else
-                    Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
-                End If
+                'If awinSettings.englishLanguage Then
+                '    Call MsgBox("no projects apply to criterias ...")
+                'Else
+                '    Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
+                'End If
             End If
 
 
@@ -608,12 +598,11 @@ Module VISBO_SPE_Utilities
             If appInstance.EnableEvents = False Then
                 appInstance.EnableEvents = True
             End If
-
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no projects loaded ...")
-            Else
-                Call MsgBox("Es sind keine Projekte geladen ...")
-            End If
+            'If awinSettings.englishLanguage Then
+            '    Call MsgBox("no projects loaded ...")
+            'Else
+            '    Call MsgBox("Es sind keine Projekte geladen ...")
+            'End If
 
         End If
 
@@ -630,7 +619,7 @@ Module VISBO_SPE_Utilities
     ''' 
     ''' </summary>
     ''' <param name="todoListe"></param>
-    Public Sub writeOnlineMassEditTermine(ByVal todoListe As Collection)
+    Public Sub writeOnlineMassEditTermineSPE(ByVal todoListe As Collection)
 
         Dim err As New clsErrorCodeMsg
 
@@ -640,15 +629,17 @@ Module VISBO_SPE_Utilities
             anzSpalten = 16
         End If
 
-        If todoListe.Count = 0 Then
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no projects for mass-edit available ..")
-            Else
-                Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
-            End If
+        'If todoListe.Count = 0 Then
 
-            Exit Sub
-        End If
+
+        '    If awinSettings.englishLanguage Then
+        '        Call MsgBox("no projects for mass-edit available ..")
+        '    Else
+        '        Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
+        '    End If
+
+        '    Exit Sub
+        'End If
 
         Try
 
@@ -657,7 +648,7 @@ Module VISBO_SPE_Utilities
             ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
             selectedProjekte.Clear(False)
 
-            Dim currentWS As Excel.Worksheet
+            Dim currentWS As Excel.Worksheet = Nothing
             Dim currentWB As Excel.Workbook
             Dim startDateColumn As Integer = 5
             Dim tmpName As String
@@ -679,16 +670,19 @@ Module VISBO_SPE_Utilities
 
                 End Try
 
-                '' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
-                'Try
-                '    currentWS.UsedRange.Clear()
-                'Catch ex As Exception
+                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                Try
+                    With currentWS
+                        Dim zRange As Excel.Range = CType(.Range(.Cells(2, 1), .Cells(visboZustaende.meMaxZeile, visboZustaende.meColED)), Excel.Range)
+                        zRange.Clear()
+                    End With
+                Catch ex As Exception
 
-                'End Try
+                End Try
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Termine Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -711,11 +705,6 @@ Module VISBO_SPE_Utilities
                     .Unprotect(Password:="x")
                 End If
 
-                ' Ausblenden von Spalten ProjektNr., ProjektName, VarianteName
-                If todoListe.Count = 1 Then
-                    ' do not show the first three columns
-                    CType(currentWS.Range(.Columns(1), .Columns(2)), Excel.Range).EntireColumn.Hidden = True
-                End If
 
                 If awinSettings.englishLanguage Then
                     CType(.Cells(1, 1), Excel.Range).Value = "Project-Nr"
@@ -1248,7 +1237,14 @@ Module VISBO_SPE_Utilities
 
             End With
 
+            ' löschen des ganzen Blattes
+            If todoListe.Count = 0 Then
+                infoDataBlock.Clear()
+            End If
+
             appInstance.EnableEvents = True
+
+
 
         Catch ex As Exception
             Call MsgBox("Fehler in Aufbereitung Termine" & vbLf & ex.Message)
@@ -1283,9 +1279,13 @@ Module VISBO_SPE_Utilities
     Sub FollowHyperlinkToWebsite(ByVal hproj As clsProjekt, Optional ByVal type As String = "Capacity")
 
         Dim vpid As String = hproj.vpID
-        Dim refDate As Date = Date.Now
+        Dim varID As String = "624dcfc6e89109508af0f7e2"
 
-        appInstance.ActiveWorkbook.FollowHyperlink(Address:="https://dev.visbo.net/vpKeyMetrics/" & vpid & "?view=" & type & "&unit=PD", NewWindow:=True)
+        Dim refDate As Date = Date.Now
+        Dim vonbis As String = "&from=2021-10-31T23:00:00.000Z&to=2025-11-30T23:00:00.000Z"
+        Dim variante As String = "&variantID=" & varID
+
+        appInstance.ActiveWorkbook.FollowHyperlink(Address:="https://dev.visbo.net/vpKeyMetrics/" & vpid & "?view=" & type & "&unit=PD" & vonbis & variante, NewWindow:=True)
 
         'appInstance.ActiveWorkbook.FollowHyperlink(Address:="https://dev.visbo.net/vpKeyMetrics/624dcfc6e89109508af0f76b?view=" & type & "&unit=PD&roleID=2", NewWindow:=True)
 
