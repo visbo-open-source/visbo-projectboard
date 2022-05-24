@@ -12,6 +12,7 @@ Public Class Tabelle2
     Private oldColumn As Integer = 5
     Private oldRow As Integer = 2
     Private columnName As Integer = 2
+    Private lastline As Integer = 2
 
 
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
@@ -19,81 +20,103 @@ Public Class Tabelle2
 
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
+
         Try
 
             Try
-            Application.DisplayFormulaBar = False
-        Catch ex As Exception
+                Application.DisplayFormulaBar = False
+            Catch ex As Exception
 
-        End Try
+            End Try
 
-        Dim meWS As Excel.Worksheet =
+            Dim meWS As Excel.Worksheet =
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
 
-        ' jetzt den Schutz aufheben , falls einer definiert ist 
-        If meWS.ProtectContents Then
-            meWS.Unprotect(Password:="x")
-        End If
+            ' jetzt den Schutz aufheben , falls einer definiert ist 
+            If meWS.ProtectContents Then
+                meWS.Unprotect(Password:="x")
+            End If
 
-        Try
-            ' die Anzahl maximaler Zeilen bestimmen 
-            With visboZustaende
-                visboZustaende.meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
-                visboZustaende.meColRC = CType(meWS.Range("RoleCost"), Excel.Range).Column
-                visboZustaende.meColSD = CType(meWS.Range("StartData"), Excel.Range).Column
-                visboZustaende.meColED = CType(meWS.Range("EndData"), Excel.Range).Column
-                visboZustaende.meColpName = 2
-                columnRC = .meColRC
-                columnStartData = .meColSD
-                columnEndData = .meColED
-            End With
+            Try
+                ' die Anzahl maximaler Zeilen bestimmen 
+                With visboZustaende
+                    visboZustaende.meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
+                    visboZustaende.meColRC = CType(meWS.Range("RoleCost"), Excel.Range).Column
+                    visboZustaende.meColSD = CType(meWS.Range("StartData"), Excel.Range).Column
+                    visboZustaende.meColED = CType(meWS.Range("EndData"), Excel.Range).Column
+                    visboZustaende.meColpName = 2
+                    columnRC = .meColRC
+                    columnStartData = .meColSD
+                    columnEndData = .meColED
+                    lastline = .meMaxZeile
+                End With
 
-        Catch ex As Exception
-            Call MsgBox("Fehler in Laden des Sheets ...")
-        End Try
+            Catch ex As Exception
+                Call MsgBox("Fehler in Laden des Sheets ...")
+            End Try
 
-        ' jetzt die Spalte 6 einblenden bzw. ausblenden 
-        Try
-            If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
-                CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-            ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
-                If RoleDefinitions.getAllSkillIDs.Count > 0 Then
-                    CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
-                Else
+            Dim aa As Boolean = Application.EnableEvents
+
+            ' jetzt die Spalte 6 einblenden bzw. ausblenden 
+            Try
+                If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
                     CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+                    If ShowProjekte.Count = 1 Then
+                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+                    Else
+                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+                    End If
+                ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+                    If RoleDefinitions.getAllSkillIDs.Count > 0 Then
+                        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
+                    Else
+                        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+                    End If
+                    If ShowProjekte.Count = 1 Then
+                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+                    Else
+                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+                    End If
+
+                End If
+            Catch ex As Exception
+                CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+            End Try
+
+
+            ' jetzt den AutoFilter setzen 
+            Try
+
+                ' jetzt die Autofilter aktivieren ... 
+                If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
+
+                    CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
+
                 End If
 
-            End If
-        Catch ex As Exception
-            CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-        End Try
+            Catch ex As Exception
+                Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
+            End Try
 
+            Try
+                If awinSettings.meEnableSorting Then
 
-        ' jetzt den AutoFilter setzen 
-        Try
-
-            ' jetzt die Autofilter aktivieren ... 
-            If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-
-                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
-
-            End If
-
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
-        End Try
-
-        Try
-            If awinSettings.meEnableSorting Then
-
-                With CType(meWS, Excel.Worksheet)
-                    .EnableSelection = XlEnableSelection.xlNoRestrictions
-                End With
-            Else
-                With meWS
-                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                    With CType(meWS, Excel.Worksheet)
+                        .EnableSelection = XlEnableSelection.xlNoRestrictions
+                    End With
+                Else
+                    With meWS
+                        .Protect(Password:="x", UserInterfaceOnly:=True,
                              AllowFormattingCells:=True,
                              AllowFormattingColumns:=True,
                              AllowInsertingColumns:=False,
@@ -102,45 +125,45 @@ Public Class Tabelle2
                              AllowDeletingRows:=True,
                              AllowSorting:=True,
                              AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlNoRestrictions
-                    meWS.EnableAutoFilter = True
-                End With
+                        .EnableSelection = XlEnableSelection.xlNoRestrictions
+                        meWS.EnableAutoFilter = True
+                    End With
+                End If
+
+
+            Catch ex As Exception
+                Call MsgBox("set autofilter in tabelle2 activateEvent")
+            End Try
+
+            Application.EnableEvents = formerEE
+
+            ' tk 4.1.20 das wird hier nicht mehr gebracuht, weil Spalte 1 immer selektierbar ist ... 
+            ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
+
+            CType(CType(meWS, Excel.Worksheet).Cells(2, 1), Excel.Range).Select()
+
+
+            ' jetzt die Gridline zeigen
+            With appInstance.ActiveWindow
+                If massColFontValues(0, 0) <> 0 Then
+                    .Zoom = massColFontValues(0, 0)
+                End If
+
+                .DisplayGridlines = True
+                .GridlineColor = Excel.XlRgbColor.rgbBlack
+            End With
+
+            ' den alten Wert merken
+            If Not IsNothing(appInstance.ActiveCell) Then
+                visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
             End If
 
 
-        Catch ex As Exception
-            Call MsgBox("set autofilter in tabelle2 activateEvent")
-        End Try
-
-        Application.EnableEvents = formerEE
-
-        ' tk 4.1.20 das wird hier nicht mehr gebracuht, weil Spalte 1 immer selektierbar ist ... 
-        ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
-
-        CType(CType(meWS, Excel.Worksheet).Cells(2, 1), Excel.Range).Select()
-
-
-        ' jetzt die Gridline zeigen
-        With appInstance.ActiveWindow
-            If massColFontValues(0, 0) <> 0 Then
-                .Zoom = massColFontValues(0, 0)
+            If Application.ScreenUpdating = False Then
+                Application.ScreenUpdating = True
             End If
 
-            .DisplayGridlines = True
-            .GridlineColor = Excel.XlRgbColor.rgbBlack
-        End With
-
-        ' den alten Wert merken
-        If Not IsNothing(appInstance.ActiveCell) Then
-            visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
-        End If
-
-
-        If Application.ScreenUpdating = False Then
-            Application.ScreenUpdating = True
-        End If
-
-        Dim a As Boolean = appInstance.ScreenUpdating
+            Dim a As Boolean = appInstance.ScreenUpdating
 
         Catch ex As Exception
             Call MsgBox("in catch von activateEvent ")
@@ -1634,20 +1657,6 @@ Public Class Tabelle2
 
         End If
 
-        ' old tk 26.1.2021
-        'If Not IsNothing(roleCost) Then
-        '    If roleCost = "" Then
-        '        CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart
-
-        '    ElseIf RoleDefinitions.containsName(roleCost) Then
-        '        CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & pdEinheit
-
-        '    Else
-        '        CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & "[T€]"
-        '    End If
-        'Else
-        '    CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart
-        'End If
 
 
 
@@ -2302,5 +2311,21 @@ Public Class Tabelle2
         If visboClient.Contains("VISBO SPE") Then
             'Call MsgBox("bin im meRC")
         End If
+    End Sub
+
+
+    ''' <summary>
+    ''' blendet die Spalte aus
+    ''' </summary>
+    ''' <param name="spalte"></param>
+    Private Sub ausblendenSpalte(ByVal spalte As Integer)
+        Dim zRange As Excel.Range = Nothing
+
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            zRange = CType(.Range(.Cells(1, spalte), .Cells(lastline, spalte)), Excel.Range)
+        End With
+
+        Dim colSpalte As Range = zRange.EntireColumn.Hidden()
+
     End Sub
 End Class

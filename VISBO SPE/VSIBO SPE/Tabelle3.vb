@@ -38,8 +38,15 @@ Public Class Tabelle3
 
     Private Sub Tabelle3_ActivateEvent() Handles Me.ActivateEvent
 
+        Dim formerEE As Boolean = Application.EnableEvents
+        Application.EnableEvents = False
+
         ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
-        Application.DisplayFormulaBar = True
+        Try
+            Application.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
 
         Dim enumTermineColumnsCount As Integer = [Enum].GetNames(GetType(PTmeTe)).Length
         ReDim col(enumTermineColumnsCount)
@@ -65,8 +72,6 @@ Public Class Tabelle3
         ' initial setzen der Spalten ... 
 
         'Dim filterRange As Excel.Range
-        Dim formerEE As Boolean = Application.EnableEvents
-        Application.EnableEvents = False
 
         Dim meWS As Excel.Worksheet =
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
@@ -98,6 +103,17 @@ Public Class Tabelle3
         Catch ex As Exception
             Call MsgBox("Fehler in Laden des Sheets ...")
         End Try
+
+        ' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
+        If ShowProjekte.Count = 1 Then
+            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+        Else
+            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+        End If
 
         ' jetzt den AutoFilter setzen 
         Try
@@ -197,6 +213,16 @@ Public Class Tabelle3
             Application.ScreenUpdating = True
         End If
 
+        ' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
+        If ShowProjekte.Count = 1 Then
+            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+        Else
+            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+        End If
 
     End Sub
 
@@ -906,6 +932,16 @@ Public Class Tabelle3
 
 
         appInstance.EnableEvents = True
+
+        If ShowProjekte.Count = 1 Then
+            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+        Else
+            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+        End If
 
     End Sub
 
