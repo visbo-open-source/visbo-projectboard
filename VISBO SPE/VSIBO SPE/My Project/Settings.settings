@@ -56,5 +56,8 @@
     <Setting Name="VISBOMApping" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="startModus" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Time</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
