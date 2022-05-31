@@ -20,14 +20,57 @@ Public Class ThisWorkbook
     End Sub
 
     Private Sub ThisWorkbook_Startup() Handles Me.Startup
+
+        Dim vpid As String = ""
+        Dim vpvid As String = ""
+        Dim oneTimeToken As String = ""
+        Dim rest As String = ""
+        Dim del As String = ""
+
         'Dim cbar As CommandBar
         Dim hstr() As String
-        Dim xxx As Long = GetCommandLine
-        Dim cline As String = CmdToSTr(xxx)
+        Dim cmdID As Long = GetCommandLine
+        Dim cline As String = CmdToSTr(cmdID)
+        'Dim cline As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug\VISBO SPE.xlsx" / """vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
         Call MsgBox(cline)
 
-        hstr = cline.Split("""")
-        'Call MsgBox(hstr(0), hstr(1), hstr(2))
+        hstr = cline.Split("/")
+        Dim parameter As String = (hstr(hstr.Length - 1))
+        Call MsgBox(parameter)
+        hstr = parameter.Split("""")
+        If hstr.Length > 1 Then
+            Call MsgBox(hstr(1))
+        End If
+
+
+        Dim parameterString As String = hstr(1)
+        'parameterString = "vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
+
+        'parameterString = "vpid:624dcb87e89109508af0ef8b&vpvid:624dcb88e89109508af0efde&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODQuMTYwLjc1LjQzIiwidGltZXN0YW1wIjoiMjAyMi0wNS0yNVQwOTo0NDozOS4zNjNaIn0sImlhdCI6MTY1MzQ3MTg3OSwiZXhwIjoxNjUzNDcxOTk5fQ.y8pZh7WOj5L1ZK50WIPCGah7t1OF10h0EN6TCpGtRm0"
+
+        'Call MsgBox(parameterString)
+        hstr = parameterString.Split("&")
+
+        For i = 0 To hstr.Length - 1
+            Dim elem As String = hstr(i)
+            Dim bezeichner As String = (elem.Split(":"))(0)
+            Call MsgBox("bezeichner = " & bezeichner)
+            Select Case bezeichner
+                Case "vpid"
+                    spe_vpid = (elem.Split(":"))(1)
+                    Call MsgBox("vpid = " & spe_vpid)
+                Case "vpvid"
+                    spe_vpvid = (elem.Split(":"))(1)
+                    Call MsgBox("vpvid = " & spe_vpvid)
+                Case "ott"
+                    spe_ott = (elem.Split(":"))(1)
+                    Call MsgBox("oneTimeToken = " & spe_ott)
+                Case Else
+                    rest = (elem.Split(":"))(1)
+                    Call MsgBox("rest = " & rest)
+            End Select
+        Next
+
 
         'visboClient = "VISBO Simple Project Edit / "
         visboClient = "VISBO SPE / "
@@ -126,7 +169,7 @@ Public Class ThisWorkbook
             End If
 
             appInstance.EnableEvents = False
-            Call speSetTypen()
+            Call speSetTypen(spe_ott)
             appInstance.EnableEvents = True
 
             appInstance.Visible = True
@@ -144,6 +187,32 @@ Public Class ThisWorkbook
             appInstance.ShowChartTipNames = True
             appInstance.ShowChartTipValues = True
         End Try
+
+        '' Laden des übergebenen Projektes
+
+        Call loadGivenProject()
+
+        'Dim err As New clsErrorCodeMsg
+
+        'If spe_vpid <> "" And spe_vpvid <> "" Then
+        '    'TODO: hier holen des Projekte mit vpid... und vpvid...
+        '    Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, Err)
+        '    If Not IsNothing(hproj) Then
+        '        ShowProjekte.Add(hproj, False)
+        '        AlleProjekte.Add(hproj, False)
+        '    End If
+        '    spe_vpid = ""
+        '    spe_vpvid = ""
+        'End If
+
+        'appInstance.EnableEvents = True
+
+        'If AlleProjekte.Count > 0 Then
+        '    ' Termine edit aufschalten
+        '    'all MsgBox(currentProjektTafelModus)
+        '    Call massEditRcTeAt(currentProjektTafelModus)
+        'End If
+
 
         anzahlCalls = 0
     End Sub

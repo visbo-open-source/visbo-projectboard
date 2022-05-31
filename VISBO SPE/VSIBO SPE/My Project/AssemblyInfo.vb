@@ -9,7 +9,7 @@ Imports System.Security
 
 ' Werte der Assemblyattribute überprüfen
 
-<Assembly: AssemblyTitle("VSIBO SPE")> 
+<Assembly: AssemblyTitle("VISBO SPE")>
 <Assembly: AssemblyDescription("")> 
 <Assembly: AssemblyCompany("")> 
 <Assembly: AssemblyProduct("VSIBO SPE")> 

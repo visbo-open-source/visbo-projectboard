@@ -1203,4 +1203,10 @@ Public Class Tabelle3
         appInstance.EnableEvents = True
         Cancel = True
     End Sub
+
+    Private Sub Tabelle3_Startup(sender As Object, e As EventArgs) Handles Me.Startup
+        If visboClient.Contains("VISBO SPE") Then
+            'Call MsgBox("bin im meTE")
+        End If
+    End Sub
 End Class

@@ -13,11 +13,15 @@ Imports System.Diagnostics
 
 Module VISBO_SPE_Utilities
 
+    Public spe_vpid As String = ""
+    Public spe_vpvid As String = ""
+    Public spe_ott As String = ""
+
     ''' <summary>
     ''' when called, all awinSetting Variables are set .. 
     ''' </summary>
     ''' <returns></returns>
-    Public Function speSetTypen() As Boolean
+    Public Function speSetTypen(ByVal oneTimeToken As String) As Boolean
 
         Dim result As Boolean = False
 
@@ -158,12 +162,12 @@ Module VISBO_SPE_Utilities
                     End If
 
                     If Not loginErfolgreich Then
-                        loginErfolgreich = logInToMongoDB(True)
+                        loginErfolgreich = logInToMongoDB(True, oneTimeToken)
                     End If
 
                 Else
                     If Not loginErfolgreich Then
-                        loginErfolgreich = logInToMongoDB(True)
+                        loginErfolgreich = logInToMongoDB(True, oneTimeToken)
                     End If
                 End If
 
@@ -459,7 +463,7 @@ Module VISBO_SPE_Utilities
                         Exit Sub
                     End If
 
-                    appInstance.EnableEvents = True
+                    'appInstance.EnableEvents = True
 
 
 
@@ -646,7 +650,7 @@ Module VISBO_SPE_Utilities
             appInstance.EnableEvents = False
 
             ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
-            selectedProjekte.Clear(False)
+            selectedProjekte.Clear()
 
             Dim currentWS As Excel.Worksheet = Nothing
             Dim currentWB As Excel.Workbook
@@ -1276,18 +1280,72 @@ Module VISBO_SPE_Utilities
     End Sub
 
 
-    Sub FollowHyperlinkToWebsite(ByVal hproj As clsProjekt, Optional ByVal type As String = "Capacity")
+    Public Sub FollowHyperlinkToWebsite(ByVal hproj As clsProjekt, Optional ByVal type As String = "Capacity")
 
         Dim vpid As String = hproj.vpID
-        Dim varID As String = "624dcfc6e89109508af0f7e2"
+        Dim varID As String = CType(databaseAcc, DBAccLayer.Request).findVariantID(vpid, hproj.variantName)
+        'Dim varID As String = "624dcfc6e89109508af0f7e2"
 
         Dim refDate As Date = Date.Now
-        Dim vonbis As String = "&from=2021-10-31T23:00:00.000Z&to=2025-11-30T23:00:00.000Z"
+        Dim StartOfProject As String = DateTimeToISODate(hproj.startDate)
+        Dim EndOfProject As String = DateTimeToISODate(hproj.endeDate)
+        Dim vonbis As String = "&from=" & StartOfProject & "&to=" & EndOfProject
+
         Dim variante As String = "&variantID=" & varID
+        Dim serverURL As String = awinSettings.databaseURL.Replace("/api", "")
 
-        appInstance.ActiveWorkbook.FollowHyperlink(Address:="https://dev.visbo.net/vpKeyMetrics/" & vpid & "?view=" & type & "&unit=PD" & vonbis & variante, NewWindow:=True)
-
-        'appInstance.ActiveWorkbook.FollowHyperlink(Address:="https://dev.visbo.net/vpKeyMetrics/624dcfc6e89109508af0f76b?view=" & type & "&unit=PD&roleID=2", NewWindow:=True)
+        appInstance.ActiveWorkbook.FollowHyperlink(Address:=serverURL & "/vpKeyMetrics/" & vpid & "?view=" & type & "&unit=PD" & vonbis & variante, NewWindow:=True)
 
     End Sub
+
+    Public Sub loadGivenProject()
+        ' Laden des übergebenen Projektes
+
+        Dim err As New clsErrorCodeMsg
+
+        If spe_vpid <> "" And spe_vpvid <> "" Then
+            'TODO: hier holen des Projekte mit vpid... und vpvid...
+            Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
+            If Not IsNothing(hproj) Then
+                ShowProjekte.Add(hproj, False)
+                AlleProjekte.Add(hproj, False)
+            End If
+            spe_vpid = ""
+            spe_vpvid = ""
+        End If
+
+        appInstance.EnableEvents = True
+
+        If AlleProjekte.Count > 0 Then
+            ' Termine edit aufschalten
+            'all MsgBox(currentProjektTafelModus)
+            Call massEditRcTeAt(currentProjektTafelModus)
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
+    ''' </summary>
+    ''' <param name="datumUhrzeit"></param>
+    ''' <returns></returns>
+    Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
+
+        Dim ISODateandTime As String = Nothing
+        Dim ISODate As String = ""
+        Dim ISOTime As String = ""
+
+        If datumUhrzeit >= Date.MinValue And datumUhrzeit <= Date.MaxValue Then
+            ' DatumUhrzeit wird um 1 Sekunde erhöht, dass die 1000-stel keine Rolle spielen
+            Dim hours As Integer = datumUhrzeit.Hour
+            Dim minutes As Integer = datumUhrzeit.Minute
+            Dim seconds As Integer = datumUhrzeit.Second
+            Dim milliseconds As Integer = datumUhrzeit.Millisecond
+            datumUhrzeit = datumUhrzeit.Date
+            datumUhrzeit = datumUhrzeit.AddHours(hours).AddMinutes(minutes).AddSeconds(seconds).AddMilliseconds(0)
+            ISODateandTime = datumUhrzeit.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        End If
+
+        DateTimeToISODate = ISODateandTime
+
+    End Function
 End Module

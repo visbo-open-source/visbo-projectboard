@@ -57,7 +57,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="startModus" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Time</Value>
+      <Value Profile="(Default)">Resources</Value>
     </Setting>
   </Settings>
 </SettingsFile>

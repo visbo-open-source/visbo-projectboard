@@ -77,8 +77,14 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Public Sub PTProjectLoad(Control As Office.IRibbonControl)
 
+        Dim projektespeichern As New frmProjekteSpeichern
+        Dim returnValue As DialogResult
+        Dim cancelAbbruch As Boolean = False
+        Dim err As New clsErrorCodeMsg
+
+
         Try
-            Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SimpleProjectEditTest\VISBO SimpleProjectEditTest\bin\Debug"
+            Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug"
 
             If Not speSetTypen_Performed Then
 
@@ -130,7 +136,7 @@ Public Class Ribbon1
                 cacheUpdateDelay = 30
 
                 appInstance.EnableEvents = False
-                Call speSetTypen()
+                Call speSetTypen("")
                 appInstance.EnableEvents = True
 
                 appInstance.Visible = True
@@ -150,7 +156,35 @@ Public Class Ribbon1
 
 
         Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
-        Call PBBDatenbankLoadProjekte(Control, False)
+
+        If Not boardWasEmpty Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
+                returnValue = projektespeichern.ShowDialog
+
+                If returnValue = DialogResult.Yes Then
+
+                    Call StoreAllProjectsinDB()
+
+                End If
+            End If
+            AlleProjekte.Clear()
+            ShowProjekte.Clear()
+        End If
+
+        If spe_vpid <> "" And spe_vpvid <> "" Then
+            'TODO: hier holen des Projekte mit vpid... und vpvid...
+            Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
+            If Not IsNothing(hproj) Then
+                ShowProjekte.Add(hproj, False)
+                AlleProjekte.Add(hproj, False)
+            Else
+                Call PBBDatenbankLoadProjekte(Control, False)
+            End If
+            spe_vpid = ""
+            spe_vpvid = ""
+        Else
+            Call PBBDatenbankLoadProjekte(Control, False)
+        End If
 
         appInstance.EnableEvents = True
 
