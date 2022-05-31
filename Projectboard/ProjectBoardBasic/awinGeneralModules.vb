@@ -5412,10 +5412,21 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="noDBAccess"></param>
     ''' <returns>true = erfolgreich</returns>
-    Public Function logInToMongoDB(ByVal noDBAccess As Boolean) As Boolean
+    Public Function logInToMongoDB(ByVal noDBAccess As Boolean, Optional ByVal oneTimeToken As String = "") As Boolean
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
 
+        If noDBAccess And oneTimeToken <> "" Then
+
+            ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
+            noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD, oneTimeToken)
+        End If
+
         If noDBAccess Then
+            If oneTimeToken <> "" Then
+
+                ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
+                noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
+            End If
             If awinSettings.databaseURL <> "" Then
                 '' ur: 23.03.2020: Angabe von VC nicht mehr nötig, es findet Auswahl statt
                 '' If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
@@ -5465,13 +5476,14 @@ Public Module awinGeneralModules
 
     End Function
 
-    Public Function autoVisboLogin(ByVal userPWD As String) As Boolean
+    Public Function autoVisboLogin(ByVal userPWD As String, Optional ByVal oneTimeToken As String = "") As Boolean
 
         Dim err As New clsErrorCodeMsg
 
         Dim cipherText As String = userPWD
         Dim pwd As String = ""
         Dim user As String = ""
+        Dim ok As Boolean
 
         If awinSettings.rememberUserPwd Then
 
@@ -5485,8 +5497,12 @@ Public Module awinGeneralModules
             Dim hrequest As New DBAccLayer.Request
             databaseAcc = hrequest
         End If
+        If oneTimeToken <> "" Then
+            ok = CType(databaseAcc, DBAccLayer.Request).loginOTT(awinSettings.databaseURL, awinSettings.databaseName, oneTimeToken, err)
+        Else
+            ok = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, user, pwd, err)
+        End If
 
-        Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, user, pwd, err)
         autoVisboLogin = ok
 
     End Function

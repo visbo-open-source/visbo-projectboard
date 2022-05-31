@@ -31,6 +31,59 @@ Public Class Request
     Private uname As String
     Private pwd As String
 
+    ''' <summary>
+    '''  'Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort)
+    ''' </summary>
+    ''' <param name="URL"></param>
+    ''' <param name="databaseName">entspricht beim Visbo-Rest-Server dem VisboCenter</param>
+    ''' <param name="OTT"></param>
+    Public Function loginOTT(ByVal URL As String, ByVal databaseName As String, ByVal OTT As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+
+        Dim loginOK As Boolean = False
+
+        Try
+            If usedWebServer Then
+
+                Dim access As New WebServerAcc.Request
+                loginOK = access.loginOTT(ServerURL:=URL, databaseName:=databaseName, OTT:=OTT, err:=err)
+                If loginOK Then
+                    DBAcc = access
+                    dbname = databaseName
+                    dburl = URL
+
+                Else
+                    If err.errorCode = 407 Then   ' Proxy-Authentifizierung required
+                        ' try is once more
+                        loginOK = access.loginOTT(ServerURL:=URL, databaseName:=databaseName, OTT:=OTT, err:=err)
+                        If loginOK Then
+                            DBAcc = access
+                            dbname = databaseName
+                            dburl = URL
+                        End If
+                    End If
+
+                End If
+
+            Else  'es wird eine MongoDB direkt adressiert
+
+                ' ur: 20220210 remove direkt MongoDB-Access
+                'Dim access As New MongoDbAccess.Request(databaseURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
+                'loginOK = access.createIndicesOnce()
+                'If loginOK Then
+                '    DBAcc = access
+                'End If
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DBAccRequest-Login" & ex.Message)
+        End Try
+
+        loginOTT = loginOK
+
+    End Function
+
+
 
 
     ''' <summary>
@@ -3410,5 +3463,97 @@ Public Class Request
         End Try
 
         sendEmailToUser = result
+    End Function
+
+
+
+    ''' <summary>
+    ''' liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), mit übergebener vpid und vpvid
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="vpvid"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneProjectVersionfromDB(ByVal vpid As String, ByVal vpvid As String,
+                                             ByRef err As clsErrorCodeMsg) As clsProjekt
+        Dim result As clsProjekt = Nothing
+
+        Try
+
+            If usedWebServer Then
+
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectVersionfromDB(vpid, vpvid, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+                            ' tk 5.5. kann das hier überhaupt mit success rauskommen ? 
+                            Case 200 ' success
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectVersionfromDB(vpid, vpvid, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+                Catch ex As Exception
+
+                    Throw New ArgumentException(ex.Message)
+
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        ' tk 20.10.21 - es trat ein Fehler auf , der durch diesen Befehl korrigiert wird
+        ' dadurch wird die private Varibale _Dauer gesetzt. In Manchen Fällen kann es wohl vorkommen
+        ' dass _Dauer ungleich AnzahlRasterElemente
+        If Not IsNothing(result) Then
+            Dim a As Integer = result.dauerInDays
+        End If
+
+
+        retrieveOneProjectVersionfromDB = result
+    End Function
+
+    Public Function findVariantID(ByVal vpid As String, ByVal variantName As String) As String
+        Dim result As String = Nothing
+        Dim err As New clsErrorCodeMsg
+        Try
+
+            If usedWebServer Then
+
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).findVariantID(vpid, variantName)
+
+                    If IsNothing(result) Or result = "" Then
+                        Call logger(ptErrLevel.logError, "findeVariantID", "no variantID found to vpid/variantName: " & vpid & "/" & variantName)
+                    End If
+                Catch ex As Exception
+
+                    Throw New ArgumentException(ex.Message)
+
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+
+            End If
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "findeVariantID", ex.Message)
+        End Try
+
+        findVariantID = result
     End Function
 End Class

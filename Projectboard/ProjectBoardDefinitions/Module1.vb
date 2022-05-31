@@ -8174,42 +8174,42 @@ Public Module Module1
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then
-                                tmpResult = "Modify Resource and Cost Needs: " & printProjName
+                                tmpResult = visboClient & "Modify Resource and Cost Needs: " & printProjName
                             Else
-                                tmpResult = "Personal- und Kostenbedarfe ändern: " & printProjName
+                                tmpResult = visboClient & "Personal- und Kostenbedarfe ändern: " & printProjName
                             End If
                         Case ptTables.meTE
                             If awinSettings.englishLanguage Then
-                                tmpResult = "Modify Tasks and Milestones: " & printProjName
+                                tmpResult = visboClient & "Modify Tasks and Milestones: " & printProjName
                             Else
-                                tmpResult = "Meilensteine und Vorgänge ändern: " & printProjName
+                                tmpResult = visboClient & "Meilensteine und Vorgänge ändern: " & printProjName
                             End If
                         Case ptTables.meAT
                             If awinSettings.englishLanguage Then
-                                tmpResult = "Modify Attributes: " & printProjName
+                                tmpResult = visboClient & "Modify Attributes: " & printProjName
                             Else
-                                tmpResult = "Attribute ändern: " & printProjName
+                                tmpResult = visboClient & "Attribute ändern: " & printProjName
                             End If
                     End Select
                 Else
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then
-                                tmpResult = "Modify Resource and Cost Needs"
+                                tmpResult = visboClient & "Modify Resource and Cost Needs"
                             Else
-                                tmpResult = "Personal- und Kostenbedarfe ändern"
+                                tmpResult = visboClient & "Personal- und Kostenbedarfe ändern"
                             End If
                         Case ptTables.meTE
                             If awinSettings.englishLanguage Then
-                                tmpResult = "Modify Tasks and Milestones"
+                                tmpResult = visboClient & "Modify Tasks and Milestones"
                             Else
-                                tmpResult = "Meilensteine und Vorgänge ändern"
+                                tmpResult = visboClient & "Meilensteine und Vorgänge ändern"
                             End If
                         Case ptTables.meAT
                             If awinSettings.englishLanguage Then
-                                tmpResult = "Modify Attributes"
+                                tmpResult = visboClient & "Modify Attributes"
                             Else
-                                tmpResult = "Attribute ändern"
+                                tmpResult = visboClient & "Attribute ändern"
                             End If
                     End Select
                 End If
