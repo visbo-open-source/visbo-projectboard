@@ -19,11 +19,11 @@
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
     <ApplicationVersion>1.0.0.5</ApplicationVersion>
-    <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
+    <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
     <UpdateIntervalUnits>hours</UpdateIntervalUnits>
-    <ProductName>VSIBO SPE</ProductName>
+    <ProductName>VISBO SPE</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
     <SupportUrl />
     <FriendlyName>VSIBO SPE</FriendlyName>
