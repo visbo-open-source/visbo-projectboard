@@ -5817,6 +5817,21 @@ Module creationModule
             Exit Function ' einfach nichts machen 
         End If
 
+        ' now find out whether or not 
+        ' there is a milestone with NAme Invoice at the end of a proejct 
+        Dim specialCaseInvoice As Boolean = False
+
+        Try
+
+            specialCaseInvoice = (cMilestone.invoice.Key > 0) And
+                                (DateDiff(DateInterval.Day, cMilestone.getDate, hproj.endeDate) = 0) And
+                                (cMilestone.name = "Invoice")
+
+
+        Catch ex As Exception
+
+        End Try
+
 
         Dim x1 As Double
         Dim x2 As Double
@@ -5891,13 +5906,18 @@ Module creationModule
                                                  myText, "", myTitle, schriftGroesse)
 
 
-                        With newShape
+                        If specialCaseInvoice Then
+                            With newShape
+                                .Top = CSng(yPosition) - .Height / 2
+                                .Left = CSng(x1) + rds.milestoneVorlagenShape.Width
+                            End With
+                        Else
+                            With newShape
+                                .Top = CSng(yPosition - rds.YMilestoneText)
+                                .Left = CSng(x1) - .Width / 2
+                            End With
+                        End If
 
-                            .Top = CSng(yPosition - rds.YMilestoneText)
-                            .Left = CSng(x1) - .Width / 2
-
-
-                        End With
                     End If
 
 
@@ -6556,7 +6576,7 @@ Module creationModule
 
                                         For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
 
-                                            If kvpCI.Value.show = True Then
+                                            If kvpCI.Value.show Then
                                                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvpCI.Value.projectName,
                                                                                                        kvpCI.Value.variantName, storedAtOrBefore, err) Then
 

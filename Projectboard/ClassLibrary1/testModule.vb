@@ -17023,15 +17023,37 @@ Public Module testModule
                 myTitle = "Invoice"
             End If
 
+            ' now find out whether or not 
+            ' there is a milestone with NAme Invoice at the end of a proejct 
+            Dim specialCaseInvoice As Boolean = False
+
+            Try
+
+                specialCaseInvoice = (MS.invoice.Key > 0) And
+                                (DateDiff(DateInterval.Day, MS.getDate, hproj.endeDate) = 0) And
+                                (MS.name = "Invoice")
+
+
+            Catch ex As Exception
+                specialCaseInvoice = False
+            End Try
+
+
             If doDraw Then
                 copiedShape = createPPTShapeFromShape(rds.MsDescVorlagenShape, pptslide)
                 With copiedShape
 
                     .TextFrame2.TextRange.Text = myText
-                    .Top = CSng(yPosition - rds.YMilestoneText)
-                    '.Left = CSng(x1) - .Width / 2
-                    .Left = CSng(x1) - .Width / 2
-                    '.Name = .Name & .Id
+
+                    If specialCaseInvoice Then
+                        .Top = CSng(yPosition - .Height / 2)
+                        .Left = CSng(x1) + rds.milestoneVorlagenShape.Width
+                    Else
+                        .Top = CSng(yPosition - rds.YMilestoneText)
+                        .Left = CSng(x1) - .Width / 2
+                    End If
+
+
                     Try
                         .Name = msShapeName & myType
                     Catch ex As Exception
