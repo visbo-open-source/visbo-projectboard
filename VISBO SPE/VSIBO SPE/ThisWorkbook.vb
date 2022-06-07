@@ -29,7 +29,8 @@ Public Class ThisWorkbook
 
         'Dim cbar As CommandBar
         Dim hstr() As String
-        Dim cmdID As Long = GetCommandLine
+        Dim cmdLine As String = GetCommandLine()
+        Dim cmdID As Int64 = CType(GetCommandLine, Int64)
         Dim cline As String = CmdToSTr(cmdID)
         'Dim cline As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug\VISBO SPE.xlsx" / """vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
         Call MsgBox(cline)
@@ -142,7 +143,7 @@ Public Class ThisWorkbook
                 awinSettings.visboresponsible = My.Settings.VISBOresponsible
                 awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
                 awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-                awinSettings.visboMapping = My.Settings.VISBOMapping
+                awinSettings.visboMapping = My.Settings.VISBOMApping
                 awinSettings.visboDebug = My.Settings.VISBODebug
                 awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
@@ -191,28 +192,6 @@ Public Class ThisWorkbook
         '' Laden des übergebenen Projektes
 
         Call loadGivenProject()
-
-        'Dim err As New clsErrorCodeMsg
-
-        'If spe_vpid <> "" And spe_vpvid <> "" Then
-        '    'TODO: hier holen des Projekte mit vpid... und vpvid...
-        '    Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, Err)
-        '    If Not IsNothing(hproj) Then
-        '        ShowProjekte.Add(hproj, False)
-        '        AlleProjekte.Add(hproj, False)
-        '    End If
-        '    spe_vpid = ""
-        '    spe_vpvid = ""
-        'End If
-
-        'appInstance.EnableEvents = True
-
-        'If AlleProjekte.Count > 0 Then
-        '    ' Termine edit aufschalten
-        '    'all MsgBox(currentProjektTafelModus)
-        '    Call massEditRcTeAt(currentProjektTafelModus)
-        'End If
-
 
         anzahlCalls = 0
     End Sub
@@ -376,20 +355,25 @@ Public Class ThisWorkbook
         Cancel = True
     End Sub
 
-    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineW" () As Long
-    Declare Function lstrlenW Lib "kernel32" (ByVal lpString As Long) As Long
-    Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (MyDest As Byte(), MySource As Long, ByVal MySize As Long)
+    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineA" () As Long
+    Declare Function lstrlenW Lib "kernel32" Alias "lstrlenA" (ByVal lpString As Long) As Long
+    Declare Function CopyMemory Lib "kernel32" Alias "lstrcpynA" (ByVal MyDest As String, ByVal MySource As Long, ByVal MySize As Long) As Long
     Function CmdToSTr(Cmd As Long) As String
-        Dim Buffer() As Byte
+        Dim Buffer As String
         Dim StrLen As Long
 
         If Cmd Then
             StrLen = lstrlenW(Cmd) * 2
 
-            If StrLen Then
-                ReDim Buffer(StrLen - 1)
-                CopyMemory(Buffer, Cmd, StrLen)
-                CmdToSTr = UnicodeBytesToString(Buffer)
+            If StrLen > 0 Then
+                Buffer = Space(StrLen - 1)
+                Cmd = CopyMemory(Buffer, Cmd, StrLen + 1)
+                If Cmd > 0 Then
+                    Dim PosZero As Long
+                    PosZero = InStr(Buffer, Chr(0))
+                    If PosZero > 0 Then Buffer = Left(Buffer, PosZero - 1)
+                End If
+                CmdToSTr = Buffer
             Else
                 CmdToSTr = ""
             End If
@@ -399,7 +383,16 @@ Public Class ThisWorkbook
     End Function
     Private Function UnicodeBytesToString(
     ByVal bytes() As Byte) As String
+        Dim enc As Encoding = New UnicodeEncoding(False, True, True)
+        Dim value As String = ""
+        Try
+            value = enc.GetString(bytes)
 
-        Return System.Text.Encoding.Unicode.GetString(bytes)
+        Catch e As DecoderFallbackException
+            Call logger(ptErrLevel.logError, "UnicodeBytesToString", "Unable to decode {0} at index {1}" & " : " & e.Index)
+
+        End Try
+
+        Return value
     End Function
 End Class

@@ -108,7 +108,7 @@ Public Class Ribbon1
                     awinSettings.visboresponsible = My.Settings.VISBOresponsible
                     awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
                     awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-                    awinSettings.visboMapping = My.Settings.VISBOMapping
+                    awinSettings.visboMapping = My.Settings.VISBOMApping
                     awinSettings.visboDebug = My.Settings.VISBODebug
                     awinSettings.visboServer = My.Settings.VISBOServer
                     awinSettings.userNamePWD = My.Settings.userNamePWD
@@ -169,10 +169,13 @@ Public Class Ribbon1
             End If
             AlleProjekte.Clear()
             ShowProjekte.Clear()
+            clearTable(currentProjektTafelModus
+                       )
         End If
 
         If spe_vpid <> "" And spe_vpvid <> "" Then
-            'TODO: hier holen des Projekte mit vpid... und vpvid...
+
+            'holen des Projekte mit vpid... und vpvid...
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
                 ShowProjekte.Add(hproj, False)
@@ -205,24 +208,6 @@ Public Class Ribbon1
             appInstance.Cursor = Excel.XlMousePointer.xlWait
             'Projekte speichern
             Call StoreAllProjectsinDB()
-            ' delete all projects from cache
-            'AlleProjekte.Clear()
-            'Try
-            '    Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
-
-            '    Select Case currentProjektTafelModus
-            '        Case ptModus.massEditTermine
-            '            Call massEditRcTeAt(ptModus.massEditTermine)
-            '        Case ptModus.massEditRessSkills
-            '            Call massEditRcTeAt(ptModus.massEditRessSkills)
-            '        Case ptModus.massEditCosts
-            '            Call massEditRcTeAt(ptModus.massEditCosts)
-
-            '    End Select
-
-            'Catch ex As Exception
-
-            'End Try
 
             ' Mouse wieder auf Normalmodus setzen
             appInstance.Cursor = Excel.XlMousePointer.xlDefault
@@ -251,8 +236,6 @@ Public Class Ribbon1
         Catch ex As Exception
 
         End Try
-
-        'Call MsgBox("Delete")
         ' Mouse wieder auf Normalmodus setzen
         'appInstance.Cursor = Excel.XlMousePointer.xlDefault
 

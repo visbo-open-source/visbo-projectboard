@@ -463,21 +463,6 @@ Module VISBO_SPE_Utilities
                         Exit Sub
                     End If
 
-                    'appInstance.EnableEvents = True
-
-
-
-                    'Try
-
-                    '    If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
-                    '        projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
-                    '    Else
-                    '        projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-                    '    End If
-
-                    'Catch ex As Exception
-                    '    projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-                    'End Try
 
                     ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
                     Dim tableTyp As Integer = ptTables.meRC
@@ -1246,6 +1231,7 @@ Module VISBO_SPE_Utilities
                 infoDataBlock.Clear()
             End If
 
+            ' TODO: hide or make visible of the columns
             appInstance.EnableEvents = True
 
 
@@ -1348,4 +1334,65 @@ Module VISBO_SPE_Utilities
         DateTimeToISODate = ISODateandTime
 
     End Function
+
+
+    Sub clearTable(ByVal meModus As Integer)
+
+        Try
+
+            appInstance.EnableEvents = False
+
+            ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
+            selectedProjekte.Clear()
+
+            Dim currentWS As Excel.Worksheet = Nothing
+            Dim currentWB As Excel.Workbook
+            Dim currentTab As Integer = ptTables.meTE
+            Dim startDateColumn As Integer = 5
+            Dim anzSpalten As Integer = visboZustaende.meColED + 20
+            Dim infoDataBlock As Excel.Range
+
+            If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
+                currentTab = ptTables.meRC
+            End If
+
+            ' hier muss jetzt das entsprechende File aufgemacht werden ...
+            ' das File 
+            Try
+                currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+                currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(currentTab)), Excel.Worksheet)
+
+                Try
+                    ' off setzen des AutoFilter Modus ... 
+                    If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                        'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                Try
+                    With currentWS
+
+                        infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(2 + visboZustaende.meMaxZeile, anzSpalten)), Excel.Range)
+                        infoDataBlock.Clear()
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+            Catch ex As Exception
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Termine Worksheet ...")
+                appInstance.EnableEvents = True
+                Exit Sub
+            End Try
+
+            appInstance.EnableEvents = True
+        Catch
+
+        End Try
+    End Sub
 End Module
