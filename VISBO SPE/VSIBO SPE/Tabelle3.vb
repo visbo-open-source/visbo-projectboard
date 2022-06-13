@@ -38,8 +38,8 @@ Public Class Tabelle3
 
     Private Sub Tabelle3_ActivateEvent() Handles Me.ActivateEvent
 
-        Dim formerEE As Boolean = Application.EnableEvents
-        Application.EnableEvents = False
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
 
         ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
         Try
@@ -104,58 +104,46 @@ Public Class Tabelle3
             Call MsgBox("Fehler in Laden des Sheets ...")
         End Try
 
-        ' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
+        '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
 
-        '?????
-
-        Dim aa As Boolean = Application.EnableEvents
+        ''?????
+        appInstance.EnableEvents = True
+        Dim aa As Boolean = appInstance.EnableEvents
 
         ' jetzt die Spalte 6 einblenden bzw. ausblenden 
         Try
-            If visboZustaende.projectBoardMode = ptModus.massEditTermine Then
-                CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-                If ShowProjekte.Count = 1 Then
-                    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-                    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-                    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-                Else
-                    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-                    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-                    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-                End If
-            ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
-                If RoleDefinitions.getAllSkillIDs.Count > 0 Then
-                    CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
-                Else
-                    CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-                End If
-                If ShowProjekte.Count = 1 Then
-                    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-                    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-                    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-                Else
-                    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-                    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-                    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-                End If
-
+            'If visboZustaende.projectBoardMode = ptModus.massEditTermine Then
+            'CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+            If ShowProjekte.Count = 1 Then
+                CType(meWS.Columns("A"), Excel.Range).Hidden = True
+                CType(meWS.Columns("B"), Excel.Range).Hidden = True
+                CType(meWS.Columns("C"), Excel.Range).Hidden = True
+            Else
+                CType(meWS.Columns("A"), Excel.Range).Hidden = False
+                CType(meWS.Columns("B"), Excel.Range).Hidden = False
+                CType(meWS.Columns("c"), Excel.Range).Hidden = False
             End If
+            'ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+            '    If RoleDefinitions.getAllSkillIDs.Count > 0 Then
+            '        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
+            '    Else
+            '        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+            '    End If
+            '    If ShowProjekte.Count = 1 Then
+            '        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+            '        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+            '        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+            '    Else
+            '        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+            '        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+            '        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+            '    End If
+
+            'End If
         Catch ex As Exception
-            CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+
         End Try
 
-
-
-
-        'If ShowProjekte.Count = 1 Then
-        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-        'Else
-        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-        'End If
 
         ' jetzt den AutoFilter setzen 
         Try
@@ -255,16 +243,16 @@ Public Class Tabelle3
             Application.ScreenUpdating = True
         End If
 
-        ' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
-        If ShowProjekte.Count = 1 Then
-            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-        Else
-            CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-            CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-            CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-        End If
+        '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
+        'If ShowProjekte.Count = 1 Then
+        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
+        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
+        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+        'Else
+        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
+        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
+        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+        'End If
 
     End Sub
 
@@ -1000,9 +988,18 @@ Public Class Tabelle3
         Catch ex As Exception
 
         End Try
+        Try
+            Me.Columns.Hidden = False
+            'CType(Me.Columns(1), Excel.Range).EntireColumn.Hidden = False
+            'CType(Me.Columns(2), Excel.Range).EntireColumn.Hidden = False
+            'CType(Me.Columns(3), Excel.Range).EntireColumn.Hidden = False
+            'CType(Me.Columns(6), Excel.Range).EntireColumn.Hidden = False
+        Catch ex As Exception
+
+        End Try
 
         Try
-            Application.DisplayFormulaBar = False
+            appInstance.DisplayFormulaBar = False
         Catch ex As Exception
 
         End Try
@@ -1113,13 +1110,13 @@ Public Class Tabelle3
                         ' wenn die Phase Kinder hat, muss das Flag "automatisch anpassen" angezeigt werden 
                         Dim anzChilds As Integer = hproj.hierarchy.getChildIDsOf(cphase.nameID, True).Count + hproj.hierarchy.getChildIDsOf(cphase.nameID, False).Count
                         If anzChilds > 0 Then
-                            frmDateEdit.chkbx_adjustChilds.Visible = True
-                            frmDateEdit.chkbx_adjustChilds.Enabled = True
-                            frmDateEdit.chkbx_adjustChilds.Checked = True
+                            frmDateEdit.chkbx_adjustChilds.Visible = False
+                            frmDateEdit.chkbx_adjustChilds.Enabled = False
+                            frmDateEdit.chkbx_adjustChilds.Checked = awinSettings.autoAjustChilds
                         End If
 
                         ' Checkbox Auto Distribution is visible ..
-                        frmDateEdit.chkbxAutoDistr.Visible = True
+                        frmDateEdit.chkbxAutoDistr.Visible = False
                         frmDateEdit.chkbxAutoDistr.Checked = Not awinSettings.noNewCalculation
 
                         frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
@@ -1139,11 +1136,12 @@ Public Class Tabelle3
                         If frmDateEdit.ShowDialog() = DialogResult.OK Then
                             ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
                             ' hier ist bereits im Formular sichergestellt, dass es sich um valide Datum-Angaben handelt .. 
-                            awinSettings.noNewCalculation = Not frmDateEdit.chkbxAutoDistr.Checked
+                            ' ur:20220609: hier nicht benötigt:::awinSettings.noNewCalculation = Not frmDateEdit.chkbxAutoDistr.Checked
 
                             Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
                             Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
-                            Dim autoAdjustChilds As Boolean = frmDateEdit.chkbx_adjustChilds.Checked
+
+                            'ur;09062022: wird ersetzt durch awinSetting.autoAjustChilds:Dim autoAdjustChilds As Boolean = frmDateEdit.chkbx_adjustChilds.Checked
 
                             If cphase.nameID = rootPhaseName Then
 
@@ -1166,13 +1164,13 @@ Public Class Tabelle3
                             ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
                             ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
                             Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
-                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, awinSettings.autoAjustChilds)
 
                             ' jetzt die Excel Zellen der aktuellen Zeile, der Phase anpassen ... 
                             meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
                             meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
 
-                            If autoAdjustChilds And nameIDCollection.Count > 0 Then
+                            If awinSettings.autoAjustChilds And nameIDCollection.Count > 0 Then
 
                                 Try
                                     ' jetzt die Excel Zeilen der Kinder aktualisieren  

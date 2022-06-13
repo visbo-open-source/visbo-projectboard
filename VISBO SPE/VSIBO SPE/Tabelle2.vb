@@ -57,40 +57,41 @@ Public Class Tabelle2
                 Call MsgBox("Fehler in Laden des Sheets ...")
             End Try
 
-            Dim aa As Boolean = Application.EnableEvents
+            appInstance.EnableEvents = True
+            Dim aa As Boolean = appInstance.EnableEvents
 
             ' jetzt die Spalte 6 einblenden bzw. ausblenden 
             Try
                 If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
-                    CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+                    CType(meWS.Columns("F"), Excel.Range).EntireColumn.Hidden = True
                     If ShowProjekte.Count = 1 Then
-                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns("A"), Excel.Range).Hidden = True
+                        CType(meWS.Columns("B"), Excel.Range).Hidden = True
+                        CType(meWS.Columns("C"), Excel.Range).Hidden = True
                     Else
-                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns("A"), Excel.Range).Hidden = False
+                        CType(meWS.Columns("B"), Excel.Range).Hidden = False
+                        CType(meWS.Columns("C"), Excel.Range).Hidden = False
                     End If
                 ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
                     If RoleDefinitions.getAllSkillIDs.Count > 0 Then
-                        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns("F"), Excel.Range).Hidden = False
                     Else
-                        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns("F"), Excel.Range).Hidden = True
                     End If
                     If ShowProjekte.Count = 1 Then
-                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+                        CType(meWS.Columns("A"), Excel.Range).Hidden = True
+                        CType(meWS.Columns("B"), Excel.Range).Hidden = True
+                        CType(meWS.Columns("C"), Excel.Range).Hidden = True
                     Else
-                        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-                        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-                        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+                        CType(meWS.Columns("A"), Excel.Range).Hidden = False
+                        CType(meWS.Columns("B"), Excel.Range).Hidden = False
+                        CType(meWS.Columns("C"), Excel.Range).Hidden = False
                     End If
 
                 End If
             Catch ex As Exception
-                CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+                CType(meWS.Columns("F"), Excel.Range).Hidden = True
             End Try
 
 
@@ -1624,7 +1625,18 @@ Public Class Tabelle2
         Catch ex As Exception
 
         End Try
+        Try
+            Me.Columns.Hidden = False
 
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
 
 
     End Sub

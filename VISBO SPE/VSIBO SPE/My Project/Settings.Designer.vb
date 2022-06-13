@@ -260,12 +260,12 @@ Partial Friend NotInheritable Class MySettings
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("")>  _
-    Public Property VISBOMApping() As String
+    Public Property VISBOMapping() As String
         Get
-            Return CType(Me("VISBOMApping"),String)
+            Return CType(Me("VISBOMapping"),String)
         End Get
         Set
-            Me("VISBOMApping") = value
+            Me("VISBOMapping") = value
         End Set
     End Property
     
@@ -278,6 +278,18 @@ Partial Friend NotInheritable Class MySettings
         End Get
         Set
             Me("startModus") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property DistributeResources() As Boolean
+        Get
+            Return CType(Me("DistributeResources"),Boolean)
+        End Get
+        Set
+            Me("DistributeResources") = value
         End Set
     End Property
 End Class

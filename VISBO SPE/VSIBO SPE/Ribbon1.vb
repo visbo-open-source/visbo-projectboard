@@ -108,7 +108,7 @@ Public Class Ribbon1
                     awinSettings.visboresponsible = My.Settings.VISBOresponsible
                     awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
                     awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-                    awinSettings.visboMapping = My.Settings.VISBOMApping
+                    awinSettings.visboMapping = My.Settings.VISBOMapping
                     awinSettings.visboDebug = My.Settings.VISBODebug
                     awinSettings.visboServer = My.Settings.VISBOServer
                     awinSettings.userNamePWD = My.Settings.userNamePWD
@@ -169,8 +169,7 @@ Public Class Ribbon1
             End If
             AlleProjekte.Clear()
             ShowProjekte.Clear()
-            clearTable(currentProjektTafelModus
-                       )
+            clearTable(currentProjektTafelModus)
         End If
 
         If spe_vpid <> "" And spe_vpvid <> "" Then
@@ -293,6 +292,78 @@ Public Class Ribbon1
     End Sub
 
 
+    ''' <summary>
+    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <returns></returns>
+    Public Function PTDateChangesChildON(control As IRibbonControl) As Boolean
+        PTDateChangesChildON = awinSettings.autoAjustChilds
+    End Function
+    ''' <summary>
+    ''' holen der gewünschten Einstellung
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <param name="pressed"></param>
+    Public Sub awinPTDateChangesChildON(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.autoAjustChilds = pressed
+    End Sub
+
+
+
+    ''' <summary>
+    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <returns></returns>
+    Public Function PTAutoDisValues(control As IRibbonControl) As Boolean
+        PTAutoDisValues = awinSettings.noNewCalculation
+    End Function
+    ''' <summary>
+    ''' holen der gewünschten Einstellung
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <param name="pressed"></param>
+    Public Sub awinPTAutoDisValues(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.noNewCalculation = pressed
+    End Sub
+
+
+
+    ''' <summary>
+    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <returns></returns>
+    Public Function PTResourcePropAdopt(control As IRibbonControl) As Boolean
+        PTResourcePropAdopt = awinSettings.propAnpassRess
+    End Function
+    ''' <summary>
+    ''' holen der gewünschten Einstellung
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <param name="pressed"></param>
+    Public Sub awinPTResourcePropAdopt(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.propAnpassRess = pressed
+    End Sub
+
+
+    ''' <summary>
+    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <returns></returns>
+    Public Function PTInvoicesUsed(control As IRibbonControl) As Boolean
+        PTInvoicesUsed = awinSettings.enableInvoices
+    End Function
+    ''' <summary>
+    ''' holen der gewünschten Einstellung
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <param name="pressed"></param>
+    Public Sub awinPTInvoicesUsed(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.enableInvoices = pressed
+    End Sub
 
 
     'Public Sub ImportWorksheet()

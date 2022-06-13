@@ -53,11 +53,14 @@
     <Setting Name="VISBOpercentDone" Type="System.String" Scope="User">
       <Value Profile="(Default)">% Abgeschlossen&lt;</Value>
     </Setting>
-    <Setting Name="VISBOMApping" Type="System.String" Scope="User">
+    <Setting Name="VISBOMapping" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="startModus" Type="System.String" Scope="User">
       <Value Profile="(Default)">Resources</Value>
+    </Setting>
+    <Setting Name="DistributeResources" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

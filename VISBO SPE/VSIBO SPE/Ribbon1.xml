@@ -33,8 +33,14 @@
 					<button id="Pt6G6B4" label="Time" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectTime" supertip="The beginning and the end for the phses and milestones of the selected projects can be edited here"/>
 					<separator id="Pt6G6B0s2"/>
 					<button id="Pt6G6B6" label="WebUI" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectGoToWebUI" />
-					<separator id="Pt6G6B0s3"/>
-					<button id="Pt6G6B7" label="Settings" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectSettings" />
+					<separator id="Pt6G6B0s3"/>					
+					<menu id="Pt6G6B7" label="Settings" getImage="imageSuper_GetImage" size ="large" >					
+							<checkBox id="PT5G1MB1"  label ="Adjust resource needs proportionally"  getPressed="PTResourcePropAdopt" onAction ="awinPTResourcePropAdopt" supertip ="Adjust resource needs proportionally"/>
+							<checkBox id="PT5G1MB2"  label ="Distribute values automatically over time" getPressed="PTAutoDisValues" onAction ="awinPTAutoDisValues" supertip ="Distribute values automatically over time"/>
+							<checkBox id="PT5G1MB3"  label ="Process invoices and contractual penalties" getPressed="PTInvoicesUsed" onAction ="awinPTInvoicesUsed" supertip ="Process invoices and contractual penalties"/>
+							<checkBox id="PT5G1MB4"  label ="Date changes also affect the subordinate tasks" getPressed="PTDateChangesChildON" onAction="awinPTDateChangesChildON" supertip="Date changes also affect the subordinate tasks"/>
+						<checkBox id="KKK" />
+					</menu>
 				</group>
 			</tab>
 		</tabs>

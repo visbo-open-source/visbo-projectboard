@@ -477,9 +477,29 @@ Module VISBO_SPE_Utilities
                         tableTyp = ptTables.meRC
                     End If
 
-                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
-                        .Activate()
-                    End With
+                    Try
+                        Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
+
+                        If appInstance.ActiveSheet.name = meWS.Name Then
+                            If ShowProjekte.Count = 1 Then
+                                CType(meWS.Columns("A"), Excel.Range).Hidden = True
+                                CType(meWS.Columns("B"), Excel.Range).Hidden = True
+                                CType(meWS.Columns("C"), Excel.Range).Hidden = True
+                            Else
+                                CType(meWS.Columns("A"), Excel.Range).Hidden = False
+                                CType(meWS.Columns("B"), Excel.Range).Hidden = False
+                                CType(meWS.Columns("C"), Excel.Range).Hidden = False
+                            End If
+                        Else
+                            meWS.Activate()
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+
+
 
 
                     'With projectboardWindows(PTwindows.massEdit)
@@ -1382,7 +1402,8 @@ Module VISBO_SPE_Utilities
                 Catch ex As Exception
 
                 End Try
-
+                currentWS.Columns.Hidden = False
+                currentWS.Activate()
 
             Catch ex As Exception
                 Call MsgBox("es gibt Probleme mit dem Mass-Edit Termine Worksheet ...")
@@ -1391,8 +1412,11 @@ Module VISBO_SPE_Utilities
             End Try
 
             appInstance.EnableEvents = True
+
+
         Catch
 
         End Try
+
     End Sub
 End Module

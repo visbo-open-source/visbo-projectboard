@@ -143,7 +143,7 @@ Public Class ThisWorkbook
                 awinSettings.visboresponsible = My.Settings.VISBOresponsible
                 awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
                 awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-                awinSettings.visboMapping = My.Settings.VISBOMApping
+                awinSettings.visboMapping = My.Settings.VISBOMapping
                 awinSettings.visboDebug = My.Settings.VISBODebug
                 awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
