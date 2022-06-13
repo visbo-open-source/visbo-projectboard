@@ -7,6 +7,11 @@
 
         Call languageSettings()
 
+        If visboClient.Contains("VISBO SPE") Then
+            chkbx_adjustChilds.Visible = False
+            chkbxAutoDistr.Visible = False
+        End If
+
         If allowedDateLeft > Date.MinValue Then
             If startdatePicker.Enabled Then
                 startdatePicker.MinDate = allowedDateLeft
