@@ -290,7 +290,7 @@ Public Module agm3
     End Function
 
     ''' <summary>
-    ''' überprüft, ob die Voraussetzungen für das Einlesen der Projekte. 
+    ''' checks whether or not is a cost Assertion / Sales Proposal sheet 
     ''' </summary>
     ''' <param name="configFile"></param>
     ''' <param name="ProjectsFile"></param>
@@ -344,21 +344,28 @@ Public Module agm3
 
                         searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
 
-                        titleCol = searcharea.Find("Titel").Column
-                        IdentCol = searcharea.Find("Identifier").Column
-                        InputFileCol = searcharea.Find("InputFile").Column
-                        TypCol = searcharea.Find("Typ").Column
-                        DatenCol = searcharea.Find("Datenbereich").Column
-                        TabUCol = searcharea.Find("Tabellen-Name").Column
-                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
-                        SUCol = searcharea.Find("Spaltenüberschrift").Column
-                        SNCol = searcharea.Find("Spalten-Nummer").Column
-                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
-                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
-                        ObjCol = searcharea.Find("Objekt-Typ").Column
-                        InhaltCol = searcharea.Find("Inhalt").Column
+                        Dim ok As Boolean = True
 
-                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
+
+                        Try
+                            titleCol = searcharea.Find("Titel").Column
+                            IdentCol = searcharea.Find("Identifier").Column
+                            InputFileCol = searcharea.Find("InputFile").Column
+                            TypCol = searcharea.Find("Typ").Column
+                            DatenCol = searcharea.Find("Datenbereich").Column
+                            TabUCol = searcharea.Find("Tabellen-Name").Column
+                            TabNCol = searcharea.Find("Tabellen-Nummer").Column
+                            SUCol = searcharea.Find("Spaltenüberschrift").Column
+                            SNCol = searcharea.Find("Spalten-Nummer").Column
+                            ZUCol = searcharea.Find("Zeilenbeschriftung").Column
+                            ZNCol = searcharea.Find("Zeilen-Nummer").Column
+                            ObjCol = searcharea.Find("Objekt-Typ").Column
+                            InhaltCol = searcharea.Find("Inhalt").Column
+                        Catch ex As Exception
+                            ok = False
+                        End Try
+
+
 
                         If ok Then
                             With currentWS
@@ -2511,6 +2518,7 @@ Public Module agm3
 
             Dim hrole As New clsRollenDefinition
             Dim rolename As String = ""
+            Dim personellNr As String = ""
             Dim absenceDay As Date
             Dim absenceType As String = ""
             Dim input_ok As Boolean = True
@@ -2528,6 +2536,11 @@ Public Module agm3
             End If
 
             enableOnUpdate = False
+
+            Dim pNrCol As Integer = -1
+            If kapaConfig.ContainsKey("persNr") Then
+                pNrCol = kapaConfig("persNr").column
+            End If
 
             Dim roleCol As Integer = kapaConfig("role").column
             Dim dateCol As Integer = kapaConfig("date").column
@@ -2552,48 +2565,133 @@ Public Module agm3
 
                                 ' Auslesen erste Verfügbarkeitsspalte
                                 firstColumn = kapaConfig("valueStart").column
+
+
                                 firstRow = kapaConfig("valueStart").row
+
+                                ' now define Row : search identifier in column and move X rows further as given in content 
+                                If firstRow = 0 Then
+                                    Try
+                                        Dim searchColumn As Excel.Range = currentWS.Columns(kapaConfig("valueStart").column)
+                                        firstRow = searchColumn.Find(What:=kapaConfig("valueStart").Identifier).Row
+                                        Dim offsetRow As Integer = kapaConfig("valueStart").getRowColumnOffset(0)
+                                        firstRow = firstRow + offsetRow
+                                    Catch ex As Exception
+                                        ' try it this way ..
+                                        firstRow = 10
+                                        msgtxt = "Warning " & " startet with line number 10 because did not find Name and according offset"
+                                        Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                    End Try
+                                End If
                                 Dim lastLineConfig As String = kapaConfig("LastLine").content
-                                If lastLineConfig = "" Then
+
+                                If IsNothing(lastLineConfig) Then
                                     lastRow = CType(currentWS.Cells(10000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
                                 Else
-                                    ' TODO: muss gemäss RegEx berechnet werden
+                                    If lastLineConfig = "" Then
+                                        lastRow = CType(currentWS.Cells(10000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                                    Else
+                                        ' TODO: muss gemäss RegEx berechnet werden
+                                    End If
+
                                 End If
 
                                 ' loop über die Zeilen
                                 For ix As Integer = firstRow To lastRow
 
                                     input_ok = True                   ' Initialise
+                                    rolename = ""
+                                    personellNr = ""
+                                    Dim tmpRolePnr As clsRollenDefinition = Nothing
 
                                     Try
-                                        rolename = CType(currentWS.Cells(ix, roleCol).value, String)
-                                        'ur: 08.04.2022:rolename = CType(currentWS.Cells(ix, roleCol).value, String).Trim
-                                        If IsNothing(rolename) Then
-                                            input_ok = False
-                                        Else
-                                            rolename = rolename.Trim
+                                        If pNrCol > 0 Then
+
+                                            If IsNothing(currentWS.Cells(ix, pNrCol).value) Then
+                                                input_ok = False
+                                            Else
+                                                personellNr = CType(currentWS.Cells(ix, pNrCol).value, String).Trim
+
+                                                If personellNr <> "" Then
+                                                    tmpRolePnr = RoleDefinitions.getRoledefByEmployeeNr(personellNr)
+                                                    If Not IsNothing(tmpRolePnr) Then
+                                                        rolename = tmpRolePnr.name
+                                                    Else
+                                                        rolename = ""
+                                                        input_ok = False
+                                                        If Not input_ok Then
+                                                            msgtxt = "Warning in Line: " & ix & " Personell-Number does not exist: " & personellNr
+                                                            Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                                        End If
+                                                    End If
+                                                End If
+                                            End If
                                         End If
+
                                     Catch ex As Exception
                                         input_ok = False
                                     End Try
 
                                     Try
-                                        absenceDay = CDate(currentWS.Cells(ix, dateCol).value)
-                                        If IsNothing(absenceDay) Then
-                                            input_ok = False
+                                        ' check whether or not this combination is correct
+
+                                        If rolename = "" Then
+                                            If IsNothing(currentWS.Cells(ix, roleCol).value) Then
+                                                input_ok = False
+                                                If Not input_ok Then
+                                                    msgtxt = "Warning in Line: " & ix & " there was no pers-Nr nor a Name provided  "
+                                                    Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                                End If
+                                            Else
+                                                rolename = CType(currentWS.Cells(ix, roleCol).value, String).Trim
+                                            End If
+                                        Else
+                                            ' was defined already through persNr .. check whether consistent 
+                                            If Not IsNothing(currentWS.Cells(ix, roleCol).value) Then
+                                                Dim tmpRoleName As String = CType(currentWS.Cells(ix, roleCol).value, String).Trim
+                                                If tmpRoleName <> "" Then
+                                                    Dim chkRole As clsRollenDefinition = RoleDefinitions.getRoledef(tmpRoleName)
+                                                    If Not IsNothing(chkRole) Then
+                                                        input_ok = (chkRole.UID = tmpRolePnr.UID)
+                                                        If Not input_ok Then
+                                                            msgtxt = "Warning in Line: " & ix & " Personal-Number and Name do not fit ... "
+                                                            Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                                        End If
+                                                    End If
+                                                End If
+                                            End If
                                         End If
+
+
+                                    Catch ex As Exception
+                                        input_ok = False
+                                    End Try
+
+                                    Try
+                                        If IsNothing(currentWS.Cells(ix, dateCol).value) Then
+                                            input_ok = False
+                                            msgtxt = "Warning in Line: " & ix & " no date provided ... "
+                                            Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                        Else
+                                            absenceDay = CDate(currentWS.Cells(ix, dateCol).value)
+                                            input_ok = (DateDiff(DateInterval.Day, StartofCalendar, absenceDay) > 0)
+                                            If Not input_ok Then
+                                                msgtxt = "Warning in Line: " & ix & " date is before timespan of VISBO projectboard .."
+                                                Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                            End If
+                                        End If
+
                                     Catch ex As Exception
                                         absenceDay = Nothing
                                         input_ok = False
                                     End Try
 
                                     Try
-                                        absenceType = CStr(currentWS.Cells(ix, absenceCol).value)
-                                        'ur: 08.04.2022:absenceType = CStr(currentWS.Cells(ix, absenceCol).value).Trim
-                                        If IsNothing(absenceType) Then
+
+                                        If IsNothing(currentWS.Cells(ix, absenceCol).value) Then
                                             input_ok = False
                                         Else
-                                            absenceType = absenceType.Trim
+                                            absenceType = CStr(currentWS.Cells(ix, absenceCol).value).Trim
                                             If kapaConfig("absence type").regex = "RegEx" Then
                                                 'regexpression = New Regex("[0-9]{4}")
                                                 regexpression = New Regex(kapaConfig("absence type").content)
@@ -2606,12 +2704,13 @@ Public Module agm3
                                                 End If
                                             End If
                                         End If
+
                                     Catch ex As Exception
                                         input_ok = False
                                     End Try
 
 
-                                    If input_ok Then        ' alle drei Angabe dieser Zeile sind soweit passend
+                                    If input_ok Then        ' alle  Angaben dieser Zeile sind soweit passend
 
                                         Dim columnOfDate As Integer = getColumnOfDate(absenceDay)
                                         If addOnHolidays.ContainsKey(rolename) Then
@@ -5126,6 +5225,10 @@ Public Module agm3
                     Dim pTemplateDefinition As clsConfigProjectsImport = projectConfig("Projekt-Template")
                     Dim pDescriptDefinition As clsConfigProjectsImport = projectConfig("Projekt-Beschreibung")
 
+                    ' added 
+                    Dim pTotalBudget As clsConfigProjectsImport = projectConfig("Gesamt-Budget")
+                    Dim pProfit As clsConfigProjectsImport = projectConfig("Profit")
+
                     Dim taskDefinition As clsConfigProjectsImport = projectConfig("Task")
                     Dim phaseNameDefinition As clsConfigProjectsImport = projectConfig("PhasenName")
                     Dim ressourceDefinition As clsConfigProjectsImport = projectConfig("Ressource")
@@ -5175,12 +5278,19 @@ Public Module agm3
 
 
                     ' read Datum: 
-                    currentWS = projectWB.Worksheets(datumsDefinition.sheetDescript)
-                    searchColNr = datumsDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=datumsDefinition.Identifier).Row
-                    offsets = datumsDefinition.getRowColumnOffset
-                    creationDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                    Try
+                        currentWS = projectWB.Worksheets(datumsDefinition.sheetDescript)
+                        searchColNr = datumsDefinition.column.von
+                        searchColumn = currentWS.Columns(searchColNr)
+                        myRowNr = searchColumn.Find(What:=datumsDefinition.Identifier).Row
+                        offsets = datumsDefinition.getRowColumnOffset
+                        creationDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                    Catch ex As Exception
+
+                        creationDate = Date.Now
+
+                    End Try
+
 
 
                     ' read VariantName 
@@ -5204,16 +5314,21 @@ Public Module agm3
                     End If
 
                     ' read Projekt-Nummer
-                    currentWS = projectWB.Worksheets(pnumberDefinition.sheetDescript)
-                    searchColNr = pnumberDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=pnumberDefinition.Identifier).Row
-                    offsets = vNameDefinition.getRowColumnOffset
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                        pNr = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
-                    Else
-                        pNr = ""
-                    End If
+                    Try
+                        currentWS = projectWB.Worksheets(pnumberDefinition.sheetDescript)
+                        searchColNr = pnumberDefinition.column.von
+                        searchColumn = currentWS.Columns(searchColNr)
+                        myRowNr = searchColumn.Find(What:=pnumberDefinition.Identifier).Row
+                        offsets = vNameDefinition.getRowColumnOffset
+                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                            pNr = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                        Else
+                            pNr = ""
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
 
                     ' read Projekt-Beschreibung
                     currentWS = projectWB.Worksheets(pDescriptDefinition.sheetDescript)
@@ -5242,7 +5357,7 @@ Public Module agm3
                         Else
                             outputline = "Die Projektvorlage wurde nicht angegeben! "
                         End If
-                        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", 0)
+                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
                         pTemplate = ""
                     End If
 
@@ -5252,7 +5367,7 @@ Public Module agm3
                         Else
                             outputline = "Die Projektvorlage '" & pTemplate & "' existiert nicht"
                         End If
-                        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", 0)
+                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
                         Throw New Exception(outputline)
                     End If
 
@@ -5307,7 +5422,7 @@ Public Module agm3
                             If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr).value) Then
                                 myValue = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr).value).Trim
                             End If
-                            Do While myValue <> trennZeichen
+                            Do While myValue <> trennZeichen And myRowNr < lastrow
                                 myRowNr = myRowNr + 1
                                 ' löschen der alten Werte
                                 myPhaseName = ""
@@ -5316,13 +5431,16 @@ Public Module agm3
                                 myCostPercent = 0.0
                                 myHours = 0.0
                                 myEuros = 0.0
+                                Dim myRoleNameID As String = ""
+
+                                Dim isCost As Boolean = False
 
                                 If awinSettings.englishLanguage Then
                                     outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
                                 Else
                                     outputline = currentWS.Name & ": Zeile Nr. " & myRowNr & " wird gelesen!"
                                 End If
-                                Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
 
                                 If Not IsNothing(currentWS.Cells(myRowNr, searchColNr).value) Then
                                     myValue = CStr(currentWS.Cells(myRowNr, searchColNr).value).Trim
@@ -5355,6 +5473,25 @@ Public Module agm3
                                             If myRoleName = topLevelRole Then
                                                 myRoleName = RoleDefinitions.getDefaultTopNodeName
                                             End If
+
+                                            ' find out whether it is a role, skill or cost-definition
+                                            If RoleDefinitions.containsName(myRoleName) Then
+                                                ' skill or role 
+                                                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
+                                                If tmpRole.isSkill Then
+                                                    Dim containingRoleUid As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(tmpRole.UID).UID
+                                                    myRoleNameID = RoleDefinitions.bestimmeRoleNameID(containingRoleUid, tmpRole.UID)
+                                                Else
+                                                    myRoleNameID = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, -1)
+                                                End If
+                                            Else
+                                                If CostDefinitions.containsName(myRoleName) Then
+                                                    isCost = True
+                                                Else
+                                                    ' Protocol warning and iterate loop  
+                                                End If
+                                            End If
+
                                         End If
 
                                         ' read Hours
@@ -5388,7 +5525,7 @@ Public Module agm3
                                                     outputline = currentWS.Name & ": Angegebener Phasenname in Zeile " & myRowNr & " ist nicht definiert: " & myPhaseName.Trim
                                                 End If
                                                 meldungen.Add(outputline)
-                                                Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
 
                                                 ' zurücksetzen des Druckbereichs - es können die fehlerhaften Felder ansonsten nicht eingefärbt werden
                                                 currentWS.PageSetup.PrintArea = ""
@@ -5405,7 +5542,7 @@ Public Module agm3
                                                     outputline = currentWS.Name & ": Angegebener Rollenname in Zeile " & myRowNr & " ist nicht definiert: " & myRoleName.Trim
                                                 End If
                                                 meldungen.Add(outputline)
-                                                Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
 
                                                 ' zurücksetzen des Druckbereichs - es können die fehlerhaften Felder ansonsten nicht eingefärbt werden
                                                 currentWS.PageSetup.PrintArea = ""
@@ -5479,7 +5616,7 @@ Public Module agm3
                                 outputline = "Die Phase '" & kvp.Key & "' existiert in ausgewählten Projektvorlage nicht."
                             End If
                             meldungen.Add(outputline)
-                            Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
                         End If
                     Next
 
@@ -5493,7 +5630,7 @@ Public Module agm3
                     '            outputline = "Die Phase '" & kvp.Key & "' existiert in ausgewählter Projektvorlage nicht."
                     '        End If
                     '        meldungen.Add(outputline)
-                    '        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                    '        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
                     '    End If
                     'Next
 
@@ -5558,7 +5695,7 @@ Public Module agm3
                                 outputline = "Die Dauer der Phase '" & phase.name & "' darf nicht " & phaseLength.ToString & " sein"
                             End If
                             meldungen.Add(outputline)
-                            Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
                         End If
 
                     Next
@@ -5571,16 +5708,16 @@ Public Module agm3
 
                         ' now protocol after project is created 
                         outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & ";"
-                        Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
 
                         ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
                         result = True
                         outputline = "Success! project created: " & newProj.getShapeText
-                        Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
                     Else
                         result = False
                         outputline = "Failed! no project created: " & pName & "[ " & vName & " ]"
-                        Call logger(ptErrLevel.logError, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
                         meldungen.Add(outputline)
                     End If
 
@@ -5593,13 +5730,13 @@ Public Module agm3
                         appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
                     End If
 
-                    Call logger(ptErrLevel.logError, ex.Message, "readTelairCostAssertionWithConfig 1", anzFehler)
+                    Call logger(ptErrLevel.logError, ex.Message, "readCostAssertionWithConfig 1", anzFehler)
                     meldungen.Add(ex.Message)
                     result = False
                 End Try
             End If
         Catch ex As Exception
-            Call logger(ptErrLevel.logError, ex.Message, "readTelairCostAssertionWithConfig 2", anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "readCostAssertionWithConfig 2", anzFehler)
             meldungen.Add(ex.Message)
             result = False
         End Try
@@ -5618,7 +5755,7 @@ Public Module agm3
         '
         ' Ende protokollieren 
         outputline = "Ende Import CostAssertion: " & tmpDatei
-        Call logger(ptErrLevel.logInfo, outputline, "readTelairCostAssertionWithConfig", anzFehler)
+        Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
         '
         '
 
