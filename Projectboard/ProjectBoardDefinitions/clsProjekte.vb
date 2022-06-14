@@ -1862,11 +1862,16 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
     ''' <remarks></remarks>
+
     Public ReadOnly Property getCountPhasesInMonth(phaseName As String, ByVal breadcrumb As String,
                                                    ByVal type As Integer, pvName As String) As Double()
 
         Get
-            Dim phasevalues() As Double
+            Dim result As Double()
+            Dim phasevalues As Double(,)
+
+            ' it now is calculated how many phases do overlap per day ...  
+            awinSettings.phasesProzentual = False
 
             'Dim anzPhasen As Integer
             Dim zeitraum As Integer
@@ -1878,7 +1883,7 @@ Public Class clsProjekte
             Dim hproj As clsProjekt
             'Dim lookforIndex As Boolean
             'Dim phasenStart As Integer, phasenEnde As Integer
-            Dim tempArray() As Double
+            'Dim tempArray() As Double
             Dim prAnfang As Integer, prEnde As Integer, phAnfang As Integer, phEnde As Integer
             Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
 
@@ -1886,7 +1891,8 @@ Public Class clsProjekte
 
             'lookforIndex = IsNumeric(phaseId)
             zeitraum = showRangeRight - showRangeLeft
-            ReDim phasevalues(zeitraum)
+            ReDim result(zeitraum)
+            ReDim phasevalues(zeitraum, 31)
 
             anzProjekte = _allProjects.Count
 
@@ -1934,13 +1940,133 @@ Public Class clsProjekte
 
                                 If anzLoops > 0 Then
 
-                                    'ReDim tempArray(phEnde - phAnfang)
-                                    tempArray = hproj.getPhasenBedarf(phaseName)
+                                    Dim tmpArray As Double(,) = hproj.getPhasenDetailBedarf(phaseName, breadcrumb)
+                                    'tempArray = hproj.getPhasenBedarf(phaseName)
 
                                     For i = 0 To anzLoops - 1
                                         ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
                                         ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
-                                        phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
+                                        For dx As Integer = 1 To 31
+                                            phasevalues(ixZeitraum + i, dx) = phasevalues(ixZeitraum + i, dx) + tmpArray(ix + i + ixKorrektur, dx)
+                                        Next
+
+                                    Next i
+
+                                End If
+
+
+                            End If
+                        End If
+                    Next
+
+
+                End If
+
+
+            Next kvp
+
+            ' now get the maximum number of parallel phases for each month ... 
+
+            For px As Integer = 0 To zeitraum
+                Dim monthMax As Double = -1
+                For dx As Integer = 1 To 31
+                    monthMax = System.Math.Max(phasevalues(px, dx), monthMax)
+                Next
+                result(px) = monthMax
+            Next
+
+            getCountPhasesInMonth = result
+
+        End Get
+
+    End Property
+    Public ReadOnly Property getCountPhasesInMonth2(ByVal phaseName As String, ByVal breadcrumb As String,
+                                                   ByVal type As Integer, pvName As String) As Double(,)
+
+        Get
+            Dim result As Double()
+            Dim phasevalues As Double(,)
+
+            ' it now is calculated how many phases do overlap per day ...  
+            awinSettings.phasesProzentual = False
+
+            'Dim anzPhasen As Integer
+            Dim zeitraum As Integer
+            'Dim projektstart As Integer
+            Dim anzProjekte As Integer
+            'Dim found As Boolean
+            Dim i As Integer ', pr As Integer, ph As Integer
+            Dim hphase As clsPhase
+            Dim hproj As clsProjekt
+            'Dim lookforIndex As Boolean
+            'Dim phasenStart As Integer, phasenEnde As Integer
+            'Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer, phAnfang As Integer, phEnde As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            'lookforIndex = IsNumeric(phaseId)
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim result(zeitraum)
+            ReDim phasevalues(zeitraum, 31)
+
+            anzProjekte = _allProjects.Count
+
+            ' anzPhasen = AllPhases.Count
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                If type = -1 Or
+                    (type = PTItemType.vorlage) Or
+                    (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Then
+                    ' Aktion machen
+
+                    Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+
+                    For px As Integer = 0 To phaseIndices.Length - 1
+
+                        If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                            hphase = hproj.getPhase(phaseIndices(px))
+                        Else
+                            hphase = Nothing
+                        End If
+
+
+                        If Not hphase Is Nothing Then
+
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                            End With
+
+
+                            If istBereichInTimezone(prAnfang, prEnde) Then
+                                'projektstart = hproj.Start
+
+                                With hphase
+                                    phAnfang = prAnfang + .relStart - 1
+                                    phEnde = prAnfang + .relEnde - 1
+                                End With
+
+                                Dim ixKorrektur As Integer = hphase.relStart - 1
+
+                                Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
+
+                                If anzLoops > 0 Then
+
+                                    Dim tmpArray As Double(,) = hproj.getPhasenDetailBedarf(phaseName, breadcrumb)
+                                    'tempArray = hproj.getPhasenBedarf(phaseName)
+
+                                    For i = 0 To anzLoops - 1
+                                        ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
+                                        ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
+                                        For dx As Integer = 1 To 31
+                                            phasevalues(ixZeitraum + i, dx) = phasevalues(ixZeitraum + i, dx) + tmpArray(ix + i + ixKorrektur, dx)
+                                        Next
+
                                     Next i
 
                                 End If
@@ -1957,7 +2083,7 @@ Public Class clsProjekte
             Next kvp
 
 
-            getCountPhasesInMonth = phasevalues
+            getCountPhasesInMonth2 = phasevalues
 
         End Get
 
@@ -2060,24 +2186,230 @@ Public Class clsProjekte
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' returns an array with frequency of milestones in timeframe showrangeLeft to showrangeRight
+    ''' </summary>
+    ''' <param name="msNames"></param>
+    ''' <returns></returns>
+    Public Function getMilestonesFrequency(ByVal msNames As List(Of String)) As Double()
+        Dim milestoneArray As Double()
+
+        If showRangeLeft <= 0 Or showRangeRight < showRangeLeft Then
+            ' nothing to do 
+            Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
+        Else
+            ReDim milestoneArray(showRangeRight - showRangeLeft)
+
+            If Not IsNothing(msNames) Then
+
+                For Each msName As String In msNames
+                    ' check whether or not this is causing overloads, meaning if there are in any month more elements than allowed(msLimit)
+                    ' it is only checked whether there are any overloads caused by the new calculation. If referece value is over the limit , bust has been 
+                    ' over the limit already in referenceValues then it is still allowed
+                    Dim breadCrumb As String = ""
+
+                    If msName.Contains("#") Then
+                        Dim tmpStr As String() = msName.Split(New Char() {CChar("#")})
+                        breadCrumb = tmpStr(0)
+                        For ix As Integer = 1 To tmpStr.Length - 2
+                            breadCrumb = breadCrumb & "#" & tmpStr(ix)
+                        Next
+                        msName = tmpStr(tmpStr.Length - 1)
+                    End If
+
+
+                    Dim typ As Integer = -1
+                    Dim pvName As String = ""
+                    Dim tmpMilestoneArray As Double(,) = getCountMilestonesInMonth(msName, breadCrumb, -1, pvName)
+
+                    For ix As Integer = 0 To showRangeRight - showRangeLeft
+                        For mx As Integer = 0 To 3
+                            milestoneArray(ix) = milestoneArray(ix) + tmpMilestoneArray(mx, ix)
+                        Next
+                    Next
+                Next
+
+            End If
+        End If
+
+        getMilestonesFrequency = milestoneArray
+
+    End Function
+
+    Public Function getPhaseFrequency(ByVal phNames As List(Of String)) As Double()
+        Dim phaseArray As Double()
+
+        If showRangeLeft <= 0 Or showRangeRight < showRangeLeft Then
+            ' nothing to do 
+            Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
+        Else
+            Dim zeitraum As Integer = showRangeRight - showRangeLeft
+            ReDim phaseArray(zeitraum)
+
+            Dim phasevalues As Double(,)
+            ReDim phasevalues(zeitraum, 31)
+
+            If Not IsNothing(phNames) Then
+
+                For Each phName As String In phNames
+                    ' now check whether or not there are given any breadcrumbs ..
+                    Dim breadcrumb As String = ""
+
+                    If phName.Contains("#") Then
+                        Dim tmpStr As String() = phName.Split(New Char() {CChar("#")})
+                        breadcrumb = tmpStr(0)
+                        For ix As Integer = 1 To tmpStr.Length - 2
+                            breadcrumb = breadcrumb & "#" & tmpStr(ix)
+                        Next
+                        phName = tmpStr(tmpStr.Length - 1)
+                    End If
+
+                    Dim typ As Integer = -1
+                    Dim pvName As String = ""
+
+                    Dim tmpPhaseArray As Double(,) = getCountPhasesInMonth2(phName, breadcrumb, typ, pvName)
+
+                    Try
+
+                        For i = 0 To zeitraum
+
+                            For dx As Integer = 1 To 31
+                                phasevalues(i, dx) = phasevalues(i, dx) + tmpPhaseArray(i, dx)
+                            Next
+
+                        Next i
+
+                    Catch ex As Exception
+                        Call logger(ptErrLevel.logError, "getPhaseFrequency", "Try 1 " & ex.Message)
+                    End Try
+
+                Next
+
+
+                Try
+
+                    For px As Integer = 0 To zeitraum
+                        Dim monthMax As Double = -1
+                        For dx As Integer = 1 To 31
+                            monthMax = System.Math.Max(phasevalues(px, dx), monthMax)
+                        Next
+                        phaseArray(px) = monthMax
+                    Next
+
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logError, "bestimmeXtipvDatenreihen", "Try 2 " & ex.Message)
+                End Try
+
+
+            End If
+        End If
+
+        getPhaseFrequency = phaseArray
+
+    End Function
+    ''' <summary>
+    ''' returns true if there are too much milestones or phases parallel within one given month
+    ''' and the situation has worsened with respect to referenceValues 
+    ''' </summary>
+    ''' <param name="msNames"></param>
+    ''' <param name="msLimit"></param>
+    ''' <param name="referenceMsValues"></param>
+    ''' <param name="phNames"></param>
+    ''' <param name="phLimit"></param>
+    ''' <param name="referencePhValues"></param>
+    ''' <returns></returns>
+    Public Function overLoadMSPhasesFound(ByVal msNames As List(Of String), ByVal msLimit As Integer,
+                                          ByVal referenceMsValues As Double(),
+                                          ByVal phNames As List(Of String), ByVal phLimit As Integer,
+                                          ByVal referencePhValues As Double()) As Boolean
+
+        Dim overloadFound As Boolean = False
+        Dim heuteCol As Integer = getColumnOfDate(Date.Now)
+
+        If showRangeLeft <= 0 Or showRangeRight < showRangeLeft Then
+            ' nothing to do 
+            Throw New ArgumentException("no or invalid timeframe defined: " & showRangeLeft & " to " & showRangeRight)
+        Else
+
+
+            Try
+                Dim milestoneArray As Double()
+                Dim phaseArray As Double()
+                ReDim milestoneArray(showRangeRight - showRangeLeft)
+                ReDim phaseArray(showRangeRight - showRangeLeft)
+
+
+                If Not IsNothing(msNames) And Not IsNothing(referenceMsValues) Then
+                    If msNames.Count > 0 Then
+
+                        milestoneArray = getMilestonesFrequency(msNames)
+
+                        ' now check whether or not there are any overloads 
+                        For ix As Integer = 0 To showRangeRight - showRangeLeft
+                            If milestoneArray(ix) > msLimit Then
+                                ' only when value is greater than before ...
+                                overloadFound = (milestoneArray(ix) > referenceMsValues(ix))
+                            End If
+                            If overloadFound Then
+                                Exit For
+                            End If
+                        Next
+
+                    End If
+                End If
+
+
+
+                If Not overloadFound Then
+
+                    If Not IsNothing(phNames) And Not IsNothing(referencePhValues) Then
+                        If phNames.Count > 0 Then
+                            phaseArray = getPhaseFrequency(phNames)
+
+                            ' now check whether or not there are any overloads 
+                            For ix As Integer = 0 To showRangeRight - showRangeLeft
+                                If phaseArray(ix) > phLimit Then
+                                    ' only when value is greater than before ...
+                                    overloadFound = (phaseArray(ix) > referencePhValues(ix))
+                                End If
+                                If overloadFound Then
+                                    Exit For
+                                End If
+                            Next
+
+                        End If
+                    End If
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
+        End If
+
+        overLoadMSPhasesFound = overloadFound
+
+    End Function
     ''' <summary>
     ''' returns true if in any month there is a overutilization of more than three time overloadCriterion
     ''' 
     ''' </summary>
     ''' <param name="roleIDs"></param>
     ''' <param name="skillIDs"></param>
-    ''' <param name="overloadCriterion">returns true, if any month is overloaded more than overloadCriterion and onlyStrictly=false </param>
-    ''' <param name="onlyStrictly">false: single months overloads should be taken into account even when overall timeframe is not overloaded at all </param>
+    ''' <param name="monthlyOverloadCriterion">returns true, if any month is overloaded more than overloadCriterion and onlyStrictly=false </param>
+    ''' <param name="onlyCompleteTimeSpan">false: single months overloads should be taken into account even when overall timeframe is not overloaded at all </param>
     ''' <param name="totalOverloadCriterion">returns true if total sum of roles is larger than totalOverloadCriterion * kapa </param>
     ''' <returns></returns>
     Public Function overLoadFound(ByVal roleIDs As List(Of String),
                                   ByVal skillIDs As List(Of String),
-                                  ByVal onlyStrictly As Boolean,
-                                  ByVal overloadCriterion As Double,
+                                  ByVal onlyCompleteTimeSpan As Boolean,
+                                  ByVal monthlyOverloadCriterion As Double,
                                   ByVal totalOverloadCriterion As Double) As Boolean
 
         Dim overloaded As Boolean = False
-        Dim monthlyCriterion As Double = 3 * overloadCriterion
         Dim curIDs As List(Of String) = Nothing
 
         For i As Integer = 1 To 2
@@ -2092,19 +2424,57 @@ Public Class clsProjekte
 
                 For Each roleIDstr As String In curIDs
 
+                    ' tk 23.4.2022 when there are already planned values on Person level we need to consider this ... 
                     Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
+
                     Dim myCollection As New Collection From {
                         roleIDstr
                      }
                     Dim kapaValues As Double() = getRoleKapasInMonth(myCollection)
 
-                    If Not onlyStrictly Then
+                    ' 
+                    ' initial idea was to use extern capacities which is more volatile than intern capacities 
+                    ' does not deliver good results , so now it is tried by looking at the month before and/or month after 
+
+
+                    ' berechne externe Kapazität, die bisher nicht genutzt wurde ... 
+                    Dim kapaIntern As Double() = getRoleKapasInMonth(myCollection, onlyIntern:=True)
+                    Dim kapaExtern As Double()
+                    Dim freeCapacity As Double()
+                    ReDim kapaExtern(kapaValues.Length - 1)
+                    ReDim freeCapacity(kapaValues.Length - 1)
+
+                    For ix As Integer = 0 To kapaValues.Length - 1
+                        kapaExtern(ix) = kapaValues(ix) - kapaIntern(ix)
+                        freeCapacity(ix) = kapaValues(ix) - roleValues(ix)
+                    Next
+
+                    If Not onlyCompleteTimeSpan Then
+
                         For ix As Integer = 0 To roleValues.Length - 1
-                            If roleValues(ix) >= overloadCriterion * kapaValues(ix) Then
-                                overloaded = True
-                                Exit For
+                            If roleValues(ix) >= monthlyOverloadCriterion * kapaValues(ix) Then
+                                If roleValues.Length - 1 = 0 Then
+                                    overloaded = True
+                                Else
+                                    If ix = 0 Then
+                                        overloaded = True
+                                    Else
+                                        Dim stillAvailableExternCapa As Double = 0
+                                        For dx As Integer = 0 To ix - 1
+                                            stillAvailableExternCapa = stillAvailableExternCapa + System.Math.Min(kapaExtern(dx), freeCapacity(dx))
+                                        Next
+                                        overloaded = roleValues(ix) > stillAvailableExternCapa + monthlyOverloadCriterion * kapaValues(ix)
+                                    End If
+                                End If
+
+                                If overloaded Then
+                                    Exit For
+                                End If
+
                             End If
+
                         Next
+
                     End If
 
                     If Not overloaded And (roleValues.Sum >= totalOverloadCriterion * kapaValues.Sum) Then
@@ -3605,95 +3975,260 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
+    ''' does an automatic new distribution of resource values over time according needed sum for that particular role and phase  
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="errMsg"></param>
+    Public Sub autoDistribute(ByVal pName As String, ByVal variantName As String, ByRef errMsg As String)
+
+        ' first auto-distribute all existing person values according free capacities , remember load which can't be done by person for summary role 
+        ' apply methodology used in mass Edit 
+
+        Dim hproj As clsProjekt = Nothing
+
+        Try
+            ' 1. create a variant, if variantName is provided 
+            If variantName <> "" Then
+                Dim baseProject As clsProjekt = getProject(pName)
+                If baseProject.variantName = variantName Then
+                    hproj = baseProject
+                Else
+                    hproj = baseProject.createVariant(variantName, "created for auto-allocation")
+                End If
+            Else
+                hproj = getProject(pName)
+            End If
+
+            Dim roleStack As New Collection
+
+            ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
+            ' for this just go over each phase 
+            For p = 1 To hproj.CountPhases
+
+                Dim cPhase As clsPhase = hproj.getPhase(p)
+
+                Dim xStartDate As Date = cPhase.getStartDate
+                Dim xEndDate As Date = cPhase.getEndDate
+
+                roleStack.Clear()
+
+                ' first wave: consider all people ... 
+                For Each tmpRole As clsRolle In cPhase.rollenListe
+
+                    Dim uid As Integer = tmpRole.uid
+                    If Not RoleDefinitions.getRoleDefByID(uid).isSummaryRole Then
+
+
+                        Dim xValues As Double()
+                        Dim laenge As Integer = tmpRole.Xwerte.Length
+                        ReDim xValues(laenge - 1)
+
+                        For i As Integer = 0 To laenge - 1
+                            xValues(i) = tmpRole.Xwerte(i)
+                            tmpRole.Xwerte(i) = 0
+                        Next
+
+                        If xValues.Sum > 0 Then
+                            ' now check and verify whether this is feasible with given capacity 
+                            tmpRole.Xwerte = ShowProjekte.adjustToCapacity(tmpRole.uid, tmpRole.teamID, False, xValues, xStartDate, tmpRole.Xwerte)
+
+                            ' now, if not all requested resource need is available 
+                            If tmpRole.Xwerte.Sum < xValues.Sum Then
+                                Dim addOn As Double = xValues.Sum - tmpRole.Xwerte.Sum
+                                Dim aggregationRole As clsRollenDefinition = RoleDefinitions.getAggregationRoleOf(tmpRole.uid)
+
+                                ' now check whether or not this role;skill summary role is already within phase
+                                Dim arNameID As String = RoleDefinitions.bestimmeRoleNameID(aggregationRole.UID, tmpRole.teamID)
+
+                                Dim pRole As clsRolle = New clsRolle(cPhase.relEnde - cPhase.relStart)
+                                With pRole
+                                    .uid = aggregationRole.UID
+                                    .teamID = tmpRole.teamID
+                                End With
+
+                                ' calculate a distribution of values over months, dependent of months and number days / per Months
+                                Dim vpSum() As Double
+                                ReDim vpSum(0)
+                                vpSum(0) = addOn
+
+                                Dim xpValues() As Double = cPhase.berechneBedarfeNew(xStartDate,
+                                                                                        xEndDate, vpSum, 1)
+
+                                xpValues = ShowProjekte.adjustToCapacity(aggregationRole.UID, tmpRole.teamID, True, xpValues, xStartDate, pRole.Xwerte)
+
+
+
+                                pRole.Xwerte = xpValues
+
+                                roleStack.Add(pRole)
+
+
+                            End If
+
+                        End If
+                    End If
+
+                Next
+
+                ' second wave: add additional summary roles 
+                For Each pRole As clsRolle In roleStack
+                    ' if it already exists, values are added to existing.. 
+                    cPhase.addRole(pRole)
+                Next
+
+                ' third wave_ consider all summary roles 
+                For Each tmpRole As clsRolle In cPhase.rollenListe
+
+                    Dim uid As Integer = tmpRole.uid
+                    If RoleDefinitions.getRoleDefByID(uid).isSummaryRole Then
+
+                        Dim oldValues As Double()
+                        Dim laenge As Integer = tmpRole.Xwerte.Length
+                        ReDim oldValues(laenge - 1)
+
+                        For i As Integer = 0 To laenge - 1
+                            oldValues(i) = tmpRole.Xwerte(i)
+                            tmpRole.Xwerte(i) = 0
+                        Next
+
+                        If oldValues.Sum > 0 Then
+                            ' now check and verify whether this is feasible with given capacity 
+                            tmpRole.Xwerte = ShowProjekte.adjustToCapacity(tmpRole.uid, tmpRole.teamID, True, oldValues, xStartDate, tmpRole.Xwerte)
+                        End If
+                    End If
+
+                Next
+
+            Next
+
+
+        Catch ex As Exception
+            errMsg = ex.Message
+        End Try
+
+
+    End Sub
+
+
+
+    ''' <summary>
     ''' does an automatic allocation of people for all summary Roles / Skills  
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <param name="variantName"></param>
     ''' <param name="errMsg"></param>
     Public Sub autoAllocate(ByVal pName As String, ByVal variantName As String,
-                            ByVal allowOvertime As Boolean, ByRef errMsg As String)
+                            ByVal allowOvertime As Boolean, ByRef errMsg As String,
+                            Optional ByVal suggestedIDs As SortedList(Of String, Double) = Nothing)
 
         Dim hproj As clsProjekt = Nothing
         Dim placeHolderNeeds As New SortedList(Of String, Double())
 
-        Dim projectScopeCandidates As SortedList(Of Double, Integer) = Nothing
 
-        ' 1. create a variant, if variantName is provided 
-        If variantName <> "" Then
-            Dim baseProject As clsProjekt = getProject(pName)
-            hproj = baseProject.createVariant(variantName, "created for auto-allocation")
-        Else
-            hproj = getProject(pName)
-        End If
+        Try
+            Dim projectScopeCandidates As SortedList(Of Double, Integer) = Nothing
 
-
-        ' get a list of summary roles used in hproj 
-        Dim placeholderIDs As SortedList(Of String, Double) = hproj.getPlaceholderRoles
-
-
-
-        ' now define freeAmount of capacity over the whole project scope ...
-        Dim projectPhase As clsPhase = hproj.getPhase(1)
-
-
-        ' now checkout the resource needs and available capacities
-        For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
-
-            Dim myCollection As New Collection From {
-                kvp.Key
-            }
-            Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
-
-            If Not placeHolderNeeds.ContainsKey(kvp.Key) Then
-                placeHolderNeeds.Add(kvp.Key, bedarf)
+            ' 1. create a variant, if variantName is provided 
+            If variantName <> "" Then
+                Dim baseProject As clsProjekt = getProject(pName)
+                If baseProject.variantName = variantName Then
+                    hproj = baseProject
+                Else
+                    hproj = baseProject.createVariant(variantName, "created for auto-allocation")
+                End If
             Else
-                ' kann eigentlich nicht sein ,,
-                Call MsgBox("unexpected Error 3522 cP")
+                hproj = getProject(pName)
             End If
 
-        Next
 
-        ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
-        ' for this just go over each phase 
-        For p = 1 To hproj.CountPhases
+            ' get a list of summary roles used in hproj 
+            Dim placeholderIDs As SortedList(Of String, Double) = hproj.getPlaceholderRoles
 
-            Dim cPhase As clsPhase = hproj.getPhase(p)
-            Dim phasePlaceHolderNeeds As SortedList(Of String, Double) = cPhase.getRoleNameIDsAndValues(onlySummaryRoles:=True)
 
-            ' who is already on the team ? 
-            Dim peopleIDs As SortedList(Of String, Double) = hproj.getPeople()
 
-            For Each phasePlaceHolder As KeyValuePair(Of String, Double) In phasePlaceHolderNeeds
+            ' now define freeAmount of capacity over the whole project scope ...
+            Dim projectPhase As clsPhase = hproj.getPhase(1)
 
-                Dim myCurrentSkillID As Integer = -1
-                Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
 
-                Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5, phasePlaceHolder.Value)
-                projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2, phasePlaceHolder.Value)
+            ' now checkout the resource needs and available capacities
+            For Each kvp As KeyValuePair(Of String, Double) In placeholderIDs
 
-                Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
+                Dim myCollection As New Collection From {
+                kvp.Key
+            }
+                Dim bedarf() As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False)
+
+                If Not placeHolderNeeds.ContainsKey(kvp.Key) Then
+                    placeHolderNeeds.Add(kvp.Key, bedarf)
+                Else
+                    ' kann eigentlich nicht sein ,,
+                    Call MsgBox("unexpected Error 3522 cP")
+                End If
+
+            Next
+
+            ' check whether or not 
+
+            ' now with resource Needs of placeHolders, possible candidates and defined priority people the Auto Allocation can be done ...
+            ' for this just go over each phase 
+            For p = 1 To hproj.CountPhases
+
+                Dim cPhase As clsPhase = hproj.getPhase(p)
+                Dim phasePlaceHolderNeeds As SortedList(Of String, Double) = cPhase.getRoleNameIDsAndValues(onlySummaryRoles:=True)
+
+                ' who is already on the team ? 
+                Dim peopleIDs As SortedList(Of String, Double) = hproj.getPeople()
+
+                If Not IsNothing(suggestedIDs) Then
+                    For Each kvp As KeyValuePair(Of String, Double) In suggestedIDs
+                        If Not peopleIDs.ContainsKey(kvp.Key) Then
+                            peopleIDs.Add(kvp.Key, kvp.Value)
+                        Else
+                            peopleIDs.Item(kvp.Key) = peopleIDs.Item(kvp.Key) + kvp.Value
+                        End If
+                    Next
+                End If
+
+                For Each phasePlaceHolder As KeyValuePair(Of String, Double) In phasePlaceHolderNeeds
+
+                    Dim myCurrentSkillID As Integer = -1
+                    Dim myCurrentRoleID As Integer = RoleDefinitions.parseRoleNameID(phasePlaceHolder.Key, myCurrentSkillID)
+
+                    Dim candidates As SortedList(Of Double, Integer) = cPhase.getCandidates(phasePlaceHolder.Key, 0.5, phasePlaceHolder.Value)
+                    projectScopeCandidates = projectPhase.getCandidates(phasePlaceHolder.Key, 2, phasePlaceHolder.Value)
+
+                    Dim bestCandidates As SortedList(Of Double, Integer) = calcBestCandidates(peopleIDs,
                                                                                           myCurrentSkillID,
                                                                                             candidates,
                                                                                             projectScopeCandidates,
                                                                                             phasePlaceHolder.Value)
 
-                ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
-                For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
-                    Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
-                    Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, allowOvertime, substitution.Key)
-                    If Not ok Then
-                        Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
-                        Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
-                    End If
+                    ' now best candidates do replace the placeHolder Role with the required Value , may Contain one or more items
+                    For Each substitution As KeyValuePair(Of Double, Integer) In bestCandidates
+                        Dim newNameID As String = RoleDefinitions.bestimmeRoleNameID(substitution.Value, myCurrentSkillID)
+                        Dim ok As Boolean = cPhase.substituteRole(phasePlaceHolder.Key, newNameID, allowOvertime, substitution.Key)
+                        If Not ok Then
+                            Dim msgTxt As String = phasePlaceHolder.Key & " -> " & newNameID
+                            Call logger(errLevel:=ptErrLevel.logWarning, addOn:="Auto-Allocation: Substitution failed", strLog:=msgTxt)
+                        End If
+                    Next
+
                 Next
 
             Next
 
-        Next
+            ' now eliminate all empty summary roles 
+            Call hproj.eliminateEmptyRoles()
 
-        ' ok, Done ! 
+            ' ok, Done ! 
+        Catch ex As Exception
+            errMsg = ex.Message
+        End Try
+
 
     End Sub
+
 
 
 

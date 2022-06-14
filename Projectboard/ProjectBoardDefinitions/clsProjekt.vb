@@ -137,29 +137,25 @@ Public Class clsProjekt
             movable = _movable
         End Get
         Set(value As Boolean)
-            If value = True Then
-                'If _Status = ProjektStatus(PTProjektStati.geplant) Or
-                '_Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
-                '(_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
-                'value = False Then
-                If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
-                (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Or
-                value = False Then
-                    _movable = value
+            If Not IsNothing(value) Then
+                If value = True Then
+                    If Not hasActualValues Then
+                        If _vpStatus = VProjectStatus(PTVPStati.initialized) Or _vpStatus = VProjectStatus(PTVPStati.proposed) Or
+                            (_vpStatus = VProjectStatus(PTVPStati.ordered) And _variantName <> "") Then
+                            _movable = True
+                        Else
+                            _movable = False
+                        End If
+                    Else
+                        _movable = False
+                    End If
+
 
                 Else
-                    Dim errmsg As String
-                    If awinSettings.englishLanguage Then
-                        errmsg = "project status does not allow movement!"
-                    Else
-                        errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
-                    End If
-                    Throw New ArgumentException(errmsg)
+                    _movable = False
                 End If
-
-            Else
-                _movable = value
             End If
+
 
         End Set
     End Property
@@ -2002,6 +1998,133 @@ Public Class clsProjekt
         End Get
     End Property
 
+    Public Function getPhasenDetailBedarf(ByVal phaseName As String, ByVal breadCrumb As String) As Double(,)
+
+        Dim result As Double(,)
+        ReDim result(_Dauer - 1, 31)
+        Dim a As Integer = dauerInDays
+
+        Dim daysPMonth(12) As Integer
+
+        daysPMonth(0) = 31
+        daysPMonth(1) = 31
+        daysPMonth(2) = 28
+        daysPMonth(3) = 31
+        daysPMonth(4) = 30
+        daysPMonth(5) = 31
+        daysPMonth(6) = 30
+        daysPMonth(7) = 31
+        daysPMonth(8) = 31
+        daysPMonth(9) = 30
+        daysPMonth(10) = 31
+        daysPMonth(11) = 30
+        daysPMonth(12) = 31
+
+
+        Dim anzPhasen As Integer
+        Dim i As Integer, p As Integer
+        Dim phase As clsPhase
+        Dim phaseStart As Date, phaseEnd As Date
+        'Dim numberOfDays As Integer
+
+
+        If _Dauer > 0 Then
+
+
+
+            anzPhasen = AllPhases.Count
+            If anzPhasen > 0 Then
+
+                Dim phaseIndices() As Integer = hierarchy.getPhaseIndices(phaseName, breadCrumb)
+
+                For px As Integer = 0 To phaseIndices.Length - 1
+
+                    If phaseIndices(px) > 0 And phaseIndices(px) <= CountPhases Then
+                        phase = getPhase(phaseIndices(px))
+                    Else
+                        phase = Nothing
+                    End If
+
+
+                    If Not IsNothing(phase) Then
+
+                        phaseStart = phase.getStartDate
+                        phaseEnd = phase.getEndDate
+
+                        Try
+                            With phase
+
+                                If .relEnde = .relStart Then
+                                    For dx As Integer = phaseStart.Day To phaseEnd.Day
+                                        result(.relStart - 1, dx) = result(.relStart - 1, dx) + 1
+                                    Next
+
+                                Else
+                                    ' Phase covers at least two or more months
+                                    For i = 0 To .relEnde - .relStart
+
+                                        If i = 0 Then
+                                            ' in dem Monat wo die Phase beginnt 
+                                            Try
+                                                For dx As Integer = phaseStart.Day To daysPMonth(phaseStart.Month)
+                                                    result(.relStart - 1 + i, dx) = result(.relStart - 1 + i, dx) + 1
+                                                Next
+                                            Catch ex As Exception
+                                                Dim xx As Integer = 0
+                                            End Try
+
+
+                                        ElseIf i = .relEnde - .relStart Then
+                                            ' in dem Monat, wo die Phase endet 
+                                            Try
+                                                For dx As Integer = 1 To phaseEnd.Day
+                                                    result(.relStart - 1 + i, dx) = result(.relStart - 1 + i, dx) + 1
+                                                Next
+                                            Catch ex As Exception
+                                                Dim xx As Integer = 0
+                                            End Try
+
+
+                                        Else
+                                            ' in einem Monat , der vollstätnig von der Phase überdeckt ist 
+                                            Dim endIX As Integer = daysPMonth(startDate.AddMonths(.relStart - 1 + i).Month)
+                                            Try
+                                                For dx As Integer = 1 To endIX
+                                                    result(.relStart - 1 + i, dx) = result(.relStart - 1 + i, dx) + 1
+                                                Next
+                                            Catch ex As Exception
+                                                Dim xx As Integer = 0
+                                            End Try
+
+                                        End If
+
+
+                                    Next
+                                End If
+                            End With
+                        Catch ex As Exception
+                            Dim sev As Integer = 2
+                        End Try
+
+
+                    End If
+
+
+                Next
+
+
+            Else
+                Throw New ArgumentException("Project has no phases")
+            End If
+
+        Else
+            Throw New ArgumentException("Project has no duration")
+
+        End If
+
+        getPhasenDetailBedarf = result
+
+    End Function
     ''' <summary>
     ''' diese Routine berücksichtigt, wieviel von der phase im Start- bzw End Monat liegt; 
     ''' es wird für Start und Ende Monat nicht automatisch 1 gesetzt, sondern ein anteiliger Wert, der sich daran bemisst, 
@@ -2265,9 +2388,8 @@ Public Class clsProjekt
             Dim differenzInTagen As Integer = CInt(DateDiff(DateInterval.Day, olddate, value))
             Dim updatePhases As Boolean = False
 
-            ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
-            ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-            If (differenzInTagen <> 0 And Me.movable) And (_vpStatus = VProjectStatus(PTVPStati.initialized) Or _variantName <> "") Then
+            'If (differenzInTagen <> 0 And Me.movable) And (_vpStatus = VProjectStatus(PTVPStati.initialized) Or _variantName <> "") Then
+            If (differenzInTagen <> 0 And Me.movable) Then
                 'ur:211202: If (differenzInTagen <> 0 And Me.movable) And  (_Status = ProjektStatus(0) Or _variantName <> "") Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
@@ -2282,7 +2404,7 @@ Public Class clsProjekt
 
 
                 'ur: 211202ElseIf _Status <> ProjektStatus(0) And _variantName = "" And Not Me.movable Then
-            ElseIf _vpStatus <> vprojectStatus(PTVPStati.initialized) And _variantName = "" And Not Me.movable Then
+            ElseIf (_vpStatus <> VProjectStatus(PTVPStati.initialized) Or _vpStatus <> VProjectStatus(PTVPStati.proposed)) And _variantName = "" And Not Me.movable Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
 
 
@@ -3598,6 +3720,177 @@ Public Class clsProjekt
 
 
         ensureStableIDs = newproj
+    End Function
+
+    ''' <summary>
+    ''' deletes all empty roles within a given project 
+    ''' empty role is a role where all resource needs sum up to 0 
+    ''' </summary>
+    Public Sub eliminateEmptyRoles()
+        Dim deleteRoleNameIDS As New Collection
+
+        For Each phase As clsPhase In AllPhases
+
+            For Each tmpRole As clsRolle In phase.rollenListe
+
+                If tmpRole.Xwerte.Sum = 0 Then
+                    Try
+                        deleteRoleNameIDS.Add(RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID))
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Next
+
+            ' now eliminate
+            For Each roleNameID As String In deleteRoleNameIDS
+                Try
+                    phase.removeRoleByNameID(roleNameID)
+                Catch ex As Exception
+
+                End Try
+            Next
+
+
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' create hedgedVersion
+    ''' </summary>
+    ''' <param name="hedgeFactor"></param>
+    Private Sub hedgeValues(ByVal hedgeFactor As Double)
+
+        If hedgeFactor > 0 And hedgeFactor < 1.0 Then
+
+            For Each phase As clsPhase In AllPhases
+
+                For Each tmpRole As clsRolle In phase.rollenListe
+
+                    If tmpRole.Xwerte.Sum > 0 Then
+                        Try
+                            Dim length As Integer = tmpRole.Xwerte.Length
+
+                            For i As Integer = 0 To length - 1
+                                tmpRole.Xwerte(i) = tmpRole.Xwerte(i) * hedgeFactor
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+                Next
+
+                For Each tmpCost As clsKostenart In phase.kostenListe
+
+                    If tmpCost.Xwerte.Sum > 0 Then
+                        Try
+                            Dim length As Integer = tmpCost.Xwerte.Length
+
+                            For i As Integer = 0 To length - 1
+                                tmpCost.Xwerte(i) = tmpCost.Xwerte(i) * hedgeFactor
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+                Next
+
+                ' now handle invoices and penalties of milestones
+                For Each ms As clsMeilenstein In phase.meilensteinListe
+                    Try
+                        If Not IsNothing(ms.invoice) Then
+                            If ms.invoice.Key > 0 Then
+                                Dim hedgedValue As Double = ms.invoice.Key * hedgeFactor
+                                Dim zahlungsziel As Integer = ms.invoice.Value
+
+                                ms.invoice = New KeyValuePair(Of Double, Integer)(hedgedValue, zahlungsziel)
+
+                            End If
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        If Not IsNothing(ms.penalty) Then
+                            If ms.penalty.Value > 0 Then
+                                Dim hedgedValue As Double = ms.penalty.Value * hedgeFactor
+                                Dim penaltyDate As Date = ms.penalty.Key
+
+                                ms.penalty = New KeyValuePair(Of Date, Double)(penaltyDate, hedgedValue)
+                            End If
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+                Next
+
+                ' now handle invoices and penalties of phase
+                Try
+                    If Not IsNothing(phase.invoice) Then
+                        If phase.invoice.Key > 0 Then
+                            Dim hedgedValue As Double = phase.invoice.Key * hedgeFactor
+                            Dim zahlungsziel As Integer = phase.invoice.Value
+
+                            phase.invoice = New KeyValuePair(Of Double, Integer)(hedgedValue, zahlungsziel)
+
+                        End If
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    If Not IsNothing(phase.penalty) Then
+                        If phase.penalty.Value > 0 Then
+                            Dim hedgedValue As Double = phase.penalty.Value * hedgeFactor
+                            Dim penaltyDate As Date = phase.penalty.Key
+
+                            phase.penalty = New KeyValuePair(Of Date, Double)(penaltyDate, hedgedValue)
+                        End If
+
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+            Next
+
+        End If
+
+    End Sub
+
+
+    ''' <summary>
+    ''' creates a hedged Variant according probability rate
+    ''' </summary>
+    ''' <param name="hedgeFactor"></param>
+    ''' <returns></returns>
+    Public Function createHedgedVariant(ByVal hedgeFactor As Double) As clsProjekt
+
+        Dim newproj As clsProjekt = Nothing
+
+        If Not hasActualValues And hedgeFactor > 0 And hedgeFactor <= 1.0 Then
+
+            Dim variantText As String = "Probability-Rated: " & hedgeFactor.ToString("P")
+
+            newproj = Me.createVariant("hedged", variantText)
+            Call newproj.hedgeValues(hedgeFactor)
+
+        End If
+
+        createHedgedVariant = newproj
+
     End Function
 
 
@@ -7974,6 +8267,8 @@ Public Class clsProjekt
         '_relStart = 1
         _leadPerson = ""
 
+        _movable = False
+
         _StartOffset = 0
         _Start = 0
         _startDate = NullDatum
@@ -8016,6 +8311,8 @@ Public Class clsProjekt
 
         _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, startDatum) + 1)
         _startDate = startDatum
+
+        _movable = False
 
         AllPhases = New List(Of clsPhase)
         Dim cphase As New clsPhase(parent:=Me)
@@ -8079,6 +8376,8 @@ Public Class clsProjekt
         '_relStart = 1
         _leadPerson = ""
 
+        _movable = False
+
         _StartOffset = 0
 
         _Start = projektStart
@@ -8118,6 +8417,8 @@ Public Class clsProjekt
         extendedView = False
         '_relStart = 1
         _leadPerson = ""
+
+        _movable = False
 
         _StartOffset = 0
 

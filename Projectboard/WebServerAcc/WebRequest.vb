@@ -2535,15 +2535,17 @@ Public Class Request
                 cVP = GETvpid(cName, err, ptPRPFType.portfolio)
                 If Not IsNothing(cVP) Then
 
-                    If cVP.Variant.Count = 1 And
-                        cVP.Variant.Item(0).variantName = ptVariantFixNames.pfv.ToString Then
-                        ' do nothing
-                    ElseIf cVP.Variant.Count = 0 Then
+                    If cVP.Variant.Count = 0 Then
                         'do nothing
                     Else
-                        err.errorCode = 0
+                        If cVP.Variant.Item(0).variantName = ptVariantFixNames.pfv.ToString Then
+                            ' do nothing
+                        Else
+                            err.errorCode = 0
                         err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
-                        Return result
+                            Return result
+                        End If
+
                     End If
                 End If
             End If

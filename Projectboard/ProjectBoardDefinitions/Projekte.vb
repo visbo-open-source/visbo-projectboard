@@ -14113,6 +14113,7 @@ Public Module Projekte
                 '.getPhase(1).name = pname
                 .getPhase(1).nameID = rootPhaseName
                 .VorlagenName = vorlagenName
+                .movable = True ' to be able to change startDate
                 .startDate = startdate
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
@@ -14389,6 +14390,24 @@ Public Module Projekte
                 If awinSettings.visboDebug Then
                     Call MsgBox("Fehler in Projekt anlegen, Name: " & newprojekt.name)
                 End If
+
+            End Try
+
+        ElseIf erloes > 0 Then
+            ' wenn es einen Meilenstein am Ende gibt, der Invoice heisst: dort anhängen und den Betrag des Erloeses ranhängen
+            Try
+                If newprojekt.getInvoicesPenalties.Sum = 0 Then
+                    Dim myInvoiceMilestone As clsMeilenstein = newprojekt.getMilestone("Invoice")
+                    If Not IsNothing(myInvoiceMilestone) Then
+                        If DateDiff(DateInterval.Day, myInvoiceMilestone.getDate, newprojekt.endeDate) <= 0 Then
+                            myInvoiceMilestone.invoice = New KeyValuePair(Of Double, Integer)(erloes, 0)
+                            If DateDiff(DateInterval.Day, myInvoiceMilestone.getDate, newprojekt.endeDate) < 0 Then
+                                myInvoiceMilestone.setDate = newprojekt.endeDate
+                            End If
+                        End If
+                    End If
+                End If
+            Catch ex As Exception
 
             End Try
 
@@ -21366,12 +21385,13 @@ Public Module Projekte
 
                         'ur: 211202: If .Status = ProjektStatus(PTProjektStati.geplant) Or
                         '                   status = ProjektStatus(PTProjektStati.abgebrochen) Then
-                        If status = VProjectStatus(PTVPStati.initialized) Or
-                            status = VProjectStatus(PTVPStati.stopped) Then
-                            .DashStyle = core.MsoLineDashStyle.msoLineDash
-                        Else
-                            .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                        End If
+                        ' old stuff
+                        'If status = VProjectStatus(PTVPStati.initialized) Or
+                        '    status = VProjectStatus(PTVPStati.stopped) Then
+                        '    .DashStyle = core.MsoLineDashStyle.msoLineDash
+                        'Else
+                        '    .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                        'End If
 
                         ' ur: 20210915 neue Property für Status bestimmt die Darstellung eines Projektes
                         If Not IsNothing(vpStatus) Then
@@ -28266,29 +28286,36 @@ Public Module Projekte
             ' make sure things can be moved ...
             hproj.movable = True
 
-            Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
-            Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate.Date, newEndDate.Date) + 1
+            ' only if setting to movable was sucessful
+            If hproj.movable Then
+                Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+                Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate.Date, newEndDate.Date) + 1
 
-            Dim cphase As clsPhase = hproj.getPhase(1)
+                Dim cphase As clsPhase = hproj.getPhase(1)
 
-            Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
-            hproj.startDate = newStartDate.Date.AddHours(8)
+                Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+                hproj.startDate = newStartDate.Date.AddHours(8)
 
-            If diffDays <> 0 Then
-                ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
-                ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
-                ' 
-                Call hproj.syncXWertePhases()
+                If diffDays <> 0 Then
+                    ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
+                    ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
+                    ' 
+                    Call hproj.syncXWertePhases()
+                End If
+
+                newOffsetInTagen = 0
+
+                cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, True)
+
+                resultingProject = hproj
             End If
 
-            newOffsetInTagen = 0
-
-            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, True)
-
-            resultingProject = hproj
         Catch ex As Exception
 
         End Try
+
+        ' to make sure there is a correct duration in months ... 
+        Dim a As Integer = resultingProject.dauerInDays
 
         moveProject = resultingProject
     End Function

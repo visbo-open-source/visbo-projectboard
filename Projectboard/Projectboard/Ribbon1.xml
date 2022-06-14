@@ -80,7 +80,7 @@
             <menu id="PT4G1M" imageMso="Import" size ="large" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
               <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="Organisation"-->
-                <!--<button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>-->
+                <button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
                 <!--label="Kapazitäten"-->
                 <button id="PT4G1B13" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportKapas" supertip ="Es werden die Kapazitätsdateien für interne / externe Mitarbeiter eingelesen"/>
                 <!--label="Custom User Roles"-->
@@ -99,7 +99,7 @@
               <button id="PT4G1B14" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportOfflineData" supertip ="Es werden offline editierte Ressourcenbedarfe eingelesen"/>-->
               <menu id="PT4G1M1-2" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="VISBO-Steckbriefe"-->
-                <!--<button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>-->
+                <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
                 <!--label ="VISBO Open XML-->
                 <!--<button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>-->
                 <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
@@ -391,7 +391,7 @@
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
           <!--<separator id="PT0G1s9" getVisible="chckVisibility" />-->
           <!--label="Optimieren"-->
-          <!--<button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>-->
+          <button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>
           <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
           <!--<separator id="PT0G1s8"/>-->
           <!--- Cockpit--><!--

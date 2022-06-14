@@ -388,7 +388,9 @@ Public Class clsCommandBarEvents
                                 projectboardShapes.sync(shpelement, selCollection)
 
                                 'ur: 211202: If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or (hproj.variantName <> "" And hproj.movable) Then
-                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or (hproj.variantName <> "" And hproj.movable) Then
+                                If hproj.vpStatus = VProjectStatus(PTVPStati.initialized) Or
+                                    hproj.vpStatus = VProjectStatus(PTVPStati.proposed) Or
+                                    (hproj.variantName <> "" And hproj.movable) Then
                                     ' Charts müssen aktualisiert werden 
                                     updateKennung = 2
                                     ChartsNeedUpdate = True

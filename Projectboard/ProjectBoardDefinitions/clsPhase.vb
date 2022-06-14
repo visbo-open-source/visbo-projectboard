@@ -3535,7 +3535,14 @@ Public Class clsPhase
                 End If
 
                 ' korrigiert den Offset der Meilensteine 
-                newresult.offset = CLng(System.Math.Round(CLng(Me.getMilestone(r).offset * corrFactor)))
+                If Me.getMilestone(r).offset = _dauerInDays - 1 Then
+                    ' verhindert, dass Meilenstein durch Rundungsfehler über das Ende der Phase hinaus geht ..
+                    newresult.offset = CLng(System.Math.Truncate(CLng(Me.getMilestone(r).offset * corrFactor)))
+                Else
+                    ' stellt sicher dass das neue Meilenstein-Datum möglichst exakt gemäß Skalierung getroffen wird
+                    newresult.offset = CLng(System.Math.Round(CLng(Me.getMilestone(r).offset * corrFactor)))
+                End If
+
 
                 Try
                     .addMilestone(newresult)

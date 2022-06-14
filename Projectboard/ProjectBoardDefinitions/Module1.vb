@@ -588,6 +588,7 @@ Public Module Module1
         personentage = 0
         euro = 1
         hrs = 2
+        anzahl = 3
     End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 
@@ -1002,10 +1003,23 @@ Public Module Module1
         ' visbo Find Project Starts
         visboFindProjectStart = 20
 
+        ' find feasible Portfolio
+        visboFindfeasiblePortfolio = 21
+
         ' represents the Automatic Team Allocation
-        'visboSuggestResourceAllocation = 
+        visboSuggestResourceAllocation = 22
 
+        ' represent the setitngs 
+        visboJsonSetting = 23
 
+        ' represents the Auto-Distribution
+        visboAutoAdjust = 24
+
+        ' create hedged variants 
+        visboCreateHedgedVariant = 25
+
+        ' visbo Find Project Starts with regard of frequency Phases, milestones
+        visboFindProjectStartPM = 26
 
     End Enum
 

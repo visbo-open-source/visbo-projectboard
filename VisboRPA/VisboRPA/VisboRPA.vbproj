@@ -71,7 +71,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>D0CB1D27181AA568ECDF28E0BB6A494C2358558D</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -138,6 +138,9 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsJobParameters.vb" />
+    <Compile Include="clsPortfolioDefinitions.vb" />
+    <Compile Include="clsRankingParameters.vb" />
     <Compile Include="clsRPASetting.vb" />
     <Compile Include="VisboRPAStart.Designer.vb">
       <DependentUpon>VisboRPAStart.vb</DependentUpon>

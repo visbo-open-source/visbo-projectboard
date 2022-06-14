@@ -524,6 +524,16 @@ Public Module agm4
         enableOnUpdate = True
     End Sub
 
+    ''' <summary>
+    ''' imports resp updates a project according resource / cost information 
+    ''' in import file there may be 
+    ''' </summary>
+    ''' <param name="workbook"></param>
+    ''' <param name="configFile"></param>
+    Public Sub ImportStdProposalUpdate(ByVal workbook As Excel.Workbook,
+                                       ByVal configFile As Excel.Workbook)
+
+    End Sub
 
 
 End Module

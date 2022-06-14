@@ -470,6 +470,34 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' returns appropriate aggregation-role for given roleID 
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getAggregationRoleOf(ByVal roleID As Integer) As clsRollenDefinition
+        Get
+
+            Dim result As clsRollenDefinition = getRoledef(getDefaultTopNodeName())
+
+            Dim myRole As clsRollenDefinition = getRoleDefByID(roleID)
+            Dim parentArray() As Integer = getParentArray(myRole)
+            Dim aggregationRoles As SortedList(Of Integer, String) = getAggregationRoles()
+            Dim found As Boolean = False
+
+            For Each uid As Integer In parentArray
+                found = aggregationRoles.ContainsKey(uid)
+                If found Then
+                    result = getRoleDefByID(uid)
+                    Exit For
+                End If
+            Next
+
+            getAggregationRoleOf = result
+        End Get
+    End Property
+
+
 
     ''' <summary>
     ''' gibt die Rolle aus der hierarchischen Organisation zurück, die alle Team-Members der teamID  enthält 
@@ -2057,6 +2085,8 @@ Public Class clsRollen
                             ' ist die RoleUID auch Kind des Teams ? 
                             If getRoleDefByID(teamID).getSubRoleIDs.ContainsKey(roleUID) Then
                                 tmpResult = True
+                            Else
+                                tmpResult = getRoleDefByID(roleUID).isCombinedRole
                             End If
                         End If
 

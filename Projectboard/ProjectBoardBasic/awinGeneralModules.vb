@@ -4053,25 +4053,27 @@ Public Module awinGeneralModules
         Else
             ' jetzt muss ggf das Summary Projekt zur Constellation erzeugt und gespeichert werden
             Try
+                ' tk 16.4.2022 Summary Projekte sollen nicht mehr geschrieben werden 
+                ' jedenfalls solnage nicht bis Baselines für Portfolios editiert werden sollen 
                 ' das Summary Project muss auf Basis der geladenen Projekte erstellt werden 
-                Dim budget As Double = -1.0
-                Dim calculateAndStoreSummaryProjekt As Boolean = False
-                Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
-                ' TODO: currentConstellation.variantName berücksichtigen
-                Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
+                'Dim budget As Double = -1.0
+                'Dim calculateAndStoreSummaryProjekt As Boolean = False
+                'Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
+                '' TODO: currentConstellation.variantName berücksichtigen
+                'Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
 
-                'Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
+                ''Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
-                ' das Portfolio Projekt
-                ' tk 5.2.20 das sollte immer (!) neu berechnet werden, schließlich haben sich ja di eProjekte geändert 
-                ' und wenn das alles identisch ist, dann wird das durch die spätere Überprüfung rausgefunden ... 
-                'calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
-                If currentConstellation.variantName = "" Then
-                    ' tk do not create and store summary projects in Cloud  
-                    calculateAndStoreSummaryProjekt = False
-                Else
-                    calculateAndStoreSummaryProjekt = False
-                End If
+                '' das Portfolio Projekt
+                '' tk 5.2.20 das sollte immer (!) neu berechnet werden, schließlich haben sich ja di eProjekte geändert 
+                '' und wenn das alles identisch ist, dann wird das durch die spätere Überprüfung rausgefunden ... 
+                ''calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
+                'If currentConstellation.variantName = "" Then
+                '    ' tk do not create and store summary projects in Cloud  
+                '    calculateAndStoreSummaryProjekt = False
+                'Else
+                '    calculateAndStoreSummaryProjekt = False
+                'End If
 
                 'Dim sproj As clsProjekt = Nothing
 

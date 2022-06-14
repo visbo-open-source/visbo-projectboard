@@ -7343,10 +7343,6 @@ Public Class Ribbon1
                     listOfArchivFiles.Add(dateiname)
                 End If
 
-                ' Schließen des LogFiles
-                ''Call logfileSchliessen()
-
-                ' ImportDatei ins archive-Directory schieben
 
                 If listOfArchivFiles.Count > 0 Then
                     Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.actualData))
