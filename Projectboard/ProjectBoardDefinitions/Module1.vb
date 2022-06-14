@@ -9039,17 +9039,21 @@ Public Module Module1
 
         If tmpMsgCollection.Count > 0 Then
             Call showOutPut(tmpMsgCollection, "Warnings:", "next step you may either cancel or continue")
-            If MsgBox("Continue and Ignore Warnings?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-                ' nichts tun .."
-                result = True
+            If Not visboClient.Contains("RPA") Then
+                If MsgBox("Continue and Ignore Warnings?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                    ' nichts tun .."
+                    result = True
+                Else
+                    result = False
+                    Call logger(ptErrLevel.logWarning, "Check Role Assignments to People", tmpMsgCollection)
+                    Dim msgTxt As String = "RoleAssignments need to be checked ... exited on user demand!"
+                    outputCollection.Add(msgTxt)
+                End If
             Else
-                result = False
-                Call logger(ptErrLevel.logWarning, "Check Role Assignments to People", tmpMsgCollection)
-                Dim msgTxt As String = "RoleAssignments need to be checked ... exited on user demand!"
-                outputCollection.Add(msgTxt)
+                result = True
             End If
-        End If
 
+        End If
 
         checkOnePersonOneRole = result
 

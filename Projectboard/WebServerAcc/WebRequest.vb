@@ -8797,7 +8797,7 @@ Public Class Request
             End Select
 
             webAntwortMsg = errcode & ": Fehler in " & restCall & " : " & webAntwortMsg
-            Call logger(ptErrLevel.logError, "errorHandling_withBreak", msgTxt)
+            'Call logger(ptErrLevel.logError, "errorHandling_withBreak", webAntwortMsg)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

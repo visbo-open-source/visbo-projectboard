@@ -338,16 +338,16 @@ Module rpaModule1
                     Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
-                    allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
-                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet of Instart", " not yet integrated !")
+                    'allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet Telair", " not yet integrated !")
+                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboZeussCapacity)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities Telair", " not yet integrated !")
+                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboFindfeasiblePortfolio)
 
@@ -756,9 +756,20 @@ Module rpaModule1
                         Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
                         'Console.WriteLine("project stored: " & kvp.Value.getShapeText)
                     Else
-                        ok = ok And False
-                        Call logger(ptErrLevel.logError, "project store failed: ", outputCollection)
-                        'Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+
+                        Call logger(ptErrLevel.logWarning, "baseline couldn't be created: ", outputCollection)
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+
+                        If storeSingleProjectToDB(kvp.Value, outputCollection) Then
+                            ok = ok And True
+                            Call logger(ptErrLevel.logInfo, "project stored: ", kvp.Value.getShapeText)
+                            Console.WriteLine("project stored: " & kvp.Value.getShapeText)
+                        Else
+                            ok = ok And False
+                            Call logger(ptErrLevel.logError, "project store failed: ", outputCollection)
+                            Console.WriteLine("!! ... project store failed: " & kvp.Value.getShapeText)
+                        End If
+
                     End If
 
                 Else
@@ -2470,7 +2481,7 @@ Module rpaModule1
         End Try
 
         If verifiedStructure Then
-            result = PTRpa.visboProposal
+            result = PTRpa.visboInstartProposal
         Else
             result = PTRpa.visboUnknown
         End If
