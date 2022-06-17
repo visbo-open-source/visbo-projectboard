@@ -528,14 +528,18 @@ Public Module agm4
     ''' reading the VCSetting "customization" if stored in the actual VC
     ''' </summary>
     ''' <returns></returns>
-    Public Function readCustomizations() As Date
+    Public Function readCustomizations(Optional ByVal customizations As clsCustomization = Nothing) As Date
 
         Dim result As Date = Date.MinValue
         Dim err As New clsErrorCodeMsg
         Dim msgTxt As String
-        '
-        ' Read Customizations 
-        Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+
+        If IsNothing(customizations) Then
+            '
+            ' Read Customizations 
+            customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+        End If
+
 
         If Not IsNothing(customizations) Then
 
@@ -597,6 +601,9 @@ Public Module agm4
             awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
             awinSettings.propAnpassRess = customizations.propAnpassRess
             awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+            awinSettings.enableInvoices = customizations.enableInvoices
+            awinSettings.noNewCalculation = customizations.noNewCalculation
 
             awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
             awinSettings.fullProtocol = customizations.fullProtocol

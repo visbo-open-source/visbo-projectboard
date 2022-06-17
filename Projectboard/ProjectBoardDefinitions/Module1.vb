@@ -8168,48 +8168,55 @@ Public Module Module1
                 End If
 
             Case PTwindows.massEdit
+                Dim visboClientTxt As String = visboClient
+
+                If visboClient.Contains("VISBO SPE") Then
+                    visboClientTxt = "VISBO Project Edit / "
+                End If
+
                 If visboClient.Contains("VISBO SPE") And ShowProjekte.Count = 1 Then
+
                     Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
                     Dim printProjName As String = hproj.name & "/" & hproj.variantName
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then
-                                tmpResult = visboClient & "Modify Resource and Cost Needs: " & printProjName
+                                tmpResult = visboClientTxt & "Modify Resource and Cost Needs: " & printProjName
                             Else
-                                tmpResult = visboClient & "Personal- und Kostenbedarfe ändern: " & printProjName
+                                tmpResult = visboClientTxt & "Personal- und Kostenbedarfe ändern: " & printProjName
                             End If
                         Case ptTables.meTE
                             If awinSettings.englishLanguage Then
-                                tmpResult = visboClient & "Modify Tasks and Milestones: " & printProjName
+                                tmpResult = visboClientTxt & "Modify Tasks and Milestones: " & printProjName
                             Else
-                                tmpResult = visboClient & "Meilensteine und Vorgänge ändern: " & printProjName
+                                tmpResult = visboClientTxt & "Meilensteine und Vorgänge ändern: " & printProjName
                             End If
                         Case ptTables.meAT
                             If awinSettings.englishLanguage Then
-                                tmpResult = visboClient & "Modify Attributes: " & printProjName
+                                tmpResult = visboClientTxt & "Modify Attributes: " & printProjName
                             Else
-                                tmpResult = visboClient & "Attribute ändern: " & printProjName
+                                tmpResult = visboClientTxt & "Attribute ändern: " & printProjName
                             End If
                     End Select
                 Else
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then
-                                tmpResult = visboClient & "Modify Resource and Cost Needs"
+                                tmpResult = visboClientTxt & "Modify Resource and Cost Needs"
                             Else
-                                tmpResult = visboClient & "Personal- und Kostenbedarfe ändern"
+                                tmpResult = visboClientTxt & "Personal- und Kostenbedarfe ändern"
                             End If
                         Case ptTables.meTE
                             If awinSettings.englishLanguage Then
-                                tmpResult = visboClient & "Modify Tasks and Milestones"
+                                tmpResult = visboClientTxt & "Modify Tasks and Milestones"
                             Else
-                                tmpResult = visboClient & "Meilensteine und Vorgänge ändern"
+                                tmpResult = visboClientTxt & "Meilensteine und Vorgänge ändern"
                             End If
                         Case ptTables.meAT
                             If awinSettings.englishLanguage Then
-                                tmpResult = visboClient & "Modify Attributes"
+                                tmpResult = visboClientTxt & "Modify Attributes"
                             Else
-                                tmpResult = visboClient & "Attribute ändern"
+                                tmpResult = visboClientTxt & "Attribute ändern"
                             End If
                     End Select
                 End If

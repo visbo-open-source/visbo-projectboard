@@ -3957,6 +3957,7 @@ Public Class Request
 
 
         Catch ex As Exception
+            result = Nothing
             Throw New ArgumentException(ex.Message)
         End Try
         retrieveCustomizationFromDB = result

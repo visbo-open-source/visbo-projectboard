@@ -58,6 +58,14 @@
     Private _showValuesOfSelected As Boolean = False
 
 
+    ' gibt an, ob bei einem Verlängern/Verkürzen einer Phase die Ressourcen und Cost Bedarfe 
+    ' automatisch neuberechnet werden 
+    Private _noNewCalculation As Boolean = False
+    ' gibt an, ob Rechnungen eingegeben werden können
+    ' wird im Formular Settings interaktiv gesetzt, oder besser über customization-Settings
+    Private _enableInvoices As Boolean = False
+
+
     ' gibt es die Einstellung für ProjectWithNoMPmayPass
     Private _mppProjectsWithNoMPmayPass As Boolean
 
@@ -566,6 +574,30 @@
         End Set
     End Property
 
+    ' Vorbesetzung hier = false
+    Public Property noNewCalculation As Boolean
+        Get
+            noNewCalculation = _noNewCalculation
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _noNewCalculation = value
+            End If
+        End Set
+    End Property
+
+
+    ' Vorbesetzung hier = false
+    Public Property enableInvoices As Boolean
+        Get
+            enableInvoices = _enableInvoices
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _enableInvoices = value
+            End If
+        End Set
+    End Property
 
 
     ' gibt es die Einstellung für ProjectWithNoMPmayPass
@@ -828,6 +860,9 @@
         autoCorrectBedarfe = True
         propAnpassRess = False
         showValuesOfSelected = False
+
+        noNewCalculation = False
+        enableInvoices = False
 
 
         ' gibt es die Einstellung für ProjectWithNoMPmayPass
