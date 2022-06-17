@@ -214,7 +214,7 @@ Module VISBO_SPE_Utilities
                 Else
                     ' no valid Login
                     Call logger(ptErrLevel.logInfo, "Load of Formular", "No valid Login ... ")
-                    'Throw New ArgumentException("No valid Login")
+                    Throw New ArgumentException("No valid Login")
                 End If
 
                 If Not loginErfolgreich Then
@@ -328,7 +328,7 @@ Module VISBO_SPE_Utilities
 
             End If
 
-            '??? Throw New ArgumentException(msg)
+            Throw New ArgumentException(msg)
 
         End Try
 
@@ -733,6 +733,9 @@ Module VISBO_SPE_Utilities
                         CType(.Cells(1, 14), Excel.Range).Value = "Term of payment"
                         CType(.Cells(1, 15), Excel.Range).Value = "Penalty Value"
                         CType(.Cells(1, 16), Excel.Range).Value = "Penalty Date"
+                    Else
+                        Dim invoicesBlock As Excel.Range = CType(.Range(.Cells(1, 13), .Cells(1, 16)), Excel.Range)
+                        invoicesBlock.Clear()
                     End If
 
 
@@ -755,6 +758,9 @@ Module VISBO_SPE_Utilities
                         CType(.Cells(1, 14), Excel.Range).Value = "Zahlungsziel"
                         CType(.Cells(1, 15), Excel.Range).Value = "Vertrags-Strafe"
                         CType(.Cells(1, 16), Excel.Range).Value = "Datum Vertrags-Strafe"
+                    Else
+                        Dim invoicesBlock As Excel.Range = CType(.Range(.Cells(1, 13), .Cells(1, 16)), Excel.Range)
+                        invoicesBlock.Clear()
                     End If
                 End If
 
@@ -1003,11 +1009,13 @@ Module VISBO_SPE_Utilities
                                     CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
                                     CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
                                 End If
+                            Else
 
-
+                                CType(currentWS.Cells(zeile, 13), Excel.Range).Clear()
+                                CType(currentWS.Cells(zeile, 14), Excel.Range).Clear()
+                                CType(currentWS.Cells(zeile, 15), Excel.Range).Clear()
+                                CType(currentWS.Cells(zeile, 16), Excel.Range).Clear()
                             End If
-
-
 
                         Else
 
@@ -1168,9 +1176,13 @@ Module VISBO_SPE_Utilities
                                         CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
                                         CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
                                     End If
-
-
+                                Else
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Clear()
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Clear()
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Clear()
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Clear()
                                 End If
+
 
                             End With
                         End If
@@ -1310,7 +1322,7 @@ Module VISBO_SPE_Utilities
         Dim err As New clsErrorCodeMsg
 
         If spe_vpid <> "" And spe_vpvid <> "" Then
-            'TODO: hier holen des Projekte mit vpid... und vpvid...
+            ' hier holen des Projekte mit vpid... und vpvid...
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
                 ShowProjekte.Add(hproj, False)

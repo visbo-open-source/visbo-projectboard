@@ -169,7 +169,7 @@ Public Class Ribbon1
             End If
             AlleProjekte.Clear()
             ShowProjekte.Clear()
-            clearTable(currentProjektTafelModus)
+            Call clearTable(currentProjektTafelModus)
         End If
 
         If spe_vpid <> "" And spe_vpvid <> "" Then
@@ -201,7 +201,7 @@ Public Class Ribbon1
 
 
     Public Sub PTProjectSave(control As Office.IRibbonControl)
-        Call MsgBox("Save")
+        'Call MsgBox("Save")
         If AlleProjekte.Count > 0 Then
             ' Mouse auf Wartemodus setzen
             appInstance.Cursor = Excel.XlMousePointer.xlWait
@@ -242,24 +242,36 @@ Public Class Ribbon1
 
 
     Public Sub PTProjectCost(control As Office.IRibbonControl)
-        currentProjektTafelModus = ptModus.massEditCosts
-        ' Call MsgBox(ptModus.massEditCosts.ToString)
 
-        Call massEditRcTeAt(ptModus.massEditCosts)
+        If ShowProjekte.Count > 0 Then
+            currentProjektTafelModus = ptModus.massEditCosts
+            ' Call MsgBox(ptModus.massEditCosts.ToString)
+
+            Call massEditRcTeAt(ptModus.massEditCosts)
+        End If
+
     End Sub
 
     Public Sub PTProjectTime(control As Office.IRibbonControl)
-        currentProjektTafelModus = ptModus.massEditTermine
-        'Call MsgBox(ptModus.massEditTermine.ToString)
 
-        Call massEditRcTeAt(ptModus.massEditTermine)
+        If ShowProjekte.Count > 0 Then
+            currentProjektTafelModus = ptModus.massEditTermine
+            'Call MsgBox(ptModus.massEditTermine.ToString)
+
+            Call massEditRcTeAt(ptModus.massEditTermine)
+        End If
+
     End Sub
 
     Public Sub PTProjectResources(control As Office.IRibbonControl)
-        currentProjektTafelModus = ptModus.massEditRessSkills
-        'Call MsgBox(ptModus.massEditRessSkills.ToString)
 
-        Call massEditRcTeAt(ptModus.massEditRessSkills)
+        If ShowProjekte.Count > 0 Then
+            currentProjektTafelModus = ptModus.massEditRessSkills
+            'Call MsgBox(ptModus.massEditRessSkills.ToString)
+
+            Call massEditRcTeAt(ptModus.massEditRessSkills)
+        End If
+
     End Sub
 
 
@@ -273,20 +285,21 @@ Public Class Ribbon1
         Dim vname As String = ""
         Dim view As String = "Capacity"
 
-        pname = visboZustaende.currentProject.name
-        vname = visboZustaende.currentProject.variantName
+        If ShowProjekte.Count > 0 Then
+            pname = visboZustaende.currentProject.name
+            vname = visboZustaende.currentProject.variantName
 
-        Select Case currentProjektTafelModus
-            Case ptModus.massEditCosts
-                view = "Cost"
-            Case ptModus.massEditRessSkills
-                view = "Capacity"
-            Case ptModus.massEditTermine
-                view = "Deadline"
-        End Select
+            Select Case currentProjektTafelModus
+                Case ptModus.massEditCosts
+                    view = "Cost"
+                Case ptModus.massEditRessSkills
+                    view = "Capacity"
+                Case ptModus.massEditTermine
+                    view = "Deadline"
+            End Select
 
-        Call FollowHyperlinkToWebsite(visboZustaende.currentProject, view)
-
+            Call FollowHyperlinkToWebsite(visboZustaende.currentProject, view)
+        End If
 
         'Call MsgBox("GoToWebUI for " & pname & ":" & vname)
     End Sub

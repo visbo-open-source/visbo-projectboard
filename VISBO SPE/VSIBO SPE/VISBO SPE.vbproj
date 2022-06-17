@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>VSIBO_SPE</RootNamespace>
     <AssemblyName>VISBO SPE</AssemblyName>
-    <VSTO_HostDocumentName>VISBO SPE.xlsx</VSTO_HostDocumentName>
+    <VSTO_HostDocumentName>VISBO Project Edit.xlsx</VSTO_HostDocumentName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <OfficeApplication>Excel</OfficeApplication>
@@ -18,8 +18,8 @@
     <PublishUrl>C:\publish\VISBO SPE\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.5</ApplicationVersion>
-    <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
+    <ApplicationVersion>1.0.0.11</ApplicationVersion>
+    <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
     <UpdateIntervalUnits>hours</UpdateIntervalUnits>
@@ -175,31 +175,31 @@
       <DependentUpon>Tabelle1.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle1.vb">
-      <DependentUpon>VISBO SPE.xlsx</DependentUpon>
+      <DependentUpon>VISBO Project Edit.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle2.Designer.vb">
       <DependentUpon>Tabelle2.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle2.vb">
-      <DependentUpon>VISBO SPE.xlsx</DependentUpon>
+      <DependentUpon>VISBO Project Edit.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle3.Designer.vb">
       <DependentUpon>Tabelle3.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle3.vb">
-      <DependentUpon>VISBO SPE.xlsx</DependentUpon>
+      <DependentUpon>VISBO Project Edit.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle4.Designer.vb">
       <DependentUpon>Tabelle4.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle4.vb">
-      <DependentUpon>VISBO SPE.xlsx</DependentUpon>
+      <DependentUpon>VISBO Project Edit.xlsx</DependentUpon>
     </Compile>
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="ThisWorkbook.vb">
-      <DependentUpon>VISBO SPE.xlsx</DependentUpon>
+      <DependentUpon>VISBO Project Edit.xlsx</DependentUpon>
     </Compile>
     <Compile Include="VISBO_SPE_Utilities.vb" />
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -223,7 +223,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="VISBO SPE.xlsx" />
+    <None Include="VISBO Project Edit.xlsx" />
     <None Include="VISBO SPE_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -317,15 +317,15 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>2B56DD674EC785928EBC12C78DE7600026C55B1D</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="VISBO SPE.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]VISBO SPE.xlsx&quot;" />
-        <Host Name="Excel Document" Path=".\VISBO SPE.xlsx" PublishedHash="C7B376692A090EC6E68ECB9030016D6B09028D44">
+        <ProjectProperties HostName="VISBO Project Edit.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]VISBO Project Edit.xlsx&quot;" />
+        <Host Name="Excel Document" Path=".\VISBO Project Edit.xlsx" PublishedHash="C7B376692A090EC6E68ECB9030016D6B09028D44">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="9C8DA9D8F95B385A08C2D2934836EB200ECD8DB7" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="9A9E490E623CC5FE7A4C41D8C75F26AE0A08A2CF" DisplayName="meTE" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />

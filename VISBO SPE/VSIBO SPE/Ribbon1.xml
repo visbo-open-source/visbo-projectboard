@@ -36,9 +36,9 @@
 					<separator id="Pt6G6B0s3"/>					
 					<menu id="Pt6G6B7" label="Settings" getImage="imageSuper_GetImage" size ="large" >					
 							<checkBox id="PT5G1MB1"  label ="Adjust resource needs proportionally"  getPressed="PTResourcePropAdopt" onAction ="awinPTResourcePropAdopt" supertip ="Adjust resource needs proportionally"/>
-							<checkBox id="PT5G1MB2"  label ="Distribute values automatically over time" getPressed="PTAutoDisValues" onAction ="awinPTAutoDisValues" supertip ="Distribute values automatically over time"/>
-							<checkBox id="PT5G1MB3"  label ="Process invoices and contractual penalties" getPressed="PTInvoicesUsed" onAction ="awinPTInvoicesUsed" supertip ="Process invoices and contractual penalties"/>
-							<checkBox id="PT5G1MB4"  label ="Date changes also affect the subordinate tasks" getPressed="PTDateChangesChildON" onAction="awinPTDateChangesChildON" supertip="Date changes also affect the subordinate tasks"/>
+							<checkBox id="PT5G1MB2"  label ="Distribute values automatically over time" getPressed="PTAutoDisValues" onAction ="awinPTAutoDisValues" supertip ="Specifies whether the resources and cost requirements are automatically recalculated when a phase is lengthened/shortened"/>
+							<checkBox id="PT5G1MB3"  label ="Process invoices and contractual penalties" getPressed="PTInvoicesUsed" onAction ="awinPTInvoicesUsed" supertip ="Indicates whether invoices  and contractual penalties can be entered"/>
+							<checkBox id="PT5G1MB4"  label ="Date changes also affect the subordinate tasks" getPressed="PTDateChangesChildON" onAction="awinPTDateChangesChildON" supertip="Specifies whether the dates of the subordinate tasks should also be adjusted when the dates change"/>
 						<checkBox id="KKK" />
 					</menu>
 				</group>
@@ -46,4 +46,3 @@
 		</tabs>
 	</ribbon>
 </customUI>
-
