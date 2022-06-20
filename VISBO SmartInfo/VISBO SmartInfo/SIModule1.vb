@@ -2627,6 +2627,7 @@ Module SIModule1
             ' denn nur die können Resourcen und Kostenbedarfe haben 
             If Not noDBAccessInPPT And Not isMilestone Then
                 Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
+
                 Dim vpid As String = smartSlideLists.getvpID(pvName)
 
                 If pvName <> "" Then
@@ -2636,27 +2637,28 @@ Module SIModule1
                     If Not IsNothing(hproj) Then
                         Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
                         Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
-                        Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
-                        Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
 
-                        Try
-                            Call smartSlideLists.addRoleAndCostInfos(roleInformations,
+                        If Not IsNothing(cPhase) Then
+                            Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+                            Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
+
+                            Try
+                                Call smartSlideLists.addRoleAndCostInfos(roleInformations,
                                                                      costInformations,
                                                                      shapeName,
                                                                      isMilestone)
-                        Catch ex As Exception
+                            Catch ex As Exception
 
-                        End Try
+                            End Try
+                        End If
+
                     End If
 
                 End If
 
-
             End If
 
-
         End If
-
 
     End Sub
 
@@ -7928,6 +7930,14 @@ Module SIModule1
             If ixEnde > 1 And ixEnde < shapeName.Length - 2 Then
                 tmpName = shapeName.Substring(1, ixEnde - 1)
             End If
+        End If
+
+        ' ur:20220620: Sonderbehandlung für BHTC nach Migration
+        Dim vName As String = getVariantnameFromKey(tmpName)
+        Dim pName As String = getPnameFromKey(tmpName)
+        If currentSlide.Tags.Item("DBURL") = bhtcDBURL And vName = "TMS" Then
+            vName = ""
+            tmpName = calcProjektKey(pName, vName)
         End If
 
         getPVnameFromShpName = tmpName
