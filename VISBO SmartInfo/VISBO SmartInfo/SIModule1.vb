@@ -1357,6 +1357,10 @@ Module SIModule1
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
                                 Dim vName As String = tmpShape.Tags.Item("VNM")
+                                ' ur:20220620: Sonderbehandlung bhtc Standard-Variante
+                                If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "") Then
+                                    vName = "orig"
+                                End If
                                 ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
                                 If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "TMS") Then
                                     vName = ""
@@ -3025,6 +3029,14 @@ Module SIModule1
 
                     Dim pName As String = pptShape.Tags.Item("PNM")
                     Dim vName As String = pptShape.Tags.Item("VNM")
+                    ' ur:20220620: Sonderbehandlung bhtc Standard-Variante
+                    If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "") Then
+                        vName = "orig"
+                    End If
+                    ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
+                    If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "TMS") Then
+                        vName = ""
+                    End If
                     Dim vpid As String = pptShape.Tags.Item("VPID")
 
                     If showOtherVariant Then
@@ -3317,7 +3329,10 @@ Module SIModule1
                     ' ist Projekt
                     Dim pName As String = pptShape.Tags.Item("PNM")
                     Dim vName As String = pptShape.Tags.Item("VNM")
-
+                    ' ur:20220620: Sonderbehandlung bhtc Standard-Variante
+                    If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "") Then
+                        vName = "orig"
+                    End If
                     ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
                     If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "TMS") Then
                         vName = ""
@@ -7852,7 +7867,10 @@ Module SIModule1
         Dim tmpResult As String = ""
         Dim pname As String = curShape.Tags.Item("PNM")
         Dim vname As String = curShape.Tags.Item("VNM")
-
+        ' ur:20220620: Sonderbehandlung bhtc Standard-Variante
+        If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vname = "") Then
+            vname = "orig"
+        End If
         ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
         If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vname = "TMS") Then
             vname = ""
@@ -7933,12 +7951,20 @@ Module SIModule1
         End If
 
         ' ur:20220620: Sonderbehandlung für BHTC nach Migration
-        Dim vName As String = getVariantnameFromKey(tmpName)
-        Dim pName As String = getPnameFromKey(tmpName)
-        If currentSlide.Tags.Item("DBURL") = bhtcDBURL And vName = "TMS" Then
-            vName = ""
+        If Not tmpName = "" Then
+            Dim vName As String = getVariantnameFromKey(tmpName)
+            Dim pName As String = getPnameFromKey(tmpName)
+            ' ur:20220620: Sonderbehandlung bhtc Standard-Variante
+            If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "") Then
+                vName = "orig"
+            End If
+            ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
+            If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "TMS") Then
+                vName = ""
+            End If
             tmpName = calcProjektKey(pName, vName)
         End If
+
 
         getPVnameFromShpName = tmpName
 
