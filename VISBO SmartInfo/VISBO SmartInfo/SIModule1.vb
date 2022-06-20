@@ -38,6 +38,13 @@ Module SIModule1
     ' bestimmt, ob in englisch oder auf deutsch ..
     Friend englishLanguage As Boolean = True
 
+    ' gibt den alten Name der mongoDBURL an
+    Public bhtcDBURL As String = "10.28.10.38"
+    Public bhtcDBName As String = "bhtc"
+
+    ' gibt den Namen des Servers an
+    Public visboDBURL As String = "https://dev.visbo.net/api"
+
     ' wird in Activate_Window gesetzt bzw. in After_presentation
     Friend currentPresHasVISBOElements As Boolean = False
 
@@ -1100,22 +1107,33 @@ Module SIModule1
             If .Tags.Item("DBURL").Length > 0 And
                 .Tags.Item("DBNAME").Length > 0 Then
 
-
-
-                If ((.Tags.Item("DBURL") = awinSettings.databaseURL And
-                        .Tags.Item("DBNAME") = awinSettings.databaseName) Or
-                        (.Tags.Item("DBURL") = awinSettings.databaseURL And
-                        .Tags.Item("VCid") = awinSettings.VCid)) And
+                If ((.Tags.Item("DBURL") = awinSettings.databaseURL And .Tags.Item("DBNAME") = awinSettings.databaseName) Or
+                        (.Tags.Item("DBURL") = awinSettings.databaseURL And .Tags.Item("VCid") = awinSettings.VCid) Or
+                        ((awinSettings.databaseURL = visboDBURL) And (.Tags.Item("DBNAME") = awinSettings.databaseName))) And
                         Not noDBAccessInPPT Then
                     ' nichts machen, user ist schon berechtigt ...
                 Else
                     noDBAccessInPPT = True
                     awinSettings.proxyURL = .Tags.Item("PRXYL")
-                    awinSettings.databaseURL = .Tags.Item("DBURL")
-                    awinSettings.databaseName = .Tags.Item("DBNAME")
+
+                    If Not ((.Tags.Item("DBURL") = bhtcDBURL)) Then
+                        awinSettings.databaseURL = .Tags.Item("DBURL")
+                    Else
+                        awinSettings.visboServer = True
+                        awinSettings.databaseURL = visboDBURL
+                        Call MsgBox("bhtcDBURL changed to: " & awinSettings.databaseURL)
+                    End If
+
+                    If Not (.Tags.Item("DBNAME") = bhtcDBName) Then
+                        awinSettings.databaseName = .Tags.Item("DBNAME")
+                    Else
+                        awinSettings.databaseName = .Tags.Item("DBNAME")
+                        Call MsgBox("bhtcDB bleibt " & awinSettings.databaseName)
+                    End If
+
                     awinSettings.VCid = .Tags.Item("VCid")
-                    awinSettings.DBWithSSL = (.Tags.Item("DBSSL") = "True")
-                    awinSettings.visboServer = (.Tags.Item("REST") = "True")
+                    awinSettings.DBWithSSL = True
+
                 End If
 
 
@@ -1277,24 +1295,28 @@ Module SIModule1
                 .Tags.Item("DBNAME").Length > 0 Then
 
                 smartSlideLists.slideDBName = .Tags.Item("DBNAME")
-                smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
+                If Not (.Tags.Item("DBURL") = bhtcDBURL) Then
+                    smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
+                Else
+                    smartSlideLists.slideDBUrl = visboDBURL
+                End If
 
                 If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or
                     (awinSettings.databaseName <> smartSlideLists.slideDBName And
                     awinSettings.VCid <> smartSlideLists.slideVCid) Then
 
-                    noDBAccessInPPT = True
-                    awinSettings.databaseURL = smartSlideLists.slideDBUrl
-                    awinSettings.databaseName = smartSlideLists.slideDBName
-                    awinSettings.VCid = smartSlideLists.slideVCid
+                        noDBAccessInPPT = True
+                        awinSettings.databaseURL = smartSlideLists.slideDBUrl
+                        awinSettings.databaseName = smartSlideLists.slideDBName
+                        awinSettings.VCid = smartSlideLists.slideVCid
 
+                    End If
                 End If
-            End If
 
-
-            If .Tags.Item("REST").Length > 0 Then
-                awinSettings.visboServer = .Tags.Item("REST") = "True"
-            End If
+            ' ur:220620: nicht mehr nötig, da immer Server nach Migration bhtc
+            'If .Tags.Item("REST").Length > 0 Then
+            '    awinSettings.visboServer = .Tags.Item("REST") = "True"
+            'End If
 
 
 
@@ -1335,6 +1357,10 @@ Module SIModule1
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
                                 Dim vName As String = tmpShape.Tags.Item("VNM")
+                                ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
+                                If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "TMS") Then
+                                    vName = ""
+                                End If
                                 pvName = calcProjektKey(pName, vName)
                             End If
                             If tmpShape.Tags.Item("VPID").Length > 0 Then
@@ -3289,6 +3315,11 @@ Module SIModule1
                     ' ist Projekt
                     Dim pName As String = pptShape.Tags.Item("PNM")
                     Dim vName As String = pptShape.Tags.Item("VNM")
+
+                    ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
+                    If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vName = "TMS") Then
+                        vName = ""
+                    End If
                     Dim vpid As String = pptShape.Tags.Item("VPID")
 
                     'If showOtherVariant Then
@@ -7820,6 +7851,10 @@ Module SIModule1
         Dim pname As String = curShape.Tags.Item("PNM")
         Dim vname As String = curShape.Tags.Item("VNM")
 
+        ' ur:20220620: Sonderbehandlung bhtc TMS-Variante
+        If (currentSlide.Tags.Item("DBURL") = bhtcDBURL) And (vname = "TMS") Then
+            vname = ""
+        End If
         If pname.Length > 0 Then
             tmpResult = calcProjektKey(pname, vname)
         End If

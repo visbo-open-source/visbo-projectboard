@@ -317,7 +317,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Test-MS-VC-BHTC_switched TMS orig")>  _
     Public Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -329,7 +329,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("https://dev.visbo.net/api")>  _
     Public Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
