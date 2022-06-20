@@ -26,51 +26,72 @@ Public Class ThisWorkbook
         Dim oneTimeToken As String = ""
         Dim rest As String = ""
         Dim del As String = ""
-
+        Dim parameterString As String = ""
         'Dim cbar As CommandBar
-        Dim hstr() As String
-        Dim cmdLine As String = GetCommandLine()
-        Dim cmdID As Int64 = CType(GetCommandLine, Int64)
-        Dim cline As String = CmdToSTr(cmdID)
-        'Dim cline As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug\VISBO SPE.xlsx" / """vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
-        Call MsgBox(cline)
 
-        hstr = cline.Split("/")
-        Dim parameter As String = (hstr(hstr.Length - 1))
-        Call MsgBox(parameter)
-        hstr = parameter.Split("""")
-        If hstr.Length > 1 Then
-            Call MsgBox(hstr(1))
+        'Call Auto_open()
+
+        Dim CmdLine As String 'command-line string
+
+        CmdLine = GetCommandLine() 'get the cmd-line string
+        CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
+        Call MsgBox("cmdline1: " & CmdLine)
+
+        Dim hstr() As String = CmdLine.Split("/")
+        Dim parameter As String = ""
+        If hstr.Length > 2 Then
+            Call MsgBox("parameter1: " & hstr(2))
+        End If
+        If hstr.Length > 3 Then
+            Call MsgBox("parameter2: " & hstr(3))
+        End If
+        If hstr.Length > 4 Then
+            Call MsgBox("parameter3: " & hstr(4))
         End If
 
+        'Dim hstr() As String
+        'Dim cmdLine As String = GetCommandLine()
 
-        Dim parameterString As String = hstr(1)
-        'parameterString = "vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
+        ''Dim cline As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug\VISBO SPE.xlsx" / """vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
+        'Call MsgBox(cmdLine)
 
-        'parameterString = "vpid:624dcb87e89109508af0ef8b&vpvid:624dcb88e89109508af0efde&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODQuMTYwLjc1LjQzIiwidGltZXN0YW1wIjoiMjAyMi0wNS0yNVQwOTo0NDozOS4zNjNaIn0sImlhdCI6MTY1MzQ3MTg3OSwiZXhwIjoxNjUzNDcxOTk5fQ.y8pZh7WOj5L1ZK50WIPCGah7t1OF10h0EN6TCpGtRm0"
+        'hstr = cmdLine.Split("/")
+        'If hstr.Length > 2 Then
+        '    parameterString = hstr(2)
+        '    Call MsgBox("parameterString: " & parameterString)
+        'Else
 
-        'Call MsgBox(parameterString)
-        hstr = parameterString.Split("&")
+        'End If
 
-        For i = 0 To hstr.Length - 1
-            Dim elem As String = hstr(i)
-            Dim bezeichner As String = (elem.Split(":"))(0)
-            Call MsgBox("bezeichner = " & bezeichner)
-            Select Case bezeichner
-                Case "vpid"
-                    spe_vpid = (elem.Split(":"))(1)
-                    Call MsgBox("vpid = " & spe_vpid)
-                Case "vpvid"
-                    spe_vpvid = (elem.Split(":"))(1)
-                    Call MsgBox("vpvid = " & spe_vpvid)
-                Case "ott"
-                    spe_ott = (elem.Split(":"))(1)
-                    Call MsgBox("oneTimeToken = " & spe_ott)
-                Case Else
-                    rest = (elem.Split(":"))(1)
-                    Call MsgBox("rest = " & rest)
-            End Select
-        Next
+
+        ''parameterString = "vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
+
+        ''parameterString = "vpid:624dcb87e89109508af0ef8b&vpvid:624dcb88e89109508af0efde&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODQuMTYwLjc1LjQzIiwidGltZXN0YW1wIjoiMjAyMi0wNS0yNVQwOTo0NDozOS4zNjNaIn0sImlhdCI6MTY1MzQ3MTg3OSwiZXhwIjoxNjUzNDcxOTk5fQ.y8pZh7WOj5L1ZK50WIPCGah7t1OF10h0EN6TCpGtRm0"
+
+        ''Call MsgBox(parameterString)
+        'hstr = parameterString.Split("&")
+        If hstr.Length > 2 Then
+            For i = 2 To hstr.Length - 2
+                Dim elem As String = hstr(i)
+                Dim bezeichner As String = (elem.Split(":"))(0)
+                Call MsgBox("bezeichner = " & bezeichner)
+                Select Case bezeichner
+                    Case "vpid"
+                        spe_vpid = (elem.Split(":"))(1)
+                        Call MsgBox("vpid = " & spe_vpid)
+                    Case "vpvid"
+                        spe_vpvid = (elem.Split(":"))(1)
+                        Call MsgBox("vpvid = " & spe_vpvid)
+                    Case "ott"
+                        spe_ott = (elem.Split(":"))(1)
+                        Call MsgBox("oneTimeToken = " & spe_ott)
+                    Case Else
+                        rest = (elem.Split(":"))(1)
+                        Call MsgBox("rest = " & rest)
+                End Select
+            Next
+        End If
+
 
 
         'visboClient = "VISBO Simple Project Edit / "
@@ -355,7 +376,7 @@ Public Class ThisWorkbook
         Cancel = True
     End Sub
 
-    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineA" () As Long
+    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineA" () As string
     Declare Function lstrlenW Lib "kernel32" Alias "lstrlenA" (ByVal lpString As Long) As Long
     Declare Function CopyMemory Lib "kernel32" Alias "lstrcpynA" (ByVal MyDest As String, ByVal MySource As Long, ByVal MySize As Long) As Long
     Function CmdToSTr(Cmd As Long) As String
@@ -366,13 +387,15 @@ Public Class ThisWorkbook
             StrLen = lstrlenW(Cmd) * 2
 
             If StrLen > 0 Then
-                Buffer = Space(StrLen - 1)
+                Buffer = Space(StrLen + 1)
+                Call MsgBox("Vor Buffer: ")
                 Cmd = CopyMemory(Buffer, Cmd, StrLen + 1)
-                If Cmd > 0 Then
-                    Dim PosZero As Long
-                    PosZero = InStr(Buffer, Chr(0))
-                    If PosZero > 0 Then Buffer = Left(Buffer, PosZero - 1)
-                End If
+                Call MsgBox("Nach Buffer: ")
+                'If Cmd > 0 Then
+                '    Dim PosZero As Long
+                '    PosZero = InStr(Buffer, Chr(0))
+                '    If PosZero > 0 Then Buffer = Left(Buffer, PosZero - 1)
+                'End If
                 CmdToSTr = Buffer
             Else
                 CmdToSTr = ""
@@ -381,6 +404,63 @@ Public Class ThisWorkbook
             CmdToSTr = ""
         End If
     End Function
+
+    Sub Auto_open()
+
+        Dim CmdLine As String 'command-line string
+
+        CmdLine = GetCommandLine() 'get the cmd-line string
+        CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
+        Call MsgBox("cmdline1: " & CmdLine)
+
+        Dim hstr() As String = CmdLine.Split("/")
+        Dim parameter As String = ""
+        If hstr.Length > 2 Then
+            Call MsgBox("parameter1: " & hstr(2))
+        End If
+        If hstr.Length > 3 Then
+            Call MsgBox("parameter2: " & hstr(3))
+        End If
+        If hstr.Length > 4 Then
+            Call MsgBox("parameter3: " & hstr(4))
+        End If
+
+
+        'On Error Resume Next 'for the wksht-function "Search"
+        'Pos1 = Application.WorksheetFunctionSearch("/", CmdLine, 1) + 1 'search "/e"
+        'Pos1 = Application.WorksheetFunction.Search("/", CmdLine, Pos1) + 1 '1st param
+        'If InStr(Pos1, CmdLine, " ") > 0 Then CmdLine = Left$(CmdLine, InStr(Pos1, CmdLine, " "))
+        'Call MsgBox("cmdline2: " & CmdLine)
+
+        'Pos1 = CmdLine.IndexOf("/e") 'search "/e"
+        'Call MsgBox("Pos1:" & Pos1.ToString)
+        'Pos2 = Application.WorksheetFunction.Search(" ", CmdLine, Pos1) + 1 '1st param
+        'Call MsgBox("Pos2:" & Pos2.ToString)
+        'Pos3 = Application.WorksheetFunction.Search(" ", CmdLine, Pos2) + 1
+        'Call MsgBox("Pos3:" & Pos3.ToString)
+
+        'Dim firstPart As String = Mid(CmdLine, 0, Pos2 - Pos1)
+        'Call MsgBox("firstPart: " & firstPart)
+        'Dim secondPart As String = Mid(CmdLine, 0, Pos3 - Pos2)
+        'Call MsgBox("secondPart: " & secondPart)
+        'Dim thirdPart As String = Mid(CmdLine, 0, Pos3)
+        'Call MsgBox("thirdPart: " & thirdPart)
+
+        'Dim newcmdLine As String = Mid(CmdLine, Pos2, Pos3 - Pos2)
+        'Call MsgBox("newcmdLine: ", newcmdLine)
+
+        'Do While ArgCount <= hstr.Length - 1
+
+        '    Call MsgBox("Argument " & ArgCount & ":" & hstr(ArgCount))
+
+        '    'Pos2 = Application.WorksheetFunction.Search("/", CmdLine, Pos1)
+        '    ArgCount = ArgCount + 1
+        '    'ReDim Preserve Args(ArgCount)
+        '    'Args(ArgCount) = Mid(CmdLine, Pos1, IIf(h_error, Len(CmdLine), Pos2) - Pos1)
+        '    'Call MsgBox("Argument " & ArgCount & " : " & Args(ArgCount))
+        '    'Pos1 = Pos2 + 1
+        'Loop
+    End Sub
     Private Function UnicodeBytesToString(
     ByVal bytes() As Byte) As String
         Dim enc As Encoding = New UnicodeEncoding(False, True, True)
