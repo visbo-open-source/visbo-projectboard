@@ -1121,14 +1121,14 @@ Module SIModule1
                     Else
                         awinSettings.visboServer = True
                         awinSettings.databaseURL = visboDBURL
-                        Call MsgBox("bhtcDBURL changed to: " & awinSettings.databaseURL)
+                        'Call MsgBox("bhtcDBURL changed to: " & awinSettings.databaseURL)
                     End If
 
                     If Not (.Tags.Item("DBNAME") = bhtcDBName) Then
                         awinSettings.databaseName = .Tags.Item("DBNAME")
                     Else
                         awinSettings.databaseName = .Tags.Item("DBNAME")
-                        Call MsgBox("bhtcDB bleibt " & awinSettings.databaseName)
+                        'Call MsgBox("bhtcDB bleibt " & awinSettings.databaseName)
                     End If
 
                     awinSettings.VCid = .Tags.Item("VCid")
