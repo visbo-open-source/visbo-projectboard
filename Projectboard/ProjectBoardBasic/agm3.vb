@@ -9271,7 +9271,7 @@ Public Module agm3
             End If
 
 
-            If IsNothing(hproj) Then
+            If IsNothing(hproj) Then                ' Anlegen fehlerhaft, da vermutlich keine Vorlage mit Namen <VorlagenName> existiert
                 hproj = New clsProjekt
 
 
@@ -9371,6 +9371,12 @@ Public Module agm3
 
                 'TODO: update einer Vorlage muss auch funktionieren
 
+                ' ur: 220622: hproj konnte angelegt werden, soll aber sofort wieder in DB gelöscht werden
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err)
+
+                If Not ok Then
+                    Call logger(ptErrLevel.logError, "erstelleProjektAusVorlage", "Project " & pname & ": " & err.errorMsg)
+                End If
             End If
 
         Else

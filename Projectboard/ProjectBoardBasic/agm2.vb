@@ -4544,7 +4544,7 @@ Public Module agm2
                 Dim pjFlag As String = ""
 
                 Try
-                    
+
                     visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
                     pjFlag = prj.FieldConstantToFieldName(visboflag)
 
@@ -4614,7 +4614,9 @@ Public Module agm2
                 ' und manche Phasen dann einen negative startoffset bekommen
                 Dim ProjectStartDate As Date
 
-                ProjectStartDate = CDate(msproj.ProjectStart)
+                ' ur: 220622: StartDatum des Projektes (msproj.start), nicht das der ProjektInformation(msproj.ProjektStart) in MSProject verwenden
+                ' ur:220622:  ProjectStartDate = CDate(msproj.ProjectStart)
+                ProjectStartDate = CDate(msproj.Start)
 
                 If CDate(msproj.Start) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.Start)
@@ -21859,46 +21861,63 @@ Public Module agm2
                     ' das kann nicht unmittelbar nach Login gemacht werden 
                     Dim meldungen As Collection = New Collection
 
-                    '' jetzt werden die Rollen besetzt 
-                    If awinSettings.readCostRolesFromDB Then
+                    If Not special = "BHTC" Then
 
-                        Try
-                            ' Lesen der CustomUserRoles aus VCSetting in DB
-                            Call setUserRoles(meldungen)
-                        Catch ex As Exception
-                            If meldungen.Count > 0 Then
-                                Call showOutPut(meldungen, "Error: setUserRoles", "")
-                                Call logger(ptErrLevel.logError, "awinsetTypen", meldungen)
-                            End If
+                        '' jetzt werden die Rollen besetzt 
+                        If awinSettings.readCostRolesFromDB Then
 
+                            Try
+                                ' Lesen der CustomUserRoles aus VCSetting in DB
+                                Call setUserRoles(meldungen)
+                            Catch ex As Exception
+                                If meldungen.Count > 0 Then
+                                    Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                    Call logger(ptErrLevel.logError, "awinsetTypen", meldungen)
+                                End If
+
+                                myCustomUserRole = New clsCustomUserRole
+
+                                With myCustomUserRole
+                                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                    .specifics = ""
+                                    .userName = dbUsername
+                                End With
+                                ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                                Call myCustomUserRole.setNonAllowances()
+                            End Try
+
+
+
+                        Else
                             myCustomUserRole = New clsCustomUserRole
 
                             With myCustomUserRole
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                If awinSettings.visboServer Then
+                                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                Else
+                                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                End If
                                 .specifics = ""
                                 .userName = dbUsername
                             End With
                             ' jetzt gibt es eine currentUserRole: myCustomUserRole
                             Call myCustomUserRole.setNonAllowances()
-                        End Try
-
-
-
+                        End If
                     Else
-                        myCustomUserRole = New clsCustomUserRole
+                        ' 220622: ur: für VISBO Project Publish ist keine CustomUserRole erforderlich
+                        ' sonst eventuell auf auf Projektleitung setzen
 
-                        With myCustomUserRole
-                            If awinSettings.visboServer Then
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            Else
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            End If
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                        Call myCustomUserRole.setNonAllowances()
+                        'myCustomUserRole = New clsCustomUserRole
+
+                        'With myCustomUserRole
+                        '    .customUserRole = ptCustomUserRoles.ProjektLeitung
+                        '    .specifics = ""
+                        '    .userName = dbUsername
+                        'End With
+                        '' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        'Call myCustomUserRole.setNonAllowances()
                     End If
+
 
                 Catch ex As Exception
 
