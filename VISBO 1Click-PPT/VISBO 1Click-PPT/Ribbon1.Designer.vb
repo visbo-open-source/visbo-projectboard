@@ -99,6 +99,7 @@
         Me.Baseline.Name = "Baseline"
         Me.Baseline.ScreenTip = "Publish Baseline in VISBO"
         Me.Baseline.ShowImage = True
+        Me.Baseline.Visible = False
         '
         'Einstellungen
         '
