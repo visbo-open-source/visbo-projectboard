@@ -4544,6 +4544,7 @@ Public Module agm2
                 Dim pjFlag As String = ""
 
                 Try
+                    
                     visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
                     pjFlag = prj.FieldConstantToFieldName(visboflag)
 
@@ -5462,6 +5463,8 @@ Public Module agm2
 
                 If modus = "BHTC" Then
 
+                    ' Sonderbehandlung: Es werden sowohl Standard-Variante alsauch 'orig' gespeichert
+
                     ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                     ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
                     If AlleProjekte.Containskey(key) Then
@@ -5529,7 +5532,7 @@ Public Module agm2
                     ' --------------------
 
                     ' ----------------------------------------
-                    ' Eintrag in ShowProjekte und AlleProjekte 
+                    ' Eintrag des Projektes, entstanden durch Mapping, in ShowProjekte und AlleProjekte 
                     ' ----------------------------------------
                     '
                     ' ist erforderlich für die Erstellung des Reports
@@ -5540,6 +5543,13 @@ Public Module agm2
 
                         If modus = "BHTC" Then
 
+                            ' Sonderbehandlung: TMS-Variante wird zur Standard-Variante
+                            If mapProj.variantName = "TMS" Then
+                                mapProj.variantName = ""
+                            End If
+
+                            key = calcProjektKey(mapProj.name, mapProj.variantName)
+
                             ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                             ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
                             If AlleProjekte.Containskey(key) Then
@@ -5547,6 +5557,21 @@ Public Module agm2
                             End If
 
                             AlleProjekte.Add(mapProj)
+
+                            ' Sonderbehandlung: Standard-Variante dann als  'orig'-Variante gespeichert
+                            If hproj.variantName = "" Then
+                                hproj.variantName = "orig"
+                            End If
+
+                            key = calcProjektKey(hproj.name, hproj.variantName)
+
+                            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
+                            If AlleProjekte.Containskey(key) Then
+                                AlleProjekte.Remove(key)
+                            End If
+
+                            AlleProjekte.Add(hproj)
 
                         Else
                             If ImportProjekte.Containskey(key) Then
