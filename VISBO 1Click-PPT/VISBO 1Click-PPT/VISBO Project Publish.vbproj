@@ -25,7 +25,7 @@
     <ProjectGuid>{5A946DC0-A085-41F0-9C6D-97B13B1A6A61}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>VISBO_1Click_PPT</RootNamespace>
-    <AssemblyName>VISBO 1Click-PPT</AssemblyName>
+    <AssemblyName>VISBO Project Publish</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <StartupObject>
@@ -33,7 +33,7 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\publish\VISBO 1Click-PPT\</PublishUrl>
+    <PublishUrl>C:\publish\VISBO Project Publsh\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
     <ApplicationVersion>4.3.1.0</ApplicationVersion>
@@ -41,7 +41,7 @@
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
-    <ProductName>VISBO 1Click-PPT</ProductName>
+    <ProductName>VISBO Project Publsh</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
     <SupportUrl />
     <FriendlyName>VISBO 1Click-PPT</FriendlyName>
@@ -290,7 +290,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>D0CB1D27181AA568ECDF28E0BB6A494C2358558D</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <MyType>Windows</MyType>

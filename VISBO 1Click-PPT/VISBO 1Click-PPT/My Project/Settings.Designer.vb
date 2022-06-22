@@ -14,7 +14,7 @@ Option Explicit On
 
 
 <Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute(),  _
- Global.System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.8.0.0"),  _
+ Global.System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0"),  _
  Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Advanced)>  _
 Partial Friend NotInheritable Class MySettings
     Inherits Global.System.Configuration.ApplicationSettingsBase
@@ -100,7 +100,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("https://dev.visbo.net/api")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -214,7 +214,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("TMS_View_local")>  _
     Public ReadOnly Property VISBOMapping() As String
         Get
             Return CType(Me("VISBOMapping"),String)
