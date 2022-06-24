@@ -402,7 +402,6 @@ Public Class Ribbon1
                 End Try
 
                 awinsetTypen_Performed = True
-                awinsetTypen_Performed = True
             End If
 
 
