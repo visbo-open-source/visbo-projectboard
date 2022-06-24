@@ -284,6 +284,7 @@ Public Class ThisAddIn
 
                     If Not IsNothing(hproj) Then
                         If hproj.name <> "" And Not IsNothing(hproj.name) Then
+
                             Try
                                 ' synchronize with earlier version , if existent 
                                 ' i.e take values resources, budget, lead person, description 
@@ -314,9 +315,13 @@ Public Class ThisAddIn
                     If Not IsNothing(mapProj) Then
                         If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
                             Try
+                                ' synchronize with earlier version , if existent 
+                                ' i.e take values resources, budget, lead person, description 
+
                                 Call synchronizeWithValuesOFExisting(mapProj)
+
                                 Call speichereProjektToDB(mapProj, True)
-                            Catch ex As System.Exception
+                            Catch ex As Exception
                                 If awinSettings.englishLanguage Then
                                     Call MsgBox("Error saving of the mapped project to DB ")
                                 Else
@@ -359,163 +364,185 @@ Public Class ThisAddIn
     End Sub
 
     Private Sub Application_ProjectBeforeSave(pj As Project, SaveAsUi As Boolean, ByRef Cancel As Boolean) Handles Application.ProjectBeforeSave
+        '    Try
+        '        If Not IsNothing(pj) Then
+        '            If Not awinsetTypen_Performed Then
 
-        'Try
-        '    If Not IsNothing(pj) Then
-        '        If Not awinsetTypen_Performed Then
-        '            Try
-        '                pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+        '                Try
+        '                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
-        '                awinSettings.databaseURL = My.Settings.mongoDBURL
-        '                awinSettings.databaseName = My.Settings.mongoDBname
-        '                awinSettings.globalPath = My.Settings.globalPath
-        '                awinSettings.awinPath = My.Settings.awinPath
-        '                awinSettings.visboTaskClass = My.Settings.TaskClass
-        '                awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-        '                awinSettings.visboAmpel = My.Settings.VISBOAmpel
-        '                awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-        '                awinSettings.visboresponsible = My.Settings.VISBOresponsible
-        '                awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-        '                awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-        '                awinSettings.visboDebug = My.Settings.VISBODebug
-        '                awinSettings.visboMapping = My.Settings.VISBOMapping
-        '                awinSettings.visboServer = My.Settings.VISBOServer
-        '                awinSettings.proxyURL = My.Settings.proxyServerURL
-        '                awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-        '                If awinSettings.rememberUserPwd Then
-        '                    awinSettings.userNamePWD = My.Settings.userNamePWD
-        '                End If
+        '                    awinSettings.databaseURL = My.Settings.mongoDBURL
+        '                    awinSettings.databaseName = My.Settings.mongoDBname
+        '                    awinSettings.globalPath = My.Settings.globalPath
+        '                    awinSettings.awinPath = My.Settings.awinPath
+        '                    awinSettings.visboTaskClass = My.Settings.TaskClass
+        '                    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+        '                    awinSettings.visboAmpel = My.Settings.VISBOAmpel
+        '                    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+        '                    awinSettings.visboresponsible = My.Settings.VISBOresponsible
+        '                    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+        '                    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+        '                    awinSettings.visboDebug = My.Settings.VISBODebug
+        '                    awinSettings.visboMapping = My.Settings.VISBOMapping
+        '                    awinSettings.visboServer = My.Settings.VISBOServer
+        '                    awinSettings.proxyURL = My.Settings.proxyServerURL
+        '                    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        '                    If awinSettings.rememberUserPwd Then
+        '                        awinSettings.userNamePWD = My.Settings.userNamePWD
+        '                    End If
 
-        '                dbUsername = ""
-        '                dbPasswort = ""
+        '                    dbUsername = ""
+        '                    dbPasswort = ""
 
-        '                '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-        '                Call awinsetTypen("BHTC")
+        '                    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+        '                    Call awinsetTypen("BHTC")
 
-        '                StartofCalendar = StartofCalendar.AddMonths(-12)
-
-
-        '            Catch ex As Exception
-
-        '                Call MsgBox(ex.Message)
-
-        '            Finally
-
-        '            End Try
-        '            awinsetTypen_Performed = True
-        '        End If
-        '    Else
-        '        fehlerBeimLoad = True
-        '    End If
+        '                    StartofCalendar = StartofCalendar.AddMonths(-12)
 
 
+        '                Catch ex As Exception
 
+        '                    Call MsgBox(ex.Message)
 
-        '    If fehlerBeimLoad Then
-        '        If awinSettings.englishLanguage Then
+        '                Finally
 
-        '            Call MsgBox("Project will not be saved!")
+        '                End Try
+        '                awinsetTypen_Performed = True
+        '            End If
         '        Else
-
-        '            Call MsgBox("Projekt wird nicht gespeichert!")
+        '            fehlerBeimLoad = True
         '        End If
-        '    Else
-
-        '        Dim reportAuswahl As New frmReportProfil
-        '        Dim hierarchiefenster As New frmHierarchySelection
-        '        Dim hproj As New clsProjekt
-        '        Dim mapProj As clsProjekt = Nothing
-        '        Dim aktuellesDatum = Date.Now
-        '        Dim validDatum As Date = "29.Feb.2016"
-        '        Dim filename As String = ""
-
-        '        '' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-        '        '' ''    ' ''    ''If aktuellesDatum > validDatum Then
-
-        '        ' Testen, ob der User die passende Lizenz besitzt
-        '        Dim user As String = myWindowsName
-        '        Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
-
-        '        ' Lesen des Lizenzen-Files
 
 
-        '        Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+        '        If fehlerBeimLoad Then
+        '            If awinSettings.englishLanguage Then
 
-        '        ' Prüfen der Lizenzen
-        '        If lizenzen.validLicence(user, komponente) Then
+        '                Call MsgBox("Project cannot be published!")
+        '            Else
 
-        '            '' Set cursor as hourglass
-        '            Cursor.Current = Cursors.WaitCursor
-
-        '            'Call MsgBox("EPReport_Click")
-
-        '            ' Laden des aktuell geladenen Projektes und des eventuell gemappten
-        '            Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
-
-        '            If Not IsNothing(hproj) Then
-        '                If hproj.name <> "" And Not IsNothing(hproj.name) Then
-        '                    Try
-        '                        ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
-        '                        If awinSettings.visboMapping <> "" Then
-        '                            Call speichereProjektToDB(hproj)
-        '                        Else
-        '                            Call speichereProjektToDB(hproj, True)
-        '                        End If
-
-        '                    Catch ex As System.Exception
-        '                        If awinSettings.englishLanguage Then
-        '                            Call MsgBox("Error saving of the original project to DB ")
-        '                        Else
-        '                            Call MsgBox("Fehler beim Speichern des Original Projektes in DB")
-        '                        End If
-        '                    End Try
-        '                End If
+        '                Call MsgBox("Projekt kann nicht veröffentlicht werden!")
         '            End If
 
-        '            If Not IsNothing(mapProj) Then
-        '                If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
-        '                    Try
-        '                        Call speichereProjektToDB(mapProj, True)
-        '                    Catch ex As System.Exception
-        '                        If awinSettings.englishLanguage Then
-        '                            Call MsgBox("Error saving of the mapped project to DB ")
-        '                        Else
-        '                            Call MsgBox("Fehler beim Speichern des Mapping Projektes in DB")
-        '                        End If
-        '                    End Try
-        '                End If
+        '        Else
+
+        '            Dim reportAuswahl As New frmReportProfil
+        '            Dim hierarchiefenster As New frmHierarchySelection
+        '            Dim hproj As New clsProjekt
+        '            Dim mapProj As clsProjekt = Nothing
+        '            Dim aktuellesDatum = Date.Now
+        '            Dim validDatum As Date = "29.Feb.2016"
+        '            Dim filename As String = ""
+        '            Dim permissionOK As Boolean = False
+
+        '            '' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+        '            '' ''    ' ''    ''If aktuellesDatum > validDatum Then
+
+        '            If Not awinSettings.visboServer Then
+
+        '                ' Testen, ob der User die passende Lizenz besitzt
+        '                Dim user As String = myWindowsName
+        '                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+
+        '                ' Lesen des Lizenzen-Files
+
+
+        '                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+
+        '                permissionOK = lizenzen.validLicence(user, komponente)
         '            Else
-        '                If awinSettings.visboMapping <> "" Then
-        '                    If awinSettings.englishLanguage Then
-        '                        Call MsgBox("Error mapping the project: no TMS - project created")
-        '                    Else
-        '                        Call MsgBox("Fehler beim  Mapping dieses Projektes: Kein TMS-project erstellt")
+
+        '                permissionOK = awinSettings.visboServer
+
+        '            End If
+
+        '            ' Prüfen der Erlaubnis
+
+        '            If permissionOK Then
+
+        '                '' Set cursor as hourglass
+        '                Cursor.Current = Cursors.WaitCursor
+
+        '                'Call MsgBox("EPReport_Click")
+
+        '                ' Laden des aktuell geladenen Projektes und des eventuell gemappten
+        '                Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
+
+        '                If Not IsNothing(hproj) Then
+        '                    If hproj.name <> "" And Not IsNothing(hproj.name) Then
+
+        '                        Try
+        '                            ' synchronize with earlier version , if existent 
+        '                            ' i.e take values resources, budget, lead person, description 
+
+        '                            Call synchronizeWithValuesOFExisting(hproj)
+
+        '                            ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
+        '                            If awinSettings.visboMapping <> "" Then
+        '                                Call speichereProjektToDB(hproj)
+        '                            Else
+        '                                Call speichereProjektToDB(hproj, True)
+        '                            End If
+
+        '                        Catch ex As Exception
+        '                            If awinSettings.englishLanguage Then
+        '                                Call MsgBox("Error saving of the original project to DB ")
+        '                            Else
+        '                                Call MsgBox("Fehler beim Speichern des Original Projektes in DB")
+        '                            End If
+        '                        End Try
         '                    End If
         '                End If
-        '            End If
 
-        '            '' Set cursor as Default
-        '            Cursor.Current = Cursors.Default
+        '                If Not IsNothing(mapProj) Then
+        '                    If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
+        '                        Try
+        '                            ' synchronize with earlier version , if existent 
+        '                            ' i.e take values resources, budget, lead person, description 
 
-        '        Else
-        '            If awinSettings.englishLanguage Then
-        '                Call MsgBox(" Please, contact your system administrator")
+        '                            Call synchronizeWithValuesOFExisting(mapProj)
+
+        '                            Call speichereProjektToDB(mapProj, True)
+        '                        Catch ex As Exception
+        '                            If awinSettings.englishLanguage Then
+        '                                Call MsgBox("Error saving of the mapped project to DB ")
+        '                            Else
+        '                                Call MsgBox("Fehler beim Speichern des Mapping Projektes in DB")
+        '                            End If
+        '                        End Try
+        '                    End If
+        '                Else
+        '                    If awinSettings.visboMapping <> "" Then
+        '                        If awinSettings.englishLanguage Then
+        '                            Call MsgBox("Error mapping the project: no TMS - project created")
+        '                        Else
+        '                            Call MsgBox("Fehler beim  Mapping dieses Projektes: Kein TMS-project erstellt")
+        '                        End If
+        '                    End If
+        '                End If
+
+        '                '' Set cursor as Default
+        '                Cursor.Current = Cursors.Default
+
         '            Else
-        '                Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+        '                If awinSettings.englishLanguage Then
+        '                    Call MsgBox(" Please, contact your system administrator")
+        '                Else
+        '                    Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+        '                End If
+
         '            End If
 
         '        End If
 
-        '    End If
+        '    Catch ex As System.Exception
+        '        If awinSettings.englishLanguage Then
+        '            Call MsgBox("Error with message:  " & ex.Message)
+        '        Else
+        '            Call MsgBox("Fehler mit Message:  " & ex.Message)
+        '        End If
 
-        'Catch ex As System.Exception
-        '    If awinSettings.englishLanguage Then
-        '        Call MsgBox("Error with message:  " & ex.Message)
-        '    Else
-        '        Call MsgBox("Fehler mit Message:  " & ex.Message)
-        '    End If
+        '    End Try
 
-        'End Try
     End Sub
 
 End Class
