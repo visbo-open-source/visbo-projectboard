@@ -59,6 +59,14 @@ Public Class clsCustomizationWeb
     Private _showValuesOfSelected As Boolean = False
 
 
+    ' gibt an, ob bei einem Verlängern/Verkürzen einer Phase die Ressourcen und Cost Bedarfe 
+    ' automatisch neuberechnet werden 
+    Private _noNewCalculation As Boolean = False
+    ' gibt an, ob Rechnungen eingegeben werden können
+    ' wird im Formular Settings interaktiv gesetzt, oder besser über customization-Settings
+    Private _enableInvoices As Boolean = False
+
+
     ' gibt es die Einstellung für ProjectWithNoMPmayPass
     Private _mppProjectsWithNoMPmayPass As Boolean
 
@@ -567,6 +575,30 @@ Public Class clsCustomizationWeb
     End Property
 
 
+    ' Vorbesetzung hier = false
+    Public Property noNewCalculation As Boolean
+        Get
+            noNewCalculation = _noNewCalculation
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _noNewCalculation = value
+            End If
+        End Set
+    End Property
+
+
+    ' Vorbesetzung hier = false
+    Public Property enableInvoices As Boolean
+        Get
+            enableInvoices = _enableInvoices
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _enableInvoices = value
+            End If
+        End Set
+    End Property
 
     ' gibt es die Einstellung für ProjectWithNoMPmayPass
     Public Property mppProjectsWithNoMPmayPass As Boolean
@@ -840,6 +872,9 @@ Public Class clsCustomizationWeb
             .propAnpassRess = Me.propAnpassRess
             .showValuesOfSelected = Me.showValuesOfSelected
 
+            .noNewCalculation = Me.noNewCalculation
+            .enableInvoices = Me.enableInvoices
+
             .mppProjectsWithNoMPmayPass = Me.mppProjectsWithNoMPmayPass
             .fullProtocol = Me.fullProtocol
             .addMissingPhaseMilestoneDef = Me.addMissingPhaseMilestoneDef
@@ -930,6 +965,9 @@ Public Class clsCustomizationWeb
             Me.propAnpassRess = .propAnpassRess
             Me.showValuesOfSelected = .showValuesOfSelected
 
+            Me.noNewCalculation = .noNewCalculation
+            Me.enableInvoices = .enableInvoices
+
             Me.mppProjectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
             Me.fullProtocol = .fullProtocol
             Me.addMissingPhaseMilestoneDef = .addMissingPhaseMilestoneDef
@@ -1012,6 +1050,8 @@ Public Class clsCustomizationWeb
         propAnpassRess = False
         showValuesOfSelected = False
 
+        noNewCalculation = False
+        enableInvoices = False
 
         ' gibt es die Einstellung für ProjectWithNoMPmayPass
         mppProjectsWithNoMPmayPass = False

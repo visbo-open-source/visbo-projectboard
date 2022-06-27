@@ -212,6 +212,9 @@ Public Class frmAuthentication
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Dim err As New clsErrorCodeMsg
+
         Try
             ' führt bei Aufruf aus Powerpoint zu Fehler ...
 
@@ -253,6 +256,13 @@ Public Class frmAuthentication
                 pwd = visboCrypto.getPwdFromCipher(cipherText)
 
                 chbx_remember.Checked = True
+
+                If IsNothing(databaseAcc) Then
+                    Dim hrequest As New DBAccLayer.Request
+                    databaseAcc = hrequest
+                End If
+
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, user, pwd, Err)
             Else
                 chbx_remember.Checked = False
             End If

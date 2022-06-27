@@ -524,6 +524,236 @@ Public Module agm4
         enableOnUpdate = True
     End Sub
 
+    ''' <summary>
+    ''' reading the VCSetting "customization" if stored in the actual VC
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function readCustomizations(Optional ByVal customizations As clsCustomization = Nothing) As Date
 
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+        Dim msgTxt As String
+
+        If IsNothing(customizations) Then
+            '
+            ' Read Customizations 
+            customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+        End If
+
+
+        If Not IsNothing(customizations) Then
+
+            StartofCalendar = customizations.kalenderStart
+            Call logger(ptErrLevel.logInfo, "readCustomizations", " StartOfCalendar: " & StartofCalendar.ToString)
+
+            businessUnitDefinitions = customizations.businessUnitDefinitions
+
+            PhaseDefinitions = customizations.phaseDefinitions
+
+            MilestoneDefinitions = customizations.milestoneDefinitions
+
+            showtimezone_color = customizations.showtimezone_color
+            noshowtimezone_color = customizations.noshowtimezone_color
+            calendarFontColor = customizations.calendarFontColor
+            nrOfDaysMonth = customizations.nrOfDaysMonth
+            farbeInternOP = customizations.farbeInternOP
+            farbeExterne = customizations.farbeExterne
+            iProjektFarbe = customizations.iProjektFarbe
+            iWertFarbe = customizations.iWertFarbe
+            vergleichsfarbe0 = customizations.vergleichsfarbe0
+            vergleichsfarbe1 = customizations.vergleichsfarbe1
+
+            awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+            awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+            awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+            awinSettings.AmpelGruen = customizations.AmpelGruen
+
+            awinSettings.AmpelGelb = customizations.AmpelGelb
+            awinSettings.AmpelRot = customizations.AmpelRot
+            awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+            awinSettings.glowColor = customizations.glowColor
+
+            awinSettings.timeSpanColor = customizations.timeSpanColor
+            awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+
+            awinSettings.gridLineColor = customizations.gridLineColor
+
+            awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+            awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
+
+            awinSettings.onePersonOneRole = customizations.onePersonOneRole
+            awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+            awinSettings.actualDataMonth = customizations.actualDataMonth
+            ergebnisfarbe1 = customizations.ergebnisfarbe1
+            ergebnisfarbe2 = customizations.ergebnisfarbe2
+            weightStrategicFit = customizations.weightStrategicFit
+            awinSettings.kalenderStart = customizations.kalenderStart
+            awinSettings.zeitEinheit = customizations.zeitEinheit
+            awinSettings.kapaEinheit = customizations.kapaEinheit
+            awinSettings.offsetEinheit = customizations.offsetEinheit
+            awinSettings.EinzelRessExport = customizations.EinzelRessExport
+            awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+            awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+            awinSettings.spaltenbreite = customizations.spaltenbreite
+            awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+            awinSettings.propAnpassRess = customizations.propAnpassRess
+            awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+            awinSettings.enableInvoices = customizations.enableInvoices
+            awinSettings.noNewCalculation = customizations.noNewCalculation
+
+            awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+            awinSettings.fullProtocol = customizations.fullProtocol
+            awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+            awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+            awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+            awinSettings.importUnknownNames = customizations.importUnknownNames
+            awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+            awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+            awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+            awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+            awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+            awinSettings.importTyp = customizations.importTyp
+
+            awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+            awinSettings.englishLanguage = customizations.englishLanguage
+
+            awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+            awinSettings.considerRiskFee = customizations.considerRiskFee
+
+            StartofCalendar = awinSettings.kalenderStart
+
+            historicDate = StartofCalendar
+            Try
+                If awinSettings.englishLanguage Then
+                    menuCult = ReportLang(PTSprache.englisch)
+                    repCult = menuCult
+                    awinSettings.kapaEinheit = "PD"
+                Else
+                    awinSettings.kapaEinheit = "PT"
+                    menuCult = ReportLang(PTSprache.deutsch)
+                    repCult = menuCult
+                End If
+            Catch ex As Exception
+                awinSettings.englishLanguage = False
+                awinSettings.kapaEinheit = "PT"
+                menuCult = ReportLang(PTSprache.deutsch)
+                repCult = menuCult
+            End Try
+            result = Date.Now
+        Else
+            msgTxt = "No customization in VISBO"
+            Call logger(ptErrLevel.logWarning, "readCustomizations", msgTxt)
+            result = Date.MinValue
+        End If
+        readCustomizations = result
+    End Function
+
+
+    ''' <summary>
+    ''' gets the newest Organisation from now
+    ''' </summary>
+    ''' <returns>date of last reading</returns>
+    Public Function readOrganisations() As Date
+
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+        Dim msgTxt As String
+        'Read Organisation
+
+        Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
+
+        ' ur: old ReSt-Call
+        'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, Err)
+
+        If Not IsNothing(currentOrga) Then
+            If currentOrga.count > 0 Then
+
+                If currentOrga.count > 0 Then
+                    validOrganisations.addOrga(currentOrga)
+                End If
+
+                CostDefinitions = currentOrga.allCosts
+                RoleDefinitions = currentOrga.allRoles
+
+                Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
+                If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
+                    ' do nothing, leave it as is 
+                Else
+                    awinSettings.ActualdataOrgaUnits = tmpActDataString
+                End If
+                result = Date.Now
+
+            Else
+                msgTxt = "No organisation in VISBO"
+                Call logger(ptErrLevel.logError, "readOrganisations", msgTxt)
+                result = Date.MinValue
+
+            End If
+        Else
+            msgTxt = "No organisation in VISBO"
+            Call logger(ptErrLevel.logError, "readOrganisations", msgTxt)
+            result = Date.MinValue
+
+        End If
+
+        readOrganisations = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' Read the projectTemplates from the actual VisboCenter 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function readProjectTemplates() As Date
+
+        Dim result As Date = Date.MinValue
+        Dim err As New clsErrorCodeMsg
+
+
+        ' lesen der templates des akt. VC
+        Dim projectTemplates As clsProjekteAlle = CType(databaseAcc, DBAccLayer.Request).retrieveProjectTemplatesFromDB(err)
+
+        If err.errorCode = 200 Then
+
+            Dim projVorlage As clsProjektvorlage
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projectTemplates.liste
+
+                projVorlage = createTemplateOfProject(kvp.Value)
+                If Not IsNothing(projVorlage) Then
+                    ' hiermit wird die _Dauer gesetzt
+                    Dim vorlagenDauer = projVorlage.dauerInDays
+
+                    Projektvorlagen.Add(projVorlage)
+
+                Else
+                    Call logger(ptErrLevel.logError, "readProjectTemplates", "Creating a project template fromm project " & kvp.Value.name & " crashed")
+                    result = Date.MinValue
+                End If
+            Next
+            If projectTemplates.liste.Count > 0 Then
+                If projectTemplates.liste.Count = Projektvorlagen.Count Then
+                    result = Date.Now
+                End If
+            Else
+                Call logger(ptErrLevel.logWarning, "readProjectTemplates", "No project templates in this VC: " & awinSettings.databaseName)
+                result = Date.MinValue
+            End If
+
+        Else
+            Call logger(ptErrLevel.logWarning, "readProjectTemplates", "Getting project templates from Server finished with warning: " & err.errorMsg)
+            result = Date.MinValue
+        End If
+
+        readProjectTemplates = result
+
+    End Function
 
 End Module

@@ -32,6 +32,7 @@ Public Module Module1
 
     'Name des VisboClient
     'Public visboClient As String = divClients(client.Projectboard)
+
     Public visboClient As String = "VISBO Projectboard / "
 
     'Cache - Infos
@@ -1202,6 +1203,7 @@ Public Module Module1
 
     Public fehlerBeimLoad As Boolean = False
     Public awinsetTypen_Performed As Boolean = False
+    Public speSetTypen_Performed As Boolean = False
 
 
     Private Declare Function OpenClipboard& Lib "user32" (ByVal hwnd As Long)
@@ -8166,28 +8168,58 @@ Public Module Module1
                 End If
 
             Case PTwindows.massEdit
+                Dim visboClientTxt As String = visboClient
 
-                Select Case tableTyp
-                    Case ptTables.meRC
-                        If awinSettings.englishLanguage Then
-                            tmpResult = "Modify Resource and Cost Needs"
-                        Else
-                            tmpResult = "Personal- und Kostenbedarfe ändern"
-                        End If
-                    Case ptTables.meTE
-                        If awinSettings.englishLanguage Then
-                            tmpResult = "Modify Tasks and Milestones"
-                        Else
-                            tmpResult = "Meilensteine und Vorgänge ändern"
-                        End If
-                    Case ptTables.meAT
-                        If awinSettings.englishLanguage Then
-                            tmpResult = "Modify Attributes"
-                        Else
-                            tmpResult = "Attribute ändern"
-                        End If
-                End Select
+                If visboClient.Contains("VISBO SPE") Then
+                    visboClientTxt = "VISBO Project Edit / "
+                End If
 
+                If visboClient.Contains("VISBO SPE") And ShowProjekte.Count = 1 Then
+
+                    Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
+                    Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    Select Case tableTyp
+                        Case ptTables.meRC
+                            If awinSettings.englishLanguage Then
+                                tmpResult = visboClientTxt & "Modify Resource and Cost Needs: " & printProjName
+                            Else
+                                tmpResult = visboClientTxt & "Personal- und Kostenbedarfe ändern: " & printProjName
+                            End If
+                        Case ptTables.meTE
+                            If awinSettings.englishLanguage Then
+                                tmpResult = visboClientTxt & "Modify Tasks and Milestones: " & printProjName
+                            Else
+                                tmpResult = visboClientTxt & "Meilensteine und Vorgänge ändern: " & printProjName
+                            End If
+                        Case ptTables.meAT
+                            If awinSettings.englishLanguage Then
+                                tmpResult = visboClientTxt & "Modify Attributes: " & printProjName
+                            Else
+                                tmpResult = visboClientTxt & "Attribute ändern: " & printProjName
+                            End If
+                    End Select
+                Else
+                    Select Case tableTyp
+                        Case ptTables.meRC
+                            If awinSettings.englishLanguage Then
+                                tmpResult = visboClientTxt & "Modify Resource and Cost Needs"
+                            Else
+                                tmpResult = visboClientTxt & "Personal- und Kostenbedarfe ändern"
+                            End If
+                        Case ptTables.meTE
+                            If awinSettings.englishLanguage Then
+                                tmpResult = visboClientTxt & "Modify Tasks and Milestones"
+                            Else
+                                tmpResult = visboClientTxt & "Meilensteine und Vorgänge ändern"
+                            End If
+                        Case ptTables.meAT
+                            If awinSettings.englishLanguage Then
+                                tmpResult = visboClientTxt & "Modify Attributes"
+                            Else
+                                tmpResult = visboClientTxt & "Attribute ändern"
+                            End If
+                    End Select
+                End If
 
         End Select
 

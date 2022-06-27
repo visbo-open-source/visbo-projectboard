@@ -42,6 +42,96 @@ Public Class Request
     Private aktUser As clsUserReg = Nothing
     Private netcred As NetworkCredential
 
+    ''' <summary>
+    '''  'Verbindung mit der Datenbank aufbauen (mit Angabe von OneTimeToken übergeben)
+    ''' </summary>
+    ''' <param name="ServerURL"></param>
+    ''' <param name="databaseName">wird beim Login am Visbo-Rest-Server nicht benötigt</param>
+    ''' <param name="OTT"></param>
+    Public Function loginOTT(ByVal ServerURL As String,
+                          ByVal databaseName As String,
+                          ByVal OTT As String,
+                          ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim typeRequest As String = "/token/user/ott"
+        Dim serverUri As New Uri(ServerURL & typeRequest)
+        Dim loginOK As Boolean = False
+        Dim errcode As Integer = 0
+        Dim errmsg As String = ""
+        Dim httpresp_sav As HttpWebResponse
+
+        Try
+            If Deployment.Application.ApplicationDeployment.IsNetworkDeployed Then
+                version =
+                  Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion()
+                visboUserAgent = visboClient & version.ToString & visboUserAgent
+            Else
+                ' Nicht via ClickOnce installiert
+                visboUserAgent = visboClient & visboUserAgent
+            End If
+
+            Dim user As New clsOTTLoginSignup
+            user.ott = OTT
+
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(user, typeRequest)
+
+
+            Dim loginAntwort As New clsWebTokenUserLoginSignup
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                httpresp_sav = httpresp     ' sichern der Server-Antwort
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+
+            End Using
+
+            If awinSettings.visboDebug Then
+                Call MsgBox(loginAntwort.message)
+            End If
+
+            If errcode = 200 Then
+
+                loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
+
+                loginOK = True
+                token = loginAntwort.token
+                serverUriName = ServerURL
+                aktUser = loginAntwort.user
+
+                ' VisboCenterID mit Name = databaseName wird gespeichert
+                aktVCid = GETvcid(databaseName)
+
+            Else
+
+                token = ""
+                serverUriName = ServerURL
+                aktUser = Nothing
+                dbPasswort = ""
+                If awinSettings.visboDebug Then
+                    Call MsgBox("( " & CType(errcode, Integer).ToString & ") : " & errmsg & " : " & loginAntwort.message)
+                End If
+
+                err.errorCode = errcode
+                err.errorMsg = "Login" & " : " & errmsg & " : " & loginAntwort.message
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("Login", errcode, errmsg & " : " & loginAntwort.message)
+
+            End If
+
+
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in Login" & typeRequest & ": " & ex.Message)
+        End Try
+
+        loginOTT = loginOK
+
+    End Function
+
 
 
     ''' <summary>
@@ -750,6 +840,56 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
         retrieveOneProjectfromDB = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), das zum angegebenen Zeitpunkt das aktuelle war
+    ''' falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="vpvid"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneProjectVersionfromDB(ByVal vpid As String, ByVal vpvid As String,
+                                             ByRef err As clsErrorCodeMsg) As clsProjekt
+        Dim result As clsProjekt = Nothing
+        Try
+            Dim hproj As New clsProjekt
+            Dim vp As clsVP = Nothing
+            Try
+                If vpid <> "" Then
+                    vp = GETallVP(aktVCid, err, ptPRPFType.project).Item(vpid)
+                End If
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "retrieveOneProjectVersionfromDB", "There exist no VP with vpid= '" & vpid & "'")
+            End Try
+
+
+            If vpvid <> "" Then
+                ' gewünschte Variante vom Server anfordern
+                Dim allVPv As New List(Of clsProjektWebLong)
+                'allVPv = GETallVPvLong(vpid, err, , , , variantname, storedAtOrBefore)
+                allVPv = GETallVPvLong(vpid:=vpid,
+                                       err:=err,
+                                       vpvid:=vpvid,
+                                       status:="",
+                                       refNext:=False,
+                                       variantName:="")
+                If allVPv.Count > 0 Then
+                    Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
+                    webProj.copyto(hproj, vp)
+
+                    result = hproj
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveOneProjectVersionfromDB = result
 
     End Function
     Public Function retrieveProjectTemplatesFromDB(ByRef err As clsErrorCodeMsg) As clsProjekteAlle
@@ -3817,6 +3957,7 @@ Public Class Request
 
 
         Catch ex As Exception
+            result = Nothing
             Throw New ArgumentException(ex.Message)
         End Try
         retrieveCustomizationFromDB = result
@@ -8439,7 +8580,7 @@ Public Class Request
     ''' <param name="vpid"></param>
     ''' <param name="variantName"></param>
     ''' <returns>variantID</returns>
-    Private Function findVariantID(ByVal vpid As String, ByVal variantName As String) As String
+    Public Function findVariantID(ByVal vpid As String, ByVal variantName As String) As String
 
         Dim variantID As String = ""
         Try ' passende VariantID herausfinden

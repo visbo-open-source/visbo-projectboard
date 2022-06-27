@@ -26605,31 +26605,35 @@ Public Module Projekte
 
             ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
             If ShowProjekte.contains(pname) Then
-                hproj = ShowProjekte.getProject(pname)
 
-                ' welche Phasen werden angezeigt , welche Meilensteine werden angezeigt ? 
-                phaseList = projectboardShapes.getPhaseList(pname)
-                milestoneList = projectboardShapes.getMilestoneList(pname)
+                If Not visboClient.Contains("VISBO SPE") Then
+                    hproj = ShowProjekte.getProject(pname)
 
-                ' prüfen, ob es überhaupt eine andere Variante ist 
-                ' Änderung 09.10.14: das sollte dann ein Abbruch-Kriterium sein, wenn nicht ohnehin ersetzt werden soll 
-                ' denn wenn das Projekt aus der Datenbank neu geladen wird, kann es ggf unterschiedlich sein; 
-                ' also sollte es bei replaceAnyhow auf alle Fälle geladen werden 
-                If hproj.variantName = newVariant And Not replaceAnyhow Then
-                    Exit Sub
+                    ' welche Phasen werden angezeigt , welche Meilensteine werden angezeigt ? 
+                    phaseList = projectboardShapes.getPhaseList(pname)
+                    milestoneList = projectboardShapes.getMilestoneList(pname)
+
+                    ' prüfen, ob es überhaupt eine andere Variante ist 
+                    ' Änderung 09.10.14: das sollte dann ein Abbruch-Kriterium sein, wenn nicht ohnehin ersetzt werden soll 
+                    ' denn wenn das Projekt aus der Datenbank neu geladen wird, kann es ggf unterschiedlich sein; 
+                    ' also sollte es bei replaceAnyhow auf alle Fälle geladen werden 
+                    If hproj.variantName = newVariant And Not replaceAnyhow Then
+                        Exit Sub
+                    End If
+
+                    ' bestimme die bisher angezeigten Phasen und Meilensteine 
+
+
+                    tfzeile = hproj.tfZeile
+
+                    ' tk/ur : sicherstellen, dass die neue Variante in der gleichen Art(extendedView) angezeigt wird wie die 
+                    ' bisherige Variante 
+                    newProj.extendedView = hproj.extendedView
+
+                    ' die Darstellung in der Projekt-Tafel löschen
+                    Call clearProjektinPlantafel(pname)
                 End If
 
-                ' bestimme die bisher angezeigten Phasen und Meilensteine 
-
-
-                tfzeile = hproj.tfZeile
-
-                ' tk/ur : sicherstellen, dass die neue Variante in der gleichen Art(extendedView) angezeigt wird wie die 
-                ' bisherige Variante 
-                newProj.extendedView = hproj.extendedView
-
-                ' die Darstellung in der Projekt-Tafel löschen
-                Call clearProjektinPlantafel(pname)
 
                 ' Änderung tk 4.7.15 erst clear auf Tafel, dann Remove aus Showprojekte 
                 ' andernfalls macht der Clear mit Röntgen-Blick Schwierigkeiten 
@@ -26642,27 +26646,26 @@ Public Module Projekte
             ' die  Variante wird aufgenommen
             ShowProjekte.Add(newProj)
 
+            If Not visboClient.Contains("VISBO SPE") Then
+                ' neu zeichnen des Projekts 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)
 
-            ' neu zeichnen des Projekts 
-            Dim tmpCollection As New Collection
-            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)
+                If selectIT Then
 
-            If selectIT Then
+                    Try
+                        CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
+                    Catch ex As Exception
 
-                Try
-                    CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
-                Catch ex As Exception
+                    End Try
 
-                End Try
-
+                End If
             End If
+
 
         Else
             'Throw New ArgumentException("Projektvariante existiert nicht")
         End If
-
-
-
 
 
     End Sub

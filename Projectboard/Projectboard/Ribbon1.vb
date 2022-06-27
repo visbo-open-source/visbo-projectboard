@@ -90,9 +90,6 @@ Public Class Ribbon1
         ' 
         ' Ende alte Version; vor dem 26.10.14
 
-
-
-
         enableOnUpdate = True
 
     End Sub
@@ -2468,7 +2465,7 @@ Public Class Ribbon1
     ''' </summary>
     ''' <param name="modus"></param>
     ''' <remarks></remarks>
-    Private Sub enableControls(ByVal modus As ptModus)
+    Public Sub enableControls(ByVal modus As ptModus)
 
         If modus = ptModus.graficboard Then
             visboZustaende.projectBoardMode = modus
