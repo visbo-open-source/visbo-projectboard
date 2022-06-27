@@ -462,9 +462,13 @@ Public Class Ribbon1
                                 Call synchronizeWithValuesOFExisting(hproj)
 
                                 ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
-                                If awinSettings.visboMapping <> "" Then
+                                If awinSettings.visboMapping <> "" And Not IsNothing(mapProj) Then
                                     Call speichereProjektToDB(hproj)
                                 Else
+                                    Call speichereProjektToDB(hproj, True)
+
+                                    ' auch als orig-Variante abspeichern
+                                    hproj.variantName = "orig"
                                     Call speichereProjektToDB(hproj, True)
                                 End If
 
