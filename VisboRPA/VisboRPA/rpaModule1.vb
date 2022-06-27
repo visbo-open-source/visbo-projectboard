@@ -333,8 +333,8 @@ Module rpaModule1
                     Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
-                    'allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
-                    Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
+                    allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
@@ -1465,7 +1465,7 @@ Module rpaModule1
     End Function
 
     ''' <summary>
-    ''' checks whether or not it is a downloaded and edited VisboCenterOrganisation 
+    ''' checks whether or not it is a downloaded and edited 
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
@@ -1794,9 +1794,6 @@ Module rpaModule1
                 Try
 
                     verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
-
-                    ' hier muss noch geprüft werden, ob alle timesheets vorhanden, sonst in separates Dir schieben und erst wenn Timesheet-completed - file vorhanden, dann alle einlesen
-
 
                 Catch ex As Exception
                     verifiedStructure = False
@@ -3974,6 +3971,7 @@ Module rpaModule1
         Dim aktDateTime As Date = Date.Now
         Dim instartImportConfigOK As Boolean = False
 
+
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
 
         'check the pre-conditions
@@ -3997,7 +3995,7 @@ Module rpaModule1
             Dim dateiName As String = ""
             Dim listofArchivAllg As New List(Of String)
             Dim outPutCollection As New Collection
-            Dim configProposalImport As String = ""
+            Dim configProposalImport As String = "configCalcTemplateImport.xlsx"
 
 
             Dim outputLine As String = ""
@@ -4015,7 +4013,6 @@ Module rpaModule1
 
             If allesOK Then
 
-
                 Dim listofVorlagen As New Collection
                 listofVorlagen.Add(myName)
                 If projectsFile = projectConfig("DateiName").ProjectsFile Then
@@ -4023,9 +4020,11 @@ Module rpaModule1
                 End If
                 'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
 
-                If listofArchivAllg.Count > 0 Then
-                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
-                End If
+                'If listofArchivAllg.Count > 0 Then
+                '    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                'End If
+
+                allesOK = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
 
                 If allesOK Then
                     ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
@@ -4034,53 +4033,44 @@ Module rpaModule1
                         ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
                         Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
 
+
                     Catch ex As Exception
                         If awinSettings.englishLanguage Then
-                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                            outputString = "Error at Import: " & vbLf & ex.Message
                         Else
-                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
                         End If
+                        outPutCollection.Add(outputString)
 
                     End Try
+
                 Else
+
+                    Call logger(ptErrLevel.logError, "checkProjectImportConfig", outPutCollection)
 
                 End If
 
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
 
             End If
 
 
-            outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
-            outPutCollection.Add(outputString)
+            allOk = allOk And allesOK
 
-            If outPutCollection.Count > 0 Then
-                If awinSettings.englishLanguage Then
-                    Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
-                Else
-                    Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
-                End If
-            End If
+        Catch ex2 As Exception
+            allOk = False
+        End Try
 
-            Try
-                ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
-                ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-
-                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
-
-            Catch ex As Exception
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
-                Else
-                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
-                End If
-
-            End Try
-
-            'Else
-            '    Call logger(ptErrLevel.logError, "processInstartProposal", outPutCollection)
-            '    allOk = False
-            'End If
-
+        Try
             ' store Projects
             If allOk Then
                 allOk = storeImportProjekte()
@@ -4089,12 +4079,14 @@ Module rpaModule1
             ' empty session 
             Call emptyRPASession()
 
-            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboInstartProposal.ToString, myName)
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProposal.ToString, myName)
 
         Catch ex1 As Exception
-            allOk = False
-            Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
+                allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Projects Proposal", ex1.Message)
         End Try
+
+
 
         processInstartProposal = allOk
     End Function
