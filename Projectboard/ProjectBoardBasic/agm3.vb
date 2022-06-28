@@ -6118,20 +6118,28 @@ Public Module agm3
 
         If awinSettings.englishLanguage Then
             outputline = vbLf & anz_Proj_created.ToString & " projects created !"
-            meldungen.Add(outputline)
+            If Not visboClient.Contains("VISBO RPA") Then
+                meldungen.Add(outputline)
+            End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            If anz_Proj_notCreated > 0 Then
+                outputline = anz_Proj_notCreated & " projects were N O T  created !"
+                meldungen.Add(outputline)
+                Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            End If
 
-            outputline = anz_Proj_notCreated & " projects were N O T  created !"
-            meldungen.Add(outputline)
-            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
         Else
             outputline = vbLf & anz_Proj_created.ToString & " Projekte wurden erzeugt !"
-            meldungen.Add(outputline)
+            If Not visboClient.Contains("VISBO RPA") Then
+                meldungen.Add(outputline)
+            End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            If anz_Proj_notCreated > 0 Then
+                outputline = anz_Proj_notCreated & " Projekte wurden N I C H T  erzeugt !"
+                meldungen.Add(outputline)
+                Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            End If
 
-            outputline = anz_Proj_notCreated & " Projekte wurden N I C H T  erzeugt !"
-            meldungen.Add(outputline)
-            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
         End If
 
 
