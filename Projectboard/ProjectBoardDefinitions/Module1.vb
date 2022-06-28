@@ -1003,6 +1003,9 @@ Public Module Module1
         ' visbo Find Project Starts
         visboFindProjectStart = 20
 
+        ' represents the CostAssertion of Telair
+        visboCostAssertion = 21
+
         ' represents the Automatic Team Allocation
         'visboSuggestResourceAllocation = 
 
