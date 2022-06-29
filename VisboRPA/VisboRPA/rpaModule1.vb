@@ -327,8 +327,8 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboUpdateTagetik)
                     allOk = True
-
-                    Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
+                    allOk = processUpdateTagetik(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
 
                 Case CInt(PTRpa.visboEGeckoCapacity)
                     allOk = True
@@ -1923,34 +1923,44 @@ Module rpaModule1
     Private Function checkTagetikUpdateProjectList(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim verifiedStructure As Boolean = False
-        Dim blattName As String = "BASE" '????
+        Dim possibleTableNames() As String = {"Telair"}
 
         Try
-            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+                Next
+            End If
+
 
             If IsNothing(currentWS) Then
                 result = PTRpa.visboUnknown
             Else
-                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
-                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
-                Try
-
-                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
-
-                Catch ex As Exception
-                    verifiedStructure = False
-                End Try
-
+                Dim tmpRange As xlns.Range = CType(currentWS.Range(currentWS.Cells(1, 1), currentWS.Cells(30, 40)), xlns.Range)
+                Dim xxx As Object = tmpRange.Find("Forecast")
+                If Not IsNothing(xxx) Then
+                    result = PTRpa.visboUpdateTagetik
+                Else
+                    result = PTRpa.visboUnknown
+                End If
             End If
+
         Catch ex As Exception
             result = PTRpa.visboUnknown
         End Try
 
-        If verifiedStructure Then
-            result = PTRpa.visboUpdateTagetik
-        Else
-            result = PTRpa.visboUnknown
-        End If
+
 
         checkTagetikUpdateProjectList = result
     End Function
@@ -4414,6 +4424,137 @@ Module rpaModule1
 
 
         processNewTagetik = allOk
+    End Function
+
+
+
+
+
+    Public Function processUpdateTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim telairUpdateConfigOK As Boolean = False
+
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboUpdateTagetik.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 2 Then
+            lastReadingProjectTemplates = readProjectTemplates()
+        End If
+
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configProjectsUpdates As String = "configProjectUpdates.xlsx"
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            telairUpdateConfigOK = checkProjectImportConfig(configProjectsUpdates, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If outPutCollection.Count > 0 Then
+                Call logger(ptErrLevel.logError, "processUpdateTagetik", outPutCollection)
+            End If
+
+
+            If telairUpdateConfigOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikUpdate)
+                End If
+                'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                'If listofArchivAllg.Count > 0 Then
+                '    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                'End If
+
+                allOk = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
+
+                If allOk Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputString = "Error at Import: " & vbLf & ex.Message
+                        Else
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
+                        End If
+                        outPutCollection.Add(outputString)
+
+                    End Try
+
+                Else
+
+                End If
+
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
+
+            End If
+
+            allOk = allOk And telairUpdateConfigOK
+
+        Catch ex2 As Exception
+            allOk = False
+        End Try
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboUpdateTagetik.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Cost Assertion Projects", ex1.Message)
+        End Try
+
+
+
+        processUpdateTagetik = allOk
     End Function
 
 
