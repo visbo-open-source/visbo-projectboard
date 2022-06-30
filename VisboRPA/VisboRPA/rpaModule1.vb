@@ -3268,10 +3268,10 @@ Module rpaModule1
 
     End Function
     Private Function processEGeckoCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
-
+        processEGeckoCapacity = True
     End Function
     Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
-
+        processZeussCapacity = True
     End Function
 
 
@@ -3530,9 +3530,9 @@ Module rpaModule1
         End If
         'If DateDiff(DateInterval.Hour, lastReadingCustomization, aktDateTime) > 24 Then
         lastReadingCustomization = readCustomizations()
-            If lastReadingCustomization <= Date.MinValue Then
-                Call logger(ptErrLevel.logError, "processVisboActualData2", "the import of actual data requires the existence of a customization setting")
-            End If
+        If lastReadingCustomization <= Date.MinValue Then
+            Call logger(ptErrLevel.logError, "processVisboActualData2", "the import of actual data requires the existence of a customization setting")
+        End If
         'End If
 
         Dim weitermachen As Boolean = False
@@ -4756,6 +4756,7 @@ Module rpaModule1
             End If
         End If
 
+        Dim ok As Boolean = cancelLocksMyProjects(dbUsername)
 
         ' wieder in das normale logfile schreiben
         logfileNamePath = createLogfileName(rpaFolder)
@@ -4769,6 +4770,39 @@ Module rpaModule1
             Call logger(ptErrLevel.logError, "processResult", msgTxt)
         End If
     End Sub
+
+    Public Function cancelLocksMyProjects(ByVal user As String) As Boolean
+        Dim err As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+        result = False
+
+        ' all locks of my projects will be deleted
+        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(user, err, False) Then
+            If awinSettings.englishLanguage Then
+                msgTxt = "Your temporary write locks have been lifted"
+            Else
+                msgTxt = "Ihre vorübergehenden Schreibsperren wurden aufgehoben"
+            End If
+            If awinSettings.visboDebug Then
+                Call MsgBox(msgTxt)
+            End If
+            Call logger(ptErrLevel.logInfo, "cancelLocksMyProjects", msgTxt)
+            result = True
+        Else
+            If awinSettings.englishLanguage Then
+                msgTxt = "Your temporary write locks could not be lifted"
+            Else
+                msgTxt = "Ihre vorübergehenden Schreibsperren konnten nicht aufgehoben werden"
+            End If
+            If awinSettings.visboDebug Then
+                Call MsgBox(msgTxt)
+            End If
+            Call logger(ptErrLevel.logInfo, "cancelLocksMyProjects", msgTxt)
+            result = False
+        End If
+
+        cancelLocksMyProjects = result
+    End Function
 
     Public Function processNewImportFile(ByVal fileName As String) As Boolean
 

@@ -2775,7 +2775,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="user"></param>
     ''' <returns></returns>
-    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg, Optional ByVal onlyNotExpired As Boolean = True) As Boolean
 
         Dim result As Boolean = True
         Dim vplist As New SortedList(Of String, clsVP)
@@ -2802,12 +2802,22 @@ Public Class Request
 
                     For Each lock As clsVPLock In locklist
 
-                        If LCase(aktUser.email) = LCase(lock.email) And
-                            lock.expiresAt > Date.UtcNow Then
+                        Dim expiredLock As Boolean = (lock.expiresAt < Date.UtcNow)
 
-                            result = result And DELETEVPLock(vpid, err, lock.variantName)
+                        If onlyNotExpired Then
 
+                            If LCase(aktUser.email) = LCase(lock.email) And
+                                                        Not expiredLock Then
+                                result = result And DELETEVPLock(vpid, err, lock.variantName)
+                            End If
+                        Else
+
+                            ' all locks of aktUser.email will be deleted
+                            If LCase(aktUser.email) = LCase(lock.email) Then
+                                result = result And DELETEVPLock(vpid, err, lock.variantName)
+                            End If
                         End If
+
                     Next
 
                 End If

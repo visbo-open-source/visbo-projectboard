@@ -2107,14 +2107,14 @@ Public Class Request
     ''' </summary>
     ''' <param name="user"></param>
     ''' <returns></returns>
-    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg, Optional ByVal onlyNotExpired As Boolean = True) As Boolean
 
         Dim result As Boolean = False
         Try
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
+                    result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err, onlyNotExpired)
 
                     If result = False Then
 
@@ -2126,7 +2126,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err, onlyNotExpired)
                                 End If
 
                             Case Else ' all others
