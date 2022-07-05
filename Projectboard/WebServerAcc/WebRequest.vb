@@ -807,6 +807,9 @@ Public Class Request
 
                 vpid = vp._id
             Else
+                If VRScache.VPsId.Count <= 0 Then
+                    VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
+                End If
                 vp = VRScache.VPsId(vpid)
                 If IsNothing(vp) Then
                     VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
@@ -814,6 +817,9 @@ Public Class Request
                 End If
             End If
 
+            If aktVCid = "" Then
+                aktVCid = vp.vcid
+            End If
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
@@ -5228,7 +5234,12 @@ Public Class Request
                     Case ptPRPFType.portfolio
 
                         For Each vp In webVPantwort.vp
-                            result.Add(vp.name, vp)
+
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt. schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                             ' VPs nach Id sortiert gecacht
                             If Not VRScache.VPsId.ContainsKey(vp._id) Then
@@ -5246,7 +5257,11 @@ Public Class Request
                         ' die erhaltenen Projekte werden in einer sortierten Liste gecacht
                         For Each vp In webVPantwort.vp
 
-                            result.Add(vp.name, vp)
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt. schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                             ' VPs nach Id sortiert gecacht
                             If Not VRScache.VPsId.ContainsKey(vp._id) Then
@@ -5270,7 +5285,11 @@ Public Class Request
 
                         For Each vp In webVPantwort.vp
 
-                            result.Add(vp.name, vp)
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt.  schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                         Next
 
@@ -5279,7 +5298,11 @@ Public Class Request
                         ' die erhaltenen Projekte/Portfolio-Projekte werden in einer sortierten Liste gecacht
                         For Each vp In webVPantwort.vp
 
-                            result.Add(vp.name, vp)
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt.  schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                             ' VPs nach Id sortiert gecacht
                             If Not VRScache.VPsId.ContainsKey(vp._id) Then
