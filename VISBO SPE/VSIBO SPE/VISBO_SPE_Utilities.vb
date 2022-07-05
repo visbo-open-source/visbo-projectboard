@@ -24,6 +24,7 @@ Module VISBO_SPE_Utilities
     Public Function speSetTypen(ByVal oneTimeToken As String) As Boolean
 
         Dim result As Boolean = False
+        Dim msgtxt As String = ""
 
         Try
             Dim err As New clsErrorCodeMsg
@@ -173,43 +174,53 @@ Module VISBO_SPE_Utilities
 
                 If loginErfolgreich Then
 
-                    ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-                    Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+                    If spe_vpid <> "" And spe_vpvid <> "" Then
+                        'Call MsgBox("Projektname: " & spe_vpid)
+                        'holen des Projekte mit vpid... und vpvid...
+                        Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB("", "", spe_vpid, Date.Now, err)
+                        'Call MsgBox("Projektname: " & hproj.name)
+                    Else
 
-                    If listOfVCs.Count = 1 Then
-                        ' alles ok, nimm dieses  VC
-                        awinSettings.databaseName = listOfVCs.Item(0)
 
-                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
-                        If Not changeOK Then
-                            Call logger(ptErrLevel.logError, "VISBO SPE load", "No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-                            Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-                        Else
-                            Dim myVC As String = awinSettings.databaseName
+                        ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+                        Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                        End If
+                        If listOfVCs.Count = 1 Then
+                            ' alles ok, nimm dieses  VC
+                            awinSettings.databaseName = listOfVCs.Item(0)
 
-                    ElseIf listOfVCs.Count > 1 Then
-                        ' wähle das gewünschte VC aus
-                        Dim chooseVC As New frmSelectOneItem
-                        chooseVC.itemsCollection = listOfVCs
-                        If chooseVC.ShowDialog = DialogResult.OK Then
-                            ' alles ok 
-                            awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
                             Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
                             If Not changeOK Then
                                 Call logger(ptErrLevel.logError, "VISBO SPE load", "No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                                 Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-                            End If
-                        Else
-                            Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
-                        End If
+                            Else
+                                Dim myVC As String = awinSettings.databaseName
 
-                    Else
-                        ' user has no access to any VISBO Center 
-                        Call logger(ptErrLevel.logInfo, "Load of Formular", "User has no access to any VISBO Center ... ")
-                        Throw New ArgumentException("No access to a VISBO Center ")
+                            End If
+
+                        ElseIf listOfVCs.Count > 1 Then
+                            ' wähle das gewünschte VC aus
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+                            If chooseVC.ShowDialog = DialogResult.OK Then
+                                ' alles ok 
+                                awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                                Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
+                                If Not changeOK Then
+                                    Call logger(ptErrLevel.logError, "VISBO SPE load", "No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
+                                    Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
+                                End If
+                            Else
+                                Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
+                            End If
+
+                        Else
+                            ' user has no access to any VISBO Center 
+                            Call logger(ptErrLevel.logInfo, "Load of Formular", "User has no access to any VISBO Center ... ")
+                            Throw New ArgumentException("No access to a VISBO Center ")
+                        End If
                     End If
+
 
                 Else
                     ' no valid Login
@@ -255,6 +266,15 @@ Module VISBO_SPE_Utilities
 
             Dim lastReadingOrganisation As Date = readOrganisations()
 
+            If lastReadingCustomization = Date.MinValue Or lastReadingOrganisation = Date.MinValue Then
+
+                If awinSettings.englishLanguage Then
+                    msgtxt = "There is no organisation or no customization settings defined. Please contact your administrator!"
+                    Throw New ArgumentException(msgtxt)
+                End If
+            Else
+
+            End If
 
             '
             ' now read customFieldDefinitions; is allowed to be empty
@@ -320,15 +340,15 @@ Module VISBO_SPE_Utilities
 
             result = False
             Call logger(ptErrLevel.logError, "speSetTypen", ex.Message)
-            Dim msg As String = ""
+            'Dim msg As String = ""
 
-            If ex.Message.StartsWith("LOGIN cancelled") Or ex.Message.Contains("User") Then
-                msg = ex.Message
-            Else
+            'If ex.Message.StartsWith("LOGIN cancelled") Or ex.Message.Contains("User") Then
+            '    msg = ex.Message
+            'Else
 
-            End If
+            'End If
 
-            Throw New ArgumentException(msg)
+            Throw New ArgumentException(ex.Message)
 
         End Try
 

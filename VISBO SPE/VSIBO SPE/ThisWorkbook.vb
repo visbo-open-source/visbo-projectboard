@@ -31,63 +31,54 @@ Public Class ThisWorkbook
 
         'Call Auto_open()
 
+        logfileNamePath = createLogfileName()
+
         Dim CmdLine As String 'command-line string
 
         CmdLine = GetCommandLine() 'get the cmd-line string
+        'CmdLine = "start excel /e/vpid:624dcfc6e89109508af0f76b/vpvid:62b95c9211d22614f90685bc/ ""C:\temp\VISBO SPE\VISBO Project Edit.xlsx"
         CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
-        Call MsgBox("cmdline1: " & CmdLine)
+        'Call MsgBox("cmdline: " & CmdLine)
+        Call logger(ptErrLevel.logInfo, "startup", "commandline: " & CmdLine)
 
         Dim hstr() As String = CmdLine.Split("/")
         Dim parameter As String = ""
         If hstr.Length > 2 Then
-            Call MsgBox("parameter1: " & hstr(2))
+            'Call MsgBox("parameter1: " & hstr(2))
+            Call logger(ptErrLevel.logInfo, "Startup", "parameter1: " & hstr(2))
         End If
         If hstr.Length > 3 Then
-            Call MsgBox("parameter2: " & hstr(3))
+            'Call MsgBox("parameter2: " & hstr(3))
+            Call logger(ptErrLevel.logInfo, "Startup", "parameter2: " & hstr(3))
         End If
         If hstr.Length > 4 Then
-            Call MsgBox("parameter3: " & hstr(4))
+            'Call MsgBox("parameter3: " & hstr(4))
+            Call logger(ptErrLevel.logInfo, "Startup", "parameter3: " & hstr(4))
         End If
 
-        'Dim hstr() As String
-        'Dim cmdLine As String = GetCommandLine()
 
-        ''Dim cline As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug\VISBO SPE.xlsx" / """vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
-        'Call MsgBox(cmdLine)
-
-        'hstr = cmdLine.Split("/")
-        'If hstr.Length > 2 Then
-        '    parameterString = hstr(2)
-        '    Call MsgBox("parameterString: " & parameterString)
-        'Else
-
-        'End If
-
-
-        ''parameterString = "vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
-
-        ''parameterString = "vpid:624dcb87e89109508af0ef8b&vpvid:624dcb88e89109508af0efde&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODQuMTYwLjc1LjQzIiwidGltZXN0YW1wIjoiMjAyMi0wNS0yNVQwOTo0NDozOS4zNjNaIn0sImlhdCI6MTY1MzQ3MTg3OSwiZXhwIjoxNjUzNDcxOTk5fQ.y8pZh7WOj5L1ZK50WIPCGah7t1OF10h0EN6TCpGtRm0"
-
-        ''Call MsgBox(parameterString)
-        'hstr = parameterString.Split("&")
         If hstr.Length > 2 Then
             For i = 2 To hstr.Length - 2
                 Dim elem As String = hstr(i)
                 Dim bezeichner As String = (elem.Split(":"))(0)
-                Call MsgBox("bezeichner = " & bezeichner)
+                'Call MsgBox("bezeichner = " & bezeichner)
                 Select Case bezeichner
                     Case "vpid"
                         spe_vpid = (elem.Split(":"))(1)
-                        Call MsgBox("vpid = " & spe_vpid)
+                        'Call MsgBox("vpid = " & spe_vpid)
+                        Call logger(ptErrLevel.logInfo, "Startup", bezeichner & " = " & spe_vpid)
                     Case "vpvid"
                         spe_vpvid = (elem.Split(":"))(1)
-                        Call MsgBox("vpvid = " & spe_vpvid)
+                        'Call MsgBox("vpvid = " & spe_vpvid)
+                        Call logger(ptErrLevel.logInfo, "Startup", bezeichner & " = " & spe_vpvid)
                     Case "ott"
                         spe_ott = (elem.Split(":"))(1)
-                        Call MsgBox("oneTimeToken = " & spe_ott)
+                        'Call MsgBox("oneTimeToken = " & spe_ott)
+                        Call logger(ptErrLevel.logInfo, "Startup", bezeichner & " = " & spe_ott)
                     Case Else
                         rest = (elem.Split(":"))(1)
-                        Call MsgBox("rest = " & rest)
+                        'Call MsgBox("rest = " & rest)
+                        Call logger(ptErrLevel.logInfo, "Startup", "everything else = " & rest)
                 End Select
             Next
         End If
@@ -116,29 +107,12 @@ Public Class ThisWorkbook
 
         appInstance = Application
 
-
-        logfileNamePath = createLogfileName()
-
         ' nicht visible setzen
         appInstance.Visible = False
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
 
         Dim path As String = CType(appInstance.ActiveWorkbook, Excel.Workbook).Path
-
-        ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
-        ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
-        ' in anderen Excel Sheets ist das weiterhin aktiv 
-        'For Each cbar In appInstance.CommandBars
-
-        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
-        '        cbar.Enabled = False
-        '    End If
-        ''Next
-
-        'ur:220523: Test if esc is no longer necessary
-        'magicBoardCmdBar.cmdbars = appInstance.CommandBars
-
 
 
         Try
@@ -198,6 +172,9 @@ Public Class ThisWorkbook
 
             speSetTypen_Performed = True
 
+            '' Laden des übergebenen Projektes
+            Call loadGivenProject()
+
         Catch ex As Exception
 
             appInstance.EnableEvents = True
@@ -210,9 +187,6 @@ Public Class ThisWorkbook
             appInstance.ShowChartTipValues = True
         End Try
 
-        '' Laden des übergebenen Projektes
-
-        Call loadGivenProject()
 
         anzahlCalls = 0
     End Sub
