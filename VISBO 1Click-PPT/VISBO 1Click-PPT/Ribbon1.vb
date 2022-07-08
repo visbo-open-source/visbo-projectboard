@@ -396,7 +396,7 @@ Public Class Ribbon1
                 Catch ex As Exception
 
                     Call MsgBox(ex.Message)
-
+                    fehlerBeimLoad = True
                 Finally
 
                 End Try
@@ -409,10 +409,10 @@ Public Class Ribbon1
             If fehlerBeimLoad Then
                 If awinSettings.englishLanguage Then
 
-                    Call MsgBox("Report of one single project cannot be executed,  " & vbLf & " 'VISBO 1Click-PPT AddIn' couldn't be loaded correctly!")
+                    Call MsgBox("Publish of this project cannot be executed,  " & vbLf & " 'VISBO Project Publish - AddIn' couldn't be loaded correctly!" & vbLf & "Please, contact your system administrator!")
                 Else
 
-                    Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                    Call MsgBox("Veröffentlichung dieses Projektes kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO Project Publish - AddIn' nicht korrekt geladen wurde!" & vbLf & "Bitte kontaktieren siehe Ihren Systemadministrator!")
                 End If
 
             Else
