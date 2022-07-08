@@ -327,27 +327,32 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboNewTagetik)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import new Projects of Tagetik", " not yet integrated !")
+                    allOk = processNewTagetik(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import new Projects of Tagetik", " not yet integrated !")
 
                 Case CInt(PTRpa.visboUpdateTagetik)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
+                    allOk = processUpdateTagetik(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
 
                 Case CInt(PTRpa.visboEGeckoCapacity)
                     allOk = True
+                    allOk = processEGeckoCapacity(fname, importDate, errMessages)
                     Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
-                    'allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
-                    Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
+                    allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "Import Cost-Assertion Sheet ", " not yet integrated !")
+                    Call logger(ptErrLevel.logError, "Import visbo proposal ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboZeussCapacity)
                     allOk = True
+                    allOk = processZeussCapacity(fname, importDate, errMessages)
                     Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
+
 
                 Case CInt(PTRpa.visboFindfeasiblePortfolio)
 
@@ -375,6 +380,11 @@ Module rpaModule1
 
                     End If
 
+
+                Case CInt(PTRpa.visboCostAssertion)
+                    allOk = True
+                    allOk = processCostAssertion(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Cost-Assertion  ", " not yet integrated !")
 
                 Case Else
                     Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
@@ -435,8 +445,8 @@ Module rpaModule1
         ImportProjekte.Clear()
         ShowProjekte.Clear(False)
         AlleProjekte.Clear(False)
-        AlleProjektSummaries.Clear(False)
-    End Sub
+        AlleProjektSummaries.Clear(False)    End Sub
+
 
     Private Function setWriteProtection(ByVal hproj As clsProjekt, ByVal writeProtect As Boolean) As Boolean
 
@@ -669,8 +679,8 @@ Module rpaModule1
 
         End If
 
-        readOrganisations = result
 
+        readOrganisations = result
     End Function
 
     Private Function storeConstellationFromProjectList(ByVal projectList As clsProjekteAlle,
@@ -721,6 +731,7 @@ Module rpaModule1
         storeConstellationFromProjectList = result
 
     End Function
+
 
     ''' <summary>
     ''' stores all projects in ImportProjekte, then clears ImportProjekte
@@ -1311,7 +1322,9 @@ Module rpaModule1
                         End If
 
                         ' Check auf Instart eGecko Urlaube ...(Instart) 
-
+                        If result = PTRpa.visboUnknown Then
+                            result = checkInstartUrlaub(currentWB)
+                        End If
                         ' Check auf Zeuss Kapazitäten... (Telair)
 
                         ' Check auf Ist-Daten 
@@ -1321,14 +1334,23 @@ Module rpaModule1
 
                         ' Check auf Telair TimeSheets
                         If result = PTRpa.visboUnknown Then
-                            'result = checkActualData2(currentWB)
+                            result = checkActualData2(currentWB)
                         End If
 
                         ' Check auf Tagetik new Project List 
                         If result = PTRpa.visboUnknown Then
                             result = checkTagetikProjectList(currentWB)
                         End If
+
                         ' Check auf Tagetik update projects 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkTagetikUpdateProjectList(currentWB)
+                        End If
+
+                        ' Check auf Cost-Assertion Telair 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkCostAssertion(currentWB)
+                        End If
 
                         ' Check auf Instart Calculation Template 
                         If result = PTRpa.visboUnknown Then
@@ -1799,7 +1821,7 @@ Module rpaModule1
     End Function
 
     ''' <summary>
-    ''' checks whether or not it is a downloaded and edited VisboCenterOrganisation 
+    ''' checks whether or not it is a downloaded and edited 
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
@@ -2407,7 +2429,7 @@ Module rpaModule1
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
-    Private Function checkTagetikProjectList(ByVal currentWB As xlns.Workbook) As PTRpa
+    Private Function checkActualData2(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim verifiedStructure As Boolean = False
         Dim blattName As String = "Instructions"
@@ -2443,7 +2465,7 @@ Module rpaModule1
             result = PTRpa.visboUnknown
         End If
 
-        checkTagetikProjectList = result
+        checkActualData2 = result
     End Function
 
     ''' <summary>
@@ -2468,9 +2490,6 @@ Module rpaModule1
 
                     verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
 
-                    ' hier muss noch geprüft werden, ob alle timesheets vorhanden, sonst in separates Dir schieben und erst wenn Timesheet-completed - file vorhanden, dann alle einlesen
-
-
                 Catch ex As Exception
                     verifiedStructure = False
                 End Try
@@ -2487,6 +2506,180 @@ Module rpaModule1
         End If
 
         checkInstartProposal = result
+    End Function
+
+
+
+    ''' <summary>
+    ''' checks whether or not a file is a Instart eGecko-Urlaubskalender
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkInstartUrlaub(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "VISBO Summary"   '????
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                Try
+
+                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboEGeckoCapacity
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkInstartUrlaub = result
+    End Function
+
+
+    ''' <summary>
+    ''' checks whether or not a file is a Create Project List (Tagetik) Telair
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkTagetikProjectList(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "BASE"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim firstLine As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+
+                Try
+                    verifiedStructure = CStr(firstLine.Cells(1, 1).value).Trim.Contains("Budget")
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboNewTagetik
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkTagetikProjectList = result
+    End Function
+
+
+    ''' <summary>
+    ''' checks whether or not a file is a Update Project List Telair (Tagetik)
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkTagetikUpdateProjectList(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim possibleTableNames() As String = {"Telair"}
+
+        Try
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+                Next
+            End If
+
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim tmpRange As xlns.Range = CType(currentWS.Range(currentWS.Cells(1, 1), currentWS.Cells(30, 40)), xlns.Range)
+                Dim xxx As Object = tmpRange.Find("Forecast")
+                If Not IsNothing(xxx) Then
+                    result = PTRpa.visboUpdateTagetik
+                Else
+                    result = PTRpa.visboUnknown
+                End If
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+
+
+        checkTagetikUpdateProjectList = result
+    End Function
+
+
+    ''' <summary>
+    ''' checks whether or not it is a cost Assertion of Telair
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkCostAssertion(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim possibleTableNames() As String = {"Stammdaten", "Electric Cost Assertion", "Mechanic Cost Assertion", "Non-Design Cost Assertion"}
+        Dim verifiedStructure As Boolean = False
+        Try
+
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+                Next
+            End If
+
+            If found Then
+                result = PTRpa.visboCostAssertion
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkCostAssertion = result
     End Function
 
     ''' <summary>
@@ -2904,6 +3097,11 @@ Module rpaModule1
             ' store Project 
             If allOK Then
                 allOK = storeImportProjekte()
+
+                ' actualize Template-List 
+                If isTemplate And allOK Then
+                    lastReadingProjectTemplates = readProjectTemplates()
+                End If
             End If
 
             ' empty session 
@@ -5344,6 +5542,12 @@ Module rpaModule1
         processVisboJira = allOk
 
     End Function
+    Private Function processEGeckoCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+    End Function
+    Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+    End Function
 
 
     Private Function processVisboUrlaubsplaner(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
@@ -6242,10 +6446,12 @@ Module rpaModule1
 
     End Function
 
+
     Public Function processInstartProposal(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
         Dim instartImportConfigOK As Boolean = False
+
 
         Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
 
@@ -6270,7 +6476,7 @@ Module rpaModule1
             Dim dateiName As String = ""
             Dim listofArchivAllg As New List(Of String)
             Dim outPutCollection As New Collection
-            Dim configProposalImport As String = ""
+            Dim configProposalImport As String = "configCalcTemplateImport.xlsx"
 
 
             Dim outputLine As String = ""
@@ -6288,7 +6494,6 @@ Module rpaModule1
 
             If allesOK Then
 
-
                 Dim listofVorlagen As New Collection
                 listofVorlagen.Add(myName)
                 If projectsFile = projectConfig("DateiName").ProjectsFile Then
@@ -6296,9 +6501,11 @@ Module rpaModule1
                 End If
                 'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
 
-                If listofArchivAllg.Count > 0 Then
-                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
-                End If
+                'If listofArchivAllg.Count > 0 Then
+                '    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                'End If
+
+                allesOK = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
 
                 If allesOK Then
                     ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
@@ -6307,53 +6514,44 @@ Module rpaModule1
                         ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
                         Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
 
+
                     Catch ex As Exception
                         If awinSettings.englishLanguage Then
-                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                            outputString = "Error at Import: " & vbLf & ex.Message
                         Else
-                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
                         End If
+                        outPutCollection.Add(outputString)
 
                     End Try
+
                 Else
+
+                    Call logger(ptErrLevel.logError, "checkProjectImportConfig", outPutCollection)
 
                 End If
 
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
 
             End If
 
 
-            outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
-            outPutCollection.Add(outputString)
+            allOk = allOk And allesOK
 
-            If outPutCollection.Count > 0 Then
-                If awinSettings.englishLanguage Then
-                    Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
-                Else
-                    Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
-                End If
-            End If
+        Catch ex2 As Exception
+            allOk = False
+        End Try
 
-            Try
-                ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
-                ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-
-                Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
-
-            Catch ex As Exception
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
-                Else
-                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
-                End If
-
-            End Try
-
-            'Else
-            '    Call logger(ptErrLevel.logError, "processInstartProposal", outPutCollection)
-            '    allOk = False
-            'End If
-
+        Try
             ' store Projects
             If allOk Then
                 allOk = storeImportProjekte()
@@ -6362,15 +6560,405 @@ Module rpaModule1
             ' empty session 
             Call emptyRPASession()
 
-            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboInstartProposal.ToString, myName)
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProposal.ToString, myName)
 
         Catch ex1 As Exception
             allOk = False
-            Call logger(ptErrLevel.logError, "RPA Error Importing Jira Project file ", ex1.Message)
+            Call logger(ptErrLevel.logError, "RPA Error Importing Projects Proposal", ex1.Message)
         End Try
+
+
 
         processInstartProposal = allOk
     End Function
+
+
+
+    Public Function processNewTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim telairImportConfigOK As Boolean = False
+
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboNewTagetik.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 2 Then
+            lastReadingProjectTemplates = readProjectTemplates()
+        End If
+
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configProjectsImport As String = "configProjectImport.xlsx"
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            telairImportConfigOK = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If outPutCollection.Count > 0 Then
+                Call logger(ptErrLevel.logError, "processNewTagetik", outPutCollection)
+            End If
+
+
+            If telairImportConfigOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikImport)
+                End If
+                'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                'If listofArchivAllg.Count > 0 Then
+                '    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                'End If
+
+                allOk = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
+
+                If allOk Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputString = "Error at Import: " & vbLf & ex.Message
+                        Else
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
+                        End If
+                        outPutCollection.Add(outputString)
+
+                    End Try
+
+                Else
+
+                End If
+
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
+
+            End If
+
+            allOk = allOk And telairImportConfigOK
+
+        Catch ex2 As Exception
+            allOk = False
+        End Try
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboNewTagetik.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Cost Assertion Projects", ex1.Message)
+        End Try
+
+
+
+        processNewTagetik = allOk
+    End Function
+
+
+
+
+
+    Public Function processUpdateTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim telairUpdateConfigOK As Boolean = False
+
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboUpdateTagetik.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+        If DateDiff(DateInterval.Hour, lastReadingProjectTemplates, aktDateTime) > 2 Then
+            lastReadingProjectTemplates = readProjectTemplates()
+        End If
+
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configProjectsUpdates As String = "configProjectUpdates.xlsx"
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            telairUpdateConfigOK = checkProjectImportConfig(configProjectsUpdates, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If outPutCollection.Count > 0 Then
+                Call logger(ptErrLevel.logError, "processUpdateTagetik", outPutCollection)
+            End If
+
+
+            If telairUpdateConfigOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.telairTagetikUpdate)
+                End If
+                'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                'If listofArchivAllg.Count > 0 Then
+                '    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                'End If
+
+                allOk = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
+
+                If allOk Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputString = "Error at Import: " & vbLf & ex.Message
+                        Else
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
+                        End If
+                        outPutCollection.Add(outputString)
+
+                    End Try
+
+                Else
+
+                End If
+
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
+
+            End If
+
+            allOk = allOk And telairUpdateConfigOK
+
+        Catch ex2 As Exception
+            allOk = False
+        End Try
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboUpdateTagetik.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Cost Assertion Projects", ex1.Message)
+        End Try
+
+
+
+        processUpdateTagetik = allOk
+    End Function
+
+
+
+    Public Function processCostAssertion(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim telairCostAssertionImportConfigOK As Boolean = False
+
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboCostAssertion.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectCostAssertConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configCostAssertionImport As String = "configCostAssertionImport.xlsx"
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            telairCostAssertionImportConfigOK = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
+
+            If telairCostAssertionImportConfigOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectCostAssertConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectCostAssertConfig, outPutCollection, ptImportTypen.telairCostAssertionImport)
+                End If
+                'listofArchivAllg = readProjectsJIRA(listofVorlagen, JIRAProjectsConfig, outPutCollection)
+
+                'If listofArchivAllg.Count > 0 Then
+                '    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                'End If
+
+                allOk = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
+
+                If allOk Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputString = "Error at Import: " & vbLf & ex.Message
+                        Else
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
+                        End If
+                        outPutCollection.Add(outputString)
+
+                    End Try
+
+                Else
+
+                    Call logger(ptErrLevel.logError, "processCostAssertion", outPutCollection)
+
+                End If
+
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
+
+            End If
+
+
+            allOk = allOk And telairCostAssertionImportConfigOK
+
+        Catch ex2 As Exception
+            allOk = False
+        End Try
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboCostAssertion.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Cost Assertion Projects", ex1.Message)
+        End Try
+
+
+
+        processCostAssertion = allOk
+    End Function
+
+
+
+
     ''' <summary>
     ''' Gibt das jeweilige Ergebnis weiter fürs logfile und schiebt die jeweilige Datei in die entsprechenden Folder
     ''' </summary>

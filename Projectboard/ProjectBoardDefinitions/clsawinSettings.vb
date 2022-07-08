@@ -317,6 +317,11 @@ Public Class clsawinSettings
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
     Public Property actualDataMonth As Date
 
+
+    ' ur: 2022.06.08: if this is set to true, the changes to the dates also affect their subordinate phases/milestones
+    Public Property autoAjustChilds As Boolean
+
+
     ' ist notwendig, um ggf die Sicht-Rechte auf eine Teil-Organisation zu beschränken ..
     ' tk 23.12.18  ist jetzt ersetzt durch customUserRole.specifics  
     'Public Property isRestrictedToOrgUnit As String
@@ -398,6 +403,9 @@ Public Class clsawinSettings
         _showBestName = True
         _drawProjectLine = True
         _showElementNames = False
+
+        'ur: 20220608
+        _autoAjustChilds = True
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0

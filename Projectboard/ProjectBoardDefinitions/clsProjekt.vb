@@ -2022,7 +2022,7 @@ Public Class clsProjekt
 
 
         Dim anzPhasen As Integer
-        Dim i As Integer, p As Integer
+        Dim i As Integer
         Dim phase As clsPhase
         Dim phaseStart As Date, phaseEnd As Date
         'Dim numberOfDays As Integer

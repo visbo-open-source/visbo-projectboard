@@ -6531,20 +6531,28 @@ Public Module agm3
 
         If awinSettings.englishLanguage Then
             outputline = vbLf & anz_Proj_created.ToString & " projects created !"
-            meldungen.Add(outputline)
+            If Not visboClient.Contains("VISBO RPA") Then
+                meldungen.Add(outputline)
+            End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            If anz_Proj_notCreated > 0 Then
+                outputline = anz_Proj_notCreated & " projects were N O T  created !"
+                meldungen.Add(outputline)
+                Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            End If
 
-            outputline = anz_Proj_notCreated & " projects were N O T  created !"
-            meldungen.Add(outputline)
-            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
         Else
             outputline = vbLf & anz_Proj_created.ToString & " Projekte wurden erzeugt !"
-            meldungen.Add(outputline)
+            If Not visboClient.Contains("VISBO RPA") Then
+                meldungen.Add(outputline)
+            End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            If anz_Proj_notCreated > 0 Then
+                outputline = anz_Proj_notCreated & " Projekte wurden N I C H T  erzeugt !"
+                meldungen.Add(outputline)
+                Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
+            End If
 
-            outputline = anz_Proj_notCreated & " Projekte wurden N I C H T  erzeugt !"
-            meldungen.Add(outputline)
-            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
         End If
 
 
@@ -9684,7 +9692,7 @@ Public Module agm3
             End If
 
 
-            If IsNothing(hproj) Then
+            If IsNothing(hproj) Then                ' Anlegen fehlerhaft, da vermutlich keine Vorlage mit Namen <VorlagenName> existiert
                 hproj = New clsProjekt
 
 
@@ -9784,6 +9792,12 @@ Public Module agm3
 
                 'TODO: update einer Vorlage muss auch funktionieren
 
+                ' ur: 220622: hproj konnte angelegt werden, soll aber sofort wieder in DB gelöscht werden
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err)
+
+                If Not ok Then
+                    Call logger(ptErrLevel.logError, "erstelleProjektAusVorlage", "Project " & pname & ": " & err.errorMsg)
+                End If
             End If
 
         Else

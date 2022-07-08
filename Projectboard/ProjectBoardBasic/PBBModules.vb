@@ -1232,7 +1232,7 @@ Public Module PBBModules
     ''' </summary>
     ''' <param name="Control"></param>
     ''' <remarks></remarks>
-    Public Sub PBBDatenbankLoadProjekte(Control As IRibbonControl)
+    Public Sub PBBDatenbankLoadProjekte(Control As IRibbonControl, Optional ByVal withDiagrams As Boolean = True)
 
         Dim deletedProj As Integer = 0
         Dim returnValue As DialogResult
@@ -1255,8 +1255,10 @@ Public Module PBBModules
             If returnValue = DialogResult.OK Then
                 'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-                ' tk 7.10.19 das war vorher in Click-Aktion von frmProjPortfolioAdmin
-                Call awinNeuZeichnenDiagramme(2)
+                If withDiagrams Then
+                    ' tk 7.10.19 das war vorher in Click-Aktion von frmProjPortfolioAdmin
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
 
             Else
                 ' returnValue = DialogResult.Cancel

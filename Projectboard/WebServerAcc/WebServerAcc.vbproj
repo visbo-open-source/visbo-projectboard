@@ -88,6 +88,7 @@
     <Compile Include="clsHryNodeWeb.vb" />
     <Compile Include="clsKostenartDefinitionWeb.vb" />
     <Compile Include="clsAllUnitsDefinitionWeb.vb" />
+    <Compile Include="clsOTTLoginSignup.vb" />
     <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />

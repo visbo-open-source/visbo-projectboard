@@ -4544,6 +4544,7 @@ Public Module agm2
                 Dim pjFlag As String = ""
 
                 Try
+
                     visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
                     pjFlag = prj.FieldConstantToFieldName(visboflag)
 
@@ -4613,7 +4614,9 @@ Public Module agm2
                 ' und manche Phasen dann einen negative startoffset bekommen
                 Dim ProjectStartDate As Date
 
-                ProjectStartDate = CDate(msproj.ProjectStart)
+                ' ur: 220622: StartDatum des Projektes (msproj.start), nicht das der ProjektInformation(msproj.ProjektStart) in MSProject verwenden
+                ' ur:220622:  ProjectStartDate = CDate(msproj.ProjectStart)
+                ProjectStartDate = CDate(msproj.Start)
 
                 If CDate(msproj.Start) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.Start)
@@ -5462,6 +5465,8 @@ Public Module agm2
 
                 If modus = "BHTC" Then
 
+                    ' Sonderbehandlung: Es werden sowohl Standard-Variante alsauch 'orig' gespeichert
+
                     ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                     ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
                     If AlleProjekte.Containskey(key) Then
@@ -5529,7 +5534,7 @@ Public Module agm2
                     ' --------------------
 
                     ' ----------------------------------------
-                    ' Eintrag in ShowProjekte und AlleProjekte 
+                    ' Eintrag des Projektes, entstanden durch Mapping, in ShowProjekte und AlleProjekte 
                     ' ----------------------------------------
                     '
                     ' ist erforderlich für die Erstellung des Reports
@@ -5540,6 +5545,13 @@ Public Module agm2
 
                         If modus = "BHTC" Then
 
+                            ' Sonderbehandlung: TMS-Variante wird zur Standard-Variante
+                            If mapProj.variantName = "TMS" Then
+                                mapProj.variantName = ""
+                            End If
+
+                            key = calcProjektKey(mapProj.name, mapProj.variantName)
+
                             ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                             ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
                             If AlleProjekte.Containskey(key) Then
@@ -5547,6 +5559,21 @@ Public Module agm2
                             End If
 
                             AlleProjekte.Add(mapProj)
+
+                            ' Sonderbehandlung: Standard-Variante dann als  'orig'-Variante gespeichert
+                            If hproj.variantName = "" Then
+                                hproj.variantName = "orig"
+                            End If
+
+                            key = calcProjektKey(hproj.name, hproj.variantName)
+
+                            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
+                            If AlleProjekte.Containskey(key) Then
+                                AlleProjekte.Remove(key)
+                            End If
+
+                            AlleProjekte.Add(hproj)
 
                         Else
                             If ImportProjekte.Containskey(key) Then
@@ -18881,7 +18908,8 @@ Public Module agm2
         Dim maxRCLengthAbsolut As Integer = 0
         Dim maxRCLengthVorkommen As Integer = 0
 
-        If todoListe.Count = 0 Then
+        If todoListe.Count = 0 And Not visboClient.Contains("VISBO SPE") Then
+
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
             Else
@@ -18891,6 +18919,7 @@ Public Module agm2
             Exit Sub
         End If
 
+
         Try
 
             appInstance.EnableEvents = False
@@ -18898,15 +18927,26 @@ Public Module agm2
             ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
             selectedProjekte.Clear(False)
 
-            Dim currentWS As Excel.Worksheet
+            Dim currentWS As Excel.Worksheet = Nothing
             Dim currentWB As Excel.Workbook
             Dim ressCostColumn As Integer
             Dim tmpName As String
-
+            Dim i As Integer
 
             Try
+
+                '' ur:220506:  ThisWorkbook.Sheets("Tabelle3").Copy after:=ActiveWorkbook.Sheets(ActiveWorkbook.Sheets.Count)
                 currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
-                currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+                'currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets.Item(i), Excel.Worksheet)
+
+                For i = 1 To currentWB.Worksheets.Count
+                    currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets.Item(i), Excel.Worksheet)
+                    Dim wsname As String = currentWS.Name
+                    If wsname = arrWsNames(ptTables.meRC).ToString Then
+                        Exit For
+                    End If
+                Next
+
 
                 Try
                     ' off setzen des AutoFilter Modus ... 
@@ -18931,7 +18971,7 @@ Public Module agm2
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit RessCost Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -19005,6 +19045,10 @@ Public Module agm2
 
                 End If
 
+
+
+                Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", " vor massEditZeile1Appearance")
+
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
                 Call massEditZeile1Appearance(ptTables.meRC)
 
@@ -19077,12 +19121,18 @@ Public Module agm2
 
                 For Each pvName As String In todoListe
 
+                    Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " wird bearbeitet")
+
                     Dim hproj As clsProjekt = Nothing
                     If AlleProjekte.Containskey(pvName) Then
                         hproj = AlleProjekte.getProject(pvName)
                     End If
 
+                    Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?")
+
                     If Not IsNothing(hproj) Then
+
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, yes")
 
                         ' if setup, that one person is haviing exactly one role then make sure that each person has its role applied ...
                         If awinSettings.onePersonOneRole Then
@@ -19105,14 +19155,19 @@ Public Module agm2
                         'Dim wpItem As clsWriteProtectionItem
                         Dim isProtectedbyOthers As Boolean
 
+
+
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " vor check isProtectedbyOthers")
+
                         ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                            If awinSettings.visboServer Then
-                                isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                            Else
-                                isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                            End If
+                            ' ur:20220520: versuchsweise herausgenommen
+                            'If awinSettings.visboServer Then
+                            '    isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                            'Else
+                            '    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                            'End If
 
                         ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                             isProtectedbyOthers = True
@@ -19124,22 +19179,25 @@ Public Module agm2
                             End If
 
                         Else
-
-                            ' er kann es nur ändern, wenn er es für sich schützen kann 
-                            Dim vNameToProtect As String = hproj.variantName
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                                If hproj.variantName <> "" Then
-                                    vNameToProtect = hproj.variantName
-                                Else
-                                    vNameToProtect = ptVariantFixNames.pfv.ToString
-                                End If
-                            End If
-                            isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
+                            ' ur:20220520: versuchsweise herausgenommen
+                            '' er kann es nur ändern, wenn er es für sich schützen kann 
+                            'Dim vNameToProtect As String = hproj.variantName
+                            'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            '    If hproj.variantName <> "" Then
+                            '        vNameToProtect = hproj.variantName
+                            '    Else
+                            '        vNameToProtect = ptVariantFixNames.pfv.ToString
+                            '    End If
+                            'End If
+                            'isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
                         End If
 
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " nach check isProtectedbyOthers")
 
                         ' tk 19.1.20 ist doch gar nicht mehr notwendig ? 
                         If isProtectedbyOthers Then
+
+                            Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "ist von jemand anderen gelockt")
 
                             ' nicht erfolgreich, weil durch anderen geschützt ... 
                             ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
@@ -19147,9 +19205,12 @@ Public Module agm2
                             'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                             'writeProtections.upsert(wpItem)
 
+                            ' ur:20220520: versuchsweise herausgenommen
                             protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
                         End If
+
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "vor if actualDataRelColumn")
 
                         If actualDataRelColumn >= 0 And Not isProtectedbyOthers Then
                             If awinSettings.englishLanguage Then
@@ -19171,6 +19232,8 @@ Public Module agm2
                             Dim phaseName As String = cphase.name
                             Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                            Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "phase " & phaseNameID & " wurd gerade bearbeitet")
+
                             ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
                             Dim hasActualData As Boolean = cphase.hasActualData
                             Dim hasForecastMonths As Boolean = True
@@ -19186,6 +19249,8 @@ Public Module agm2
 
                             If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                                 ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                                Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Phase " & phaseNameID & " im Zeitraum enthalten")
 
                                 ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
                                 Dim ixZeitraum As Integer
@@ -19399,22 +19464,31 @@ Public Module agm2
                                         lockText = protectionText
                                     End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", False,
+                                    Try
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", False,
                                                                             lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 0)
+                                        If ok Then
+                                            zeile = zeile + 1
+                                        Else
+                                            Call MsgBox("not ok")
+                                        End If
 
-                                    If ok Then
-                                        zeile = zeile + 1
-                                    Else
-                                        Call MsgBox("not ok")
-                                    End If
+                                    Catch ex As Exception
+                                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "leere Projekt-Phase-Info")
+                                    End Try
+
+
 
                                 End If
 
                             End If
 
                         Next p
+
+                    Else
+                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, no")
 
                     End If
 
@@ -19538,6 +19612,11 @@ Public Module agm2
             Catch ex As Exception
 
             End Try
+
+            ' löschen des ganzen Blattes
+            If todoListe.Count = 0 Then
+                infoDatablock.Clear()
+            End If
 
 
             appInstance.EnableEvents = True
@@ -19800,16 +19879,16 @@ Public Module agm2
 
                 End Try
 
-                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
-                Try
-                    currentWS.UsedRange.Clear()
-                Catch ex As Exception
+                '' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                'Try
+                '    currentWS.UsedRange.Clear()
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Termine Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -19908,12 +19987,12 @@ Public Module agm2
                             protectionText = "Orga-Admin may only view data ..."
                         End If
                     Else
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                        If isProtectedbyOthers Then
+                        ''isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        'If isProtectedbyOthers Then
 
-                            protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+                        '    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
-                        End If
+                        'End If
                     End If
 
 
@@ -20433,7 +20512,7 @@ Public Module agm2
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Attribute Worksheet ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -20950,7 +21029,13 @@ Public Module agm2
 
 
         Dim cfgs As New configuration
-        Dim cfgFile As String = path & "\ProjectboardConfig.xml"
+        Dim cfgFile As String = ""
+        If visboClient.Contains("VISBO SPE") Then
+            cfgFile = path & "\VISBO SimpleProjectEditTestConfig.xml"
+        Else
+            cfgFile = path & "\ProjectboardConfig.xml"
+        End If
+
 
         Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
 
@@ -21562,8 +21647,8 @@ Public Module agm2
             End Try
 
 
-            ' tk 14.1.2020
             ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
+
             Dim customizations As New clsCustomization
             customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
             If Not IsNothing(customizations) Then
@@ -21573,14 +21658,10 @@ Public Module agm2
 
             Try
 
-                ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
-                ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
+                ' ur:2019-07-18: wenn customizations nicht aus DB lesbar, so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
 
                 Dim noCustomizationFound As Boolean = False   ' zeigt an, dass keine Einstellungen, entweder in DB oder auf Platte, gefunden wurden
-                'Dim customizations As New clsCustomization
 
-
-                'customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
 
                 If IsNothing(customizations) And Not IsNothing(wsName4) Then
 
@@ -21618,126 +21699,129 @@ Public Module agm2
                     End If
 
                 Else
-                    If Not IsNothing(customizations) Then
-                        ' alle awinSettings... mit den customizations... besetzen
-                        'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                        '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
-                        'Next
-                        businessUnitDefinitions = customizations.businessUnitDefinitions
 
-                        'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
-                        '    customizations.phaseDefinitions.Add(kvp.Value)
-                        'Next
-                        PhaseDefinitions = customizations.phaseDefinitions
+                    Dim result As Date = readCustomizations()
 
-                        'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
-                        '    customizations.milestoneDefinitions.Add(kvp.Value)
-                        'Next
-                        MilestoneDefinitions = customizations.milestoneDefinitions
-                        ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+                    'If Not IsNothing(customizations) Then
+                    '    ' alle awinSettings... mit den customizations... besetzen
+                    '    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    '    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                    '    'Next
+                    '    businessUnitDefinitions = customizations.businessUnitDefinitions
 
-                        showtimezone_color = customizations.showtimezone_color
-                        noshowtimezone_color = customizations.noshowtimezone_color
-                        calendarFontColor = customizations.calendarFontColor
-                        nrOfDaysMonth = customizations.nrOfDaysMonth
-                        farbeInternOP = customizations.farbeInternOP
-                        farbeExterne = customizations.farbeExterne
-                        iProjektFarbe = customizations.iProjektFarbe
-                        iWertFarbe = customizations.iWertFarbe
-                        vergleichsfarbe0 = customizations.vergleichsfarbe0
-                        vergleichsfarbe1 = customizations.vergleichsfarbe1
-                        'customizations.vergleichsfarbe2 = vergleichsfarbe2
+                    '    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                    '    '    customizations.phaseDefinitions.Add(kvp.Value)
+                    '    'Next
+                    '    PhaseDefinitions = customizations.phaseDefinitions
 
-                        awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
-                        awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
-                        awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
-                        awinSettings.AmpelGruen = customizations.AmpelGruen
-                        'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-                        awinSettings.AmpelGelb = customizations.AmpelGelb
-                        awinSettings.AmpelRot = customizations.AmpelRot
-                        awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
-                        awinSettings.glowColor = customizations.glowColor
+                    '    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                    '    '    customizations.milestoneDefinitions.Add(kvp.Value)
+                    '    'Next
+                    '    MilestoneDefinitions = customizations.milestoneDefinitions
+                    '    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
 
-                        awinSettings.timeSpanColor = customizations.timeSpanColor
-                        awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+                    '    showtimezone_color = customizations.showtimezone_color
+                    '    noshowtimezone_color = customizations.noshowtimezone_color
+                    '    calendarFontColor = customizations.calendarFontColor
+                    '    nrOfDaysMonth = customizations.nrOfDaysMonth
+                    '    farbeInternOP = customizations.farbeInternOP
+                    '    farbeExterne = customizations.farbeExterne
+                    '    iProjektFarbe = customizations.iProjektFarbe
+                    '    iWertFarbe = customizations.iWertFarbe
+                    '    vergleichsfarbe0 = customizations.vergleichsfarbe0
+                    '    vergleichsfarbe1 = customizations.vergleichsfarbe1
+                    '    'customizations.vergleichsfarbe2 = vergleichsfarbe2
 
-                        awinSettings.gridLineColor = customizations.gridLineColor
+                    '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                    '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                    '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                    '    awinSettings.AmpelGruen = customizations.AmpelGruen
+                    '    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                    '    awinSettings.AmpelGelb = customizations.AmpelGelb
+                    '    awinSettings.AmpelRot = customizations.AmpelRot
+                    '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                    '    awinSettings.glowColor = customizations.glowColor
 
-                        awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-                        ' ur:20210729 kommt nun eigentlich von Organisation
-                        ' ur:20220322 now it is back to customization
-                        If awinSettings.ActualdataOrgaUnits = "" Then
-                            If customizations.isActualDataRelevant <> "" Then
-                                awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
-                            Else
-                                awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-                            End If
-                        End If
-                        awinSettings.onePersonOneRole = customizations.onePersonOneRole
-                        awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+                    '    awinSettings.timeSpanColor = customizations.timeSpanColor
+                    '    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
 
-                        awinSettings.actualDataMonth = customizations.actualDataMonth
-                        ergebnisfarbe1 = customizations.ergebnisfarbe1
-                        ergebnisfarbe2 = customizations.ergebnisfarbe2
-                        weightStrategicFit = customizations.weightStrategicFit
-                        awinSettings.kalenderStart = customizations.kalenderStart
-                        awinSettings.zeitEinheit = customizations.zeitEinheit
-                        awinSettings.kapaEinheit = customizations.kapaEinheit
-                        awinSettings.offsetEinheit = customizations.offsetEinheit
-                        awinSettings.EinzelRessExport = customizations.EinzelRessExport
-                        awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
-                        awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
-                        awinSettings.spaltenbreite = customizations.spaltenbreite
-                        awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
-                        awinSettings.propAnpassRess = customizations.propAnpassRess
-                        awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+                    '    awinSettings.gridLineColor = customizations.gridLineColor
 
-                        awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
-                        awinSettings.fullProtocol = customizations.fullProtocol
-                        awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
-                        awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
-                        awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
-                        awinSettings.importUnknownNames = customizations.importUnknownNames
-                        awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+                    '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+                    '    ' ur:20210729 kommt nun eigentlich von Organisation
+                    '    ' ur:20220322 now it is back to customization
+                    '    If awinSettings.ActualdataOrgaUnits = "" Then
+                    '        If customizations.isActualDataRelevant <> "" Then
+                    '            awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
+                    '        Else
+                    '            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                    '        End If
+                    '    End If
+                    '    awinSettings.onePersonOneRole = customizations.onePersonOneRole
+                    '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
-                        awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
-                        awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
-                        awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
-                        awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+                    '    awinSettings.actualDataMonth = customizations.actualDataMonth
+                    '    ergebnisfarbe1 = customizations.ergebnisfarbe1
+                    '    ergebnisfarbe2 = customizations.ergebnisfarbe2
+                    '    weightStrategicFit = customizations.weightStrategicFit
+                    '    awinSettings.kalenderStart = customizations.kalenderStart
+                    '    awinSettings.zeitEinheit = customizations.zeitEinheit
+                    '    awinSettings.kapaEinheit = customizations.kapaEinheit
+                    '    awinSettings.offsetEinheit = customizations.offsetEinheit
+                    '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                    '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                    '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                    '    awinSettings.spaltenbreite = customizations.spaltenbreite
+                    '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                    '    awinSettings.propAnpassRess = customizations.propAnpassRess
+                    '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
 
-                        awinSettings.importTyp = customizations.importTyp
+                    '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                    '    awinSettings.fullProtocol = customizations.fullProtocol
+                    '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                    '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                    '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                    '    awinSettings.importUnknownNames = customizations.importUnknownNames
+                    '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
 
-                        awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+                    '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                    '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                    '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                    '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
 
-                        awinSettings.englishLanguage = customizations.englishLanguage
+                    '    awinSettings.importTyp = customizations.importTyp
 
-                        awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
-                        awinSettings.considerRiskFee = customizations.considerRiskFee
+                    '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
 
-                        ' noch zu tun, sonst in readOtherdefinitions
-                        StartofCalendar = awinSettings.kalenderStart
-                        'StartofCalendar = StartofCalendar.ToLocalTime()
+                    '    awinSettings.englishLanguage = customizations.englishLanguage
 
-                        historicDate = StartofCalendar
-                        Try
-                            If awinSettings.englishLanguage Then
-                                menuCult = ReportLang(PTSprache.englisch)
-                                repCult = menuCult
-                                awinSettings.kapaEinheit = "PD"
-                            Else
-                                awinSettings.kapaEinheit = "PT"
-                                menuCult = ReportLang(PTSprache.deutsch)
-                                repCult = menuCult
-                            End If
-                        Catch ex As Exception
-                            awinSettings.englishLanguage = False
-                            awinSettings.kapaEinheit = "PT"
-                            menuCult = ReportLang(PTSprache.deutsch)
-                            repCult = menuCult
-                        End Try
-                    Else
-                        noCustomizationFound = True
-                    End If
+                    '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                    '    awinSettings.considerRiskFee = customizations.considerRiskFee
+
+                    '    ' noch zu tun, sonst in readOtherdefinitions
+                    '    StartofCalendar = awinSettings.kalenderStart
+                    '    'StartofCalendar = StartofCalendar.ToLocalTime()
+
+                    '    historicDate = StartofCalendar
+                    '    Try
+                    '        If awinSettings.englishLanguage Then
+                    '            menuCult = ReportLang(PTSprache.englisch)
+                    '            repCult = menuCult
+                    '            awinSettings.kapaEinheit = "PD"
+                    '        Else
+                    '            awinSettings.kapaEinheit = "PT"
+                    '            menuCult = ReportLang(PTSprache.deutsch)
+                    '            repCult = menuCult
+                    '        End If
+                    '    Catch ex As Exception
+                    '        awinSettings.englishLanguage = False
+                    '        awinSettings.kapaEinheit = "PT"
+                    '        menuCult = ReportLang(PTSprache.deutsch)
+                    '        repCult = menuCult
+                    '    End Try
+                    'Else
+                    '    noCustomizationFound = True
+                    'End If
                     Call logger(ptErrLevel.logInfo, "awinsetTypen", "customizations now set")
 
                 End If
@@ -21836,46 +21920,63 @@ Public Module agm2
                     ' das kann nicht unmittelbar nach Login gemacht werden 
                     Dim meldungen As Collection = New Collection
 
-                    '' jetzt werden die Rollen besetzt 
-                    If awinSettings.readCostRolesFromDB Then
+                    If Not special = "BHTC" Then
 
-                        Try
-                            ' Lesen der CustomUserRoles aus VCSetting in DB
-                            Call setUserRoles(meldungen)
-                        Catch ex As Exception
-                            If meldungen.Count > 0 Then
-                                Call showOutPut(meldungen, "Error: setUserRoles", "")
-                                Call logger(ptErrLevel.logError, "awinsetTypen", meldungen)
-                            End If
+                        '' jetzt werden die Rollen besetzt 
+                        If awinSettings.readCostRolesFromDB Then
 
+                            Try
+                                ' Lesen der CustomUserRoles aus VCSetting in DB
+                                Call setUserRoles(meldungen)
+                            Catch ex As Exception
+                                If meldungen.Count > 0 Then
+                                    Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                    Call logger(ptErrLevel.logError, "awinsetTypen", meldungen)
+                                End If
+
+                                myCustomUserRole = New clsCustomUserRole
+
+                                With myCustomUserRole
+                                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                    .specifics = ""
+                                    .userName = dbUsername
+                                End With
+                                ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                                Call myCustomUserRole.setNonAllowances()
+                            End Try
+
+
+
+                        Else
                             myCustomUserRole = New clsCustomUserRole
 
                             With myCustomUserRole
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                If awinSettings.visboServer Then
+                                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                Else
+                                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                End If
                                 .specifics = ""
                                 .userName = dbUsername
                             End With
                             ' jetzt gibt es eine currentUserRole: myCustomUserRole
                             Call myCustomUserRole.setNonAllowances()
-                        End Try
-
-
-
+                        End If
                     Else
-                        myCustomUserRole = New clsCustomUserRole
+                        ' 220622: ur: für VISBO Project Publish ist keine CustomUserRole erforderlich
+                        ' sonst eventuell auf auf Projektleitung setzen
 
-                        With myCustomUserRole
-                            If awinSettings.visboServer Then
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            Else
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            End If
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                        Call myCustomUserRole.setNonAllowances()
+                        'myCustomUserRole = New clsCustomUserRole
+
+                        'With myCustomUserRole
+                        '    .customUserRole = ptCustomUserRoles.ProjektLeitung
+                        '    .specifics = ""
+                        '    .userName = dbUsername
+                        'End With
+                        '' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        'Call myCustomUserRole.setNonAllowances()
                     End If
+
 
                 Catch ex As Exception
 

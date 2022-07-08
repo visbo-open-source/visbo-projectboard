@@ -284,6 +284,7 @@ Public Class ThisAddIn
 
                     If Not IsNothing(hproj) Then
                         If hproj.name <> "" And Not IsNothing(hproj.name) Then
+
                             Try
                                 ' synchronize with earlier version , if existent 
                                 ' i.e take values resources, budget, lead person, description 
@@ -291,9 +292,13 @@ Public Class ThisAddIn
                                 Call synchronizeWithValuesOFExisting(hproj)
 
                                 ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
-                                If awinSettings.visboMapping <> "" Then
+                                If awinSettings.visboMapping <> "" And Not IsNothing(mapProj) Then
                                     Call speichereProjektToDB(hproj)
                                 Else
+                                    Call speichereProjektToDB(hproj, True)
+
+                                    ' auch als orig-Variante abspeichern
+                                    hproj.variantName = "orig"
                                     Call speichereProjektToDB(hproj, True)
                                 End If
 
@@ -310,9 +315,13 @@ Public Class ThisAddIn
                     If Not IsNothing(mapProj) Then
                         If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
                             Try
+                                ' synchronize with earlier version , if existent 
+                                ' i.e take values resources, budget, lead person, description 
+
                                 Call synchronizeWithValuesOFExisting(mapProj)
+
                                 Call speichereProjektToDB(mapProj, True)
-                            Catch ex As System.Exception
+                            Catch ex As Exception
                                 If awinSettings.englishLanguage Then
                                     Call MsgBox("Error saving of the mapped project to DB ")
                                 Else
@@ -358,6 +367,7 @@ Public Class ThisAddIn
         '    Try
         '        If Not IsNothing(pj) Then
         '            If Not awinsetTypen_Performed Then
+
         '                Try
         '                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
@@ -404,16 +414,15 @@ Public Class ThisAddIn
         '        End If
 
 
-
-
         '        If fehlerBeimLoad Then
         '            If awinSettings.englishLanguage Then
 
-        '                Call MsgBox("Project will not be saved!")
+        '                Call MsgBox("Project cannot be published!")
         '            Else
 
-        '                Call MsgBox("Projekt wird nicht gespeichert!")
+        '                Call MsgBox("Projekt kann nicht veröffentlicht werden!")
         '            End If
+
         '        Else
 
         '            Dim reportAuswahl As New frmReportProfil
@@ -423,21 +432,32 @@ Public Class ThisAddIn
         '            Dim aktuellesDatum = Date.Now
         '            Dim validDatum As Date = "29.Feb.2016"
         '            Dim filename As String = ""
+        '            Dim permissionOK As Boolean = False
 
         '            '' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
         '            '' ''    ' ''    ''If aktuellesDatum > validDatum Then
 
-        '            ' Testen, ob der User die passende Lizenz besitzt
-        '            Dim user As String = myWindowsName
-        '            Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+        '            If Not awinSettings.visboServer Then
 
-        '            ' Lesen des Lizenzen-Files
+        '                ' Testen, ob der User die passende Lizenz besitzt
+        '                Dim user As String = myWindowsName
+        '                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+
+        '                ' Lesen des Lizenzen-Files
 
 
-        '            Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+        '                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
-        '            ' Prüfen der Lizenzen
-        '            If lizenzen.validLicence(user, komponente) Then
+        '                permissionOK = lizenzen.validLicence(user, komponente)
+        '            Else
+
+        '                permissionOK = awinSettings.visboServer
+
+        '            End If
+
+        '            ' Prüfen der Erlaubnis
+
+        '            If permissionOK Then
 
         '                '' Set cursor as hourglass
         '                Cursor.Current = Cursors.WaitCursor
@@ -449,7 +469,13 @@ Public Class ThisAddIn
 
         '                If Not IsNothing(hproj) Then
         '                    If hproj.name <> "" And Not IsNothing(hproj.name) Then
+
         '                        Try
+        '                            ' synchronize with earlier version , if existent 
+        '                            ' i.e take values resources, budget, lead person, description 
+
+        '                            Call synchronizeWithValuesOFExisting(hproj)
+
         '                            ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
         '                            If awinSettings.visboMapping <> "" Then
         '                                Call speichereProjektToDB(hproj)
@@ -457,7 +483,7 @@ Public Class ThisAddIn
         '                                Call speichereProjektToDB(hproj, True)
         '                            End If
 
-        '                        Catch ex As System.Exception
+        '                        Catch ex As Exception
         '                            If awinSettings.englishLanguage Then
         '                                Call MsgBox("Error saving of the original project to DB ")
         '                            Else
@@ -470,8 +496,13 @@ Public Class ThisAddIn
         '                If Not IsNothing(mapProj) Then
         '                    If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
         '                        Try
+        '                            ' synchronize with earlier version , if existent 
+        '                            ' i.e take values resources, budget, lead person, description 
+
+        '                            Call synchronizeWithValuesOFExisting(mapProj)
+
         '                            Call speichereProjektToDB(mapProj, True)
-        '                        Catch ex As System.Exception
+        '                        Catch ex As Exception
         '                            If awinSettings.englishLanguage Then
         '                                Call MsgBox("Error saving of the mapped project to DB ")
         '                            Else
@@ -511,6 +542,7 @@ Public Class ThisAddIn
         '        End If
 
         '    End Try
+
     End Sub
 
 End Class
