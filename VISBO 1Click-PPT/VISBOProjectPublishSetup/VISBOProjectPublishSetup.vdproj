@@ -254,6 +254,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
         "Release"
@@ -284,6 +292,11 @@
                     {
                     "Name" = "8:Microsoft .NET Framework 4.6 (x86 und x64)"
                     "ProductCode" = "8:.NETFramework,Version=v4.6"
+                    }
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.VSTORuntime.4.0"
+                    {
+                    "Name" = "8:Microsoft Visual Studio 2010-Tools für Office-Laufzeit (x86 und x64)"
+                    "ProductCode" = "8:Microsoft.VSTORuntime.4.0"
                     }
                 }
             }
@@ -767,6 +780,13 @@
             "Message" = "8:A required component for interacting with Excel is not available. Please run setup.exe."
             "InstallUrl" = "8:"
             }
+            "{836E08B8-0285-4809-BA42-01DB6754A45D}:_A40884F1AAEA412DB2A77F5DDC5827CF"
+            {
+            "Name" = "8:Condition1"
+            "Condition" = "8:COMPONENTEXISTS1"
+            "Message" = "8:<Error Message>"
+            "InstallUrl" = "8:"
+            }
             "{836E08B8-0285-4809-BA42-01DB6754A45D}:_B07F27250D5640B2A5415186E1EB7376"
             {
             "Name" = "8:Verify VSTO 2010 Runtime availability"
@@ -777,6 +797,12 @@
         }
         "Locator"
         {
+            "{B8A5E33E-1082-4FE2-AC2E-1197791E9409}:_7F6B4B67A198491F96AD3142C59162FD"
+            {
+            "Name" = "8:Search for Office shared PIA"
+            "ComponentId" = "8:{625F5772-C1B3-497E-8ABE-7254EDB00506}"
+            "Property" = "8:COMPONENTEXISTS1"
+            }
             "{CF66B7F7-B7DA-4B08-A67A-233430638C9C}:_9E06402C6BBD4ED6921E9BBD4C520EB8"
             {
             "Name" = "8:Search for VSTO 2010 Runtime"
@@ -802,7 +828,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO ProjectPublish"
         "ProductCode" = "8:{8134113C-D594-4677-8017-B4FB289AE821}"
-        "PackageCode" = "8:{A5FBB074-2403-4BDF-9585-95F0904F1598}"
+        "PackageCode" = "8:{DDB57EB5-D510-4607-9AD5-0E1F53F81DF3}"
         "UpgradeCode" = "8:{9D50FE51-59BB-4B6C-B5C0-B906B864B32A}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
