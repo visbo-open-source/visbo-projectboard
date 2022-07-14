@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\desbhtcprj1\Visbo\MS Project VISBO AddIn\</Value>
+      <Value Profile="(Default)">C:\Users\UteRittinghaus-Koyte\Dokumente\Projekt-Tafel Folder\BHTC\</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Task Class</Value>
@@ -18,7 +18,7 @@
       <Value Profile="(Default)">VISBO Ampel</Value>
     </Setting>
     <Setting Name="mongoDBURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://my.visbo.net/api</Value>
+      <Value Profile="(Default)">https://dev.visbo.net/api</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
