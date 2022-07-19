@@ -113,6 +113,8 @@ Public Class ThisWorkbook
                 awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
                 awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+                awinSettings.autoLogin = (My.Settings.VISBOMode <> "Demo")
+
 
             End If
 

@@ -5417,6 +5417,21 @@ Public Module awinGeneralModules
     Public Function logInToMongoDB(ByVal noDBAccess As Boolean, Optional ByVal oneTimeToken As String = "") As Boolean
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
 
+
+        If Not awinSettings.autoLogin Then
+            If noDBAccess Then
+                noDBAccess = Not loginProzedur()
+
+                If Not noDBAccess Then
+                    ' in diesem Fall das mySettings setzen 
+                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                    awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
+                End If
+
+            End If
+        End If
+
         If noDBAccess And oneTimeToken <> "" Then
 
             ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 

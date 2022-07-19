@@ -88,6 +88,10 @@ Module rpaModule1
         ' proxy Server URL
         awinSettings.proxyURL = My.Settings.proxyURL
         ' Default Path für RPA
+
+        ' soll ein neuer Login gemacht werden - dann true, wenn VISBOMode = Demoe
+        awinSettings.autoLogin = (My.Settings.VISBOMode <> "Demo")
+
         rpaPath = My.Settings.rpaPath
         ' Default Portfolio zu verwenden
         myActivePortfolio = My.Settings.activePortfolio
@@ -139,40 +143,46 @@ Module rpaModule1
 
         Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "check if the user/pwd is remembered")
 
-        If awinSettings.userNamePWD <> "" Then
-
-            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-
-            dbUsername = visboCrypto.getUserNameFromCipher(awinSettings.userNamePWD)
-            dbPasswort = visboCrypto.getPwdFromCipher(awinSettings.userNamePWD)
-            
-
-            If IsNothing(awinSettings.VCid) Then
-                awinSettings.VCid = ""
-            End If
-
-            If IsNothing(databaseAcc) Then
-                databaseAcc = New DBAccLayer.Request
-            End If
-
-            'ur:08022022: soll mit Default erfragt werden
-            'Try
-            '    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
-            'Catch ex As Exception
-            '    loginErfolgreich = False
-            'End Try
-
-            If Not loginErfolgreich Then
-
-                Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "Login for starting")
-                loginErfolgreich = logInToMongoDB(True)
-
-            End If
-
-        Else
+        If Not awinSettings.autoLogin Then
+            Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "Login for starting")
             loginErfolgreich = logInToMongoDB(True)
-        End If
+        Else
 
+            If awinSettings.userNamePWD <> "" Then
+
+                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+
+                dbUsername = visboCrypto.getUserNameFromCipher(awinSettings.userNamePWD)
+                dbPasswort = visboCrypto.getPwdFromCipher(awinSettings.userNamePWD)
+
+
+                If IsNothing(awinSettings.VCid) Then
+                    awinSettings.VCid = ""
+                End If
+
+                If IsNothing(databaseAcc) Then
+                    databaseAcc = New DBAccLayer.Request
+                End If
+
+                'ur:08022022: soll mit Default erfragt werden
+                'Try
+                '    loginErfolgreich = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, dbUsername, dbPasswort, err)
+                'Catch ex As Exception
+                '    loginErfolgreich = False
+                'End Try
+
+                If Not loginErfolgreich Then
+
+                    Call logger(ptErrLevel.logInfo, "VISBO Robotic Process automation", "Login for starting")
+                    loginErfolgreich = logInToMongoDB(True)
+
+                End If
+
+            Else
+                loginErfolgreich = logInToMongoDB(True)
+            End If
+
+        End If
 
         If loginErfolgreich Then
 

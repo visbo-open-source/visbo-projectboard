@@ -21088,6 +21088,12 @@ Public Module agm2
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "rememberUserPWD"
                             awinSettings.rememberUserPwd = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "VISBOMode"
+                            Try
+                                awinSettings.autoLogin = (cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value <> "Demo")
+                            Catch ex As Exception
+
+                            End Try
 
                     End Select
                 Next

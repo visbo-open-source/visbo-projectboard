@@ -386,6 +386,18 @@ Partial Friend NotInheritable Class MySettings
             Me("awinPath") = value
         End Set
     End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Demo")>  _
+    Public Property VISBOMode() As String
+        Get
+            Return CType(Me("VISBOMode"),String)
+        End Get
+        Set
+            Me("VISBOMode") = value
+        End Set
+    End Property
 End Class
 
 Namespace My

@@ -13,6 +13,10 @@ Public Class clsawinSettings
     ' tk 17.6.2020 
     ' Kurzarbeit aktiviert oder nicht 
 
+    ' tk 9.7.22 eingeführt, um steuern zu können, ob Auto Login gemacht wird 
+    ' wenn VISBOMode = noAutoLogin, dann kein Auto Login
+    ' ansonsten immer autoLogin
+    Public Property autoLogin As Boolean
     ' tk 22.6.21, for Instart Role Definition 
     Public Property onePersonOneRole As Boolean
 
@@ -331,6 +335,7 @@ Public Class clsawinSettings
 
         'ReDim _importSettings(17)
 
+        _autoLogin = True
         _meAllowOverTime = False
         _onePersonOneRole = False
         _meCompareVsLastPlan = False

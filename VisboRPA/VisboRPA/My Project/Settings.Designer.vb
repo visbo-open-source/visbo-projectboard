@@ -149,6 +149,18 @@ Namespace My
                 Return CType(Me("proxyURL"),String)
             End Get
         End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("Demo")>  _
+        Public Property VISBOMode() As String
+            Get
+                Return CType(Me("VISBOMode"),String)
+            End Get
+            Set
+                Me("VISBOMode") = value
+            End Set
+        End Property
     End Class
 End Namespace
 

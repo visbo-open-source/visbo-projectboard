@@ -86,5 +86,8 @@
     <Setting Name="awinPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\</Value>
     </Setting>
+    <Setting Name="VISBOMode" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Demo</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

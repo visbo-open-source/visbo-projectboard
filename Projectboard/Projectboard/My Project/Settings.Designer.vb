@@ -184,7 +184,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public Property rememberUserPWD() As Boolean
         Get
             Return CType(Me("rememberUserPWD"),Boolean)
@@ -219,6 +219,18 @@ Partial Public NotInheritable Class MySettings
         Get
             Return CType(Me("proxyServerURL"),String)
         End Get
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Demo")>  _
+    Public Property VISBOMode() As String
+        Get
+            Return CType(Me("VISBOMode"),String)
+        End Get
+        Set
+            Me("VISBOMode") = value
+        End Set
     End Property
 End Class
 
