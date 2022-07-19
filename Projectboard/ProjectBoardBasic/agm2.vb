@@ -22263,7 +22263,7 @@ Public Module agm2
                 Dim oCollection As New Collection
                 oCollection.Add(outputline)
                 Call showOutPut(oCollection, "Startprobleme", "Please contact us")
-                'msg = "Fehler in awinsettypen " & special & vbCrLf & ex.Message
+                msg = "Startprobleme, Please contact us" & vbCrLf & ex.Message
             End If
 
             Throw New ArgumentException(msg)
