@@ -226,25 +226,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1B529F65D29F45AC881D2866FE19C390"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_63CC3A8063D13F47009AD44A18714121"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_D926E08CEA414F60824D18D341B40E82"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_4D31D9FC2B238B42542D185E737AAD55"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -257,6 +239,24 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_789F44101E2138968A219569A68531EA"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_63CC3A8063D13F47009AD44A18714121"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_4D31D9FC2B238B42542D185E737AAD55"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_1B529F65D29F45AC881D2866FE19C390"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1036,7 +1036,7 @@
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
             {
-            "DefaultLocation" = "8:[AppDataFolder][Manufacturer]\\[ProductName]"
+            "DefaultLocation" = "8:[ProgramFilesFolder][Manufacturer]\\[ProductName]"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:TRUE"
             "Condition" = "8:"
@@ -1078,7 +1078,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO ProjectPublish"
         "ProductCode" = "8:{8134113C-D594-4677-8017-B4FB289AE821}"
-        "PackageCode" = "8:{A71D54B2-6F6B-45A3-8D62-4659EE9AEDC3}"
+        "PackageCode" = "8:{F4178F20-9867-4B8F-AF71-17A36A56CBC6}"
         "UpgradeCode" = "8:{9D50FE51-59BB-4B6C-B5C0-B906B864B32A}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
