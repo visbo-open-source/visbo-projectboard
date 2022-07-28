@@ -469,6 +469,7 @@ Public Class Ribbon1
 
                                     ' auch als orig-Variante abspeichern
                                     hproj.variantName = "orig"
+                                    hproj.updatedAt = Nothing
                                     Call speichereProjektToDB(hproj, True)
                                 End If
 
@@ -502,9 +503,9 @@ Public Class Ribbon1
                     Else
                         If awinSettings.visboMapping <> "" Then
                             If awinSettings.englishLanguage Then
-                                Call MsgBox("Error mapping the project: no TMS - project created")
+                                Call MsgBox("No Mapping took place! ")
                             Else
-                                Call MsgBox("Fehler beim  Mapping dieses Projektes: Kein TMS-project erstellt")
+                                Call MsgBox("Kein Mapping erfolgt! ")
                             End If
                         End If
                     End If
