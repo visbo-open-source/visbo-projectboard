@@ -3315,7 +3315,7 @@ Public Class Request
                 Try
                     dbname = vcName
                     result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, vcID, err)
-                    result = (dbname = awinSettings.databaseName)
+                    result = result And (dbname = awinSettings.databaseName) And (vcID <> "")
 
                     If Not result Then
 
@@ -3328,6 +3328,7 @@ Public Class Request
                                 loginErfolgreich = login(dburl, dbname, vcID, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, vcID, err)
+                                    result = result And (dbname = awinSettings.databaseName) And (vcID <> "")
                                 End If
 
                             Case Else ' all others
