@@ -458,111 +458,125 @@ Module SIModule1
                 End If
                 Call MsgBox(msg)
             Else
+                ' ggfs. vcid zu gegebenen VC merken
+                If awinSettings.VCid = "" And awinSettings.databaseName <> "" Then
+                    Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
 
-                ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
-                Try
-                    My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
-                    If My.Settings.rememberUserPWD Then
-                        My.Settings.userNamePWD = awinSettings.userNamePWD
-                    End If
-                    My.Settings.Save()
-                Catch ex As Exception
-                    Call MsgBox(ex.StackTrace)
-                End Try
+                    If changeOK Then
+                        ' awinSettings.VCid wurde schon durch Aufruf von updateActualVC gesetzt
+                        ' ur: 220728: zum Test 
+                        Call logger(ptErrLevel.logInfo, "userIsEntitled", "bhtcDBURL changed to: " & awinSettings.databaseURL & " DBName now is: " & awinSettings.databaseName & " DBVCID now is: " & awinSettings.VCid)
 
-                ' CustomUserRoles holen 
-                ' aber nur wenn es sich um eine Visbo-Server Version handelt ... 
-                If awinSettings.visboServer = True Then
-                    Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
-                    allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
-
-                Else
-                    With myCustomUserRole
-                        .userName = dbUsername
-                        .customUserRole = ptCustomUserRoles.Alles
-                        .specifics = ""
-                    End With
-                End If
-
-
-
-
-                ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
-                If sld.Tags.Item("PRXYL").Length > 0 Then
-                    sld.Tags.Delete("PRXYL")
-                End If
-
-                If awinSettings.proxyURL.Length > 0 Then
-                    sld.Tags.Add("PRXYL", awinSettings.proxyURL)
-                End If
-
-                'Start of Calendar auslesen, damit Orga richtig interpretiert wird
-                If sld.Tags.Item("SOC").Length > 0 Then
-                    StartofCalendar = CDate(sld.Tags.Item("SOC"))
-                End If
-
-                tmpResult = True
-
-                ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
-                Dim currentOrga As New clsOrganisation
-                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                If Not IsNothing(currentOrga) Then
-
-
-                    If currentOrga.count > 0 Then
-                        validOrganisations.addOrga(currentOrga)
-                    End If
-
-                End If
-
-
-                If Not IsNothing(currentOrga) Then
-                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                    RoleDefinitions = currentOrga.allRoles
-                    CostDefinitions = currentOrga.allCosts
-                End If
-
-                ' Behandeln der myUserRole 
-                ' jetzt wird die für die Slide passende Rolle gesucht 
-                If awinSettings.visboServer = True Then
-                    myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
-                    If IsNothing(myCustomUserRole) Then
-
-                        msg = "Error: Keine Berechtigung"
-                        tmpResult = False
-                    Else
-                        tmpResult = True
-                    End If
-
-
-                    If meldungen.Count > 0 Then
-                        Call MsgBox(meldungen.Item(1))
-                        tmpResult = False
-                    End If
-
-                    If tmpResult Then
-                        '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
-                        'Call RoleDefinitions.buildTopNodes()
-                        'Call RoleDefinitions.buildOrgaTeamChilds()
-
-                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                        ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
                         Try
-                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                            My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                            If My.Settings.rememberUserPWD Then
+                                My.Settings.userNamePWD = awinSettings.userNamePWD
 
-                            If IsNothing(customFieldDefinitions) Then
-                                customFieldDefinitions = New clsCustomFieldDefinitions
-                                'Call MsgBox(err.errorMsg)
                             End If
+                            My.Settings.Save()
                         Catch ex As Exception
-
+                            Call MsgBox(ex.StackTrace)
                         End Try
+
+                        ' CustomUserRoles holen 
+                        ' aber nur wenn es sich um eine Visbo-Server Version handelt ... 
+                        If awinSettings.visboServer = True Then
+                            Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+                            allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
+
+                        Else
+                            With myCustomUserRole
+                                .userName = dbUsername
+                                .customUserRole = ptCustomUserRoles.Alles
+                                .specifics = ""
+                            End With
+                        End If
+
+                        ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
+                        If sld.Tags.Item("PRXYL").Length > 0 Then
+                            sld.Tags.Delete("PRXYL")
+                        End If
+
+                        If awinSettings.proxyURL.Length > 0 Then
+                            sld.Tags.Add("PRXYL", awinSettings.proxyURL)
+                        End If
+
+                        'Start of Calendar auslesen, damit Orga richtig interpretiert wird
+                        If sld.Tags.Item("SOC").Length > 0 Then
+                            StartofCalendar = CDate(sld.Tags.Item("SOC"))
+                        End If
+
+                        tmpResult = True
+
+                        ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
+                        Dim currentOrga As New clsOrganisation
+                        currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                        If Not IsNothing(currentOrga) Then
+
+
+                            If currentOrga.count > 0 Then
+                                validOrganisations.addOrga(currentOrga)
+                            End If
+
+                        End If
+
+
+                        If Not IsNothing(currentOrga) Then
+                            ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                            RoleDefinitions = currentOrga.allRoles
+                            CostDefinitions = currentOrga.allCosts
+                        End If
+
+                        ' Behandeln der myUserRole 
+                        ' jetzt wird die für die Slide passende Rolle gesucht 
+                        If awinSettings.visboServer = True Then
+                            myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+                            If IsNothing(myCustomUserRole) Then
+
+                                msg = "Error: Keine Berechtigung"
+                                tmpResult = False
+                            Else
+                                tmpResult = True
+                            End If
+
+
+                            If meldungen.Count > 0 Then
+                                Call MsgBox(meldungen.Item(1))
+                                tmpResult = False
+                            End If
+
+                            If tmpResult Then
+                                '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
+                                'Call RoleDefinitions.buildTopNodes()
+                                'Call RoleDefinitions.buildOrgaTeamChilds()
+
+                                ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                                Try
+                                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                                    If IsNothing(customFieldDefinitions) Then
+                                        customFieldDefinitions = New clsCustomFieldDefinitions
+                                        'Call MsgBox(err.errorMsg)
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        End If
+
+                        ' in allen Slides den Sicht Schutz aufheben 
+                        protectionSolved = True
+                        Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
+
+                    Else
+                        Dim msgtxt As String = "You have no permission to this VISBO Center: " & awinSettings.databaseName
+                        Call logger(ptErrLevel.logError, "userIsEntitled", msgtxt)
+                        Call MsgBox(msgtxt)
+                        tmpResult = False
                     End If
                 End If
-
-                ' in allen Slides den Sicht Schutz aufheben 
-                protectionSolved = True
-                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
 
             End If
 
@@ -1102,6 +1116,7 @@ Module SIModule1
     ''' <remarks></remarks>
     Friend Sub getDBsettings(ByVal sld As PowerPoint.Slide)
 
+        Dim err As New clsErrorCodeMsg
         With sld
 
             If .Tags.Item("DBURL").Length > 0 And
@@ -1131,13 +1146,24 @@ Module SIModule1
                         'Call MsgBox("bhtcDB bleibt " & awinSettings.databaseName)
                     End If
 
-                    awinSettings.VCid = .Tags.Item("VCid")
+                    If .Tags.Item("VCiD").Length > 0 Then
+                        awinSettings.VCid = .Tags.Item("VCid")
+                    Else
+                        'Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
+                        'If changeOK Then
+                        '    ' awinSettings.VCid wurde schon durch Aufruf von updateActualVC gesetzt
+                        '    Call MsgBox("bhtcDBURL changed to: " & awinSettings.databaseURL & vbCrLf & "DBName now is: " & awinSettings.databaseName & vbCrLf & "DBVCID now is: " & awinSettings.VCid)
+                        'Else
+                        '    Call MsgBox("couldn't updateActualVC because, you have no permission to this DB: " & awinSettings.databaseName)
+                        'End If
+                    End If
+
                     awinSettings.DBWithSSL = True
 
+                    End If
+
+
                 End If
-
-
-            End If
         End With
     End Sub
 
