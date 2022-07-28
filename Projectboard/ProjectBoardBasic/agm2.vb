@@ -5520,10 +5520,10 @@ Public Module agm2
                         ' aufbauen der RcLists - evt. nicht nötig
                         ' mapProj.updateRcLists()
                         If IsNothing(mapProj) Then
-                            If modus <> "RPA" Then
-                                Call MsgBox("Kein Mapping erfolgt")
-                            Else
+                            If (visboClient = divClients(client.VisboMSProject)) Or (modus = "RPA") Then
                                 Call logger(ptErrLevel.logWarning, "awinImportMSProject: ", "Kein Mapping erfolgt!")
+                            Else
+                                Call MsgBox("Kein Mapping erfolgt")
                             End If
                         End If
 
