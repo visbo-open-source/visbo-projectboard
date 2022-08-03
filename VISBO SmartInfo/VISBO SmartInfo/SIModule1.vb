@@ -43,7 +43,7 @@ Module SIModule1
     Public bhtcDBName As String = "bhtc"
 
     ' gibt den Namen des Servers an
-    Public visboDBURL As String = "https://dev.visbo.net/api"
+    Public visboDBURL As String = "https://my.visbo.net/api"
 
     ' wird in Activate_Window gesetzt bzw. in After_presentation
     Friend currentPresHasVISBOElements As Boolean = False
