@@ -346,12 +346,17 @@ Public Class Tabelle3
                                     Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
                                     Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
                                     Dim autoAdjustChilds As Boolean = True
+                                    autoAdjustChilds = awinSettings.autoAjustChilds
 
 
                                     If cphase.nameID = rootPhaseName Then
 
                                         hproj.startDate = newStartDate
-                                        newOffsetInTagen = 0
+                                        If autoAdjustChilds Then
+                                            newOffsetInTagen = 0
+                                        Else
+                                            'keep calculated newOffsetInTagen
+                                        End If
 
                                     End If
 
@@ -474,6 +479,7 @@ Public Class Tabelle3
                                         ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
                                         ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
                                         Dim autoAdjustChilds As Boolean = True
+                                        autoAdjustChilds = awinSettings.autoAjustChilds
                                         Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
                                         cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
 
