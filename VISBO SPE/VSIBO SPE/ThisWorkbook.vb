@@ -31,22 +31,27 @@ Public Class ThisWorkbook
 
         'Call Auto_open()
 
+
+
+        logfileNamePath = createLogfileName()
+
         Dim CmdLine As String 'command-line string
 
         CmdLine = GetCommandLine() 'get the cmd-line string
         CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
-        Call MsgBox("cmdline1: " & CmdLine)
+        CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:62cd656811d22614f910c46f/ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODcuMTM5Ljk0LjE5NSIsInRpbWVzdGFtcCI6IjIwMjItMDgtMDVUMDc6NDA6MTIuNjU3WiJ9LCJpYXQiOjE2NTk2ODUyMTIsImV4cCI6MTY1OTY4NTMzMn0.b_cwOFvAEibDB4RemkKi3nnJ4M38I54ybrRCUE1EUfs/"
+        Call logger(ptErrLevel.logInfo, "Startup", "cmdline: " & CmdLine)
 
         Dim hstr() As String = CmdLine.Split("/")
         Dim parameter As String = ""
         If hstr.Length > 2 Then
-            Call MsgBox("parameter1: " & hstr(2))
+            Call logger(ptErrLevel.logInfo, "Startup", "parameter1: " & hstr(2))
         End If
         If hstr.Length > 3 Then
-            Call MsgBox("parameter2: " & hstr(3))
+            Call logger(ptErrLevel.logInfo, "Startup", "parameter2: " & hstr(3))
         End If
         If hstr.Length > 4 Then
-            Call MsgBox("parameter3: " & hstr(4))
+            Call logger(ptErrLevel.logInfo, "Startup", "parameter3: " & hstr(4))
         End If
 
         'Dim hstr() As String
@@ -74,20 +79,20 @@ Public Class ThisWorkbook
             For i = 2 To hstr.Length - 2
                 Dim elem As String = hstr(i)
                 Dim bezeichner As String = (elem.Split(":"))(0)
-                Call MsgBox("bezeichner = " & bezeichner)
+                'Call MsgBox("bezeichner = " & bezeichner)
                 Select Case bezeichner
                     Case "vpid"
                         spe_vpid = (elem.Split(":"))(1)
-                        Call MsgBox("vpid = " & spe_vpid)
+                        Call logger(ptErrLevel.logInfo, "Startup", "vpid = " & spe_vpid)
                     Case "vpvid"
                         spe_vpvid = (elem.Split(":"))(1)
-                        Call MsgBox("vpvid = " & spe_vpvid)
+                        Call logger(ptErrLevel.logInfo, "Startup", "vpvid = " & spe_vpvid)
                     Case "ott"
                         spe_ott = (elem.Split(":"))(1)
-                        Call MsgBox("oneTimeToken = " & spe_ott)
+                        Call logger(ptErrLevel.logInfo, "Startup", "oneTimeToken = " & spe_ott)
                     Case Else
                         rest = (elem.Split(":"))(1)
-                        Call MsgBox("rest = " & rest)
+                        Call logger(ptErrLevel.logInfo, "Startup", "rest = " & rest)
                 End Select
             Next
         End If
@@ -115,9 +120,6 @@ Public Class ThisWorkbook
         cacheUpdateDelay = 10
 
         appInstance = Application
-
-
-        logfileNamePath = createLogfileName()
 
         ' nicht visible setzen
         appInstance.Visible = False
