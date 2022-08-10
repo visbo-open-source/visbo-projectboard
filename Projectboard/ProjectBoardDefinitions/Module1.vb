@@ -7721,7 +7721,8 @@ Public Module Module1
 
 
         If IsNothing(awinPath) Then
-            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            'Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.Temp
             awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
         End If
         Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
