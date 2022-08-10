@@ -1340,9 +1340,9 @@ Module SIModule1
                 End If
 
             ' ur:220620: nicht mehr nötig, da immer Server nach Migration bhtc
-            'If .Tags.Item("REST").Length > 0 Then
-            '    awinSettings.visboServer = .Tags.Item("REST") = "True"
-            'End If
+            If .Tags.Item("REST").Length > 0 Then
+                awinSettings.visboServer = .Tags.Item("REST") = "True"
+            End If
 
 
 
