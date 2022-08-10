@@ -458,6 +458,7 @@ Module SIModule1
                 End If
                 Call MsgBox(msg)
             Else
+                tmpResult = True
                 ' ggfs. vcid zu gegebenen VC merken
                 If awinSettings.VCid = "" And awinSettings.databaseName <> "" Then
                     Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
