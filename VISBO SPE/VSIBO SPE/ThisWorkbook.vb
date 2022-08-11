@@ -31,6 +31,8 @@ Public Class ThisWorkbook
 
         'Call Auto_open()
 
+        ' Name of the called Client
+        visboClient = divClients(client.VisboSPE)
 
 
         logfileNamePath = createLogfileName()
@@ -38,8 +40,14 @@ Public Class ThisWorkbook
         Dim CmdLine As String 'command-line string
 
         CmdLine = GetCommandLine() 'get the cmd-line string
+        If CmdLine.Contains(" /x") Then
+            CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx"
+        End If
+
         CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
-        CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:62cd656811d22614f910c46f/ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODcuMTM5Ljk0LjE5NSIsInRpbWVzdGFtcCI6IjIwMjItMDgtMDVUMDc6NDA6MTIuNjU3WiJ9LCJpYXQiOjE2NTk2ODUyMTIsImV4cCI6MTY1OTY4NTMzMn0.b_cwOFvAEibDB4RemkKi3nnJ4M38I54ybrRCUE1EUfs/"
+
+        'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx"
+        'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:62cd656811d22614f910c46f/ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODcuMTM5Ljk0LjE5NSIsInRpbWVzdGFtcCI6IjIwMjItMDgtMDVUMDc6NDA6MTIuNjU3WiJ9LCJpYXQiOjE2NTk2ODUyMTIsImV4cCI6MTY1OTY4NTMzMn0.b_cwOFvAEibDB4RemkKi3nnJ4M38I54ybrRCUE1EUfs/"
         Call logger(ptErrLevel.logInfo, "Startup", "cmdline: " & CmdLine)
 
         Dim hstr() As String = CmdLine.Split("/")
@@ -97,10 +105,6 @@ Public Class ThisWorkbook
             Next
         End If
 
-
-
-        'visboClient = "VISBO Simple Project Edit / "
-        visboClient = "VISBO SPE / "
 
         ' currentProjektTafelModus auf beginnend mit massEditTermine setzend
         Select Case My.Settings.startModus
