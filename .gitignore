@@ -196,3 +196,5 @@ VisboRPA/.vs/VisboRPA/v15/Server/sqlite3/storage.ide-wal
 VisboRPA/.vs/VisboRPA/v15/Server/sqlite3/storage.ide-shm
 VisboRPA/.vs/VisboRPA/v15/Server/sqlite3/storage.ide
 VisboRPA/.vs/VisboRPA/v15/Server/sqlite3/db.lock
+VISBO SmartInfo\VISBO SmartInfoSetup\Release\*.exe
+VISBO SmartInfo\VISBO SmartInfoSetup\Release\*.msi
