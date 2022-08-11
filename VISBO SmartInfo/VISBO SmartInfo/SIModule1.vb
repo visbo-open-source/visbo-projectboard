@@ -458,6 +458,7 @@ Module SIModule1
                 End If
                 Call MsgBox(msg)
             Else
+                tmpResult = True
                 ' ggfs. vcid zu gegebenen VC merken
                 If awinSettings.VCid = "" And awinSettings.databaseName <> "" Then
                     Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
@@ -1340,9 +1341,9 @@ Module SIModule1
                 End If
 
             ' ur:220620: nicht mehr nötig, da immer Server nach Migration bhtc
-            'If .Tags.Item("REST").Length > 0 Then
-            '    awinSettings.visboServer = .Tags.Item("REST") = "True"
-            'End If
+            If .Tags.Item("REST").Length > 0 Then
+                awinSettings.visboServer = .Tags.Item("REST") = "True"
+            End If
 
 
 
