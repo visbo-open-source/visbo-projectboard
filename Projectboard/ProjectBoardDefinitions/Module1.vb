@@ -8178,11 +8178,11 @@ Public Module Module1
             Case PTwindows.massEdit
                 Dim visboClientTxt As String = visboClient
 
-                If visboClient.Contains("VISBO SPE") Then
+                If visboClient = divClients(client.VisboSPE) Then
                     visboClientTxt = "VISBO Project Edit / "
                 End If
 
-                If visboClient.Contains("VISBO SPE") And ShowProjekte.Count = 1 Then
+                If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
 
                     Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
                     Dim printProjName As String = hproj.name & "/" & hproj.variantName

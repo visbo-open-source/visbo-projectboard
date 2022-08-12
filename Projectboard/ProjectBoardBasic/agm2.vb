@@ -18879,7 +18879,7 @@ Public Module agm2
         Dim maxRCLengthAbsolut As Integer = 0
         Dim maxRCLengthVorkommen As Integer = 0
 
-        If todoListe.Count = 0 And Not visboClient.Contains("VISBO SPE") Then
+        If todoListe.Count = 0 And Not visboClient = divClients(client.VisboSPE) Then
 
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -21001,8 +21001,8 @@ Public Module agm2
 
         Dim cfgs As New configuration
         Dim cfgFile As String = ""
-        If visboClient.Contains("VISBO SPE") Then
-            cfgFile = path & "\VISBO SimpleProjectEditTestConfig.xml"
+        If visboClient = divClients(client.VisboSPE) Then
+            cfgFile = path & "\VISBO SPE.dll.config???"
         Else
             cfgFile = path & "\ProjectboardConfig.xml"
         End If

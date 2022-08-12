@@ -20,7 +20,7 @@ Public Class frmProjekteSpeichern
 
         Call languageSettings()
 
-        If visboClient.Contains("VISBO SPE") Then
+        If visboClient = divClients(client.VisboSPE) Then
             Me.Text = "Exit VISBO Project Edit"
         Else
             Me.Text = "Exit " & visboClient

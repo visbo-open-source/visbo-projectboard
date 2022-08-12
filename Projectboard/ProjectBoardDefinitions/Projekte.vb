@@ -26606,7 +26606,7 @@ Public Module Projekte
             ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
             If ShowProjekte.contains(pname) Then
 
-                If Not visboClient.Contains("VISBO SPE") Then
+                If Not visboClient = divClients(client.VisboSPE) Then
                     hproj = ShowProjekte.getProject(pname)
 
                     ' welche Phasen werden angezeigt , welche Meilensteine werden angezeigt ? 
