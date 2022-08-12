@@ -4,6 +4,7 @@ Imports ProjectBoardBasic
 Imports ProjectboardReports
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
+Imports Microsoft.Win32.Registry
 Public Class ThisWorkbook
     ' Copyright Philipp Koytek et al. 
     ' 2012 ff
@@ -40,10 +41,6 @@ Public Class ThisWorkbook
         Dim CmdLine As String 'command-line string
 
         CmdLine = GetCommandLine() 'get the cmd-line string
-        If CmdLine.Contains(" /x") Then
-            CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx"
-        End If
-
         CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
 
         'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx"
@@ -62,27 +59,6 @@ Public Class ThisWorkbook
             Call logger(ptErrLevel.logInfo, "Startup", "parameter3: " & hstr(4))
         End If
 
-        'Dim hstr() As String
-        'Dim cmdLine As String = GetCommandLine()
-
-        ''Dim cline As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug\VISBO SPE.xlsx" / """vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
-        'Call MsgBox(cmdLine)
-
-        'hstr = cmdLine.Split("/")
-        'If hstr.Length > 2 Then
-        '    parameterString = hstr(2)
-        '    Call MsgBox("parameterString: " & parameterString)
-        'Else
-
-        'End If
-
-
-        ''parameterString = "vpid:627a4a80c0bdb36bb7f65062&vpvid:627a5a1fc0bdb36bb7f65a22&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MThhNzViNzIyMDI2NDIyODkwY2NhOWEiLCJlbWFpbCI6InVsaS5wcm9ic3RAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiOTEuMTAuMTk3LjE4MiIsInRpbWVzdGFtcCI6IjIwMjItMDUtMjNUMTg6Mzk6MDMuODg0WiJ9LCJpYXQiOjE2NTMzMzExNDMsImV4cCI6MTY1MzMzMTI2M30.0V1vu5kDApZqnZs6P7pW_ds7qUwdwT0NcSCbVy9sO70"
-
-        ''parameterString = "vpid:624dcb87e89109508af0ef8b&vpvid:624dcb88e89109508af0efde&ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODQuMTYwLjc1LjQzIiwidGltZXN0YW1wIjoiMjAyMi0wNS0yNVQwOTo0NDozOS4zNjNaIn0sImlhdCI6MTY1MzQ3MTg3OSwiZXhwIjoxNjUzNDcxOTk5fQ.y8pZh7WOj5L1ZK50WIPCGah7t1OF10h0EN6TCpGtRm0"
-
-        ''Call MsgBox(parameterString)
-        'hstr = parameterString.Split("&")
         If hstr.Length > 2 Then
             For i = 2 To hstr.Length - 2
                 Dim elem As String = hstr(i)

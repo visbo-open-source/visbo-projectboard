@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="awinPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\UteRittinghaus-Koyte\Dokumente\Projekt-Tafel Folder\Demo Visbo Center\</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

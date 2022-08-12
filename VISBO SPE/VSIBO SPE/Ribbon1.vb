@@ -84,7 +84,8 @@ Public Class Ribbon1
 
 
         Try
-            Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug"
+            'Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug"
+            Dim path As String = ""
 
             If Not speSetTypen_Performed Then
 

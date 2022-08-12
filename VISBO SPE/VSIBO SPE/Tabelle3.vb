@@ -1251,7 +1251,7 @@ Public Class Tabelle3
     End Sub
 
     Private Sub Tabelle3_Startup(sender As Object, e As EventArgs) Handles Me.Startup
-        If visboClient.Contains("VISBO SPE") Then
+        If visboClient = divClients(client.VisboSPE) Then
             'Call MsgBox("bin im meTE")
         End If
     End Sub
