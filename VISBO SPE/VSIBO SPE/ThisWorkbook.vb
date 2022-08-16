@@ -4,7 +4,6 @@ Imports ProjectBoardBasic
 Imports ProjectboardReports
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
-Imports Microsoft.Win32.Registry
 Public Class ThisWorkbook
     ' Copyright Philipp Koytek et al. 
     ' 2012 ff
