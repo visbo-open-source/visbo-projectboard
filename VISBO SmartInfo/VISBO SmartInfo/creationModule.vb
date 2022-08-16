@@ -331,6 +331,10 @@ Module creationModule
 
                     Dim tmpStr(3) As String
                     Try
+                        'Änderung TK: 220727
+                        If .Title = "" And .AlternativeText <> "" Then
+                            .Title = .AlternativeText
+                        End If
 
                         If .Title <> "" Then
                             tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
@@ -521,7 +525,10 @@ Module creationModule
                         End If
 
                         ' wenn .AlternativeText was enthält ; das wird z.Bsp in Tabelle PRojektziele benötigt ...
-                        If .AlternativeText <> "" Then
+
+                        'If .AlternativeText <> "" then
+                        'Änderung TK: 
+                        If .AlternativeText <> "" And .AlternativeText <> .Title Then
                             qualifier2 = .AlternativeText
                         End If
 
