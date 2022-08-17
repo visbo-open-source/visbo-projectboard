@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_00877AD29CBE4EED9C0F9EDDA2125A01"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_017479623F995615D7FA29BE6FE540C6"
         "OwnerKey" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
         "MsmSig" = "8:_UNDEFINED"
@@ -147,6 +141,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_A49943F0374D471F80A208339D1D56B7"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B71E9CA696DF3739EAE60A5458198FC9"
         "OwnerKey" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
         "MsmSig" = "8:_UNDEFINED"
@@ -167,6 +167,12 @@
         {
         "MsmKey" = "8:_BC469195A707C18661B624CFBDB45B46"
         "OwnerKey" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C4D50903984142408A10B0A99E746418"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -232,19 +238,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_DC4084F440E8A7131E20008ADE0C9173"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6B153B9ED99A484F969F38D0F7B08B07"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_935FD8C4F618AAF771D3D9A422DB8C0C"
+        "OwnerKey" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -256,7 +250,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
+        "OwnerKey" = "8:_935FD8C4F618AAF771D3D9A422DB8C0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_6B153B9ED99A484F969F38D0F7B08B07"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -337,6 +337,12 @@
         "OwnerKey" = "8:_64AA1748D7027CB1209E3478B79D8B57"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_DC4084F440E8A7131E20008ADE0C9173"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -355,6 +361,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -421,26 +435,6 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_00877AD29CBE4EED9C0F9EDDA2125A01"
-            {
-            "SourcePath" = "8:..\\VSIBO SPE\\bin\\Debug\\VISBO SPE.dll.manifest"
-            "TargetName" = "8:VISBO SPE.dll.manifest"
-            "Tag" = "8:"
-            "Folder" = "8:_1E16486CFE854776BA118B6925AB664D"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_017479623F995615D7FA29BE6FE540C6"
             {
             "AssemblyRegister" = "3:1"
@@ -519,7 +513,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -581,7 +575,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -643,7 +637,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -674,7 +668,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -771,6 +765,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A49943F0374D471F80A208339D1D56B7"
+            {
+            "SourcePath" = "8:..\\VSIBO SPE\\bin\\Debug\\VISBO SPE.dll.manifest"
+            "TargetName" = "8:VISBO SPE.dll.manifest"
+            "Tag" = "8:"
+            "Folder" = "8:_1E16486CFE854776BA118B6925AB664D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B71E9CA696DF3739EAE60A5458198FC9"
             {
             "AssemblyRegister" = "3:1"
@@ -860,8 +874,28 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C4D50903984142408A10B0A99E746418"
+            {
+            "SourcePath" = "8:..\\..\\..\\..\\visbo-connect\\Visbo.ico"
+            "TargetName" = "8:Visbo.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_1E16486CFE854776BA118B6925AB664D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CF5A7F9E7E064F3D9CB29F788D108CCC"
@@ -973,7 +1007,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -1062,9 +1096,32 @@
         }
         "LaunchCondition"
         {
+            "{836E08B8-0285-4809-BA42-01DB6754A45D}:_78D29E92681347C0B958B490E7456A2B"
+            {
+            "Name" = "8:Verify VSTO 2010 Runtime availability"
+            "Condition" = "8:VSTORUNTIMEREDIST>=\"10.0.30319\" OR OFFICERUNTIME>=\"10.0.21022\""
+            "Message" = "8:The Visual Studio 2010 Tools for Office Runtime is not installed. Please run Setup.exe to install the Add-in"
+            "InstallUrl" = "8:"
+            }
         }
         "Locator"
         {
+            "{CF66B7F7-B7DA-4B08-A67A-233430638C9C}:_62E843DC400644849F094A79B3764CE0"
+            {
+            "Name" = "8:Search for VSTO 2010 Runtime"
+            "Root" = "2:1"
+            "RegKey" = "8:SOFTWARE\\Microsoft\\VSTO Runtime Setup\\v4R"
+            "Value" = "8:Version"
+            "Property" = "8:VSTORUNTIMEREDIST"
+            }
+            "{CF66B7F7-B7DA-4B08-A67A-233430638C9C}:_828AF06A9A43479EA9EAD7BEC8C7A5FE"
+            {
+            "Name" = "8:Search for Office VSTO Runtime"
+            "Root" = "2:1"
+            "RegKey" = "8:SOFTWARE\\Microsoft\\VSTO Runtime Setup\\v4"
+            "Value" = "8:"
+            "Property" = "8:OFFICERUNTIME"
+            }
         }
         "MsiBootstrapper"
         {
@@ -1076,7 +1133,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO ProjectEdit"
         "ProductCode" = "8:{0B3710FA-297C-4FA9-AC4C-8ACD3B23F60C}"
-        "PackageCode" = "8:{79023DE6-CF46-427E-8EB2-97B4910DD10A}"
+        "PackageCode" = "8:{550941CE-91EB-4CDF-BDC9-B810708E80C9}"
         "UpgradeCode" = "8:{8730F8C0-4BB1-4E0E-8F1F-660F995B2283}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
@@ -1087,13 +1144,13 @@
         "Manufacturer" = "8:VISBO"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
-        "Title" = "8:VISBO ProjectEditSetup"
+        "Title" = "8:VISBO ProjectEdit"
         "Subject" = "8:"
         "ARPCONTACT" = "8:VISBO"
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:Project Edit called from WebUI"
         "ARPURLINFOABOUT" = "8:"
-        "ARPPRODUCTICON" = "8:"
+        "ARPPRODUCTICON" = "8:_C4D50903984142408A10B0A99E746418"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -1188,6 +1245,122 @@
             {
                 "Keys"
                 {
+                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_51D3761FFF4D492783A371ECD3025118"
+                    {
+                    "Name" = "8:Software"
+                    "Condition" = "8:"
+                    "AlwaysCreate" = "11:FALSE"
+                    "DeleteAtUninstall" = "11:FALSE"
+                    "Transitive" = "11:FALSE"
+                        "Keys"
+                        {
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_DD59908C89224031B10EEB21F26D4239"
+                            {
+                            "Name" = "8:Microsoft"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:FALSE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_0988A99F7E324FAFBE4BCD18D4DC79C8"
+                                    {
+                                    "Name" = "8:Office"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_01352701BFBD4F7788A476A67F931C44"
+                                            {
+                                            "Name" = "8:Excel"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_95A33DF8188F448E8FFA7A2DD451E9F4"
+                                                    {
+                                                    "Name" = "8:Addins"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_640F240B507E4FD6B983B76DAFA6AAAA"
+                                                            {
+                                                            "Name" = "8:VISBO ProjectEdit"
+                                                            "Condition" = "8:"
+                                                            "AlwaysCreate" = "11:FALSE"
+                                                            "DeleteAtUninstall" = "11:FALSE"
+                                                            "Transitive" = "11:FALSE"
+                                                                "Keys"
+                                                                {
+                                                                }
+                                                                "Values"
+                                                                {
+                                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_237441C3A3194661B25A035934A2224A"
+                                                                    {
+                                                                    "Name" = "8:Manifest"
+                                                                    "Condition" = "8:"
+                                                                    "Transitive" = "11:FALSE"
+                                                                    "ValueTypes" = "3:1"
+                                                                    "Value" = "8:\"file:///TARGETDIR]VISBO SPE.vsto|vstolocal\""
+                                                                    }
+                                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_2FEE56FEE6064FE39E160FDBB2C62136"
+                                                                    {
+                                                                    "Name" = "8:FriendlyName"
+                                                                    "Condition" = "8:"
+                                                                    "Transitive" = "11:FALSE"
+                                                                    "ValueTypes" = "3:1"
+                                                                    "Value" = "8:ExcelAddIn project edit"
+                                                                    }
+                                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_E3BB5E967F564DE48A3EF597B5CEFFC9"
+                                                                    {
+                                                                    "Name" = "8:Description"
+                                                                    "Condition" = "8:"
+                                                                    "Transitive" = "11:FALSE"
+                                                                    "ValueTypes" = "3:1"
+                                                                    "Value" = "8:ExelAddIn to Edit a Project called from WebUI"
+                                                                    }
+                                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_F553E08F3A04430F990C7DEB67B81CD7"
+                                                                    {
+                                                                    "Name" = "8:LoadBehavior"
+                                                                    "Condition" = "8:"
+                                                                    "Transitive" = "11:FALSE"
+                                                                    "ValueTypes" = "3:3"
+                                                                    "Value" = "3:3"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        "Values"
+                                                        {
+                                                        }
+                                                    }
+                                                }
+                                                "Values"
+                                                {
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                        }
+                                    }
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                        }
+                        "Values"
+                        {
+                        }
+                    }
                 }
             }
         }
@@ -1207,7 +1380,7 @@
             "Target" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
             "Folder" = "8:_5606E207D60F4E7EB66C181C252ACCC0"
             "WorkingFolder" = "8:_1E16486CFE854776BA118B6925AB664D"
-            "Icon" = "8:_CF5A7F9E7E064F3D9CB29F788D108CCC"
+            "Icon" = "8:_C4D50903984142408A10B0A99E746418"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_38659DB44244435CA43E2C3482F92D05"
@@ -1221,7 +1394,21 @@
             "Target" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
             "Folder" = "8:_D86E8A07CAFF4B3E8042F6D67353A499"
             "WorkingFolder" = "8:_1E16486CFE854776BA118B6925AB664D"
-            "Icon" = "8:_CF5A7F9E7E064F3D9CB29F788D108CCC"
+            "Icon" = "8:_C4D50903984142408A10B0A99E746418"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_58EB68CA17534B1996CFC010DA5EFE62"
+            {
+            "Name" = "8:ProjectEditShortCut"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_288035DC399B4EB48632E9E8E55D4FAB"
+            "Folder" = "8:_1E16486CFE854776BA118B6925AB664D"
+            "WorkingFolder" = "8:_1E16486CFE854776BA118B6925AB664D"
+            "Icon" = "8:_C4D50903984142408A10B0A99E746418"
             "Feature" = "8:"
             }
         }
