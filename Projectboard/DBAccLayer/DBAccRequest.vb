@@ -478,6 +478,20 @@ Public Class Request
 
     End Function
 
+    Public Function retrieveOneVPandSetaktVCid(ByVal vpid As String, ByRef err As clsErrorCodeMsg)
+        Dim result As New clsProjekt
+
+
+        Try
+            Call CType(DBAcc, WebServerAcc.Request).retrieveOneVPandSetaktVCid(vpid, err)
+        Catch ex As Exception
+
+        End Try
+
+        'retrieveOneVPandSetaktVCid = result
+
+    End Function
+
     ''' <summary>
     '''  liest entweder alle Projekte im angegebenen Zeitraum 
     '''  oder aber alle Timestamps der übergebenen Projektvariante im angegeben Zeitfenster

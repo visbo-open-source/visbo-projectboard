@@ -106,7 +106,6 @@ Public Class Tabelle3
 
         '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
 
-        ''?????
         appInstance.EnableEvents = True
         Dim aa As Boolean = appInstance.EnableEvents
 
@@ -123,21 +122,6 @@ Public Class Tabelle3
                 CType(meWS.Columns("B"), Excel.Range).Hidden = False
                 CType(meWS.Columns("c"), Excel.Range).Hidden = False
             End If
-            'ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
-            '    If RoleDefinitions.getAllSkillIDs.Count > 0 Then
-            '        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
-            '    Else
-            '        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-            '    End If
-            '    If ShowProjekte.Count = 1 Then
-            '        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-            '        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-            '        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-            '    Else
-            '        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-            '        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-            '        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-            '    End If
 
             'End If
         Catch ex As Exception
@@ -243,16 +227,7 @@ Public Class Tabelle3
             Application.ScreenUpdating = True
         End If
 
-        '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
-        'If ShowProjekte.Count = 1 Then
-        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-        'Else
-        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-        'End If
+
 
     End Sub
 
@@ -346,12 +321,17 @@ Public Class Tabelle3
                                     Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
                                     Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
                                     Dim autoAdjustChilds As Boolean = True
+                                    autoAdjustChilds = awinSettings.autoAjustChilds
 
 
                                     If cphase.nameID = rootPhaseName Then
 
                                         hproj.startDate = newStartDate
-                                        newOffsetInTagen = 0
+                                        If autoAdjustChilds Then
+                                            newOffsetInTagen = 0
+                                        Else
+                                            'keep calculated newOffsetInTagen
+                                        End If
 
                                     End If
 
@@ -474,6 +454,7 @@ Public Class Tabelle3
                                         ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
                                         ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
                                         Dim autoAdjustChilds As Boolean = True
+                                        autoAdjustChilds = awinSettings.autoAjustChilds
                                         Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
                                         cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
 
@@ -1245,7 +1226,7 @@ Public Class Tabelle3
     End Sub
 
     Private Sub Tabelle3_Startup(sender As Object, e As EventArgs) Handles Me.Startup
-        If visboClient.Contains("VISBO SPE") Then
+        If visboClient = divClients(client.VisboSPE) Then
             'Call MsgBox("bin im meTE")
         End If
     End Sub

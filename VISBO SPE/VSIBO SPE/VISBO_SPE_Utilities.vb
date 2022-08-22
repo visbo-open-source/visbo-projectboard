@@ -189,7 +189,7 @@ Module VISBO_SPE_Utilities
 
                         End If
 
-                    ElseIf listOfVCs.Count > 1 Then
+                    ElseIf listOfVCs.Count > 1 And spe_vpid = "" Then
                         ' wähle das gewünschte VC aus
                         Dim chooseVC As New frmSelectOneItem
                         chooseVC.itemsCollection = listOfVCs
@@ -204,6 +204,9 @@ Module VISBO_SPE_Utilities
                         Else
                             Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
+                    ElseIf listOfVCs.Count > 1 And spe_vpid <> "" Then
+                        ' because the vpid is unique over the whole platform, we here can look for the vcid and set it. 
+                        Call CType(databaseAcc, DBAccLayer.Request).retrieveOneVPandSetaktVCid(spe_vpid, err)
 
                     Else
                         ' user has no access to any VISBO Center 
@@ -383,19 +386,6 @@ Module VISBO_SPE_Utilities
 
             If todoListe.Count >= 0 Then
 
-                ' jetzt muss ggf noch showrangeLeft und showrangeRight gesetzt werden  
-
-                ' Call enableControls(meModus)
-
-                ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
-                ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
-                'Call saveProjectsToBackup(todoListe)
-
-                ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
-                'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
-
-                ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
-                'appInstance.ScreenUpdating = False
 
                 Try
                     enableOnUpdate = False
@@ -481,6 +471,7 @@ Module VISBO_SPE_Utilities
                         Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
 
                         If appInstance.ActiveSheet.name = meWS.Name Then
+
                             If ShowProjekte.Count = 1 Then
                                 CType(meWS.Columns("A"), Excel.Range).Hidden = True
                                 CType(meWS.Columns("B"), Excel.Range).Hidden = True
@@ -496,9 +487,6 @@ Module VISBO_SPE_Utilities
                     Catch ex As Exception
 
                     End Try
-
-
-
 
 
 
@@ -1302,7 +1290,7 @@ Module VISBO_SPE_Utilities
 
         Dim vpid As String = hproj.vpID
         Dim varID As String = CType(databaseAcc, DBAccLayer.Request).findVariantID(vpid, hproj.variantName)
-        'Dim varID As String = "624dcfc6e89109508af0f7e2"
+
 
         Dim refDate As Date = Date.Now
         Dim StartOfProject As String = DateTimeToISODate(hproj.startDate)
@@ -1323,6 +1311,7 @@ Module VISBO_SPE_Utilities
 
         If spe_vpid <> "" And spe_vpvid <> "" Then
             ' hier holen des Projekte mit vpid... und vpvid...
+            Call CType(databaseAcc, DBAccLayer.Request).retrieveOneVPandSetaktVCid(spe_vpid, err)
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
                 ShowProjekte.Add(hproj, False)

@@ -611,7 +611,31 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' liest ein VP mit nur der vpid, setzt daraufhin die globale Variable aktVCid für weitere ReST-Aufrufe
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="err"></param>
+    Public Sub retrieveOneVPandSetaktVCid(ByVal vpid As String, ByRef err As clsErrorCodeMsg)
 
+        Dim result As clsVP = Nothing
+
+        Try
+            result = GETOneVP(vpid, err)
+            If err.errorCode = 200 Then
+                ' hier wird das aktuell VC gesetzt.
+                aktVCid = result.vcid
+                Call logger(ptErrLevel.logInfo, "retrieveOneVPandSetAktvcid", "VP with vpid: " & vpid & " successfully read")
+                Call logger(ptErrLevel.logInfo, "retrieveOneVPandSetAktvcid", "actVCid set to vcid: " & aktVCid)
+            Else
+                Call logger(ptErrLevel.logError, "retrieveOneVPandSetAktvcid", "VP with vpid: " & vpid & " not found")
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+    End Sub
 
     ''' <summary>
     '''  liest entweder alle Projekte im angegebenen Zeitraum 
@@ -860,7 +884,7 @@ Public Class Request
             Dim vp As clsVP = Nothing
             Try
                 If vpid <> "" Then
-                    vp = GETallVP(aktVCid, err, ptPRPFType.project).Item(vpid)
+                    vp = GETOneVP(vpid, err)
                 End If
             Catch ex As Exception
                 Call logger(ptErrLevel.logError, "retrieveOneProjectVersionfromDB", "There exist no VP with vpid= '" & vpid & "'")
@@ -8102,6 +8126,70 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' liest ein VP mit vpid
+    ''' </summary>
+    ''' <param name="vpid">vpid (über alle VCs eindeutig) des gesuchten Projektes enthalten</param>
+    ''' <returns>vp project</returns>
+    Public Function GETOneVP(ByVal vpid As String,
+                               ByRef err As clsErrorCodeMsg) As clsVP
+
+        Dim result As New clsVP
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim usermsg As String = ""
+
+        Try
+            Dim serverUriString As String = ""
+            Dim typeRequest As String = "/vp"
+
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest & "/" & vpid
+            Dim serverUri As New Uri(serverUriString)
+
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As String
+            Dim webVPantwort As clsWebVP = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+                If webVPantwort.vp.Count = 1 Then
+                    result = webVPantwort.vp(0)
+                Else
+                    If awinSettings.englishLanguage Then
+                        usermsg = "No project could be read with this VPID: " & vpid
+                    Else
+                        usermsg = "Es konnte kein Projekt mit dieser VPID: " & vpid & " gelesen werden"
+                    End If
+                    Call logger(ptErrLevel.logError, "GETOneVP", usermsg)
+
+                End If
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVP", errcode, errmsg & " : " & webVPantwort.message)
+                Call logger(ptErrLevel.logError, "GETOneVP", errmsg)
+
+            End If
+
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVP" & " : " & errmsg & " : " & webVPantwort.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETOneVP = result
+
+    End Function
 
     ''' <summary>
     ''' legt ein VisboProject/VisboPortfolio an
@@ -8582,17 +8670,32 @@ Public Class Request
     ''' <returns>variantID</returns>
     Public Function findVariantID(ByVal vpid As String, ByVal variantName As String) As String
 
+        Dim err As New clsErrorCodeMsg
         Dim variantID As String = ""
+        Dim actualVP As clsVP = Nothing
+
         Try ' passende VariantID herausfinden
             If vpid <> "" Then
                 If VRScache.VPsId.ContainsKey(vpid) Then
-                    Dim actualVP As clsVP = VRScache.VPsId.Item(vpid)
+                    actualVP = VRScache.VPsId.Item(vpid)
                     For Each var As clsVPvariant In actualVP.Variant
                         If var.variantName = variantName Then
                             variantID = var._id
                             Exit For
                         End If
                     Next
+                Else
+                    ' no yet in cache
+                    actualVP = GETOneVP(vpid, err)
+                    If Not IsNothing(actualVP) Then
+                        For Each var As clsVPvariant In actualVP.Variant
+                            If var.variantName = variantName Then
+                                variantID = var._id
+                                Exit For
+                            End If
+                        Next
+
+                    End If
                 End If
             End If
         Catch ex As Exception

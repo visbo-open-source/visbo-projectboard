@@ -4,6 +4,7 @@ Imports System.Collections.Generic
 Imports System.Math
 Imports System.Windows.Forms
 Imports System.IO
+Imports System.Environment
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
@@ -301,12 +302,14 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
-    Public divClients() As String = {"VISBO Projectboard / ", "VISBO Smartinfo / ", "VISBO MSProjectAddIn / "}
+    Public divClients() As String = {"VISBO Projectboard / ", "VISBO SmartInfo / ", "VISBO ProjectPublish / ", "VISBO RPA / ", "VISBO ProjectEdit / "}
 
     Public Enum client
         Projectboard = 0
         VisboSmartInfo = 1
         VisboMSProject = 2
+        VisboRPA = 3
+        VisboSPE = 4
     End Enum
 
     Public Enum ptVariantFixNames
@@ -7722,10 +7725,15 @@ Public Module Module1
         ' FileNamen zusammenbauen
         Dim logfileOrdner As String = "logfiles"
 
+        ' Name of the calling program
+        Dim hstr() As String = Split(visboClient, " ", -1)
+        Dim toolName As String = hstr(1)
 
         If IsNothing(awinPath) Then
-            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            Dim curUserDir As String = GetFolderPath(SpecialFolder.ApplicationData)
+            Dim appData As String = GetFolderPath(SpecialFolder.LocalApplicationData)
             awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            logfileOrdner = toolName & "\" & logfileOrdner
         End If
         Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
 
@@ -8173,11 +8181,11 @@ Public Module Module1
             Case PTwindows.massEdit
                 Dim visboClientTxt As String = visboClient
 
-                If visboClient.Contains("VISBO SPE") Then
+                If visboClient = divClients(client.VisboSPE) Then
                     visboClientTxt = "VISBO Project Edit / "
                 End If
 
-                If visboClient.Contains("VISBO SPE") And ShowProjekte.Count = 1 Then
+                If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
 
                     Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
                     Dim printProjName As String = hproj.name & "/" & hproj.variantName
