@@ -8670,8 +8670,14 @@ Public Module awinGeneralModules
         Dim outPutCollection As New Collection
         Dim outputline As String = ""
 
-        ' die aktuelle WriteProtection holen 
-        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+        If visboClient = divClients(client.VisboSPE) Then
+            ' die aktuelle WriteProtection holen 
+            writeProtections.adjustListe(False) = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+        Else
+            ' die aktuelle WriteProtection holen 
+            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+        End If
+
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         'Call storeSessionConstellation("Last")
