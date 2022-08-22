@@ -36,11 +36,20 @@ Public Class ThisWorkbook
 
 
         logfileNamePath = createLogfileName()
+        'Call MsgBox(logfileNamePath)
 
         Dim CmdLine As String 'command-line string
 
         CmdLine = GetCommandLine() 'get the cmd-line string
         CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
+
+        '----nur zum Test
+        Dim hhstr() As String = CmdLine.Split("/")
+        Dim hparameter As String = ""
+        If hhstr.Length = 2 Then
+            CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:63032bdd0e4b7351418a5729/"
+        End If
+        '----nur zum Test
 
         'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx"
         'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:62cd656811d22614f910c46f/ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODcuMTM5Ljk0LjE5NSIsInRpbWVzdGFtcCI6IjIwMjItMDgtMDVUMDc6NDA6MTIuNjU3WiJ9LCJpYXQiOjE2NTk2ODUyMTIsImV4cCI6MTY1OTY4NTMzMn0.b_cwOFvAEibDB4RemkKi3nnJ4M38I54ybrRCUE1EUfs/"
@@ -62,7 +71,6 @@ Public Class ThisWorkbook
             For i = 2 To hstr.Length - 2
                 Dim elem As String = hstr(i)
                 Dim bezeichner As String = (elem.Split(":"))(0)
-                'Call MsgBox("bezeichner = " & bezeichner)
                 Select Case bezeichner
                     Case "vpid"
                         spe_vpid = (elem.Split(":"))(1)
@@ -186,7 +194,6 @@ Public Class ThisWorkbook
 
             appInstance.EnableEvents = True
 
-            Call MsgBox(ex.Message)
             appInstance.Quit()
         Finally
             appInstance.ScreenUpdating = True
@@ -244,6 +251,7 @@ Public Class ThisWorkbook
         Dim returnValue As DialogResult
         Dim cancelAbbruch As Boolean = False
         Dim err As New clsErrorCodeMsg
+        Dim msg As String = ""
 
         If loginErfolgreich Then
 
@@ -289,11 +297,15 @@ Public Class ThisWorkbook
 
                         Else
                             If awinSettings.englishLanguage Then
-                                Call MsgBox("no projects to store ...")
+                                msg = "no projects to store ..."
                             Else
-                                Call MsgBox("keine Projekte zu speichern ...")
+                                msg = "keine Projekte zu speichern ..."
+                            End If
+                            If awinSettings.visboDebug Then
+                                Call MsgBox(msg)
                             End If
 
+                            Call logger(ptErrLevel.logInfo, "Worksbook.Before Close", msg)
 
                         End If
                     End If
@@ -360,103 +372,68 @@ Public Class ThisWorkbook
         Cancel = True
     End Sub
 
-    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineA" () As string
-    Declare Function lstrlenW Lib "kernel32" Alias "lstrlenA" (ByVal lpString As Long) As Long
-    Declare Function CopyMemory Lib "kernel32" Alias "lstrcpynA" (ByVal MyDest As String, ByVal MySource As Long, ByVal MySize As Long) As Long
-    Function CmdToSTr(Cmd As Long) As String
-        Dim Buffer As String
-        Dim StrLen As Long
+    Declare Function GetCommandLine Lib "kernel32" Alias "GetCommandLineA" () As String
+    'Declare Function lstrlenW Lib "kernel32" Alias "lstrlenA" (ByVal lpString As Long) As Long
+    'Declare Function CopyMemory Lib "kernel32" Alias "lstrcpynA" (ByVal MyDest As String, ByVal MySource As Long, ByVal MySize As Long) As Long
+    'Function CmdToSTr(Cmd As Long) As String
+    '    Dim Buffer As String
+    '    Dim StrLen As Long
 
-        If Cmd Then
-            StrLen = lstrlenW(Cmd) * 2
+    '    If Cmd Then
+    '        StrLen = lstrlenW(Cmd) * 2
 
-            If StrLen > 0 Then
-                Buffer = Space(StrLen + 1)
-                Call MsgBox("Vor Buffer: ")
-                Cmd = CopyMemory(Buffer, Cmd, StrLen + 1)
-                Call MsgBox("Nach Buffer: ")
-                'If Cmd > 0 Then
-                '    Dim PosZero As Long
-                '    PosZero = InStr(Buffer, Chr(0))
-                '    If PosZero > 0 Then Buffer = Left(Buffer, PosZero - 1)
-                'End If
-                CmdToSTr = Buffer
-            Else
-                CmdToSTr = ""
-            End If
-        Else
-            CmdToSTr = ""
-        End If
-    End Function
+    '        If StrLen > 0 Then
+    '            Buffer = Space(StrLen + 1)
+    '            Call MsgBox("Vor Buffer: ")
+    '            Cmd = CopyMemory(Buffer, Cmd, StrLen + 1)
+    '            Call MsgBox("Nach Buffer: ")
+    '            'If Cmd > 0 Then
+    '            '    Dim PosZero As Long
+    '            '    PosZero = InStr(Buffer, Chr(0))
+    '            '    If PosZero > 0 Then Buffer = Left(Buffer, PosZero - 1)
+    '            'End If
+    '            CmdToSTr = Buffer
+    '        Else
+    '            CmdToSTr = ""
+    '        End If
+    '    Else
+    '        CmdToSTr = ""
+    '    End If
+    'End Function
 
-    Sub Auto_open()
+    'Sub Auto_open()
 
-        Dim CmdLine As String 'command-line string
+    '    Dim CmdLine As String 'command-line string
 
-        CmdLine = GetCommandLine() 'get the cmd-line string
-        CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
-        Call MsgBox("cmdline1: " & CmdLine)
+    '    CmdLine = GetCommandLine() 'get the cmd-line string
+    '    CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
+    '    Call MsgBox("cmdline1: " & CmdLine)
 
-        Dim hstr() As String = CmdLine.Split("/")
-        Dim parameter As String = ""
-        If hstr.Length > 2 Then
-            Call MsgBox("parameter1: " & hstr(2))
-        End If
-        If hstr.Length > 3 Then
-            Call MsgBox("parameter2: " & hstr(3))
-        End If
-        If hstr.Length > 4 Then
-            Call MsgBox("parameter3: " & hstr(4))
-        End If
+    '    Dim hstr() As String = CmdLine.Split("/")
+    '    Dim parameter As String = ""
+    '    If hstr.Length > 2 Then
+    '        Call MsgBox("parameter1: " & hstr(2))
+    '    End If
+    '    If hstr.Length > 3 Then
+    '        Call MsgBox("parameter2: " & hstr(3))
+    '    End If
+    '    If hstr.Length > 4 Then
+    '        Call MsgBox("parameter3: " & hstr(4))
+    '    End If
 
+    'End Sub
+    'Private Function UnicodeBytesToString(
+    'ByVal bytes() As Byte) As String
+    '    Dim enc As Encoding = New UnicodeEncoding(False, True, True)
+    '    Dim value As String = ""
+    '    Try
+    '        value = enc.GetString(bytes)
 
-        'On Error Resume Next 'for the wksht-function "Search"
-        'Pos1 = Application.WorksheetFunctionSearch("/", CmdLine, 1) + 1 'search "/e"
-        'Pos1 = Application.WorksheetFunction.Search("/", CmdLine, Pos1) + 1 '1st param
-        'If InStr(Pos1, CmdLine, " ") > 0 Then CmdLine = Left$(CmdLine, InStr(Pos1, CmdLine, " "))
-        'Call MsgBox("cmdline2: " & CmdLine)
+    '    Catch e As DecoderFallbackException
+    '        Call logger(ptErrLevel.logError, "UnicodeBytesToString", "Unable to decode {0} at index {1}" & " : " & e.Index)
 
-        'Pos1 = CmdLine.IndexOf("/e") 'search "/e"
-        'Call MsgBox("Pos1:" & Pos1.ToString)
-        'Pos2 = Application.WorksheetFunction.Search(" ", CmdLine, Pos1) + 1 '1st param
-        'Call MsgBox("Pos2:" & Pos2.ToString)
-        'Pos3 = Application.WorksheetFunction.Search(" ", CmdLine, Pos2) + 1
-        'Call MsgBox("Pos3:" & Pos3.ToString)
+    '    End Try
 
-        'Dim firstPart As String = Mid(CmdLine, 0, Pos2 - Pos1)
-        'Call MsgBox("firstPart: " & firstPart)
-        'Dim secondPart As String = Mid(CmdLine, 0, Pos3 - Pos2)
-        'Call MsgBox("secondPart: " & secondPart)
-        'Dim thirdPart As String = Mid(CmdLine, 0, Pos3)
-        'Call MsgBox("thirdPart: " & thirdPart)
-
-        'Dim newcmdLine As String = Mid(CmdLine, Pos2, Pos3 - Pos2)
-        'Call MsgBox("newcmdLine: ", newcmdLine)
-
-        'Do While ArgCount <= hstr.Length - 1
-
-        '    Call MsgBox("Argument " & ArgCount & ":" & hstr(ArgCount))
-
-        '    'Pos2 = Application.WorksheetFunction.Search("/", CmdLine, Pos1)
-        '    ArgCount = ArgCount + 1
-        '    'ReDim Preserve Args(ArgCount)
-        '    'Args(ArgCount) = Mid(CmdLine, Pos1, IIf(h_error, Len(CmdLine), Pos2) - Pos1)
-        '    'Call MsgBox("Argument " & ArgCount & " : " & Args(ArgCount))
-        '    'Pos1 = Pos2 + 1
-        'Loop
-    End Sub
-    Private Function UnicodeBytesToString(
-    ByVal bytes() As Byte) As String
-        Dim enc As Encoding = New UnicodeEncoding(False, True, True)
-        Dim value As String = ""
-        Try
-            value = enc.GetString(bytes)
-
-        Catch e As DecoderFallbackException
-            Call logger(ptErrLevel.logError, "UnicodeBytesToString", "Unable to decode {0} at index {1}" & " : " & e.Index)
-
-        End Try
-
-        Return value
-    End Function
+    '    Return value
+    'End Function
 End Class

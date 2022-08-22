@@ -106,7 +106,6 @@ Public Class Tabelle3
 
         '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
 
-        ''?????
         appInstance.EnableEvents = True
         Dim aa As Boolean = appInstance.EnableEvents
 
@@ -123,21 +122,6 @@ Public Class Tabelle3
                 CType(meWS.Columns("B"), Excel.Range).Hidden = False
                 CType(meWS.Columns("c"), Excel.Range).Hidden = False
             End If
-            'ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
-            '    If RoleDefinitions.getAllSkillIDs.Count > 0 Then
-            '        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
-            '    Else
-            '        CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-            '    End If
-            '    If ShowProjekte.Count = 1 Then
-            '        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-            '        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-            '        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-            '    Else
-            '        CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-            '        CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-            '        CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-            '    End If
 
             'End If
         Catch ex As Exception
@@ -243,16 +227,7 @@ Public Class Tabelle3
             Application.ScreenUpdating = True
         End If
 
-        '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
-        'If ShowProjekte.Count = 1 Then
-        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
-        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
-        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
-        'Else
-        '    CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
-        '    CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
-        '    CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
-        'End If
+
 
     End Sub
 

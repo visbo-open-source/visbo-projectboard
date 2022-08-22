@@ -133,6 +133,12 @@ Public Class Ribbon1
                     awinSettings.userNamePWD = ""
                 End If
 
+                Try
+                    Dim clearOK As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logError, "PTProjectLoad", "Warning: no Cache clearing " & ex.Message)
+                End Try
+
                 ' Refresh von Projekte im Cache  in Minuten
                 cacheUpdateDelay = 30
 
@@ -193,7 +199,7 @@ Public Class Ribbon1
 
         If AlleProjekte.Count > 0 Then
             ' Termine edit aufschalten
-            'all MsgBox(currentProjektTafelModus)
+            visboZustaende.currentProject = AlleProjekte.getProject(0)
             Call massEditRcTeAt(currentProjektTafelModus)
         End If
 
@@ -339,7 +345,7 @@ Public Class Ribbon1
     ''' <param name="control"></param>
     ''' <param name="pressed"></param>
     Public Sub awinPTAutoDisValues(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.noNewCalculation = pressed
+        awinSettings.noNewCalculation = Not pressed
     End Sub
 
 
