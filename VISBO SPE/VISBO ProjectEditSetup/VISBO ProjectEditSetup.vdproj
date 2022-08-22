@@ -368,6 +368,19 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 und x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.VSTORuntime.4.0"
+                    {
+                    "Name" = "8:Microsoft Visual Studio 2010-Tools für Office-Laufzeit (x86 und x64)"
+                    "ProductCode" = "8:Microsoft.VSTORuntime.4.0"
+                    }
+                }
             }
         }
         "Release"
@@ -1133,7 +1146,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO ProjectEdit"
         "ProductCode" = "8:{0B3710FA-297C-4FA9-AC4C-8ACD3B23F60C}"
-        "PackageCode" = "8:{550941CE-91EB-4CDF-BDC9-B810708E80C9}"
+        "PackageCode" = "8:{BF66E2DB-BD42-436D-BB0B-5BB99C97712D}"
         "UpgradeCode" = "8:{8730F8C0-4BB1-4E0E-8F1F-660F995B2283}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
@@ -1812,7 +1825,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_288035DC399B4EB48632E9E8E55D4FAB"
             {
-            "SourcePath" = "8:..\\VSIBO SPE\\obj\\Release\\VISBO SPE.dll"
+            "SourcePath" = "8:..\\VSIBO SPE\\obj\\Debug\\VISBO SPE.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1E16486CFE854776BA118B6925AB664D"
