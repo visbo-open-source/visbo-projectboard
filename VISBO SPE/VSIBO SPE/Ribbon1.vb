@@ -337,7 +337,7 @@ Public Class Ribbon1
     ''' <param name="control"></param>
     ''' <returns></returns>
     Public Function PTAutoDisValues(control As IRibbonControl) As Boolean
-        PTAutoDisValues = awinSettings.noNewCalculation
+        PTAutoDisValues = Not awinSettings.noNewCalculation
     End Function
     ''' <summary>
     ''' holen der gewünschten Einstellung
@@ -345,7 +345,7 @@ Public Class Ribbon1
     ''' <param name="control"></param>
     ''' <param name="pressed"></param>
     Public Sub awinPTAutoDisValues(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.noNewCalculation = Not pressed
+        awinSettings.noNewCalculation = pressed
     End Sub
 
 

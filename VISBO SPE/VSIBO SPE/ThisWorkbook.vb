@@ -158,6 +158,8 @@ Public Class ThisWorkbook
                 awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
                 awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+
+                ' the following settings were defined in customization-configuration
                 'awinSettings.autoAjustChilds = My.Settings.autoAjustChilds
                 'awinSettings.noNewCalculation = My.Settings.noNewCalculation
                 'awinSettings.propAnpassRess = My.Settings.propAnpassRess
