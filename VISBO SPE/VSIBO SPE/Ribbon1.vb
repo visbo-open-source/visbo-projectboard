@@ -84,7 +84,8 @@ Public Class Ribbon1
 
 
         Try
-            Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug"
+            'Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug"
+            Dim path As String = ""
 
             If Not speSetTypen_Performed Then
 
@@ -131,6 +132,12 @@ Public Class Ribbon1
                 Else
                     awinSettings.userNamePWD = ""
                 End If
+
+                Try
+                    Dim clearOK As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logError, "PTProjectLoad", "Warning: no Cache clearing " & ex.Message)
+                End Try
 
                 ' Refresh von Projekte im Cache  in Minuten
                 cacheUpdateDelay = 30
@@ -192,7 +199,7 @@ Public Class Ribbon1
 
         If AlleProjekte.Count > 0 Then
             ' Termine edit aufschalten
-            'all MsgBox(currentProjektTafelModus)
+            visboZustaende.currentProject = AlleProjekte.getProject(0)
             Call massEditRcTeAt(currentProjektTafelModus)
         End If
 
@@ -330,7 +337,7 @@ Public Class Ribbon1
     ''' <param name="control"></param>
     ''' <returns></returns>
     Public Function PTAutoDisValues(control As IRibbonControl) As Boolean
-        PTAutoDisValues = awinSettings.noNewCalculation
+        PTAutoDisValues = Not awinSettings.noNewCalculation
     End Function
     ''' <summary>
     ''' holen der gewünschten Einstellung
