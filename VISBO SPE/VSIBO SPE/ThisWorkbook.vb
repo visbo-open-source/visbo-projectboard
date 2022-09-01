@@ -3,6 +3,7 @@ Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports ProjectboardReports
 Imports Microsoft.Office.Core
+Imports System.Environment
 Imports Microsoft.Office.Interop.Excel
 Public Class ThisWorkbook
     ' Copyright Philipp Koytek et al. 
@@ -44,15 +45,15 @@ Public Class ThisWorkbook
         CmdLine = Left$(CmdLine, InStr(CmdLine & vbNullChar, vbNullChar) - 1)
 
         '----nur zum Test
+
         Dim hhstr() As String = CmdLine.Split("/")
         Dim hparameter As String = ""
         If hhstr.Length = 2 Then
-            CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:63032bdd0e4b7351418a5729/"
+            Dim curUserAppDir As String = GetFolderPath(SpecialFolder.ApplicationData)
+            CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE " & curUserAppDir & "\VISBO\VISBO Project Edit\VISBO Project Edit.xlsx/"
         End If
-        '----nur zum Test
 
-        'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx"
-        'CmdLine = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE C:\temp\VISBO SPE\Visbo Project Edit.xlsx /e/vpid:624dcfc6e89109508af0f76b/vpvid:62cd656811d22614f910c46f/ott:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YWY4NGU3ZGUxMTdjNGM3ZmI3MGQ1MjAiLCJlbWFpbCI6InV0ZS5yaXR0aW5naGF1cy1rb3l0ZWtAdmlzYm8uZGUiLCJzZXNzaW9uIjp7ImlwIjoiODcuMTM5Ljk0LjE5NSIsInRpbWVzdGFtcCI6IjIwMjItMDgtMDVUMDc6NDA6MTIuNjU3WiJ9LCJpYXQiOjE2NTk2ODUyMTIsImV4cCI6MTY1OTY4NTMzMn0.b_cwOFvAEibDB4RemkKi3nnJ4M38I54ybrRCUE1EUfs/"
+        '----nur zum Test
         Call logger(ptErrLevel.logInfo, "Startup", "cmdline: " & CmdLine)
 
         Dim hstr() As String = CmdLine.Split("/")
