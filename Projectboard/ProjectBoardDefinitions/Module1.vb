@@ -1121,7 +1121,7 @@ Public Module Module1
     Public repCult As CultureInfo
 
     ' aktuell verwendete Sprache für Menu Strukturen 
-    Public menuCult As CultureInfo
+    Public menuCult As CultureInfo = ReportLang(PTSprache.englisch)
     '
     '
     ' Diagramm-Typ kann sein:
@@ -7731,7 +7731,6 @@ Public Module Module1
 
         If IsNothing(awinPath) Then
             Dim curUserDir As String = GetFolderPath(SpecialFolder.ApplicationData)
-            Dim appData As String = GetFolderPath(SpecialFolder.LocalApplicationData)
             awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
             logfileOrdner = toolName & "\" & logfileOrdner
         End If
