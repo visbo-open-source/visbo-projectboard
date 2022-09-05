@@ -100,7 +100,7 @@ Public Class Request
                 token = loginAntwort.token
                 serverUriName = ServerURL
                 aktUser = loginAntwort.user
-
+                Call logger(ptErrLevel.logInfo, "loginOTT", "login with OTT successful: OTT: " & token)
                 ' VisboCenterID mit Name = databaseName wird gespeichert
                 aktVCid = GETvcid(databaseName)
 
@@ -117,6 +117,7 @@ Public Class Request
                 err.errorCode = errcode
                 err.errorMsg = "Login" & " : " & errmsg & " : " & loginAntwort.message
 
+                Call logger(ptErrLevel.logError, "loginOTT", "login with OTT failure: : Error:  " & err.errorCode & " : " & err.errorMsg)
                 ' Fehlerbehandlung je nach errcode
                 Dim statError As Boolean = errorHandling_withBreak("Login", errcode, errmsg & " : " & loginAntwort.message)
 

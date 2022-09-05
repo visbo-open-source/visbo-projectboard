@@ -411,13 +411,14 @@ Public Class Tabelle2
 
         Dim msgTxt As String = ""
         Dim former_EE As Boolean = appInstance.EnableEvents
+        Dim addOrDeleteLine As New frmAddOrDeleteALine
+
 
         appInstance.EnableEvents = True
 
         Dim currentCell As Excel.Range = Target
 
-
-        ' die Rechtsklick-Behandlung soll auf alle Fälle abgeschaltet werden 
+        ' die Doubleklick-Behandlung soll auf alle Fälle abgeschaltet werden 
         Cancel = True
 
         Dim criteriaFulfilled As Boolean = False
@@ -737,7 +738,28 @@ Public Class Tabelle2
             End Try
 
         Else
-            ' nichts weiter zu tun
+
+            ' Behandlung für Zeile hinzufügen/löschen
+            If (Target.Column > 0) And (Target.Column <= 5) Then
+
+                ' Cursor is positioned in the column of BusinessUnit,ProjectName, variantName, or Phasename
+                ' here the rightClick means + for Add a Line and - for Delete a Line
+
+                addOrDeleteLine.position = Target
+                addOrDeleteLine.addLine = False
+                addOrDeleteLine.deleteLine = False
+
+                addOrDeleteLine.ShowDialog()
+                If addOrDeleteLine.addLine Then
+                    ' Zeile hinzufügen
+                    Call massEditZeileEinfügen("Zeile einfügen")
+
+                ElseIf addOrDeleteLine.deleteLine Then
+                    ' Zeile löschen
+                    Call massEditZeileLoeschen("Zeile löschen")
+                End If
+            End If
+
         End If
 
         appInstance.EnableEvents = former_EE
@@ -1684,7 +1706,7 @@ Public Class Tabelle2
         Dim former_showRangeLeft As Integer = showRangeLeft
         Dim former_showRangeRight As Integer = showRangeRight
 
-
+        'Application.OnKey("{INSERT}", "gibMessageaus")
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
 
         If Target.Row <> oldRow Then
@@ -2326,18 +2348,19 @@ Public Class Tabelle2
     End Sub
 
 
-    ''' <summary>
-    ''' blendet die Spalte aus
-    ''' </summary>
-    ''' <param name="spalte"></param>
-    Private Sub ausblendenSpalte(ByVal spalte As Integer)
-        Dim zRange As Excel.Range = Nothing
+    '''' <summary>
+    '''' blendet die Spalte aus
+    '''' </summary>
+    '''' <param name="spalte"></param>
+    'Private Sub ausblendenSpalte(ByVal spalte As Integer)
+    '    Dim zRange As Excel.Range = Nothing
 
-        With CType(appInstance.ActiveSheet, Excel.Worksheet)
-            zRange = CType(.Range(.Cells(1, spalte), .Cells(lastline, spalte)), Excel.Range)
-        End With
+    '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
+    '        zRange = CType(.Range(.Cells(1, spalte), .Cells(lastline, spalte)), Excel.Range)
+    '    End With
 
-        Dim colSpalte As Range = zRange.EntireColumn.Hidden()
+    '    Dim colSpalte As Range = zRange.EntireColumn.Hidden()
 
-    End Sub
+    'End Sub
+
 End Class

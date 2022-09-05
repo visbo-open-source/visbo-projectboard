@@ -70,6 +70,7 @@ Public Class Ribbon1
         End Select
     End Function
 
+
     ''' <summary>
     ''' lädt die gewählten Projekte und gewählten Varianten in die Session
     ''' </summary>
@@ -242,8 +243,6 @@ Public Class Ribbon1
         Catch ex As Exception
 
         End Try
-        ' Mouse wieder auf Normalmodus setzen
-        'appInstance.Cursor = Excel.XlMousePointer.xlDefault
 
     End Sub
 
@@ -282,8 +281,9 @@ Public Class Ribbon1
     End Sub
 
 
-    Public Sub PTProjectSettings(control As Office.IRibbonControl)
-        Call MsgBox("Settings")
+    Public Sub PTProjectEditSettings(control As Office.IRibbonControl)
+        Dim settingsEdit As New frmProjectEditSettings
+        settingsEdit.ShowDialog()
     End Sub
 
     Public Sub PTProjectGoToWebUI(control As Office.IRibbonControl)
@@ -311,123 +311,6 @@ Public Class Ribbon1
         'Call MsgBox("GoToWebUI for " & pname & ":" & vname)
     End Sub
 
-
-    ''' <summary>
-    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <returns></returns>
-    Public Function PTDateChangesChildON(control As IRibbonControl) As Boolean
-        PTDateChangesChildON = awinSettings.autoAjustChilds
-    End Function
-    ''' <summary>
-    ''' holen der gewünschten Einstellung
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <param name="pressed"></param>
-    Public Sub awinPTDateChangesChildON(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.autoAjustChilds = pressed
-    End Sub
-
-
-
-    ''' <summary>
-    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <returns></returns>
-    Public Function PTAutoDisValues(control As IRibbonControl) As Boolean
-        PTAutoDisValues = Not awinSettings.noNewCalculation
-    End Function
-    ''' <summary>
-    ''' holen der gewünschten Einstellung
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <param name="pressed"></param>
-    Public Sub awinPTAutoDisValues(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.noNewCalculation = pressed
-    End Sub
-
-
-
-    ''' <summary>
-    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <returns></returns>
-    Public Function PTResourcePropAdopt(control As IRibbonControl) As Boolean
-        PTResourcePropAdopt = awinSettings.propAnpassRess
-    End Function
-    ''' <summary>
-    ''' holen der gewünschten Einstellung
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <param name="pressed"></param>
-    Public Sub awinPTResourcePropAdopt(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.propAnpassRess = pressed
-    End Sub
-
-
-    ''' <summary>
-    ''' hier wird dem Ribbon die aktuelle Einstellung gegeben
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <returns></returns>
-    Public Function PTInvoicesUsed(control As IRibbonControl) As Boolean
-        PTInvoicesUsed = awinSettings.enableInvoices
-    End Function
-    ''' <summary>
-    ''' holen der gewünschten Einstellung
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <param name="pressed"></param>
-    Public Sub awinPTInvoicesUsed(control As IRibbonControl, ByRef pressed As Boolean)
-        awinSettings.enableInvoices = pressed
-    End Sub
-
-
-    'Public Sub ImportWorksheet()
-    '    ' This macro will import a file into this workbook 
-    '    Dim ControlFile As String = appInstance.ActiveWorkbook.Name
-
-    '    Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
-
-    '    Dim wb As Excel.Workbook = appInstance.Workbooks.Open(Filename:="C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\Projectboard\Projectboard\bin\Debug\" & "Projectboard.xlsx")
-
-
-    '    ' Private Sub Application_WorkbookBeforeSave(
-    '    'ByVal Wb As Microsoft.Office.Interop.Excel.Workbook
-    '    'ByVal SaveAsUI As Boolean
-    '    'ByRef Cancel As Boolean) Handles Application.WorkbookBeforeSave
-
-    '    If Globals.Factory.HasVstoObject(wb) = True Then
-    '        For Each interopSheet As Excel.Worksheet In wb.Worksheets
-    '            If Globals.Factory.HasVstoObject(interopSheet) = True Then
-    '                Dim vstoSheet As Worksheet = Globals.Factory.GetVstoObject(interopSheet)
-    '                If vstoSheet.Controls.Count > 0 Then
-    '                    System.Windows.Forms.MessageBox.Show(
-    '                        "The VSTO controls are not persisted when you" _
-    '                        + " save and close this workbook.",
-    '                        "Controls Persistence",
-    '                        System.Windows.Forms.MessageBoxButtons.OK,
-    '                        System.Windows.Forms.MessageBoxIcon.Warning)
-    '                    Exit For
-    '                End If
-    '            End If
-    '        Next
-    '    End If
-
-
-    '    myProjektTafel = wb.Name
-
-    '    Dim newWS As Excel.Worksheet = wb.Worksheets.Item("meRC")
-    '    Dim newWSName As String = newWS.Name
-    '    appInstance.ActiveWorkbook.Worksheets.Item("meRC").Copy(After:=currentws)
-
-    '    'appInstance.Windows("Projectboard").Activate()
-    '    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-    '    'appInstance.Windows(ControlFile).Activate()
-    'End Sub
 #End Region
 
 #Region "Hilfsprogramme"

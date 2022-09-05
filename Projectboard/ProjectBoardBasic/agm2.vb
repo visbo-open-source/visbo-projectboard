@@ -19683,7 +19683,7 @@ Public Module agm2
                 Call writeMEcellWithProjectName(CType(.Cells(zeile, 2), Excel.Range), hproj.name, isProtectedbyOthers, protectiontext)
 
                 ' den Varianten-Namen schreiben
-                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                CType(.Cells(zeile, 3), Excel.Range).Value = CStr(hproj.variantName)
                 'CType(.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                 ' Phase und ggf PhaseNameID schreiben
