@@ -167,12 +167,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="MongoDB.Bson">
-      <HintPath>..\..\Projectboard\MongoDbAccess\CSharpDriver\MongoDB.Bson.dll</HintPath>
-    </Reference>
-    <Reference Include="MongoDbAccess">
-      <HintPath>..\..\Projectboard\MongoDbAccess\bin\Debug\MongoDbAccess.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Projectboard\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -182,8 +176,9 @@
     <Reference Include="ProjectBoardDefinitions">
       <HintPath>..\..\Projectboard\ProjectBoardDefinitions\bin\Debug\ProjectBoardDefinitions.dll</HintPath>
     </Reference>
-    <Reference Include="ProjectboardReports">
-      <HintPath>..\..\Projectboard\ClassLibrary1\bin\Debug\ProjectboardReports.dll</HintPath>
+    <Reference Include="ProjectboardReports, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Projectboard\ProjectBoardBasic\bin\Debug\ProjectboardReports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -206,8 +201,9 @@
     <Reference Include="System.Xml.Linq">
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6\System.Xml.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="WebServerAcc">
-      <HintPath>..\..\Projectboard\WebServerAcc\bin\Debug\WebServerAcc.dll</HintPath>
+    <Reference Include="WebServerAcc, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Projectboard\DBAccLayer\bin\Debug\WebServerAcc.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

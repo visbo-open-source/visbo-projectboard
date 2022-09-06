@@ -1,6 +1,5 @@
 ﻿Imports Microsoft.Office.Interop.PowerPoint
 Imports ProjectBoardDefinitions
-Imports MongoDbAccess
 Imports ProjectBoardBasic
 
 Public Class ThisAddIn
