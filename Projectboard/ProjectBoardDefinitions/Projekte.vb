@@ -26626,7 +26626,7 @@ Public Module Projekte
             ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
             If ShowProjekte.contains(pname) Then
 
-                If Not visboClient.Contains("VISBO SPE") Then
+                If Not visboClient = divClients(client.VisboSPE) Then
                     hproj = ShowProjekte.getProject(pname)
 
                     ' welche Phasen werden angezeigt , welche Meilensteine werden angezeigt ? 
@@ -26666,7 +26666,7 @@ Public Module Projekte
             ' die  Variante wird aufgenommen
             ShowProjekte.Add(newProj)
 
-            If Not visboClient.Contains("VISBO SPE") Then
+            If Not visboClient.contains("ProjectEdit") Then
                 ' neu zeichnen des Projekts 
                 Dim tmpCollection As New Collection
                 Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)

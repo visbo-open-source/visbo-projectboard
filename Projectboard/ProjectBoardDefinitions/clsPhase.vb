@@ -973,9 +973,13 @@ Public Class clsPhase
             faktor = newDauerInTagen / Me.dauerInDays
         End If
 
+        If Me.nameID = rootphasename Then
+            Call Me.adjustStartandDauer(0, newDauerInTagen)
+        Else
+            ' jetzt wird diese Phase entsprechend geändert ...
+            Call Me.adjustStartandDauer(newOffsetInTagen, newDauerInTagen)
+        End If
 
-        ' jetzt wird diese Phase entsprechend geändert ...
-        Call Me.adjustStartandDauer(newOffsetInTagen, newDauerInTagen)
 
         If autoAdjustChilds Then
 

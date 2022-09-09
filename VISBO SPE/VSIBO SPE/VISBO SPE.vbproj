@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
     <RootNamespace>VSIBO_SPE</RootNamespace>
-    <AssemblyName>VISBO SPE</AssemblyName>
+    <AssemblyName>VISBO Project Edit</AssemblyName>
     <VSTO_HostDocumentName>VISBO Project Edit.xlsx</VSTO_HostDocumentName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
@@ -18,7 +18,7 @@
     <PublishUrl>C:\publish\VISBO SPE\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.13</ApplicationVersion>
+    <ApplicationVersion>1.0.0.34</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -57,7 +57,7 @@
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>VISBO SPE.xml</DocumentationFile>
+    <DocumentationFile>VISBO Project Edit.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
@@ -70,7 +70,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>VISBO SPE.xml</DocumentationFile>
+    <DocumentationFile>VISBO Project Edit.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
@@ -169,6 +169,18 @@
     <Import Include="Excel = Microsoft.Office.Interop.Excel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="frmAddOrDeleteALine.Designer.vb">
+      <DependentUpon>frmAddOrDeleteALine.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAddOrDeleteALine.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProjectEditSettings.Designer.vb">
+      <DependentUpon>frmProjectEditSettings.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProjectEditSettings.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ribbon1.vb" />
     <Compile Include="Tabelle1.Designer.vb">
@@ -202,6 +214,12 @@
       <DependentUpon>VISBO Project Edit.xlsx</DependentUpon>
     </Compile>
     <Compile Include="VISBO_SPE_Utilities.vb" />
+    <EmbeddedResource Include="frmAddOrDeleteALine.resx">
+      <DependentUpon>frmAddOrDeleteALine.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProjectEditSettings.resx">
+      <DependentUpon>frmProjectEditSettings.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>

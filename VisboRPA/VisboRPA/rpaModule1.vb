@@ -55,7 +55,8 @@ Module rpaModule1
         'Call MsgBox("TempFile:" & tempFile)
 
         ' name des aktuell laufenden Clients
-        visboClient = "VISBO RPA /"
+        'visboClient = "VISBO RPA /"
+        visboClient = divClients(client.VisboRPA)
 
         logfileNamePath = tempFile
 

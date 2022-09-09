@@ -18908,7 +18908,7 @@ Public Module agm2
         Dim maxRCLengthAbsolut As Integer = 0
         Dim maxRCLengthVorkommen As Integer = 0
 
-        If todoListe.Count = 0 And Not visboClient.Contains("VISBO SPE") Then
+        If todoListe.Count = 0 And Not visboClient = divClients(client.VisboSPE) Then
 
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -19685,7 +19685,7 @@ Public Module agm2
                 Call writeMEcellWithProjectName(CType(.Cells(zeile, 2), Excel.Range), hproj.name, isProtectedbyOthers, protectiontext)
 
                 ' den Varianten-Namen schreiben
-                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                CType(.Cells(zeile, 3), Excel.Range).Value = CStr(hproj.variantName)
                 'CType(.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                 ' Phase und ggf PhaseNameID schreiben
@@ -21030,8 +21030,8 @@ Public Module agm2
 
         Dim cfgs As New configuration
         Dim cfgFile As String = ""
-        If visboClient.Contains("VISBO SPE") Then
-            cfgFile = path & "\VISBO SimpleProjectEditTestConfig.xml"
+        If visboClient = divClients(client.VisboSPE) Then
+            cfgFile = path & "\VISBO SPE.dll.config???"
         Else
             cfgFile = path & "\ProjectboardConfig.xml"
         End If
