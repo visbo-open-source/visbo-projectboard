@@ -302,7 +302,7 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
-    Public divClients() As String = {"VISBO Projectboard / ", "VISBO SmartInfo / ", "VISBO ProjectPublish / ", "VISBO RPA / ", "VISBO ProjectEdit / "}
+    Public divClients() As String = {"VISBO Projectboard / ", "VISBO SmartInfo / ", "VISBO ProjectPublish / ", "VISBO RPA / ", "VISBO Project Edit / "}
 
     Public Enum client
         Projectboard = 0
@@ -7741,8 +7741,8 @@ Public Module Module1
         Dim logfileOrdner As String = "logfiles"
 
         ' Name of the calling program
-        Dim hstr() As String = Split(visboClient, " ", -1)
-        Dim toolName As String = hstr(1)
+        Dim hstr() As String = Split(visboClient, " /", -1)
+        Dim toolName As String = hstr(0)
 
         If IsNothing(awinPath) Then
             Dim curUserDir As String = GetFolderPath(SpecialFolder.ApplicationData)

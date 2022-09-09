@@ -505,7 +505,7 @@ Public Class ThisWorkbook
                 End If
 
             End If
-
+            Call logger(ptErrLevel.logInfo, "VISBO Projectboard", "finished")
             appInstance.ScreenUpdating = True
 
             If Application.Workbooks.Count <= 1 Then
