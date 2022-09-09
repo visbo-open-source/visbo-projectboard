@@ -456,7 +456,8 @@ Module rpaModule1
         ImportProjekte.Clear()
         ShowProjekte.Clear(False)
         AlleProjekte.Clear(False)
-        AlleProjektSummaries.Clear(False)    End Sub
+        AlleProjektSummaries.Clear(False)
+    End Sub
 
 
     Private Function setWriteProtection(ByVal hproj As clsProjekt, ByVal writeProtect As Boolean) As Boolean
@@ -5554,10 +5555,10 @@ Module rpaModule1
 
     End Function
     Private Function processEGeckoCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
-
+        processEGeckoCapacity = True
     End Function
     Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
-
+        processZeussCapacity = True
     End Function
 
 
