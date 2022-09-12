@@ -335,10 +335,6 @@ Module rpaModule1
                     allOk = True
                     Call logger(ptErrLevel.logError, "Import of actual data ???", " do not exist so far !")
 
-                Case CInt(PTRpa.visboZeussCapacity)
-                    allOk = True
-                    allOk = processZeussCapacity()
-
                 Case CInt(PTRpa.visboNewTagetik)
                     allOk = True
                     allOk = processNewTagetik(fname, myActivePortfolio, collectFolder, importDate)
@@ -5622,8 +5618,8 @@ Module rpaModule1
                 ''  check Config-File - zum Einlesen der Istdaten gemäß Konfiguration -
                 ''  - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
                 Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
-                Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outpu
-        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+                Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
+                ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
@@ -5735,7 +5731,7 @@ Module rpaModule1
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), xlns.Workbook).Worksheets(arrWsNames(ptTables.MPT)), xlns.Worksheet)
             .Activate()
         End With
         appInstance.ScreenUpdating = True
