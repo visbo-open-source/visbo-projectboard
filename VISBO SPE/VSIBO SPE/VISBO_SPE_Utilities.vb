@@ -186,10 +186,19 @@ Module VISBO_SPE_Utilities
                             Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         Else
                             Dim myVC As String = awinSettings.databaseName
-
                         End If
+                    End If
 
-                    ElseIf listOfVCs.Count > 1 And spe_vpid = "" Then
+                    If listOfVCs.Count > 1 And spe_vpid <> "" Then
+                        ' because the vpid is unique over the whole platform, we here can look for the vcid and set it. 
+                        Call CType(databaseAcc, DBAccLayer.Request).retrieveOneVPandSetaktVCid(spe_vpid, err)
+                        If err.errorCode <> 200 Then
+                            'wrong spe_vpid - initialize it
+                            spe_vpid = ""
+                        End If
+                    End If
+
+                    If listOfVCs.Count > 1 And spe_vpid = "" Then
                         ' wähle das gewünschte VC aus
                         Dim chooseVC As New frmSelectOneItem
                         chooseVC.itemsCollection = listOfVCs
@@ -204,11 +213,10 @@ Module VISBO_SPE_Utilities
                         Else
                             Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
-                    ElseIf listOfVCs.Count > 1 And spe_vpid <> "" Then
-                        ' because the vpid is unique over the whole platform, we here can look for the vcid and set it. 
-                        Call CType(databaseAcc, DBAccLayer.Request).retrieveOneVPandSetaktVCid(spe_vpid, err)
+                    End If
 
-                    Else
+
+                    If listOfVCs.Count < 1 Then
                         ' user has no access to any VISBO Center 
                         Call logger(ptErrLevel.logInfo, "Load of Formular", "User has no access to any VISBO Center ... ")
                         Throw New ArgumentException("No access to a VISBO Center ")
