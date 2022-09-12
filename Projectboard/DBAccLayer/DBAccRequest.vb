@@ -478,19 +478,16 @@ Public Class Request
 
     End Function
 
-    Public Function retrieveOneVPandSetaktVCid(ByVal vpid As String, ByRef err As clsErrorCodeMsg)
-        Dim result As New clsProjekt
-
+    Public Sub retrieveOneVPandSetaktVCid(ByVal vpid As String, ByRef err As clsErrorCodeMsg)
 
         Try
             Call CType(DBAcc, WebServerAcc.Request).retrieveOneVPandSetaktVCid(vpid, err)
         Catch ex As Exception
-
+            Call logger(ptErrLevel.logError, "retrieveOneVPandSetaktVCid", "There was something wrong reading the project with id: " & vpid)
         End Try
 
-        'retrieveOneVPandSetaktVCid = result
 
-    End Function
+    End Sub
 
     ''' <summary>
     '''  liest entweder alle Projekte im angegebenen Zeitraum 
