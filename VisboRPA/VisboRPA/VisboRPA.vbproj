@@ -71,7 +71,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>7E2BA574A41FA2EE605EA51A576FA016FF481A96</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -140,6 +140,7 @@
   <ItemGroup>
     <Compile Include="clsJobParameters.vb" />
     <Compile Include="clsPortfolioDefinitions.vb" />
+    <Compile Include="clsRankingList.vb" />
     <Compile Include="clsRankingParameters.vb" />
     <Compile Include="clsRPASetting.vb" />
     <Compile Include="rpaTkModule.vb" />

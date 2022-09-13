@@ -1,4 +1,5 @@
 ﻿Public Class clsRankingParameters
+
     Private _projectName As String
     Public Property projectName As String
         Get
@@ -60,9 +61,14 @@
         End Get
         Set(value As Date)
             If Not IsNothing(value) Then
-                _earliestStart = value
+                If DateDiff(DateInterval.Day, Date.Now, value) > 0 Then
+                    _earliestStart = value
+                Else
+                    _earliestStart = Date.Now.AddDays(1)
+                End If
+
             Else
-                _earliestStart = Date.Now
+                _earliestStart = Date.Now.AddDays(1)
             End If
         End Set
     End Property
@@ -106,7 +112,7 @@
         End Get
         Set(value As Double)
             If Not IsNothing(value) Then
-                If value > 0.0 Then
+                If value > 1.0 Then
                     _longestDuration = value
                 Else
                     _longestDuration = 1.0

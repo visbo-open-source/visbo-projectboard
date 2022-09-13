@@ -1,4 +1,5 @@
 ﻿Public Class clsPortfolioDefinitions
+
     Private _listofPortfolioDefinitions As SortedList(Of String, List(Of String))
 
     Public Function contains(ByVal key As String) As Boolean
@@ -46,5 +47,6 @@
         _listofPortfolioDefinitions = New SortedList(Of String, List(Of String))
 
     End Sub
+
 
 End Class

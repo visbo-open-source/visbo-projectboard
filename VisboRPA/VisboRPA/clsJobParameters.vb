@@ -1,7 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Public Class clsJobParameters
 
-    Public kennung As PTRPA
+    Public kennung As PTRpa
 
 
     Private _allowedOverloadMonth As Double
@@ -233,7 +233,7 @@ Public Class clsJobParameters
     Sub New()
 
         _sortItem = ""
-        _allowedOverloadMonth = 1.05
+        _allowedOverloadMonth = 1.0
         _allowedOverloadTotal = 1.0
         _limitPhases = 1
         _limitMilestones = 1
