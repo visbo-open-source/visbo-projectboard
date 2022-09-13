@@ -7426,7 +7426,7 @@ Public Class Ribbon1
                             If awinSettings.englishLanguage Then
                                 txtMsg = referenzPortfolioName & ": Portfolio does not exist - Cancelled ..."
                             End If
-                            If Not visboClient.Contains("RPA") Then
+                            If Not visboClient = divClients(client.VisboRPA) Then
                                 Call MsgBox(txtMsg)
                             End If
 

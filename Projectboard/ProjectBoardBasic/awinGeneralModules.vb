@@ -4377,7 +4377,7 @@ Public Module awinGeneralModules
                         outPutCollection.Add(outputLine)
                     End If
                 Else
-                    If Not visboClient.Contains("RPA") Then
+                    If Not visboClient = divClients(client.VisboRPA) Then
                         If awinSettings.englishLanguage Then
                             outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                             outPutCollection.Add(outputLine)

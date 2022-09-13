@@ -26666,7 +26666,7 @@ Public Module Projekte
             ' die  Variante wird aufgenommen
             ShowProjekte.Add(newProj)
 
-            If Not visboClient.contains("ProjectEdit") Then
+            If Not visboClient = divClients(client.VisboSPE) Then
                 ' neu zeichnen des Projekts 
                 Dim tmpCollection As New Collection
                 Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)

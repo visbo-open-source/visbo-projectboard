@@ -8017,7 +8017,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String, Optional ByVal logType As Integer = ptErrLevel.logInfo)
 
-        If visboClient.Contains("RPA") Then
+        If visboClient = divClients(client.VisboRPA) Then
             Call logger(logType, header, outPutCollection)
         Else
             If outPutCollection.Count > 0 Then
@@ -9082,7 +9082,7 @@ Public Module Module1
 
         If tmpMsgCollection.Count > 0 Then
             Call showOutPut(tmpMsgCollection, "Warnings:", "next step you may either cancel or continue")
-            If Not visboClient.Contains("RPA") Then
+            If Not visboClient = divClients(client.VisboRPA) Then
                 If MsgBox("Continue and Ignore Warnings?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
                     ' nichts tun .."
                     result = True
