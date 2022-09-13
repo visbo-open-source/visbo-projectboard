@@ -1244,6 +1244,11 @@ Module rpaModule1
                             result = checkCreateHedgedVariants(currentWB)
                         End If
 
+                        ' Check auf Auto Adjust Resource Bottlenecks
+                        If result = PTRpa.visboUnknown Then
+                            result = checkAutoAdjustPortfolio(currentWB)
+                        End If
+
                         ' Check auf VISBO Project Template  
                         ' Check auf VISBO Project Brief and VISBO Project Template
                         ' Template has to contain the word "template" within the filename
@@ -1252,10 +1257,6 @@ Module rpaModule1
                             result = checkProjectBrief(currentWB)
                         End If
 
-                        ' Check auf Auto Adjust Resource Bottlenecks
-                        If result = PTRpa.visboUnknown Then
-                            result = checkAutoAdjustPortfolio(currentWB)
-                        End If
 
                         ' Check auf Organisation 
                         If result = PTRpa.visboUnknown Then
