@@ -432,6 +432,7 @@ Public Module Module1
         prSymTeam = 19
         prSymProject = 20
         pfName = 21
+        pfStrategieRisiko = 22
     End Enum
 
     ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
