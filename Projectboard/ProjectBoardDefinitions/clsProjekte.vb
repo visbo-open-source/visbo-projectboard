@@ -2427,6 +2427,17 @@ Public Class clsProjekte
                     ' tk 23.4.2022 when there are already planned values on Person level we need to consider this ... 
                     Dim roleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True)
 
+                    ' tk 9.9.2022 added, because other resource needs of people having that skill are now considered 
+                    If i = 2 Then
+                        ' it is about Skills
+                        ' then the sum need to be considered where people having that skill have resource needs, but as team member 
+                        ' it is meant: considerAllOtherNeeds of people having exact that skill
+                        Dim addOnRoleValues As Double() = getRoleValuesInMonth(roleIDstr, considerAllSubRoles:=True, considerAllNeedsOfRolesHavingTheseSkills:=True)
+                        For ix As Integer = 0 To roleValues.Length - 1
+                            roleValues(ix) = roleValues(ix) + addOnRoleValues(ix)
+                        Next
+                    End If
+
                     Dim myCollection As New Collection From {
                         roleIDstr
                      }
@@ -2452,7 +2463,7 @@ Public Class clsProjekte
                     If Not onlyCompleteTimeSpan Then
 
                         For ix As Integer = 0 To roleValues.Length - 1
-                            If roleValues(ix) >= monthlyOverloadCriterion * kapaValues(ix) Then
+                            If roleValues(ix) > monthlyOverloadCriterion * kapaValues(ix) Then
                                 If roleValues.Length - 1 = 0 Then
                                     overloaded = True
                                 Else
@@ -2496,6 +2507,7 @@ Public Class clsProjekte
         Next
 
         overLoadFound = overloaded
+
     End Function
 
     ''' <summary>

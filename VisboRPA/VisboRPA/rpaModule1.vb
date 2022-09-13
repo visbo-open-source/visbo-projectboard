@@ -271,14 +271,6 @@ Module rpaModule1
 
                     allOk = processProjectList(myName, myActivePortfolio)
 
-                Case CInt(PTRpa.visboFindProjectStart)
-
-                    allOk = processFindProjectStart(myName)
-
-                Case CInt(PTRpa.visboFindProjectStartPM)
-
-                    allOk = processFindProjectStart(myName, PTRpa.visboFindProjectStartPM)
-
                 Case CInt(PTRpa.visboMPP)
 
                     allOk = processMppFile(fname, importDate)
@@ -363,6 +355,13 @@ Module rpaModule1
                     allOk = processZeussCapacity(fname, importDate, errMessages)
                     Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
 
+                Case CInt(PTRpa.visboFindProjectStart)
+
+                    allOk = processFindProjectStart(myName)
+
+                Case CInt(PTRpa.visboFindProjectStartPM)
+
+                    allOk = processFindProjectStart(myName, PTRpa.visboFindProjectStartPM)
 
                 Case CInt(PTRpa.visboFindfeasiblePortfolio)
 
