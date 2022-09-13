@@ -2297,8 +2297,8 @@ Public Class Tabelle2
     End Function
 
     Private Sub Tabelle2_Startup(sender As Object, e As EventArgs) Handles Me.Startup
-        If visboClient.Contains("VISBO SPE") Then
-            Call MsgBox("bin im meRC")
+        If visboClient = divClients(client.VisboSPE) Then
+            'Call MsgBox("bin im meRC")
         End If
     End Sub
 End Class

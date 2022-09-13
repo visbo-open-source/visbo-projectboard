@@ -1990,7 +1990,7 @@ Public Module agm3
                     ImportProjekte.Clear(False)
                 End If
             Else
-                If Not visboClient.Contains("RPA") Then
+                If Not visboClient = divClients(client.VisboRPA) Then
                     Call showOutPut(oCollection, "Errors occurred .. no import", "")
                 End If
 
@@ -6531,7 +6531,7 @@ Public Module agm3
 
         If awinSettings.englishLanguage Then
             outputline = vbLf & anz_Proj_created.ToString & " projects created !"
-            If Not visboClient.Contains("VISBO RPA") Then
+            If Not visboClient = divClients(client.VisboRPA) Then
                 meldungen.Add(outputline)
             End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
@@ -6543,7 +6543,7 @@ Public Module agm3
 
         Else
             outputline = vbLf & anz_Proj_created.ToString & " Projekte wurden erzeugt !"
-            If Not visboClient.Contains("VISBO RPA") Then
+            If Not visboClient = divClients(client.VisboRPA) Then
                 meldungen.Add(outputline)
             End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)

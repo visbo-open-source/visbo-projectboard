@@ -7,7 +7,7 @@
 
         Call languageSettings()
 
-        If visboClient.Contains("VISBO SPE") Then
+        If visboClient = divClients(client.VisboSPE) Then
             chkbx_adjustChilds.Visible = False
             chkbxAutoDistr.Visible = False
         End If

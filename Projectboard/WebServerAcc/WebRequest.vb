@@ -832,6 +832,9 @@ Public Class Request
 
                 vpid = vp._id
             Else
+                If VRScache.VPsId.Count <= 0 Then
+                    VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
+                End If
                 vp = VRScache.VPsId(vpid)
                 If IsNothing(vp) Then
                     VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
@@ -839,6 +842,9 @@ Public Class Request
                 End If
             End If
 
+            If aktVCid = "" Then
+                aktVCid = vp.vcid
+            End If
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
@@ -2802,7 +2808,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="user"></param>
     ''' <returns></returns>
-    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg, Optional ByVal onlyNotExpired As Boolean = True) As Boolean
 
         Dim result As Boolean = True
         Dim vplist As New SortedList(Of String, clsVP)
@@ -2829,12 +2835,22 @@ Public Class Request
 
                     For Each lock As clsVPLock In locklist
 
-                        If LCase(aktUser.email) = LCase(lock.email) And
-                            lock.expiresAt > Date.UtcNow Then
+                        Dim expiredLock As Boolean = (lock.expiresAt < Date.UtcNow)
 
-                            result = result And DELETEVPLock(vpid, err, lock.variantName)
+                        If onlyNotExpired Then
 
+                            If LCase(aktUser.email) = LCase(lock.email) And
+                                                        Not expiredLock Then
+                                result = result And DELETEVPLock(vpid, err, lock.variantName)
+                            End If
+                        Else
+
+                            ' all locks of aktUser.email will be deleted
+                            If LCase(aktUser.email) = LCase(lock.email) Then
+                                result = result And DELETEVPLock(vpid, err, lock.variantName)
+                            End If
                         End If
+
                     Next
 
                 End If
@@ -5245,7 +5261,12 @@ Public Class Request
                     Case ptPRPFType.portfolio
 
                         For Each vp In webVPantwort.vp
-                            result.Add(vp.name, vp)
+
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt. schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                             ' VPs nach Id sortiert gecacht
                             If Not VRScache.VPsId.ContainsKey(vp._id) Then
@@ -5263,7 +5284,11 @@ Public Class Request
                         ' die erhaltenen Projekte werden in einer sortierten Liste gecacht
                         For Each vp In webVPantwort.vp
 
-                            result.Add(vp.name, vp)
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt. schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                             ' VPs nach Id sortiert gecacht
                             If Not VRScache.VPsId.ContainsKey(vp._id) Then
@@ -5287,7 +5312,11 @@ Public Class Request
 
                         For Each vp In webVPantwort.vp
 
-                            result.Add(vp.name, vp)
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt.  schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                         Next
 
@@ -5296,7 +5325,11 @@ Public Class Request
                         ' die erhaltenen Projekte/Portfolio-Projekte werden in einer sortierten Liste gecacht
                         For Each vp In webVPantwort.vp
 
-                            result.Add(vp.name, vp)
+                            If Not result.ContainsKey(vp.name) Then
+                                result.Add(vp.name, vp)
+                            Else
+                                'vp.name ist evt.  schon vorhanden, da nur innerhalb eines VC eindeutig
+                            End If
 
                             ' VPs nach Id sortiert gecacht
                             If Not VRScache.VPsId.ContainsKey(vp._id) Then

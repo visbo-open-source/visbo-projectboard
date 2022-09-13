@@ -56,7 +56,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("xxx")>  _
         Public Property userNamePWD() As String
             Get
                 Return CType(Me("userNamePWD"),String)
@@ -113,7 +113,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
         Public Property rememberUserPWD() As Boolean
             Get
                 Return CType(Me("rememberUserPWD"),Boolean)
@@ -134,7 +134,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("https://dev.visbo.net/api")>  _
         Public ReadOnly Property VisboURL() As String
             Get
                 Return CType(Me("VisboURL"),String)

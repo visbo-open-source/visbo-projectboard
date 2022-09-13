@@ -530,6 +530,7 @@ Public Module agm4
         Dim result As Date = Date.MinValue
         Dim err As New clsErrorCodeMsg
         Dim msgTxt As String
+        Dim noCustomizationFound As Boolean = False
 
         If IsNothing(customizations) Then
             '
@@ -645,9 +646,33 @@ Public Module agm4
             End Try
             result = Date.Now
         Else
-            msgTxt = "No customization in VISBO"
-            Call logger(ptErrLevel.logWarning, "readCustomizations", msgTxt)
             result = Date.MinValue
+            noCustomizationFound = True
+
+            Try
+                If awinSettings.englishLanguage Then
+                    menuCult = ReportLang(PTSprache.englisch)
+                    repCult = menuCult
+                    awinSettings.kapaEinheit = "PD"
+                Else
+                    awinSettings.kapaEinheit = "PT"
+                    menuCult = ReportLang(PTSprache.deutsch)
+                    repCult = menuCult
+                End If
+            Catch ex As Exception
+                awinSettings.englishLanguage = False
+                awinSettings.kapaEinheit = "PT"
+                menuCult = ReportLang(PTSprache.deutsch)
+                repCult = menuCult
+            End Try
+
+            If noCustomizationFound Then
+                msgTxt = "There are no customization settings in VISBO given" & vbCrLf &
+                                                "Please contact your administrator!"
+                Call logger(ptErrLevel.logWarning, "readCustomizations", msgTxt)
+                Throw New ArgumentException(msgTxt)
+            End If
+
         End If
         readCustomizations = result
     End Function
