@@ -142,6 +142,7 @@
     <Compile Include="clsPortfolioDefinitions.vb" />
     <Compile Include="clsRankingParameters.vb" />
     <Compile Include="clsRPASetting.vb" />
+    <Compile Include="rpaTkModule.vb" />
     <Compile Include="VisboRPAStart.Designer.vb">
       <DependentUpon>VisboRPAStart.vb</DependentUpon>
     </Compile>
