@@ -13961,6 +13961,9 @@ Public Module Projekte
                     .name = pName
                 End If
 
+                ' added 14.09.22 by tk
+                .movable = True
+
                 .variantName = vName
                 .kundenNummer = projectNummer
                 .getPhase(1).nameID = rootPhaseName
