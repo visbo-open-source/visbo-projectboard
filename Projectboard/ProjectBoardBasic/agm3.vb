@@ -5818,7 +5818,6 @@ Public Module agm3
         readTelairCostAssertionWithConfig = result
     End Function
 
-
     Function readProjectsWithConfig(ByVal projectConfig As SortedList(Of String, clsConfigProjectsImport),
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
@@ -6505,13 +6504,33 @@ Public Module agm3
                                                         For m = monthVon To monthBis
                                                             Select Case timeUnit
                                                                 Case "hours", "hour"
-                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) / 8
+                                                                    Try
+                                                                        hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) / 8
+                                                                    Catch ex As Exception
+                                                                        hroleValues(m - monthVon) = 0
+                                                                    End Try
+
                                                                 Case "days", "day"
-                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value)
+                                                                    Try
+                                                                        hroleValues(m - monthVon) = CDbl(.Cells(i, m).value)
+                                                                    Catch ex As Exception
+                                                                        hroleValues(m - monthVon) = 0
+                                                                    End Try
+
                                                                 Case "weeks", "week"
-                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) * 5
+                                                                    Try
+                                                                        hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) * 5
+                                                                    Catch ex As Exception
+                                                                        hroleValues(m - monthVon) = 0
+                                                                    End Try
+
                                                                 Case "months", "month"
-                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) * nrOfDaysMonth
+                                                                    Try
+                                                                        hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) * nrOfDaysMonth
+                                                                    Catch ex As Exception
+                                                                        hroleValues(m - monthVon) = 0
+                                                                    End Try
+
                                                             End Select
 
                                                         Next
@@ -6587,7 +6606,7 @@ Public Module agm3
 
         If awinSettings.englishLanguage Then
             outputline = vbLf & anz_Proj_created.ToString & " projects created !"
-            If Not visboClient = divClients(client.VisboRPA) Then
+            If Not visboClient.Contains("VISBO RPA") Then
                 meldungen.Add(outputline)
             End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
@@ -6599,7 +6618,7 @@ Public Module agm3
 
         Else
             outputline = vbLf & anz_Proj_created.ToString & " Projekte wurden erzeugt !"
-            If Not visboClient = divClients(client.VisboRPA) Then
+            If Not visboClient.Contains("VISBO RPA") Then
                 meldungen.Add(outputline)
             End If
             Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
@@ -6614,6 +6633,7 @@ Public Module agm3
 
         readProjectsWithConfig = result
     End Function
+
 
     ''' <summary>
     ''' used for Import ActualData : BaselineVersions = Nothing 
@@ -9737,7 +9757,8 @@ Public Module agm3
         If Projektvorlagen.Contains(vorlagenName) Or Not IsNothing(myproject) Then
 
             ' Aufruf von Rest-Call Create a Copy of a Version url: https://dev.visbo.net/api/vpv/:vpvid/copy
-            If Not template And IsNothing(myproject) Then
+            ' if template ... 15.6.22 statt if not template
+            If template And IsNothing(myproject) Then
                 Try
                     hproj = CType(databaseAcc, DBAccLayer.Request).createProjectFromTemplate(pname, vorlagenName, startdate, endedate, budgetVorgabe, sfit, risk, profitUserAskedFor, kurzBeschreibung, kdNr, err)
                 Catch ex As Exception
@@ -9811,6 +9832,7 @@ Public Module agm3
                     With hproj
                         .name = pname
                         .VorlagenName = vorlagenName
+                        .movable = True
                         .startDate = startdate
                         .kundenNummer = kdNr
                         .businessUnit = buName
@@ -9867,7 +9889,6 @@ Public Module agm3
         erstelleProjektAusVorlage = hproj
 
     End Function
-
 
 
     '
