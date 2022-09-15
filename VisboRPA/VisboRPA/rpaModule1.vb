@@ -1652,54 +1652,54 @@ Module rpaModule1
         checkVCOrganisation = result
     End Function
 
-    ''' <summary>
-    ''' returns form Parameters the Portfolio-Name and Vname 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' 
-    Public Function getNameList(ByVal blattName As String) As Collection
-        Dim result As New Collection
+    '''' <summary>
+    '''' returns form Parameters the Portfolio-Name and Vname 
+    '''' </summary>
+    '''' <returns></returns>
+    '''' 
+    'Public Function getNameList(ByVal blattName As String) As Collection
+    '    Dim result As New Collection
 
 
-        Try
+    '    Try
 
-            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
-                                                            Global.Microsoft.Office.Interop.Excel.Workbook)
+    '        Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+    '                                                        Global.Microsoft.Office.Interop.Excel.Workbook)
 
-            Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+    '        Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            Dim zeile As Integer = 2
-            Dim spalte As Integer = 1
+    '        Dim zeile As Integer = 2
+    '        Dim spalte As Integer = 1
 
 
 
-            If Not IsNothing(currentWS) Then
-                With currentWS
-                    Dim lastRow As Integer = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+    '        If Not IsNothing(currentWS) Then
+    '            With currentWS
+    '                Dim lastRow As Integer = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
 
-                    While zeile <= lastRow
-                        Dim pName As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If Not IsNothing(pName) Then
-                            pName = pName.Trim
+    '                While zeile <= lastRow
+    '                    Dim pName As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+    '                    If Not IsNothing(pName) Then
+    '                        pName = pName.Trim
 
-                            If pName <> "" Then
-                                If Not result.Contains(pName) Then
-                                    result.Add(pName, pName)
-                                End If
-                            End If
+    '                        If pName <> "" Then
+    '                            If Not result.Contains(pName) Then
+    '                                result.Add(pName, pName)
+    '                            End If
+    '                        End If
 
-                            zeile = zeile + 1
-                        End If
-                    End While
+    '                        zeile = zeile + 1
+    '                    End If
+    '                End While
 
-                End With
-            End If
-        Catch ex As Exception
+    '            End With
+    '        End If
+    '    Catch ex As Exception
 
-        End Try
+    '    End Try
 
-        getNameList = result
-    End Function
+    '    getNameList = result
+    'End Function
 
 
     ''' <summary>
@@ -2153,6 +2153,12 @@ Module rpaModule1
 
     End Function
 
+    ''' <summary>
+    ''' Liest eine in Excel beschriebene Liste mit Projekten  (VISBO defined)
+    ''' </summary>
+    ''' <param name="myName"></param>
+    ''' <param name="myActivePortfolio"></param>
+    ''' <returns></returns>
     Private Function processProjectList(ByVal myName As String, ByVal myActivePortfolio As String) As Boolean
 
         Dim allOk As Boolean = False
