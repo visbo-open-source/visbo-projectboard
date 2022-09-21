@@ -709,7 +709,7 @@ Public Class Request
                                     webProj.copyto(hproj, vp)
 
                                     Dim a As Integer = hproj.dauerInDays
-                                    Dim key As String = Projekte.calcProjektKey(hproj)
+                                    Dim key As String = ProjekteCalc.calcProjektKey(hproj)
                                     If Not result.ContainsKey(key) Then
                                         result.Add(key, hproj)
                                     End If
@@ -769,7 +769,7 @@ Public Class Request
 
                                     webProj.copyto(hproj, vp)
                                     Dim a As Integer = hproj.dauerInDays
-                                    Dim key As String = Projekte.calcProjektKey(hproj)
+                                    Dim key As String = ProjekteCalc.calcProjektKey(hproj)
                                     If Not result.ContainsKey(key) Then
                                         result.Add(key, hproj)
                                     End If
@@ -2320,7 +2320,7 @@ Public Class Request
                 webproj.copyto(hproj, thisVP)
 
                 Dim a As Integer = hproj.dauerInDays
-                Dim key As String = Projekte.calcProjektKey(hproj)
+                Dim key As String = ProjekteCalc.calcProjektKey(hproj)
                 If Not result.ContainsKey(key) Then
                     result.Add(key, hproj)
                 End If
