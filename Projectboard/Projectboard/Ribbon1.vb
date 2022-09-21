@@ -2877,6 +2877,12 @@ Public Class Ribbon1
                     tmpLabel = "Auto-Allocation"
                 End If
 
+            Case "PT2G1M1B6"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Autom. Verteilung"
+                Else
+                    tmpLabel = "Auto-Distribution"
+                End If
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Strategie/Risiko/Abhängigkeiten"
