@@ -5808,6 +5808,96 @@ Public Class Ribbon1
         appInstance.EnableEvents = formerEE
     End Sub
 
+    Sub PT2AutoDistribute(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Dim outPutCollection As New Collection
+
+        Dim savShowrangeLeft As Integer = showRangeLeft
+        Dim savShowRangeRight As Integer = showRangeRight
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Try
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
+                    With singleShp
+                        If isProjectType(shapeArt) Then
+
+                            If ShowProjekte.contains(.Name) Then
+
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                                If Not hproj.hasActualValues Then
+                                    showRangeLeft = getColumnOfDate(hproj.startDate)
+                                    showRangeRight = getColumnOfDate(hproj.endeDate)
+
+                                    Dim errMsg As String = ""
+                                    Dim allowOvertime As Boolean = False
+                                    Call ShowProjekte.autoDistribute(.Name, "", errMsg)
+
+
+                                    If errMsg <> "" Then
+                                        Call MsgBox(errMsg)
+                                    Else
+                                        outPutCollection.Add(.Name & " : success")
+                                    End If
+                                Else
+                                    outPutCollection.Add(.Name & " : in current version not possible because of actual Data")
+                                End If
+
+
+                            End If
+
+                        End If
+                    End With
+
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection, "Auto-Distribution", "")
+            End If
+
+        Else
+            Dim msgTxt As String = "vorher Projekt selektieren ..."
+            If awinSettings.englishLanguage Then
+                msgTxt = "please select project first .."
+            End If
+            Call MsgBox(msgTxt)
+        End If
+
+        ' restore Time Range
+        showRangeLeft = savShowrangeLeft
+        showRangeRight = savShowRangeRight
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+    End Sub
+
     ''' <summary>
     ''' die Platzhalter Rollen durhc Personen ersetzen ...
     ''' </summary>

@@ -252,6 +252,8 @@
               <button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
               <!--label="Auto-Allocate"-->
               <button id="PT2G1M1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2AutoAllocate" supertip ="Automatisierte Ressourcen Allokation"/>
+              <!--label="Auto-Distribute"-->
+              <button id="PT2G1M1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2AutoDistribute" supertip ="Automatisierte Ressourcen Verteilung"/>
             </menu>
           <!--</splitButton>-->
         </group>        
