@@ -25701,7 +25701,7 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String,
                                                       ByVal actualDataConfig As SortedList(Of String, clsConfigActualDataImport),
-                                                      ByRef meldungen As Collection) As List(Of String)
+                                                      ByRef meldungen As Collection, Optional ByVal capafile As String = "") As List(Of String)
 
         Dim kapaConfig As New SortedList(Of String, clsConfigKapaImport)
         Dim kapaFile As String = ""
@@ -25736,10 +25736,17 @@ Public Module agm2
                 kapaFileName = kapaConfig("Kapa-Datei").capacityFile
                 Dim Test As Boolean = (kapaFile = kapaFileName)
             End If
+            If visboClient = divClients(client.VisboRPA) Then
+                Dim fi As New FileInfo(capafile)
+                Dim capafolder As String = fi.Directory.ToString
+                Dim capafileName As String = fi.Name
+                listOfFiles = My.Computer.FileSystem.GetFiles(capafolder, FileIO.SearchOption.SearchTopLevelOnly, capafileName)
+            Else
+                ' Dateien mit WildCards lesen
+                listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                                 FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+            End If
 
-            ' Dateien mit WildCards lesen
-            listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
-                             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
             If listOfFiles.Count = 0 Then
                 If awinSettings.englishLanguage Then
                     outputline = "There don't exist any capacity-file: " & kapaFileName
