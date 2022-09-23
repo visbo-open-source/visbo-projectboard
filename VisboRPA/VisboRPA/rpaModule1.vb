@@ -2623,7 +2623,129 @@ Module rpaModule1
     Private Function processEGeckoCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim result As Boolean = False
-        result = processZeussCapacity(myName, importDate, errMessages)
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivConfig As New List(Of String)
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim outputCollection As New Collection
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+
+                ' wenn es gibt - lesen der EGecko-Files o.ä., die durch configCapaImport beschrieben sind
+                Dim configCapaImport As String = configfilesOrdner & "\" & "configCapaImport.xlsx"
+                If My.Computer.FileSystem.FileExists(configCapaImport) Then
+
+                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection, myName)
+                Else
+                    outPutline = "There is no Config-File for the capacities!"
+                    Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)
+                End If
+
+                If listofArchivConfig.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' Dim orga As clsOrganisation = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' tk wozu brauche ich das hier ? 
+                            ' orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
+                            End If
+
+                        Else
+                            'Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
+                            Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+
+                        End If
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no Files to import ...")
+                        Else
+                            Call MsgBox("es gab keine Dateien zum Einlesen ... ")
+
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
         processEGeckoCapacity = result
 
     End Function
@@ -2637,6 +2759,7 @@ Module rpaModule1
         Dim lastrow As Integer = 0
         Dim listofArchivUrlaub As New List(Of String)
         Dim listofArchivConfig As New List(Of String)
+        Dim configActualDataImport As String = "configActualDataImport.xlsx"
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -2669,10 +2792,12 @@ Module rpaModule1
 
                 ''  check Config-File - zum Einlesen der Istdaten gemäß Konfiguration -
                 ''  - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
-                Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+                configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+                configActualDataImport = configfilesOrdner & "\" & "configActualDataImport.xlsx"
                 Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
+
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-                Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
+                Dim configCapaImport As String = configfilesOrdner & "\" & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
                     listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
@@ -2783,9 +2908,6 @@ Module rpaModule1
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), xlns.Workbook).Worksheets(arrWsNames(ptTables.MPT)), xlns.Worksheet)
-            .Activate()
-        End With
         appInstance.ScreenUpdating = True
         processZeussCapacity = True
     End Function
@@ -2847,7 +2969,7 @@ Module rpaModule1
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         ' Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                        If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or visboClient = "VISBO RPA / " Then
+                        If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or (visboClient = divClients(client.VisboRPA)) Then
 
 
                             ' tk 13.4.22 wozu brauchen wir das hier ? 
@@ -3989,6 +4111,9 @@ Module rpaModule1
 
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            ' Konfigurationsdatei lesen und Validierung durchführen
+            configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+            configProjectsUpdates = configfilesOrdner & configProjectsUpdates
             telairUpdateConfigOK = checkProjectImportConfig(configProjectsUpdates, projectsFile, projectConfig, lastrow, outPutCollection)
 
             If outPutCollection.Count > 0 Then
@@ -4112,8 +4237,8 @@ Module rpaModule1
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
             ' Konfigurationsdatei lesen und Validierung durchführen
-
-
+            configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+            configCostAssertionImport = configfilesOrdner & configCostAssertionImport
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
             telairCostAssertionImportConfigOK = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
 
