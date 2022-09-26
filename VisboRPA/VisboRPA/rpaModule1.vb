@@ -340,7 +340,7 @@ Module rpaModule1
                 Case CInt(PTRpa.visboEGeckoCapacity)
                     allOk = True
                     allOk = processEGeckoCapacity(fname, importDate, errMessages)
-                    Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
+                    'Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
                     allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
@@ -2692,8 +2692,9 @@ Module rpaModule1
                         Else
                             'Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
                             Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
-
                         End If
+
+                        result = resultSum
 
                     Else
 
