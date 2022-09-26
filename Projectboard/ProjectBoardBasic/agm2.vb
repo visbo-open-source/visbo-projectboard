@@ -25739,8 +25739,7 @@ Public Module agm2
             If visboClient = divClients(client.VisboRPA) Then
                 Dim fi As New FileInfo(capafile)
                 Dim capafolder As String = fi.Directory.ToString
-                Dim capafileName As String = fi.Name
-                listOfFiles = My.Computer.FileSystem.GetFiles(capafolder, FileIO.SearchOption.SearchTopLevelOnly, capafileName)
+                listOfFiles = My.Computer.FileSystem.GetFiles(capafolder, FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
             Else
                 ' Dateien mit WildCards lesen
                 listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
@@ -25830,14 +25829,17 @@ Public Module agm2
 
                             For Each tmpDatei As String In listOfFiles
 
-                                Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                                result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+                                If Not tmpDatei.StartsWith("~") Then
+                                    Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                                    result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
 
-                                If result Then
-                                    ' hier: merken der erfolgreich importierten KapaFiles
-                                    listOfArchivFiles.Add(tmpDatei)
+                                    If result Then
+                                        ' hier: merken der erfolgreich importierten KapaFiles
+                                        listOfArchivFiles.Add(tmpDatei)
+                                    Else
+                                    End If
                                 Else
-
+                                    ' nichts weiter tun - File nur registriert, weil bereits geöffnet
                                 End If
                             Next
 
@@ -25869,15 +25871,17 @@ Public Module agm2
                     If listOfFiles.Count >= 1 Then
 
                         For Each tmpDatei As String In listOfFiles
-
-                            Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                            result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
-
-                            If result Then
-                                ' hier: merken der erfolgreich importierten KapaFiles
-                                listOfArchivFiles.Add(tmpDatei)
+                            Dim fname As String = System.IO.Path.GetFileName(tmpDatei)
+                            If Not fname.StartsWith("~$") Then
+                                Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                                result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+                                If result Then
+                                    ' hier: merken der erfolgreich importierten KapaFiles
+                                    listOfArchivFiles.Add(tmpDatei)
+                                Else
+                                End If
                             Else
-
+                                ' nichts weiter tun - File nur registriert, weil bereits geöffnet
                             End If
                         Next
 

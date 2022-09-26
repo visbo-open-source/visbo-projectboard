@@ -2657,6 +2657,9 @@ Public Module agm3
                                                             msgtxt = "Warning in Line: " & ix & " Personal-Number and Name do not fit ... "
                                                             Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                                                         End If
+                                                    Else
+                                                        msgtxt = "Warning in Line: " & ix & " do not find the Name to the Personal-Number ... "
+                                                        Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                                                     End If
                                                 End If
                                             End If
