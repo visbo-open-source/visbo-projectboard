@@ -20449,26 +20449,34 @@ Public Module agm2
                             ' read CalendarReferenceFile for correct Calendar for Capacities
                             result = readCalendarReferenceFile(actualDataConfig, calendarRefFile, calendarReference, meldungen)
 
-
                             If Not IsNothing(calendarReference) And calendarReference.otherCal.Count > 0 Then
+
+                                Dim todolist As New List(Of String)
+                                'listOfFiles bereinigen um die bereits geöffneten Dateien und todoList erstellen
+                                For Each tmpDatei As String In listOfFiles
+                                    Dim fname As String = System.IO.Path.GetFileName(tmpDatei)
+                                    If Not fname.StartsWith("~$") Then
+                                        todolist.Add(tmpDatei)
+                                    Else
+                                        ' nichts weiter tun - File nur registriert, weil bereits geöffnet
+                                    End If
+                                Next
+
                                 ' There is a calendarReference to consider
                                 Dim referenzListe As New SortedList(Of String, String)
                                 If listOfFiles.Count > 0 Then
                                     referenzListe = createReferenzListe(kapaConfig, listOfFiles)
                                 End If
-                                If referenzListe.Count > 0 And referenzListe.Count = listOfFiles.Count Then
+                                If referenzListe.Count > 0 And referenzListe.Count = todolist.Count Then
                                     ' in referenzListe ist zu jedem Kapa-Monat der Zeuss-Dateiname festgehalten
                                     Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten ", "", anzFehler)
                                     result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, referenzListe, meldungen)
 
                                     If result Then
-                                        For Each tmpDatei As String In listOfFiles
-
+                                        For Each tmpDatei As String In todolist
                                             ' hier: merken der erfolgreich importierten KapaFiles
                                             listOfArchivFiles.Add(tmpDatei)
-
                                         Next
-
                                     End If
                                 Else
                                     outputline = "Es sind Fehler aufgetreten bei der Zuordnung der Kapa-Dateien zum entsprechenden Monat"
@@ -20515,8 +20523,8 @@ Public Module agm2
                         If listOfFiles.Count >= 1 Then
 
                             For Each tmpDatei As String In listOfFiles
-
-                                If Not tmpDatei.StartsWith("~") Then
+                                Dim fname As String = System.IO.Path.GetFileName(tmpDatei)
+                                If Not fname.StartsWith("~$") Then
                                     Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
                                     result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
 
@@ -20700,7 +20708,7 @@ Public Module agm2
 
                     End With
 
-                    kfWB.Close()        ' Zeuss-Datei wieder schließen
+                    kfWB.Close(SaveChanges:=False)        ' Zeuss-Datei wieder schließen
 
                 Catch ex As Exception
                     Call logger(ptErrLevel.logError, "Fehler beim Öffnen der Datei " & kf, "", anzFehler)
