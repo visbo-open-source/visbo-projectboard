@@ -249,7 +249,7 @@ Module rpaModule1
         Dim myName As String = My.Computer.FileSystem.GetName(fname)
         Dim currentWB As xlns.Workbook = Nothing
         Dim allOk As Boolean = False
-
+        Dim listOfArchivFiles As New List(Of String)
         errMessages = New Collection
 
         Try
@@ -352,8 +352,9 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboZeussCapacity)
                     allOk = True
-                    allOk = processZeussCapacity(fname, importDate, errMessages)
-                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
+                    currentWB.Close(SaveChanges:=False)
+                    allOk = processZeussCapacity(fname, importDate, errMessages, listOfArchivFiles)
+                    'Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboFindProjectStart)
 
@@ -418,7 +419,9 @@ Module rpaModule1
                     'Else
                     '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
                     'End If
-                    currentWB.Close(SaveChanges:=False)
+                    If Not IsNothing(currentWB) Then
+                        currentWB.Close(SaveChanges:=False)
+                    End If
                 End If
             Catch ex As Exception
 
@@ -426,9 +429,22 @@ Module rpaModule1
 
             ' here the logfiles and the importfiles will be moved to a folder depending on the result of the import
             If Not rpaCat = PTRpa.visboActualData2 Then
-                Call processResult(fname, allOk, errMessages)
+                If listOfArchivFiles.Count > 0 Then
+                    For Each archivFile As String In listOfArchivFiles
+                        Call processResult(archivFile, allOk, errMessages)
+                    Next
+                Else
+                    Call processResult(fname, allOk, errMessages)
+                End If
             Else
-                Call processResult(fname, allOk, errMessages)
+                If listOfArchivFiles.Count > 0 Then
+                    For Each archivFile As String In listOfArchivFiles
+                        Call processResult(archivFile, allOk, errMessages)
+                    Next
+                Else
+                    Call processResult(fname, allOk, errMessages)
+                End If
+                'Call processResult(fname, allOk, errMessages)
             End If
 
         Catch ex As Exception
@@ -1289,7 +1305,11 @@ Module rpaModule1
                         If result = PTRpa.visboUnknown Then
                             result = checkInstartUrlaub(currentWB)
                         End If
+
                         ' Check auf Zeuss Kapazitäten... (Telair)
+                        If result = PTRpa.visboUnknown Then
+                            result = checkZeussCapacity(currentWB)
+                        End If
 
                         ' Check auf Ist-Daten 
                         If result = PTRpa.visboUnknown Then
@@ -1954,6 +1974,61 @@ Module rpaModule1
         End If
 
         checkInstartUrlaub = result
+    End Function
+
+
+
+
+    ''' <summary>
+    ''' checks whether or not a file is a Zeuss (Telair)-Urlaubskalender
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkZeussCapacity(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim fName As String = "Zeuss"   '????
+
+        Dim currentWS As xlns.Worksheet = Nothing
+        Dim found As Boolean = False
+        Dim wb As xlns.Workbook = currentWB
+
+        Try
+            If currentWB.Name.Contains(fName) Then
+
+                currentWS = currentWB.Worksheets.Item(1)
+
+                If IsNothing(currentWS) Then
+                    result = PTRpa.visboUnknown
+                Else
+
+
+                    Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                    Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                    Try
+
+                        verifiedStructure = CStr(zweiteZeile.Cells(1, 1).value).Trim.Contains("Jahr:")
+
+                    Catch ex As Exception
+                        verifiedStructure = False
+                    End Try
+
+                    verifiedStructure = True
+
+                End If
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboZeussCapacity
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkZeussCapacity = result
     End Function
 
 
@@ -2751,7 +2826,7 @@ Module rpaModule1
 
     End Function
 
-    Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection, ByRef listOfArchivFiles As List(Of String)) As Boolean
 
 
         Dim actualDataFile As String = ""
@@ -2761,6 +2836,7 @@ Module rpaModule1
         Dim listofArchivUrlaub As New List(Of String)
         Dim listofArchivConfig As New List(Of String)
         Dim configActualDataImport As String = "configActualDataImport.xlsx"
+        Dim result As Boolean = False
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -2801,7 +2877,7 @@ Module rpaModule1
                 Dim configCapaImport As String = configfilesOrdner & "\" & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection, myName)
                 Else
                     outPutline = "There is no Config-File for the capacities!"
                     Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)
@@ -2823,7 +2899,7 @@ Module rpaModule1
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
 
                             ' tk wozu brauche ich das hier ? 
                             ' orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
@@ -2832,24 +2908,25 @@ Module rpaModule1
                             resultSum = storeCapasOfRoles()
 
                             If resultSum = True Then
-                                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                                 Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                                listOfArchivFiles = listofArchivConfig
 
-                                ' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
-                                Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
-                                ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                                Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                                ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                                Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
+                                'Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
 
                             Else
-                                Call MsgBox("Error when writing Capacities to Database:" & vbCrLf & err.errorMsg)
                                 Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listofArchivConfig
                             End If
 
+                            result = resultSum
+
                         Else
-                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
-                            Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                            Call logger(ptErrLevel.logError, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                             ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
                             'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
                             '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
@@ -2903,14 +2980,11 @@ Module rpaModule1
 
         End If
 
-        ' Schließen des LogFiles
-        ''Call logfileSchliessen()
-
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
         appInstance.ScreenUpdating = True
-        processZeussCapacity = True
+        processZeussCapacity = result
     End Function
 
 
