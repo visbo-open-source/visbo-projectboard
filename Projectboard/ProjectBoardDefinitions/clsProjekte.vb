@@ -2411,6 +2411,7 @@ Public Class clsProjekte
 
         Dim overloaded As Boolean = False
         Dim curIDs As List(Of String) = Nothing
+        Dim considerFreeExternCapacity As Boolean = False
 
         For i As Integer = 1 To 2
 
@@ -2471,9 +2472,13 @@ Public Class clsProjekte
                                         overloaded = True
                                     Else
                                         Dim stillAvailableExternCapa As Double = 0
-                                        For dx As Integer = 0 To ix - 1
-                                            stillAvailableExternCapa = stillAvailableExternCapa + System.Math.Min(kapaExtern(dx), freeCapacity(dx))
-                                        Next
+                                        ' only consider former, not used extern capacity when asked for by considerFreeExternCapacity
+                                        If considerFreeExternCapacity Then
+                                            For dx As Integer = 0 To ix - 1
+                                                stillAvailableExternCapa = stillAvailableExternCapa + System.Math.Min(kapaExtern(dx), freeCapacity(dx))
+                                            Next
+                                        End If
+
                                         overloaded = roleValues(ix) > stillAvailableExternCapa + monthlyOverloadCriterion * kapaValues(ix)
                                     End If
                                 End If
