@@ -1030,6 +1030,9 @@ Public Module Module1
         ' find feasible Portfolio
         visboFindfeasiblePortfolio = 27
 
+        ' represents the weser ressourcenplan
+        visboWWWRessourcen = 28
+
     End Enum
 
     ''' <summary>

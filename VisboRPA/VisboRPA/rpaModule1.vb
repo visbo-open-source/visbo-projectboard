@@ -346,6 +346,10 @@ Module rpaModule1
                     allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
                     'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
+                Case CInt(PTRpa.visboWWWRessourcen)
+                    allOk = processWWWRessourcen(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
+
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
                     Call logger(ptErrLevel.logError, "Import visbo proposal ", " not yet integrated !")
@@ -1340,7 +1344,11 @@ Module rpaModule1
                         If result = PTRpa.visboUnknown Then
                             result = checkInstartProposal(currentWB)
                         End If
-                        ' Check auf VISBO Calculation Template 
+                        ' Check auf Weser Ressourcenplanung 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkWWWRessourcen(currentWB)
+                        End If
+
 
                         currentWB.Close(SaveChanges:=False)
 
@@ -1878,6 +1886,49 @@ Module rpaModule1
 
         checkActualData2 = result
     End Function
+
+    ''' <summary>
+    '''  checks whether or not a file is a Weser Ressourcenplanung
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkWWWRessourcen(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Kostencontrolling"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                Try
+
+                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Projektressourcenplan")
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboWWWRessourcen
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkWWWRessourcen = result
+    End Function
+
+
+
 
     ''' <summary>
     ''' checks whether or not a file is a Instart Proposal - CalcSheet
@@ -4012,6 +4063,130 @@ Module rpaModule1
 
 
 
+    Public Function processWWWRessourcen(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim instartImportConfigOK As Boolean = False
+
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configWWWRessourcenImport As String = "configCalcTemplateImport.xlsx"
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+            ' wenn es gibt - lesen der Jira und anderer, die durch configCapaImport beschrieben sind
+            ' no longer necessary
+            ' Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            configWWWRessourcenImport = configfilesOrdner & "\" & configWWWRessourcenImport
+            Dim allesOK As Boolean = checkProjectImportConfig(configWWWRessourcenImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If allesOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
+
+
+                allesOK = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
+
+                If allesOK Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputString = "Error at Import: " & vbLf & ex.Message
+                        Else
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
+                        End If
+                        outPutCollection.Add(outputString)
+
+                    End Try
+
+                Else
+
+                    Call logger(ptErrLevel.logError, "checkProjectImportConfig", outPutCollection)
+
+                End If
+
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
+
+            End If
+
+
+            allOk = allOk And allesOK
+
+        Catch ex2 As Exception
+            allOk = False
+        End Try
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProposal.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Projects Proposal", ex1.Message)
+        End Try
+
+
+
+        processWWWRessourcen = allOk
+    End Function
+
+
+
     Public Function processNewTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
@@ -4055,6 +4230,7 @@ Module rpaModule1
 
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            configProjectsImport = configfilesOrdner & "\" & configProjectsImport
             telairImportConfigOK = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
             If outPutCollection.Count > 0 Then
@@ -4188,7 +4364,7 @@ Module rpaModule1
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
             ' Konfigurationsdatei lesen und Validierung durchführen
             configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
-            configProjectsUpdates = configfilesOrdner & configProjectsUpdates
+            configProjectsUpdates = configfilesOrdner & "\" & configProjectsUpdates
             telairUpdateConfigOK = checkProjectImportConfig(configProjectsUpdates, projectsFile, projectConfig, lastrow, outPutCollection)
 
             If outPutCollection.Count > 0 Then
@@ -4313,7 +4489,7 @@ Module rpaModule1
 
             ' Konfigurationsdatei lesen und Validierung durchführen
             configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
-            configCostAssertionImport = configfilesOrdner & configCostAssertionImport
+            configCostAssertionImport = configfilesOrdner & "\" & configCostAssertionImport
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
             telairCostAssertionImportConfigOK = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
 
@@ -4573,7 +4749,7 @@ Module rpaModule1
                 'FileExtension ansehen
                 Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
                 Select Case fileExt
-                    Case ".xlsx"
+                    Case ".xlsx", ".xlsm"
 
                         myName = My.Computer.FileSystem.GetName(fullFileName)
 
@@ -4591,6 +4767,26 @@ Module rpaModule1
                                 Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
                             End If
                         End If
+
+                    Case ".xlsm"
+
+                        myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                        ' Bestimme den Import-Typ der zu importierenden Daten
+                        rpaCategory = bestimmeRPACategory(fullFileName)
+
+                        If rpaCategory = PTRpa.visboUnknown Then
+                            ' move file to unknown Folder ... 
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                        Else
+                            result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                            If result Then
+                                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                            End If
+                        End If
+
                     Case ".mpp"
 
                         myName = My.Computer.FileSystem.GetName(fullFileName)
