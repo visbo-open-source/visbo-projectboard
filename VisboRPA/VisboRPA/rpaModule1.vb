@@ -1652,54 +1652,54 @@ Module rpaModule1
         checkVCOrganisation = result
     End Function
 
-    ''' <summary>
-    ''' returns form Parameters the Portfolio-Name and Vname 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' 
-    Public Function getNameList(ByVal blattName As String) As Collection
-        Dim result As New Collection
+    '''' <summary>
+    '''' returns form Parameters the Portfolio-Name and Vname 
+    '''' </summary>
+    '''' <returns></returns>
+    '''' 
+    'Public Function getNameList(ByVal blattName As String) As Collection
+    '    Dim result As New Collection
 
 
-        Try
+    '    Try
 
-            Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
-                                                            Global.Microsoft.Office.Interop.Excel.Workbook)
+    '        Dim currentWB As xlns.Workbook = CType(appInstance.ActiveWorkbook,
+    '                                                        Global.Microsoft.Office.Interop.Excel.Workbook)
 
-            Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+    '        Dim currentWS As xlns.Worksheet = CType(currentWB.Sheets.Item(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            Dim zeile As Integer = 2
-            Dim spalte As Integer = 1
+    '        Dim zeile As Integer = 2
+    '        Dim spalte As Integer = 1
 
 
 
-            If Not IsNothing(currentWS) Then
-                With currentWS
-                    Dim lastRow As Integer = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+    '        If Not IsNothing(currentWS) Then
+    '            With currentWS
+    '                Dim lastRow As Integer = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
 
-                    While zeile <= lastRow
-                        Dim pName As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If Not IsNothing(pName) Then
-                            pName = pName.Trim
+    '                While zeile <= lastRow
+    '                    Dim pName As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+    '                    If Not IsNothing(pName) Then
+    '                        pName = pName.Trim
 
-                            If pName <> "" Then
-                                If Not result.Contains(pName) Then
-                                    result.Add(pName, pName)
-                                End If
-                            End If
+    '                        If pName <> "" Then
+    '                            If Not result.Contains(pName) Then
+    '                                result.Add(pName, pName)
+    '                            End If
+    '                        End If
 
-                            zeile = zeile + 1
-                        End If
-                    End While
+    '                        zeile = zeile + 1
+    '                    End If
+    '                End While
 
-                End With
-            End If
-        Catch ex As Exception
+    '            End With
+    '        End If
+    '    Catch ex As Exception
 
-        End Try
+    '    End Try
 
-        getNameList = result
-    End Function
+    '    getNameList = result
+    'End Function
 
 
     ''' <summary>
@@ -1909,23 +1909,38 @@ Module rpaModule1
     Private Function checkInstartUrlaub(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim verifiedStructure As Boolean = False
-        Dim blattName As String = "VISBO Summary"   '????
+        Dim blattName As String = "Arbeitszeitauswertung"   '????
+
+        Dim currentWS As xlns.Worksheet = Nothing
+        Dim found As Boolean = False
+        Dim wb As xlns.Workbook = currentWB
 
         Try
-            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+            For Each tmpSheet As xlns.Worksheet In currentWB.Worksheets
+
+                If tmpSheet.Name.Contains(blattName) Then
+                    found = True
+                    currentWS = tmpSheet
+                    Exit For
+                End If
+            Next
 
             If IsNothing(currentWS) Then
                 result = PTRpa.visboUnknown
             Else
-                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
-                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
-                Try
 
-                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
 
-                Catch ex As Exception
-                    verifiedStructure = False
-                End Try
+                'Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                'Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                'Try
+
+                '    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Phase/Arbeitspaket")
+
+                'Catch ex As Exception
+                '    verifiedStructure = False
+                'End Try
+
+                verifiedStructure = True
 
             End If
         Catch ex As Exception
@@ -2103,22 +2118,36 @@ Module rpaModule1
             Dim wsGeneralInformation As xlns.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Stammdaten"),
                     Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            ' read the file and import into hproj
+            If isTemplate Then
+                ' read the file and import into vproj
+                Call awinImportProjectmitHrchy(Nothing, vproj, True, importDate)
 
+                Dim template As New clsProjekt
+                ' mache aus clsprojektVorlage ein 'clsProjekt'
+                Dim startDate As Date = StartofCalendar
+                Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
+                Dim myProject As clsProjekt = Nothing
+                template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
+                If Not IsNothing(template) Then
+                    template.name = vproj.VorlagenName
+                    template.projectType = ptPRPFType.projectTemplate
+                End If
+                hproj = template
 
-            Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Else
 
-            If isTemplate And Not IsNothing(hproj) Then
-                hproj.projectType = ptPRPFType.projectTemplate
+                ' read the file and import into hproj
+                Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+
             End If
+
 
             allOK = Not IsNothing(hproj)
 
             If allOK Then
                 Try
-                    Dim keyStr As String = calcProjektKey(hproj)
+
                     ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
-                    'AlleProjekte.Add(hproj, updateCurrentConstellation:=False)
 
                     Call importProjekteEintragen(importDate, drawPlanTafel:=False, fileFrom3rdParty:=True, getSomeValuesFromOldProj:=True, calledFromActualDataImport:=False, calledFromRPA:=True)
                 Catch ex2 As Exception
@@ -2153,6 +2182,12 @@ Module rpaModule1
 
     End Function
 
+    ''' <summary>
+    ''' Liest eine in Excel beschriebene Liste mit Projekten  (VISBO defined)
+    ''' </summary>
+    ''' <param name="myName"></param>
+    ''' <param name="myActivePortfolio"></param>
+    ''' <returns></returns>
     Private Function processProjectList(ByVal myName As String, ByVal myActivePortfolio As String) As Boolean
 
         Dim allOk As Boolean = False
@@ -2586,7 +2621,11 @@ Module rpaModule1
 
 
     Private Function processEGeckoCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
-        processEGeckoCapacity = True
+
+        Dim result As Boolean = False
+        result = processZeussCapacity(myName, importDate, errMessages)
+        processEGeckoCapacity = result
+
     End Function
 
     Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean

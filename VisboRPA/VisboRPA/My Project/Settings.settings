@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
-      <Value Profile="(Default)">xxx</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="rpaPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA</Value>

@@ -25483,21 +25483,18 @@ Public Module Projekte
     Public Function calcProjektKey(ByVal hproj As clsProjekt) As String
 
         Dim trennzeichen As String = "#"
-        With hproj
 
-            ' Konsistenzbedingungen gewährleisten
-            If IsNothing(.name) Then
-                Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
-            ElseIf .name.Length < 2 Then
-                Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & .name)
-            ElseIf IsNothing(.variantName) Then
-                .variantName = ""
-            End If
 
-            calcProjektKey = .name & trennzeichen & .variantName
+        ' Konsistenzbedingungen gewährleisten
+        If IsNothing(hproj.name) Then
+            Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
+        ElseIf hproj.name.Length < 2 Then
+            Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & hproj.name)
+        ElseIf IsNothing(hproj.variantName) Then
+            hproj.variantName = ""
+        End If
 
-        End With
-
+        calcProjektKey = hproj.name & trennzeichen & hproj.variantName
 
     End Function
 
