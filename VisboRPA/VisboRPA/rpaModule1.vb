@@ -2308,6 +2308,8 @@ Module rpaModule1
                 Dim startDate As Date = StartofCalendar
                 Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
                 Dim myProject As clsProjekt = Nothing
+                ' zunächst die eingelesene Vorlage in die Liste der Projektvorlagen hinzufügen
+                Projektvorlagen.Add(vproj)
                 template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
                 If Not IsNothing(template) Then
                     template.name = vproj.VorlagenName
