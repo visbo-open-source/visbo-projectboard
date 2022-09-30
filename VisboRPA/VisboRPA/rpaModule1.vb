@@ -297,12 +297,13 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboModifierCapacities)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
+                    allOk = processModifierExternContracts(fname, importDate, errMessages)
+                    'Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
 
                 Case CInt(PTRpa.visboExternalContracts)
                     allOk = True
                     allOk = processExternalContracts(fname, importDate, errMessages)
-                    Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
+             '       Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
 
 
                 Case CInt(PTRpa.visboActualData1)
@@ -1299,6 +1300,9 @@ Module rpaModule1
                         End If
 
                         ' Check auf Modifier Kapazitäten
+                        If result = PTRpa.visboUnknown Then
+                            result = checkModifierExternKapa(currentWB)
+                        End If
 
                         ' Check auf externe Rahmenverträge 
                         If result = PTRpa.visboUnknown Then
@@ -1558,31 +1562,82 @@ Module rpaModule1
 
     End Function
 
+
     ''' <summary>
-    ''' checks whether or not it is a downloaded and edited 
+    ''' checks whether or not it is a ModifierCapacities-File
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
-    Private Function checkExtRahmenvertr(ByVal currentWB As xlns.Workbook) As PTRpa
+    Private Function checkModifierExternKapa(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
-        Dim possibleTableNames() As String = {"externe Vertraege", "externe Rahmenvertraege"}
+        Dim possibleTableNames() As String = {"Kapazität"}
         Dim verifiedStructure As Boolean = False
         Try
 
             Dim currentWS As xlns.Worksheet = Nothing
             Dim found As Boolean = False
 
-            For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Worksheets)
 
-                For Each tblname As String In possibleTableNames
-                    If tmpSheet.Name.StartsWith(tblname) Then
-                        found = True
-                        currentWS = tmpSheet
-                        Exit For
-                    End If
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+
                 Next
+            End If
 
-            Next
+
+            If found Then
+                result = PTRpa.visboModifierCapacities
+            End If
+
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+
+        checkModifierExternKapa = result
+    End Function
+    ''' <summary>
+    ''' checks whether or not it is a File with external Contracts (like Allianz)
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkExtRahmenvertr(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim possibleTableNames() As String = {"externe Vertraege", "externe Rahmenvertraege", "Werte in Euro"}
+        Dim verifiedStructure As Boolean = False
+        Try
+
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+
+                Next
+            End If
+
 
             If found Then
                 result = PTRpa.visboExternalContracts
@@ -2730,19 +2785,251 @@ Module rpaModule1
 
     End Function
 
-    Private Function processExternalContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    Private Function processModifierExternContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+        Dim listOfArchivFiles As New List(Of String)
+        Dim result As Boolean = False
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
 
         Dim outputCollection As New Collection
+
+        lastReadingOrganisation = readOrganisations()
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+
+                ' wenn es gibt - lesen der Externen Verträge 
+                result = readKapaModifier(myName, listOfArchivExtern, errMessages)
+
+                If result Then
+                    Call logger(ptErrLevel.logInfo, "Import external contracts from file " & myName & " successful", "processModifierExternContracts", anzFehler)
+                End If
+
+                If listOfArchivExtern.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, external Contracts " & myName & " successfully updated ...", "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities of external contract " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+                            End If
+
+                            result = resultSum
+
+                        Else
+                            Call logger(ptErrLevel.logError, "ok, external Contracts " & myName & " temporarily updated ...", "", -1)
+
+                        End If
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call logger(ptErrLevel.logError, "no Files to import ...", "processModifierExternContracts: ", anzFehler)
+                        Else
+                            Call logger(ptErrLevel.logError, "es gab keine Dateien zum Einlesen ... ", "processModifierExternContracts: ", anzFehler)
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call logger(ptErrLevel.logError, "No valid roles! Please import one first!", "processModifierExternContracts: ", anzFehler)
+                Else
+                    Call logger(ptErrLevel.logError, "Die gültige Organisation beinhaltet keine Rollen! ", "processModifierExternContracts: ", anzFehler)
+
+                End If
+            End If
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call logger(ptErrLevel.logError, "No valid organization! Please import one first!", "processModifierExternContracts: ", anzFehler)
+            Else
+                Call logger(ptErrLevel.logError, "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren", "processModifierExternContracts: ", anzFehler)
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+
+        End If
+
+        processModifierExternContracts = result
+    End Function
+
+
+    Private Function processExternalContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
         Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listOfArchivFiles As New List(Of String)
+        Dim result As Boolean = False
 
-        ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
-        Dim listOfArchivExtern As New List(Of String)
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
 
-        ' wenn es gibt - lesen der Externen Verträge 
-        Call readMonthlyExternKapasEV(outputCollection, listOfArchivExtern)
+        Dim outputCollection As New Collection
+
+        lastReadingOrganisation = readOrganisations()
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
 
 
-        processExternalContracts = True
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+
+                ' wenn es gibt - lesen der Externen Verträge 
+                result = readKapaExtern(myName, listOfArchivExtern, errMessages)
+
+                If result Then
+                    Call logger(ptErrLevel.logInfo, "Import external contracts from file " & myName & " successful", "readMonthlyExternKapasEV", anzFehler)
+                End If
+
+                If listOfArchivExtern.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, external Contracts " & myName & " successfully updated ...", "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+
+                                '' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
+                                'Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities of external contract " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+                            End If
+
+                            result = resultSum
+
+                        Else
+                            Call logger(ptErrLevel.logError, "ok, external Contracts " & myName & " temporarily updated ...", "", -1)
+
+                        End If
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no Files to import ...")
+                        Else
+                            Call MsgBox("es gab keine Dateien zum Einlesen ... ")
+
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+        End If
+
+        processExternalContracts = result
     End Function
 
 
