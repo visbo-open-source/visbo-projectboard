@@ -10263,136 +10263,13 @@ Public Module agm2
 
                     Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
 
-                    If Not IsNothing(dateiName) Then
 
-                        If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
+                    ' einlesen einer Datei
+                    Dim result As Boolean = readKapaExtern(dateiName, successList, meldungen)
 
-                            errMsg = "Reading external Capacities " & dateiName
-                            Call logger(ptErrLevel.logInfo, errMsg, "", anzFehler)
-
-                            Try
-                                appInstance.Workbooks.Open(dateiName)
-                                ok = True
-                                Dim noError As Boolean = True
-
-                                Try
-
-                                    currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                                    Dim colRessource As Integer = 8
-                                    Dim colBeginn As Integer = 9
-                                    Dim colEnde As Integer = 10
-                                    Dim colVV As Integer = 15
-
-                                    Dim lastRow As Integer = CType(currentWS.Cells(16000, "H"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
-
-                                    ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
-
-                                    aktzeile = 3
-                                    Do While aktzeile <= lastRow
-
-                                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colRessource), Excel.Range).Value)
-
-                                        If Not IsNothing(subRoleName) Then
-                                            subRoleName = subRoleName.Trim
-                                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
-
-                                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
-
-                                                ' nur weiter machen, wenn es keine SummenRolle ist ... und es ausserdem einen Tagessatz gibt ..
-                                                ' weil andernfalls Dividion durch Null passieren würde 
-                                                If Not subRole.isCombinedRole And subRole.tagessatzIntern > 0 Then
-
-                                                    ' lese das Vertragsvolumen
-                                                    Try
-                                                        Dim vertragsVolumen As Double = 0.0
-                                                        If Not IsNothing(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value) Then
-                                                            vertragsVolumen = CDbl(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value)
-                                                        End If
-
-                                                        Dim startDate As Date = CDate(CType(currentWS.Cells(aktzeile, colBeginn), Excel.Range).Value)
-                                                        Dim endeDate As Date = CDate(CType(currentWS.Cells(aktzeile, colEnde), Excel.Range).Value)
-
-                                                        If vertragsVolumen >= 0 Then
-                                                            Dim dimension As Integer = getColumnOfDate(endeDate) - getColumnOfDate(startDate)
-                                                            Dim vorgabeArray(0) As Double
-                                                            vorgabeArray(0) = vertragsVolumen / subRole.tagessatzIntern
-                                                            Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0)
-
-                                                            Dim startCol As Integer = getColumnOfDate(startDate)
-                                                            For ix As Integer = 0 To volumenArray.Length - 1
-                                                                If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
-                                                                    If ix + startCol >= getColumnOfDate(subRole.entryDate) And ix + startCol < getColumnOfDate(subRole.exitDate) Then
-                                                                        subRole.kapazitaet(ix + startCol) = volumenArray(ix)
-                                                                    Else
-                                                                        subRole.kapazitaet(ix + startCol) = 0
-                                                                    End If
-
-                                                                End If
-                                                            Next
-
-                                                        End If
-                                                    Catch ex As Exception
-
-                                                    End Try
-
-
-                                                Else
-                                                    If subRole.isCombinedRole Then
-                                                        noError = False
-                                                        errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
-                                                        meldungen.Add(errMsg)
-                                                    ElseIf subRole.tagessatzIntern <= 0 Then
-                                                        noError = False
-                                                        errMsg = "File " & dateiName & ": " & subRoleName & " no dayrate / tagessatz available "
-                                                        meldungen.Add(errMsg)
-                                                    End If
-
-                                                    Call logger(ptErrLevel.logInfo, errMsg, "", anzFehler)
-                                                End If
-                                            Else
-                                                If subRoleName.Length > 0 Then
-                                                    noError = False
-                                                    errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
-                                                    meldungen.Add(errMsg)
-                                                    Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
-                                                End If
-                                            End If
-
-                                        End If
-
-                                        aktzeile = aktzeile + 1
-                                        ' jetzt spalte wieder auf 2 setzen 
-                                        spalte = 2
-                                    Loop
-
-                                Catch ex2 As Exception
-                                    noError = False
-                                    errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
-                                    meldungen.Add(errMsg)
-                                    Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
-
-                                    If Not IsNothing(currentWS) Then
-                                        CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                        saveNeeded = True
-                                    End If
-
-                                End Try
-
-
-                                If noError Then
-                                    successList.Add(dateiName)
-                                End If
-
-                                appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
-                            Catch ex As Exception
-                                appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
-                            End Try
-
-                        End If
-
+                    If result Then
+                        Call logger(ptErrLevel.logInfo, "Import external contracts from file " & dateiName & " successful", "readMonthlyExternKapasEV", anzFehler)
                     End If
-
 
                 Next i
 
@@ -10419,15 +10296,14 @@ Public Module agm2
 
 
     End Sub
-
-
     ''' <summary>
-    ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
-    ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
+    ''' 
     ''' </summary>
-    Public Sub readMonthlyModifierKapas(ByRef meldungen As Collection, ByRef successList As List(Of String))
-
-        Dim kapaFolder As String
+    ''' <param name="dateiName"></param>
+    ''' <param name="successList"></param>
+    ''' <param name="meldungen"></param>
+    ''' <returns></returns>
+    Public Function readKapaModifier(ByVal dateiName As String, ByRef successList As List(Of String), ByRef meldungen As Collection) As Boolean
 
 
         Dim ok As Boolean = True
@@ -10440,6 +10316,327 @@ Public Module agm2
         Dim tmpDate As Date
         Dim tmpKapa As Double
         Dim lastSpalte As Integer
+        Dim errMsg As String = ""
+
+        Dim noError As Boolean = True
+
+        Dim colName As Integer = 2
+        endeZeile = 0
+
+        If Not IsNothing(dateiName) Then
+
+            If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") And dateiName.Contains("Modifier") Then
+
+                Try
+                    appInstance.Workbooks.Open(dateiName)
+                    ok = True
+
+                    Try
+
+                        currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                        Try
+                            endeZeile = CType(currentWS.Cells(12000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
+                        Catch ex As Exception
+                            endeZeile = 0
+                        End Try
+
+
+                        If endeZeile > 0 Then
+
+                            lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+
+                            ' bestimme jetzt die Spalte, wo der Name stehen sollte 
+                            Dim dateFound As Boolean = False
+                            Dim tmpSpalte As Integer = 2
+                            Do While Not dateFound
+                                If Not IsNothing(CType(currentWS.Cells(1, tmpSpalte), Excel.Range).Value) Then
+                                    If IsDate(CType(currentWS.Cells(1, tmpSpalte), Excel.Range).Value) Then
+                                        dateFound = True
+                                        colName = tmpSpalte - 1
+                                    Else
+                                        tmpSpalte = tmpSpalte + 1
+                                    End If
+                                End If
+                            Loop
+
+                            ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+
+                            Dim aktzeile As Integer = 2
+                            Do While aktzeile < endeZeile
+
+                                Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colName), Excel.Range).Value)
+
+                                If Not IsNothing(subRoleName) Then
+                                    subRoleName = subRoleName.Trim
+                                    If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                        Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                        ' nur weiter machen, wenn es keine SummenRolle ist ...
+                                        If Not subRole.isCombinedRole Then
+
+                                            Try
+                                                spalte = colName + 1
+                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                                                ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
+
+                                                Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                                                    Try
+                                                        spalte = spalte + 1
+                                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                    Catch ex As Exception
+
+                                                    End Try
+                                                Loop
+
+                                                Do While spalte < 241 And spalte <= lastSpalte
+
+                                                    Try
+                                                        index = getColumnOfDate(tmpDate)
+                                                        If index >= 1 Then
+                                                            tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                                            If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                                                If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
+                                                                    subRole.kapazitaet(index) = tmpKapa
+                                                                Else
+                                                                    subRole.kapazitaet(index) = 0
+                                                                End If
+
+                                                            End If
+                                                        End If
+
+                                                        spalte = spalte + 1
+                                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                    Catch ex As Exception
+                                                        noError = False
+                                                        errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
+                                                        meldungen.Add(errMsg)
+                                                    End Try
+
+
+                                                Loop
+
+                                            Catch ex As Exception
+
+                                            End Try
+                                        Else
+                                            noError = False
+                                            errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                            meldungen.Add(errMsg)
+                                        End If
+                                    Else
+                                        If subRoleName.Length > 0 Then
+                                            noError = False
+                                            errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                            meldungen.Add(errMsg)
+                                        End If
+                                    End If
+
+                                End If
+
+                                aktzeile = aktzeile + 1
+                                ' jetzt spalte wieder auf 2 setzen 
+                                spalte = 2
+                            Loop
+
+                        Else
+                            noError = False
+                            errMsg = "File " & dateiName & " does not contain data in column A ..."
+                            meldungen.Add(errMsg)
+                        End If
+
+                    Catch ex2 As Exception
+                        noError = False
+                        errMsg = "File " & dateiName & ": unidentified error ... "
+                        meldungen.Add(errMsg)
+                    End Try
+
+                    ' In diesem Fall wurde erfolgreich eingelesen ...
+                    If noError Then
+                        successList.Add(dateiName)
+                    End If
+
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Catch ex As Exception
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                End Try
+
+            End If
+
+        End If
+
+        readKapaModifier = noError
+    End Function
+
+
+    Public Function readKapaExtern(ByVal dateiName As String, ByRef successList As List(Of String), ByRef meldungen As Collection) As Boolean
+
+
+        'Dim kapaFolder As String
+        Dim ok As Boolean = True
+
+        Dim spalte As Integer = 2
+        Dim currentWS As Excel.Worksheet = Nothing
+        Dim blattname As String = "Werte in Euro"
+
+        Dim errMsg As String = ""
+        Dim anzFehler As Integer = 0
+
+        Dim aktzeile As Integer = 1
+        Dim saveNeeded As Boolean = False
+        Dim noError As Boolean = False
+
+        Try
+            'Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+
+            If Not IsNothing(dateiName) Then
+
+                If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
+
+                    errMsg = "Reading external Capacities " & dateiName
+                    Call logger(ptErrLevel.logInfo, errMsg, "readKapaExtern", anzFehler)
+
+                    Try
+                        appInstance.Workbooks.Open(dateiName)
+                        ok = True
+                        noError = True
+
+                        Try
+                            currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                            Dim colRessource As Integer = 8
+                            Dim colBeginn As Integer = 9
+                            Dim colEnde As Integer = 10
+                            Dim colVV As Integer = 11
+
+                            Dim lastRow As Integer = CType(currentWS.Cells(16000, colRessource), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                            ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+
+                            aktzeile = 3
+                            Do While aktzeile <= lastRow
+
+                                Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colRessource), Excel.Range).Value)
+
+                                If Not IsNothing(subRoleName) Then
+                                    subRoleName = subRoleName.Trim
+                                    If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                        Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                        ' nur weiter machen, wenn es keine SummenRolle ist ... und es ausserdem einen Tagessatz gibt ..
+                                        ' weil andernfalls Dividion durch Null passieren würde 
+                                        If Not subRole.isCombinedRole And subRole.tagessatzIntern > 0 Then
+
+                                            ' lese das Vertragsvolumen
+                                            Try
+                                                Dim vertragsVolumen As Double = 0.0
+                                                If Not IsNothing(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value) Then
+                                                    vertragsVolumen = CDbl(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value)
+                                                End If
+
+                                                Dim startDate As Date = CDate(CType(currentWS.Cells(aktzeile, colBeginn), Excel.Range).Value)
+                                                Dim endeDate As Date = CDate(CType(currentWS.Cells(aktzeile, colEnde), Excel.Range).Value)
+
+                                                If vertragsVolumen >= 0 Then
+                                                    Dim dimension As Integer = getColumnOfDate(endeDate) - getColumnOfDate(startDate)
+                                                    Dim vorgabeArray(0) As Double
+                                                    vorgabeArray(0) = vertragsVolumen / subRole.tagessatzIntern
+                                                    Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0)
+
+                                                    Dim startCol As Integer = getColumnOfDate(startDate)
+                                                    For ix As Integer = 0 To volumenArray.Length - 1
+                                                        If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
+                                                            If ix + startCol >= getColumnOfDate(subRole.entryDate) And ix + startCol < getColumnOfDate(subRole.exitDate) Then
+                                                                subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                            Else
+                                                                subRole.kapazitaet(ix + startCol) = 0
+                                                            End If
+
+                                                        End If
+                                                    Next
+
+                                                End If
+                                            Catch ex As Exception
+
+                                            End Try
+
+
+                                        Else
+                                            If subRole.isCombinedRole Then
+                                                noError = False
+                                                errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                meldungen.Add(errMsg)
+                                            ElseIf subRole.tagessatzIntern <= 0 Then
+                                                noError = False
+                                                errMsg = "File " & dateiName & ": " & subRoleName & " no dayrate / tagessatz available "
+                                                meldungen.Add(errMsg)
+                                            End If
+
+                                            Call logger(ptErrLevel.logInfo, errMsg, "", anzFehler)
+                                        End If
+                                    Else
+                                        If subRoleName.Length > 0 Then
+                                            noError = False
+                                            errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                            meldungen.Add(errMsg)
+                                            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
+                                        End If
+                                    End If
+
+                                End If
+
+                                aktzeile = aktzeile + 1
+                                ' jetzt spalte wieder auf 2 setzen 
+                                spalte = 2
+                            Loop
+
+                        Catch ex2 As Exception
+                            noError = False
+                            errMsg = "File " & dateiName & ": evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
+                            meldungen.Add(errMsg)
+                            Call logger(ptErrLevel.logError, errMsg, "readKapaExtern", anzFehler)
+
+                            If Not IsNothing(currentWS) Then
+                                CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                saveNeeded = True
+                            End If
+                        End Try
+
+
+                        If noError Then
+                            successList.Add(dateiName)
+                        End If
+
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
+                    Catch ex As Exception
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
+                    End Try
+
+                End If
+
+            End If
+
+        Catch ex As Exception
+            errMsg = "Vermutlich falsches Datenformat übergeben!"
+            Call logger(ptErrLevel.logError, errMsg, "readKapaExtern", anzFehler)
+        End Try
+
+        readKapaExtern = noError
+    End Function
+
+
+    ''' <summary>
+    ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
+    ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
+    ''' </summary>
+    Public Sub readMonthlyModifierKapas(ByRef meldungen As Collection, ByRef successList As List(Of String))
+
+        Dim kapaFolder As String
+        Dim ok As Boolean = True
         Dim errMsg As String = ""
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -10465,156 +10662,10 @@ Public Module agm2
 
                 For i = 0 To listOfImportfiles.Count - 1
 
-                    Dim noError As Boolean = True
                     Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
-                    Dim colName As Integer = 2
-                    endeZeile = 0
 
-                    If Not IsNothing(dateiName) Then
-
-                        If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") And dateiName.Contains("Modifier") Then
-
-                            Try
-                                appInstance.Workbooks.Open(dateiName)
-                                ok = True
-
-                                Try
-
-                                    currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                                    Try
-                                        endeZeile = CType(currentWS.Cells(12000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
-                                    Catch ex As Exception
-                                        endeZeile = 0
-                                    End Try
-
-
-                                    If endeZeile > 0 Then
-
-                                        lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
-
-                                        ' bestimme jetzt die Spalte, wo der Name stehen sollte 
-                                        Dim dateFound As Boolean = False
-                                        Dim tmpSpalte As Integer = 2
-                                        Do While Not dateFound
-                                            If Not IsNothing(CType(currentWS.Cells(1, tmpSpalte), Excel.Range).Value) Then
-                                                If IsDate(CType(currentWS.Cells(1, tmpSpalte), Excel.Range).Value) Then
-                                                    dateFound = True
-                                                    colName = tmpSpalte - 1
-                                                Else
-                                                    tmpSpalte = tmpSpalte + 1
-                                                End If
-                                            End If
-                                        Loop
-
-                                        ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
-
-                                        Dim aktzeile As Integer = 2
-                                        Do While aktzeile < endeZeile
-
-                                            Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colName), Excel.Range).Value)
-
-                                            If Not IsNothing(subRoleName) Then
-                                                subRoleName = subRoleName.Trim
-                                                If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
-
-                                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
-
-                                                    ' nur weiter machen, wenn es keine SummenRolle ist ...
-                                                    If Not subRole.isCombinedRole Then
-
-                                                        Try
-                                                            spalte = colName + 1
-                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-
-                                                            ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
-
-                                                            Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
-                                                                Try
-                                                                    spalte = spalte + 1
-                                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                                Catch ex As Exception
-
-                                                                End Try
-                                                            Loop
-
-                                                            Do While spalte < 241 And spalte <= lastSpalte
-
-                                                                Try
-                                                                    index = getColumnOfDate(tmpDate)
-                                                                    If index >= 1 Then
-                                                                        tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
-
-                                                                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                                            If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
-                                                                                subRole.kapazitaet(index) = tmpKapa
-                                                                            Else
-                                                                                subRole.kapazitaet(index) = 0
-                                                                            End If
-
-                                                                        End If
-                                                                    End If
-
-                                                                    spalte = spalte + 1
-                                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                                Catch ex As Exception
-                                                                    noError = False
-                                                                    errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
-                                                                    meldungen.Add(errMsg)
-                                                                End Try
-
-
-                                                            Loop
-
-                                                        Catch ex As Exception
-
-                                                        End Try
-                                                    Else
-                                                        noError = False
-                                                        errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
-                                                        meldungen.Add(errMsg)
-                                                    End If
-                                                Else
-                                                    If subRoleName.Length > 0 Then
-                                                        noError = False
-                                                        errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
-                                                        meldungen.Add(errMsg)
-                                                    End If
-                                                End If
-
-                                            End If
-
-                                            aktzeile = aktzeile + 1
-                                            ' jetzt spalte wieder auf 2 setzen 
-                                            spalte = 2
-                                        Loop
-
-                                    Else
-                                        noError = False
-                                        errMsg = "File " & dateiName & " does not contain data in column A ..."
-                                        meldungen.Add(errMsg)
-                                    End If
-
-                                Catch ex2 As Exception
-                                    noError = False
-                                    errMsg = "File " & dateiName & ": unidentified error ... "
-                                    meldungen.Add(errMsg)
-                                End Try
-
-                                ' In diesem Fall wurde erfolgreich eingelesen ...
-                                If noError Then
-                                    successList.Add(dateiName)
-                                End If
-
-                                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                            Catch ex As Exception
-                                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                            End Try
-
-                        End If
-
-                    End If
-
+                    ' Einlesen der Kapazität referenziert in file 'dateiName'
+                    ok = readKapaModifier(dateiName, successList, meldungen)
 
                 Next i
 
