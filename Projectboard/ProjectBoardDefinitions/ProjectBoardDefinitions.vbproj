@@ -351,6 +351,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Projekte.vb" />
+    <Compile Include="ProjekteCalc.vb" />
+    <Compile Include="ProjekteZeichne.vb" />
     <Compile Include="Settings.vb" />
   </ItemGroup>
   <ItemGroup>

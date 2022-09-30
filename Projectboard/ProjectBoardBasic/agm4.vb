@@ -525,6 +525,105 @@ Public Module agm4
     End Sub
 
 
+    ''' <summary>
+    ''' liest, falls vorhanden aus ProjectboardConfig.xml die Settings
+    ''' wenn nicht vorhanden, gibt false zurück 
+    ''' </summary>
+    ''' <param name="path"></param>
+    ''' <returns>ob erfolgreich oder nicht </returns>
+    ''' <remarks></remarks>
+    Public Function readawinSettings(ByVal path As String) As Boolean
+
+
+        Dim cfgs As New configuration
+        Dim cfgFile As String = ""
+        If visboClient = divClients(client.VisboSPE) Then
+            cfgFile = path & "\VISBO SPE.dll.config???"
+        Else
+            cfgFile = path & "\ProjectboardConfig.xml"
+        End If
+
+
+        Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
+
+        Try
+
+            cfgs = XMLImportConfig(cfgFile)
+
+            If Not IsNothing(cfgs) Then
+
+                Dim anzahlSettings As Integer = cfgs.applicationSettings.ExcelWorkbook1MySettings.Length
+
+                For i = 0 To anzahlSettings - 1
+
+                    Select Case cfgs.applicationSettings.ExcelWorkbook1MySettings(i).name
+                        Case "mongoDBURL"
+                            awinSettings.databaseURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBname"
+                            awinSettings.databaseName = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBWithSSL"
+                            awinSettings.DBWithSSL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "proxyServerURL"
+                            awinSettings.proxyURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "globalPath"
+                            awinSettings.globalPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "awinPath"
+                            awinSettings.awinPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "TaskClass"
+                            awinSettings.visboTaskClass = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAbbreviation"
+                            awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpel"
+                            awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpelText"
+                            awinSettings.visboAmpelText = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOdeliverables"
+                            awinSettings.visbodeliverables = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOresponsible"
+                            awinSettings.visboresponsible = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOpercentDone"
+                            awinSettings.visbopercentDone = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOMapping"
+                            awinSettings.visboMapping = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "userNamePWD"
+                            awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOServer"
+                            awinSettings.visboServer = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "mongoDBWithSSL"
+                            awinSettings.DBWithSSL = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "VISBODebug"
+                            awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "rememberUserPWD"
+                            awinSettings.rememberUserPwd = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "VISBOMode"
+                            Try
+                                awinSettings.autoLogin = (cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value <> "Demo")
+                            Catch ex As Exception
+
+                            End Try
+
+                    End Select
+                Next
+
+                readawinSettings = True
+
+            Else
+
+                readawinSettings = False
+
+            End If
+
+        Catch ex As Exception
+
+            readawinSettings = False
+
+        End Try
+
+    End Function
+
+
+
+
     Public Function readCustomizations(Optional ByVal customizations As clsCustomization = Nothing) As Date
 
         Dim result As Date = Date.MinValue
