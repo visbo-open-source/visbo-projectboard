@@ -249,7 +249,7 @@ Module rpaModule1
         Dim myName As String = My.Computer.FileSystem.GetName(fname)
         Dim currentWB As xlns.Workbook = Nothing
         Dim allOk As Boolean = False
-
+        Dim listOfArchivFiles As New List(Of String)
         errMessages = New Collection
 
         Try
@@ -297,12 +297,13 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboModifierCapacities)
                     allOk = True
-                    Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
+                    allOk = processModifierExternContracts(fname, importDate, errMessages)
+                    'Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
 
                 Case CInt(PTRpa.visboExternalContracts)
                     allOk = True
                     allOk = processExternalContracts(fname, importDate, errMessages)
-                    Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
+             '       Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
 
 
                 Case CInt(PTRpa.visboActualData1)
@@ -340,10 +341,14 @@ Module rpaModule1
                 Case CInt(PTRpa.visboEGeckoCapacity)
                     allOk = True
                     allOk = processEGeckoCapacity(fname, importDate, errMessages)
-                    Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
+                    'Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
 
                 Case CInt(PTRpa.visboInstartProposal)
                     allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
+                    'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
+
+                Case CInt(PTRpa.visboWWWRessourcen)
+                    allOk = processWWWRessourcen(fname, myActivePortfolio, collectFolder, importDate)
                     'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
@@ -352,8 +357,9 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboZeussCapacity)
                     allOk = True
-                    allOk = processZeussCapacity(fname, importDate, errMessages)
-                    Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
+                    currentWB.Close(SaveChanges:=False)
+                    allOk = processZeussCapacity(fname, importDate, errMessages, listOfArchivFiles)
+                    'Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboFindProjectStart)
 
@@ -418,7 +424,9 @@ Module rpaModule1
                     'Else
                     '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
                     'End If
-                    currentWB.Close(SaveChanges:=False)
+                    If Not IsNothing(currentWB) Then
+                        currentWB.Close(SaveChanges:=False)
+                    End If
                 End If
             Catch ex As Exception
 
@@ -426,9 +434,22 @@ Module rpaModule1
 
             ' here the logfiles and the importfiles will be moved to a folder depending on the result of the import
             If Not rpaCat = PTRpa.visboActualData2 Then
-                Call processResult(fname, allOk, errMessages)
+                If listOfArchivFiles.Count > 0 Then
+                    For Each archivFile As String In listOfArchivFiles
+                        Call processResult(archivFile, allOk, errMessages)
+                    Next
+                Else
+                    Call processResult(fname, allOk, errMessages)
+                End If
             Else
-                Call processResult(fname, allOk, errMessages)
+                If listOfArchivFiles.Count > 0 Then
+                    For Each archivFile As String In listOfArchivFiles
+                        Call processResult(archivFile, allOk, errMessages)
+                    Next
+                Else
+                    Call processResult(fname, allOk, errMessages)
+                End If
+                'Call processResult(fname, allOk, errMessages)
             End If
 
         Catch ex As Exception
@@ -1279,6 +1300,9 @@ Module rpaModule1
                         End If
 
                         ' Check auf Modifier Kapazitäten
+                        If result = PTRpa.visboUnknown Then
+                            result = checkModifierExternKapa(currentWB)
+                        End If
 
                         ' Check auf externe Rahmenverträge 
                         If result = PTRpa.visboUnknown Then
@@ -1289,7 +1313,11 @@ Module rpaModule1
                         If result = PTRpa.visboUnknown Then
                             result = checkInstartUrlaub(currentWB)
                         End If
+
                         ' Check auf Zeuss Kapazitäten... (Telair)
+                        If result = PTRpa.visboUnknown Then
+                            result = checkZeussCapacity(currentWB)
+                        End If
 
                         ' Check auf Ist-Daten 
                         If result = PTRpa.visboUnknown Then
@@ -1320,7 +1348,11 @@ Module rpaModule1
                         If result = PTRpa.visboUnknown Then
                             result = checkInstartProposal(currentWB)
                         End If
-                        ' Check auf VISBO Calculation Template 
+                        ' Check auf Weser Ressourcenplanung 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkWWWRessourcen(currentWB)
+                        End If
+
 
                         currentWB.Close(SaveChanges:=False)
 
@@ -1530,31 +1562,82 @@ Module rpaModule1
 
     End Function
 
+
     ''' <summary>
-    ''' checks whether or not it is a downloaded and edited 
+    ''' checks whether or not it is a ModifierCapacities-File
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
-    Private Function checkExtRahmenvertr(ByVal currentWB As xlns.Workbook) As PTRpa
+    Private Function checkModifierExternKapa(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
-        Dim possibleTableNames() As String = {"externe Vertraege", "externe Rahmenvertraege"}
+        Dim possibleTableNames() As String = {"Kapazität"}
         Dim verifiedStructure As Boolean = False
         Try
 
             Dim currentWS As xlns.Worksheet = Nothing
             Dim found As Boolean = False
 
-            For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Worksheets)
 
-                For Each tblname As String In possibleTableNames
-                    If tmpSheet.Name.StartsWith(tblname) Then
-                        found = True
-                        currentWS = tmpSheet
-                        Exit For
-                    End If
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+
                 Next
+            End If
 
-            Next
+
+            If found Then
+                result = PTRpa.visboModifierCapacities
+            End If
+
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+
+        checkModifierExternKapa = result
+    End Function
+    ''' <summary>
+    ''' checks whether or not it is a File with external Contracts (like Allianz)
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkExtRahmenvertr(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim possibleTableNames() As String = {"externe Vertraege", "externe Rahmenvertraege", "Werte in Euro"}
+        Dim verifiedStructure As Boolean = False
+        Try
+
+            Dim currentWS As xlns.Worksheet = Nothing
+            Dim found As Boolean = False
+
+
+            If IsNothing(currentWB) Then
+                result = PTRpa.visboUnknown
+            Else
+                For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
+
+                    For Each tblname As String In possibleTableNames
+                        If tmpSheet.Name.StartsWith(tblname) Then
+                            found = True
+                            currentWS = tmpSheet
+                            Exit For
+                        End If
+                    Next
+
+                Next
+            End If
+
 
             If found Then
                 result = PTRpa.visboExternalContracts
@@ -1860,6 +1943,49 @@ Module rpaModule1
     End Function
 
     ''' <summary>
+    '''  checks whether or not a file is a Weser Ressourcenplanung
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkWWWRessourcen(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Kostencontrolling"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                Try
+
+                    verifiedStructure = CStr(zweiteZeile.Cells(1, 2).value).Trim.Contains("Projektressourcenplan")
+
+                Catch ex As Exception
+                    verifiedStructure = False
+                End Try
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboWWWRessourcen
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkWWWRessourcen = result
+    End Function
+
+
+
+
+    ''' <summary>
     ''' checks whether or not a file is a Instart Proposal - CalcSheet
     ''' </summary>
     ''' <param name="currentWB"></param>
@@ -1954,6 +2080,61 @@ Module rpaModule1
         End If
 
         checkInstartUrlaub = result
+    End Function
+
+
+
+
+    ''' <summary>
+    ''' checks whether or not a file is a Zeuss (Telair)-Urlaubskalender
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkZeussCapacity(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim fName As String = "Zeuss"   '????
+
+        Dim currentWS As xlns.Worksheet = Nothing
+        Dim found As Boolean = False
+        Dim wb As xlns.Workbook = currentWB
+
+        Try
+            If currentWB.Name.Contains(fName) Then
+
+                currentWS = currentWB.Worksheets.Item(1)
+
+                If IsNothing(currentWS) Then
+                    result = PTRpa.visboUnknown
+                Else
+
+
+                    Dim firstUsefullLine As Integer = CType(currentWS.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlDown).Row
+                    Dim zweiteZeile As xlns.Range = CType(currentWS.Rows.Item(firstUsefullLine), xlns.Range)
+                    Try
+
+                        verifiedStructure = CStr(zweiteZeile.Cells(1, 1).value).Trim.Contains("Jahr:")
+
+                    Catch ex As Exception
+                        verifiedStructure = False
+                    End Try
+
+                    verifiedStructure = True
+
+                End If
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        If verifiedStructure Then
+            result = PTRpa.visboZeussCapacity
+        Else
+            result = PTRpa.visboUnknown
+        End If
+
+        checkZeussCapacity = result
     End Function
 
 
@@ -2127,6 +2308,8 @@ Module rpaModule1
                 Dim startDate As Date = StartofCalendar
                 Dim endDate As Date = startDate.AddDays(vproj.dauerInDays - 1)
                 Dim myProject As clsProjekt = Nothing
+                ' zunächst die eingelesene Vorlage in die Liste der Projektvorlagen hinzufügen
+                Projektvorlagen.Add(vproj)
                 template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
                 If Not IsNothing(template) Then
                     template.name = vproj.VorlagenName
@@ -2604,31 +2787,386 @@ Module rpaModule1
 
     End Function
 
-    Private Function processExternalContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    Private Function processModifierExternContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+        Dim listOfArchivFiles As New List(Of String)
+        Dim result As Boolean = False
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
 
         Dim outputCollection As New Collection
+
+        lastReadingOrganisation = readOrganisations()
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+
+                ' wenn es gibt - lesen der Externen Verträge 
+                result = readKapaModifier(myName, listOfArchivExtern, errMessages)
+
+                If result Then
+                    Call logger(ptErrLevel.logInfo, "Import external contracts from file " & myName & " successful", "processModifierExternContracts", anzFehler)
+                End If
+
+                If listOfArchivExtern.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, external Contracts " & myName & " successfully updated ...", "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities of external contract " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+                            End If
+
+                            result = resultSum
+
+                        Else
+                            Call logger(ptErrLevel.logError, "ok, external Contracts " & myName & " temporarily updated ...", "", -1)
+
+                        End If
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call logger(ptErrLevel.logError, "no Files to import ...", "processModifierExternContracts: ", anzFehler)
+                        Else
+                            Call logger(ptErrLevel.logError, "es gab keine Dateien zum Einlesen ... ", "processModifierExternContracts: ", anzFehler)
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call logger(ptErrLevel.logError, "No valid roles! Please import one first!", "processModifierExternContracts: ", anzFehler)
+                Else
+                    Call logger(ptErrLevel.logError, "Die gültige Organisation beinhaltet keine Rollen! ", "processModifierExternContracts: ", anzFehler)
+
+                End If
+            End If
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call logger(ptErrLevel.logError, "No valid organization! Please import one first!", "processModifierExternContracts: ", anzFehler)
+            Else
+                Call logger(ptErrLevel.logError, "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren", "processModifierExternContracts: ", anzFehler)
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+
+        End If
+
+        processModifierExternContracts = result
+    End Function
+
+
+    Private Function processExternalContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
         Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listOfArchivFiles As New List(Of String)
+        Dim result As Boolean = False
 
-        ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
-        Dim listOfArchivExtern As New List(Of String)
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
 
-        ' wenn es gibt - lesen der Externen Verträge 
-        Call readMonthlyExternKapasEV(outputCollection, listOfArchivExtern)
+        Dim outputCollection As New Collection
+
+        lastReadingOrganisation = readOrganisations()
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
 
 
-        processExternalContracts = True
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+
+                ' wenn es gibt - lesen der Externen Verträge 
+                result = readKapaExtern(myName, listOfArchivExtern, errMessages)
+
+                If result Then
+                    Call logger(ptErrLevel.logInfo, "Import external contracts from file " & myName & " successful", "readMonthlyExternKapasEV", anzFehler)
+                End If
+
+                If listOfArchivExtern.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, external Contracts " & myName & " successfully updated ...", "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+
+                                '' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
+                                'Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities of external contract " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listOfArchivExtern
+                            End If
+
+                            result = resultSum
+
+                        Else
+                            Call logger(ptErrLevel.logError, "ok, external Contracts " & myName & " temporarily updated ...", "", -1)
+
+                        End If
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no Files to import ...")
+                        Else
+                            Call MsgBox("es gab keine Dateien zum Einlesen ... ")
+
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+        End If
+
+        processExternalContracts = result
     End Function
 
 
     Private Function processEGeckoCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim result As Boolean = False
-        result = processZeussCapacity(myName, importDate, errMessages)
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivConfig As New List(Of String)
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim outputCollection As New Collection
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+
+                ' wenn es gibt - lesen der EGecko-Files o.ä., die durch configCapaImport beschrieben sind
+                Dim configCapaImport As String = configfilesOrdner & "\" & "configCapaImport.xlsx"
+                If My.Computer.FileSystem.FileExists(configCapaImport) Then
+
+                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection, myName)
+                Else
+                    outPutline = "There is no Config-File for the capacities!"
+                    Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)
+                End If
+
+                If listofArchivConfig.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' Dim orga As clsOrganisation = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' tk wozu brauche ich das hier ? 
+                            ' orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
+                            End If
+
+                        Else
+                            'Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
+                            Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                        End If
+
+                        result = resultSum
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no Files to import ...")
+                        Else
+                            Call MsgBox("es gab keine Dateien zum Einlesen ... ")
+
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
         processEGeckoCapacity = result
 
     End Function
 
-    Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection, ByRef listOfArchivFiles As List(Of String)) As Boolean
 
 
         Dim actualDataFile As String = ""
@@ -2637,6 +3175,8 @@ Module rpaModule1
         Dim lastrow As Integer = 0
         Dim listofArchivUrlaub As New List(Of String)
         Dim listofArchivConfig As New List(Of String)
+        Dim configActualDataImport As String = "configActualDataImport.xlsx"
+        Dim result As Boolean = False
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -2669,13 +3209,15 @@ Module rpaModule1
 
                 ''  check Config-File - zum Einlesen der Istdaten gemäß Konfiguration -
                 ''  - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
-                Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+                configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+                configActualDataImport = configfilesOrdner & "\" & "configActualDataImport.xlsx"
                 Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
+
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-                Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
+                Dim configCapaImport As String = configfilesOrdner & "\" & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection, myName)
                 Else
                     outPutline = "There is no Config-File for the capacities!"
                     Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)
@@ -2697,7 +3239,7 @@ Module rpaModule1
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
 
                             ' tk wozu brauche ich das hier ? 
                             ' orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
@@ -2706,24 +3248,25 @@ Module rpaModule1
                             resultSum = storeCapasOfRoles()
 
                             If resultSum = True Then
-                                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                                 Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                                listOfArchivFiles = listofArchivConfig
 
-                                ' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
-                                Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
-                                ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                                Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                                ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                                Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
+                                'Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                                '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                                'Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
 
                             Else
-                                Call MsgBox("Error when writing Capacities to Database:" & vbCrLf & err.errorMsg)
                                 Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listofArchivConfig
                             End If
 
+                            result = resultSum
+
                         Else
-                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
-                            Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                            Call logger(ptErrLevel.logError, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                             ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
                             'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
                             '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
@@ -2777,17 +3320,11 @@ Module rpaModule1
 
         End If
 
-        ' Schließen des LogFiles
-        ''Call logfileSchliessen()
-
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), xlns.Workbook).Worksheets(arrWsNames(ptTables.MPT)), xlns.Worksheet)
-            .Activate()
-        End With
         appInstance.ScreenUpdating = True
-        processZeussCapacity = True
+        processZeussCapacity = result
     End Function
 
 
@@ -2847,7 +3384,7 @@ Module rpaModule1
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         ' Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                        If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or visboClient = "VISBO RPA / " Then
+                        If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or myCustomUserRole.customUserRole = ptCustomUserRoles.Alles) Or (visboClient = divClients(client.VisboRPA)) Then
 
 
                             ' tk 13.4.22 wozu brauchen wir das hier ? 
@@ -3815,6 +4352,130 @@ Module rpaModule1
 
 
 
+    Public Function processWWWRessourcen(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim allOk As Boolean = True
+        Dim aktDateTime As Date = Date.Now
+        Dim instartImportConfigOK As Boolean = False
+
+
+        Call logger(ptErrLevel.logInfo, "start Processing: " & PTRpa.visboProposal.ToString, myName)
+
+        'check the pre-conditions
+        If DateDiff(DateInterval.Hour, lastReadingOrganisation, aktDateTime) > 2 Then
+            lastReadingOrganisation = readOrganisations()
+        End If
+
+
+        ' cache löschen
+        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).clearCache()
+
+
+        'read File with Proposals Instart and put it into ImportProjekte
+        Try
+            '' read the file and import into hproj
+            'Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+            Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+            Dim projectsFile As String = ""
+            Dim lastrow As Integer = 0
+            Dim outputString As String = ""
+            Dim dateiName As String = ""
+            Dim listofArchivAllg As New List(Of String)
+            Dim outPutCollection As New Collection
+            Dim configWWWRessourcenImport As String = "configCalcTemplateImport.xlsx"
+
+
+            Dim outputLine As String = ""
+
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
+            ' Konfigurationsdatei lesen und Validierung durchführen
+
+            ' wenn es gibt - lesen der Jira und anderer, die durch configCapaImport beschrieben sind
+            ' no longer necessary
+            ' Dim configJIRAProjects As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configJIRAProjectImport.xlsx")
+
+            ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            configWWWRessourcenImport = configfilesOrdner & "\" & configWWWRessourcenImport
+            Dim allesOK As Boolean = checkProjectImportConfig(configWWWRessourcenImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+            If allesOK Then
+
+                Dim listofVorlagen As New Collection
+                listofVorlagen.Add(myName)
+                If projectsFile = projectConfig("DateiName").ProjectsFile Then
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection, ptImportTypen.instartCalcTemplateImport)
+                End If
+
+
+                allesOK = (listofArchivAllg.Count > 0 And outPutCollection.Count = 0)
+
+                If allesOK Then
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                        ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False, calledFromRPA:=True)
+
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            outputString = "Error at Import: " & vbLf & ex.Message
+                        Else
+                            outputString = "Fehler bei Import: " & vbLf & ex.Message
+                        End If
+                        outPutCollection.Add(outputString)
+
+                    End Try
+
+                Else
+
+                    Call logger(ptErrLevel.logError, "checkProjectImportConfig", outPutCollection)
+
+                End If
+
+                outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.txt"
+                outPutCollection.Add(outputString)
+
+                If outPutCollection.Count > 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+                    Else
+                        Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+                    End If
+                End If
+
+            End If
+
+
+            allOk = allOk And allesOK
+
+        Catch ex2 As Exception
+            allOk = False
+        End Try
+
+        Try
+            ' store Projects
+            If allOk Then
+                allOk = storeImportProjekte()
+            End If
+
+            ' empty session 
+            Call emptyRPASession()
+
+            Call logger(ptErrLevel.logInfo, "end Processing: " & PTRpa.visboProposal.ToString, myName)
+
+        Catch ex1 As Exception
+            allOk = False
+            Call logger(ptErrLevel.logError, "RPA Error Importing Projects Proposal", ex1.Message)
+        End Try
+
+
+
+        processWWWRessourcen = allOk
+    End Function
+
+
+
     Public Function processNewTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
@@ -3858,6 +4519,7 @@ Module rpaModule1
 
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            configProjectsImport = configfilesOrdner & "\" & configProjectsImport
             telairImportConfigOK = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
 
             If outPutCollection.Count > 0 Then
@@ -3989,6 +4651,9 @@ Module rpaModule1
 
 
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+            ' Konfigurationsdatei lesen und Validierung durchführen
+            configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+            configProjectsUpdates = configfilesOrdner & "\" & configProjectsUpdates
             telairUpdateConfigOK = checkProjectImportConfig(configProjectsUpdates, projectsFile, projectConfig, lastrow, outPutCollection)
 
             If outPutCollection.Count > 0 Then
@@ -4112,8 +4777,8 @@ Module rpaModule1
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
             ' Konfigurationsdatei lesen und Validierung durchführen
-
-
+            configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+            configCostAssertionImport = configfilesOrdner & "\" & configCostAssertionImport
             ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
             telairCostAssertionImportConfigOK = checkProjectImportConfig(configCostAssertionImport, projectsFile, projectCostAssertConfig, lastrow, outPutCollection)
 
@@ -4373,7 +5038,7 @@ Module rpaModule1
                 'FileExtension ansehen
                 Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
                 Select Case fileExt
-                    Case ".xlsx"
+                    Case ".xlsx", ".xlsm"
 
                         myName = My.Computer.FileSystem.GetName(fullFileName)
 
@@ -4391,6 +5056,26 @@ Module rpaModule1
                                 Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
                             End If
                         End If
+
+                    Case ".xlsm"
+
+                        myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                        ' Bestimme den Import-Typ der zu importierenden Daten
+                        rpaCategory = bestimmeRPACategory(fullFileName)
+
+                        If rpaCategory = PTRpa.visboUnknown Then
+                            ' move file to unknown Folder ... 
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                        Else
+                            result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                            If result Then
+                                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                            End If
+                        End If
+
                     Case ".mpp"
 
                         myName = My.Computer.FileSystem.GetName(fullFileName)
