@@ -3978,7 +3978,7 @@ Module rpaModule1
                                 logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
                             Next
 
-                            Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
+                            Call logger(ptErrLevel.logInfo, "PTImportIstDaten", logArray, logDblArray)
                         Next
 
                     Next
@@ -4937,7 +4937,11 @@ Module rpaModule1
             End If
         End If
 
-        Dim ok As Boolean = cancelLocksMyProjects(dbUsername)
+        Try
+            Dim ok As Boolean = cancelLocksMyProjects(dbUsername)
+        Catch ex As Exception
+            ' evt. keine locks vorhanden
+        End Try
 
         ' wieder in das normale logfile schreiben
         logfileNamePath = createLogfileName(rpaFolder)
