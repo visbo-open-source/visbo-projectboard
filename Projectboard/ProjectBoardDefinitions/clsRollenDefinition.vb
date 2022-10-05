@@ -168,7 +168,7 @@
     End Function
 
     ''' <summary>
-    ''' returns true, when role is active during timeframe given by fromDateCol and toDateCol
+    ''' returns true, when role is active during timeframe given by fromDateCol and toDateCol 
     ''' </summary>
     ''' <param name="fromDateCol"></param>
     ''' <param name="toDateCol"></param>
@@ -181,6 +181,7 @@
             Dim columnOfExitDate As Integer = getColumnOfDate(exitDate)
 
             result = columnOfEntryDate <= toDateCol And columnOfExitDate > fromDateCol
+
         End If
 
         isActiveRole = result
