@@ -4185,6 +4185,69 @@ Public Class Request
         retrieveConfigurationsFromDB = webconfiguration
     End Function
 
+
+
+
+    Public Function retrieveCustomSettingsRPAFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As clsCustomSettingsRPA
+
+        Dim result As clsCustomSettingsRPA = Nothing
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.customSettingRPA)
+
+        timestamp = timestamp.ToUniversalTime
+
+        Dim webCustomSettRPA As New clsCustomSettingsRPA
+        Try
+
+            setting = New List(Of clsCustomSettingRPA)
+            setting = GETOneVCsetting(aktVCid, type, name, timestamp, "", err, refnext)
+
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
+
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomSettingsRPA)).Count
+
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
+                            result = New clsCustomSettingsRPA
+                            settingID = CType(setting, List(Of clsVCSettingCustomSettingsRPA)).ElementAt(0)._id
+                            webCustomSettRPA = CType(setting, List(Of clsVCSettingCustomSettingsRPA)).ElementAt(0).value
+                            'webconfiguration.copyto(result)
+
+                        Else
+                            ' Fehler: es gibt nur eine Configuration pro name
+                        End If
+
+                    Else
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
+
+                    End If
+                Else
+                    Call MsgBox(err.errorMsg)
+
+                End If
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveCustomSettingsRPAFromDB = webCustomSettRPA
+    End Function
+
     ''' <summary>
     ''' Es werden alle vcName in einer Liste zurückgegeben, auf die der akt. User (akt. Token) Zugriff hat
     ''' </summary>
@@ -7095,6 +7158,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.importConfiguration)
                     result = CType(result, clsVCSettingConfiguration)
 
+                Case settingTypes(ptSettingTypes.customSettingRPA)
+                    result = CType(result, clsVCSettingCustomSettingsRPA)
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -7174,9 +7240,11 @@ Public Class Request
                             result = CType(webVCsetting.vcsetting, List(Of clsVCSettingAppearance))
                         Case settingTypes(ptSettingTypes.importConfiguration)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingconfiguration)(Antwort)
-                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingConfiguration))
+                        Case settingTypes(ptSettingTypes.customSettingRPA)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomSettingRPA)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomSettingsRPA))
                         Case Else
-                            Call MsgBox("settingType = " & type)
+                            Call MsgBox("searched settingType = " & type)
                     End Select
 
                     If awinSettings.visboDebug Then

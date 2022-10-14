@@ -97,6 +97,16 @@ Public Class clsVCSettingConfiguration
 
 End Class
 
+Public Class clsVCSettingCustomSettingsRPA
+    Inherits clsVCSetting
+    Public Property value As clsCustomSettingsRPA
+
+    Sub New()
+        _value = New clsCustomSettingsRPA
+    End Sub
+
+End Class
+
 
 
 

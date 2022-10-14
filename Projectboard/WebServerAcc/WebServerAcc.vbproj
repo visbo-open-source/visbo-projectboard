@@ -81,8 +81,10 @@
     <Compile Include="clsConfigurationWeb.vb" />
     <Compile Include="clsCustomFieldDefinitionsWeb.vb" />
     <Compile Include="clsCustomizationWeb.vb" />
+    <Compile Include="clsCustomSettingsRPA.vb" />
     <Compile Include="clsCustomUserRolesWeb.vb" />
     <Compile Include="clsCustomUserRoleWeb.vb" />
+    <Compile Include="clsCustomSettingRPA.vb" />
     <Compile Include="clsEmail.vb" />
     <Compile Include="clsHierarchyWeb.vb" />
     <Compile Include="clsHryNodeWeb.vb" />
@@ -126,6 +128,7 @@
     <Compile Include="clsVPfItem.vb" />
     <Compile Include="clsWebVCcost.vb" />
     <Compile Include="clsWebVCrole.vb" />
+    <Compile Include="clsWebVCSettingCustomSettingRPA.vb" />
     <Compile Include="clsWebVCSettingEverything.vb" />
     <Compile Include="clsWebVCSettingOrganisation.vb" />
     <Compile Include="clsWebVCTSOrganisation.vb" />

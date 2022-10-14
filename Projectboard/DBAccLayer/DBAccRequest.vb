@@ -3179,7 +3179,54 @@ Public Class Request
 
                     End If
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
 
+            Else
+                ' to do for direct MongoAccess
+                ' to do for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+            logger(ptErrLevel.logDebug, "retrieveConfigurationsFromDB", "There is something wrong, reading the Configurations: (" & err.errorCode & ") " & err.errorMsg)
+        End Try
+
+        retrieveConfigurationsFromDB = result.configLines
+
+    End Function
+
+
+    Public Function retrieveCustomSettingsRPAFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As List(Of clsCustomSettingRPA)
+
+        Dim result As clsCustomSettingsRPA = Nothing
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomSettingsRPAFromDB(name, timestamp, refnext, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomSettingsRPAFromDB(name, timestamp, refnext, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
 
                 Catch ex As Exception
                     Throw New ArgumentException(ex.Message)
@@ -3188,15 +3235,13 @@ Public Class Request
             Else
                 ' to do for direct MongoAccess
                 ' to do for direct MongoAccess
-
-
             End If
 
         Catch ex As Exception
-            logger(ptErrLevel.logDebug, "retrieveConfigurationsFromDB", "There is something wrong, reading the Configurations: (" & err.errorCode & ") " & err.errorMsg)
+            logger(ptErrLevel.logDebug, "retrieveCustomSettingsRPAFromDB", "There is something wrong, reading the CustomUserSettingsRPA: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
-        retrieveConfigurationsFromDB = result.configLines
+        retrieveCustomSettingsRPAFromDB = result.customUserSettingsRPA
 
 
     End Function
