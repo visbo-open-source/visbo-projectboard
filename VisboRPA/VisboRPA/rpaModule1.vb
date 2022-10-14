@@ -17,6 +17,8 @@ Module rpaModule1
     Public myActivePortfolio As String
     Public myVC As String
     Public inputvalues As clsRPASetting
+    ' indicates if or if not successful Import will send an email
+    Public noSucessEmails As Boolean
 
     Public rpaPath As String
     Public swPath As String
@@ -51,6 +53,9 @@ Module rpaModule1
         ' automation in resource And team allocation will follow
 
         Dim actDir = My.Computer.FileSystem.CurrentDirectory
+
+        ' success Emails will be sent
+        noSucessEmails = False
 
         'Call MsgBox("TempFile:" & tempFile)
 
@@ -4898,9 +4903,16 @@ Module rpaModule1
             My.Computer.FileSystem.MoveFile(fullfileName, newDestination, True)
             Call logger(ptErrLevel.logInfo, "success: ", myName)
 
-            errMsgCode = New clsErrorCodeMsg
-            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ..." & vbCrLf _
-                                                                            & mailMessage, errMsgCode)
+            If noSucessEmails Then
+
+                ' do nothing
+            Else
+
+                errMsgCode = New clsErrorCodeMsg
+                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ..." & vbCrLf _
+                                                                                & mailMessage, errMsgCode)
+            End If
+
 
         Else
             Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
@@ -4913,19 +4925,6 @@ Module rpaModule1
                 Dim logfileName As String = My.Computer.FileSystem.GetName(logfileNamePath)
                 Dim newLog As String = My.Computer.FileSystem.CombinePath(failureFolder, logfileName)
                 My.Computer.FileSystem.MoveFile(logfileNamePath, newLog, True)
-
-                'Dim mailMessage As String = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & vbCrLf
-
-                'For i As Integer = 1 To meldungen.Count
-                '    Dim text As String = CStr(meldungen.Item(i))
-                '    mailMessage = mailMessage & text & vbCrLf
-                'Next
-
-                'For i As Integer = 1 To errMessages.Count
-                '    Dim text As String = CStr(errMessages.Item(i))
-                '    mailMessage = mailMessage & text & vbCrLf
-                'Next
-
 
                 errMsgCode = New clsErrorCodeMsg
                 'result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
@@ -5015,8 +5014,16 @@ Module rpaModule1
 
                 ' wieder in das normale logfile schreiben
                 logfileNamePath = createLogfileName(rpaFolder)
-                errMsgCode = New clsErrorCodeMsg
-                result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+
+                If noSucessEmails Then
+
+                    ' do nothing
+                Else
+
+                    errMsgCode = New clsErrorCodeMsg
+                    result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf & myName & ": successful ...", errMsgCode)
+                End If
+
             Else
                 Dim newDestination As String = My.Computer.FileSystem.CombinePath(failureFolder, myName)
                 If My.Computer.FileSystem.FileExists(fullFileName) Then
