@@ -1439,9 +1439,12 @@ Public Class Request
                                     End If
                                 Next
                                 If newManager.Count > 0 Then
+                                    ' Project lead in VP eintragen
                                     Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                                     If vpList.Count <= 0 Then
                                         Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                    Else
+                                        Call logger(ptErrLevel.logInfo, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID successful! ")
                                     End If
                                 End If
                             End If
@@ -3272,7 +3275,7 @@ Public Class Request
                         settingID = ""
                     End If
 
-                Case settingTypes(ptSettingTypes.Customization)
+                Case settingTypes(ptSettingTypes.customization)
                     setting = New List(Of clsVCSettingCustomization)
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingCustomization)).Count
