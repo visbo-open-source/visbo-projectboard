@@ -1422,7 +1422,10 @@ Public Class Request
                     ' action to invite the project.leadPerson into the new created project
 
                     If Not IsNothing(projekt.leadPerson) And projekt.leadPerson <> "" Then
-                        'Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+                        Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+                        If userlist.Count = 1 Then
+                            projekt.leadPerson = userlist.ElementAt(0).email
+                        End If
 
                         Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
                         ' find visbo Project Admin GroupID
@@ -1432,7 +1435,7 @@ Public Class Request
                                 Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
                                 For Each u In newManager
                                     If LCase(u.email) = LCase(projekt.leadPerson) Then
-                                        aktvp.managerID = u.userId
+                                        aktvp.managerId = u.userId
                                     End If
                                 Next
                                 If newManager.Count > 0 Then
@@ -2713,7 +2716,7 @@ Public Class Request
                             ' do nothing
                         Else
                             err.errorCode = 0
-                        err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
+                            err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
                             Return result
                         End If
 
@@ -3494,8 +3497,13 @@ Public Class Request
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
             allUsers = GETallUserOfVC(aktVCid, err)
 
-            For Each pers In allUsers
-                If LCase(pers.email) = LCase(userEmail) Then
+            For Each pers As clsUserReg In allUsers
+                Dim a As Boolean = LCase(userEmail).Contains(LCase(pers.email))
+                Dim b As Boolean = LCase(userEmail).Contains(LCase(pers.profile.firstname))
+                Dim c As Boolean = LCase(userEmail).Contains(LCase(pers.profile.lastname))
+
+                If (LCase(userEmail).Contains((pers.email))) Or
+                    ((LCase(userEmail).Contains(LCase(pers.profile.firstname))) And (LCase(userEmail).Contains(LCase(pers.profile.lastname)))) Then
                     result.Add(pers)
                 End If
             Next
