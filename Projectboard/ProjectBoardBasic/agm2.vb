@@ -6263,7 +6263,13 @@ Public Module agm2
                                             arrayOfSpalten(i - nrOfStdColumns) = i + spalte ' spalte = immer 1
                                         Next
 
-                                        Call readCustomFieldsFromExcel(arrayOfSpalten, 1, zeile, activeWSListe)
+                                        'Call readCustomFieldsFromExcel(arrayOfSpalten, 1, zeile, activeWSListe)
+                                        ' tk 24.10.22
+                                        Try
+                                            custFields = readCustomFieldsFromExcel(arrayOfSpalten, 1, zeile, activeWSListe)
+                                        Catch ex As Exception
+                                            custFields.Clear()
+                                        End Try
 
                                     End If
 

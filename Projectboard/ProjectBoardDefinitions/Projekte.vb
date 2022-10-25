@@ -13873,6 +13873,25 @@ Public Module Projekte
                         End If
                     End If
                 End If
+
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+            ' wenn Enacted Savings als Custom Field definiert sind ..
+            Try
+                Dim enactedSavings As Double = newprojekt.getCustomDField("Enacted Savings")
+                If Not IsNothing(enactedSavings) Then
+                    If enactedSavings > 0 Then
+                        Dim myEnactedSavingsMilestone As clsMeilenstein = newprojekt.getMilestone("Enacted Savings")
+                        If Not IsNothing(myEnactedSavingsMilestone) Then
+                            myEnactedSavingsMilestone.invoice = New KeyValuePair(Of Double, Integer)(enactedSavings, 0)
+                        End If
+                    End If
+                End If
             Catch ex As Exception
 
             End Try
