@@ -578,7 +578,13 @@ Public Class frmMEhryRoleCost
             currentSkill = RoleDefinitions.getRoledef(skillName)
         End If
 
-        If currentRole.isActiveRole Then
+        ' get the phase beginning and end to decide whether the role can be planned with
+        Dim hphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+        Dim fromDateCol As Integer = getColumnOfDate(hphase.getStartDate)
+        Dim toDateCol As Integer = getColumnOfDate(hphase.getEndDate)
+        Dim actualDataCol As Integer = getColumnOfDate(hproj.actualDataUntil)
+
+        If currentRole.isActiveRole(Math.Max(fromDateCol, actualDataCol), toDateCol) Then
             Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
             Dim currentNode As TreeNode

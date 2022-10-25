@@ -337,16 +337,35 @@ Public Class VisboRPAStart
 
     Private Sub btn_start_Click(sender As Object, e As EventArgs) Handles btn_start.Click
 
+        Dim err As New clsErrorCodeMsg
+
+        ' read the settings for the chosen VC
+
+        Dim customSetting As New List(Of clsCustomSettingRPA)
+        customSetting = CType(databaseAcc, DBAccLayer.Request).retrieveCustomSettingsRPAFromDB("", Date.Now, False, err)
+        Dim anwender As String = dbUsername
+
+        Dim found As Boolean = False
+        Dim i As Integer = 0
+
+        While Not found And i < customSetting.Count
+            found = customSetting.ElementAt(i).userName.Contains(dbUsername)
+            If found Then
+                noSucessEmails = Not customSetting.ElementAt(i).successEmail
+            End If
+            i = i + 1
+        End While
+
         If Not IsNothing(rpaDir.Text) Then
             rpaFolder = rpaDir.Text
         End If
 
         If My.Computer.FileSystem.DirectoryExists(rpaFolder) Then
-                'this is the path we want to monitor
-                watchFolder.Path = rpaFolder
+            'this is the path we want to monitor
+            watchFolder.Path = rpaFolder
 
-                'Set this property to true to start watching
-                watchFolder.EnableRaisingEvents = True
+            'Set this property to true to start watching
+            watchFolder.EnableRaisingEvents = True
 
             Call startWatching(rpaFolder)
         Else

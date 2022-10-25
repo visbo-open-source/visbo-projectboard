@@ -1422,7 +1422,10 @@ Public Class Request
                     ' action to invite the project.leadPerson into the new created project
 
                     If Not IsNothing(projekt.leadPerson) And projekt.leadPerson <> "" Then
-                        'Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+                        Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+                        If userlist.Count = 1 Then
+                            projekt.leadPerson = userlist.ElementAt(0).email
+                        End If
 
                         Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
                         ' find visbo Project Admin GroupID
@@ -1432,13 +1435,16 @@ Public Class Request
                                 Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
                                 For Each u In newManager
                                     If LCase(u.email) = LCase(projekt.leadPerson) Then
-                                        aktvp.managerID = u.userId
+                                        aktvp.managerId = u.userId
                                     End If
                                 Next
                                 If newManager.Count > 0 Then
+                                    ' Project lead in VP eintragen
                                     Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                                     If vpList.Count <= 0 Then
                                         Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                    Else
+                                        Call logger(ptErrLevel.logInfo, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID successful! ")
                                     End If
                                 End If
                             End If
@@ -2713,7 +2719,7 @@ Public Class Request
                             ' do nothing
                         Else
                             err.errorCode = 0
-                        err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
+                            err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
                             Return result
                         End If
 
@@ -3269,7 +3275,7 @@ Public Class Request
                         settingID = ""
                     End If
 
-                Case settingTypes(ptSettingTypes.Customization)
+                Case settingTypes(ptSettingTypes.customization)
                     setting = New List(Of clsVCSettingCustomization)
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingCustomization)).Count
@@ -3494,8 +3500,13 @@ Public Class Request
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
             allUsers = GETallUserOfVC(aktVCid, err)
 
-            For Each pers In allUsers
-                If LCase(pers.email) = LCase(userEmail) Then
+            For Each pers As clsUserReg In allUsers
+                Dim a As Boolean = LCase(userEmail).Contains(LCase(pers.email))
+                Dim b As Boolean = LCase(userEmail).Contains(LCase(pers.profile.firstname))
+                Dim c As Boolean = LCase(userEmail).Contains(LCase(pers.profile.lastname))
+
+                If (LCase(userEmail).Contains((pers.email))) Or
+                    ((LCase(userEmail).Contains(LCase(pers.profile.firstname))) And (LCase(userEmail).Contains(LCase(pers.profile.lastname)))) Then
                     result.Add(pers)
                 End If
             Next
@@ -4183,6 +4194,69 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
         retrieveConfigurationsFromDB = webconfiguration
+    End Function
+
+
+
+
+    Public Function retrieveCustomSettingsRPAFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As clsCustomSettingsRPA
+
+        Dim result As clsCustomSettingsRPA = Nothing
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.customSettingRPA)
+
+        timestamp = timestamp.ToUniversalTime
+
+        Dim webCustomSettRPA As New clsCustomSettingsRPA
+        Try
+
+            setting = New List(Of clsCustomSettingRPA)
+            setting = GETOneVCsetting(aktVCid, type, name, timestamp, "", err, refnext)
+
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
+
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomSettingsRPA)).Count
+
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
+                            result = New clsCustomSettingsRPA
+                            settingID = CType(setting, List(Of clsVCSettingCustomSettingsRPA)).ElementAt(0)._id
+                            webCustomSettRPA = CType(setting, List(Of clsVCSettingCustomSettingsRPA)).ElementAt(0).value
+                            'webconfiguration.copyto(result)
+
+                        Else
+                            ' Fehler: es gibt nur eine Configuration pro name
+                        End If
+
+                    Else
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
+
+                    End If
+                Else
+                    Call MsgBox(err.errorMsg)
+
+                End If
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveCustomSettingsRPAFromDB = webCustomSettRPA
     End Function
 
     ''' <summary>
@@ -7095,6 +7169,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.importConfiguration)
                     result = CType(result, clsVCSettingConfiguration)
 
+                Case settingTypes(ptSettingTypes.customSettingRPA)
+                    result = CType(result, clsVCSettingCustomSettingsRPA)
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -7174,9 +7251,11 @@ Public Class Request
                             result = CType(webVCsetting.vcsetting, List(Of clsVCSettingAppearance))
                         Case settingTypes(ptSettingTypes.importConfiguration)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingconfiguration)(Antwort)
-                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingConfiguration))
+                        Case settingTypes(ptSettingTypes.customSettingRPA)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomSettingRPA)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomSettingsRPA))
                         Case Else
-                            Call MsgBox("settingType = " & type)
+                            Call MsgBox("searched settingType = " & type)
                     End Select
 
                     If awinSettings.visboDebug Then
