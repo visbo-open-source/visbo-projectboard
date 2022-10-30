@@ -2153,8 +2153,19 @@ Module rpaTkModule
                             Dim stdDuration As Integer = hproj.dauerInDays
                             Dim myDuration As Integer = stdDuration
                             'Dim minDuration As Integer = CInt(stdDuration * 0.7)
-                            Dim minDuration As Integer = CInt(stdDuration * rankingPair.Value.shortestDuration)
-                            Dim maxDuration As Integer = CInt(stdDuration * rankingPair.Value.longestDuration)
+
+                            Dim minDuration As Integer
+                            Dim maxDuration As Integer
+                            If rankingPair.Value.shortestDuration > 5 Then
+                                minDuration = System.Math.Min(rankingPair.Value.shortestDuration, stdDuration)
+                                maxDuration = System.Math.Max(rankingPair.Value.longestDuration, stdDuration)
+                            Else
+                                minDuration = CInt(stdDuration * rankingPair.Value.shortestDuration)
+                                maxDuration = CInt(stdDuration * rankingPair.Value.longestDuration)
+                            End If
+
+
+
 
                             Dim startOffset As Integer = 0
                             Dim durationModifier As Integer = (stdDuration - minDuration)
