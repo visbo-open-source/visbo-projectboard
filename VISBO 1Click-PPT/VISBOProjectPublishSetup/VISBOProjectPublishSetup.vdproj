@@ -33,6 +33,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1F86A399DBE340588348C6B4AF702A8E"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_22875862F3111991CE8D4FDDE8FF148B"
         "OwnerKey" = "8:_6E41DD989B3A429AB809A38DB78C3AEC"
         "MsmSig" = "8:_UNDEFINED"
@@ -47,12 +53,6 @@
         {
         "MsmKey" = "8:_252FD2F3283B0EFCF88576CF60138242"
         "OwnerKey" = "8:_6E41DD989B3A429AB809A38DB78C3AEC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_37EB1DD82D494539B8C8B73C5F6A3324"
-        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -125,12 +125,6 @@
         {
         "MsmKey" = "8:_8A641A79BF83FBF3FFF237BD5AA01240"
         "OwnerKey" = "8:_6E41DD989B3A429AB809A38DB78C3AEC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_9354AD14BF684E2CA137FA1172B48870"
-        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -512,6 +506,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1F86A399DBE340588348C6B4AF702A8E"
+            {
+            "SourcePath" = "8:..\\..\\..\\..\\..\\OneDrive\\Bilder\\Bild Material Allgemein\\Visbo-Database2.ico"
+            "TargetName" = "8:Visbo-Database2.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_22875862F3111991CE8D4FDDE8FF148B"
             {
             "AssemblyRegister" = "3:1"
@@ -572,26 +586,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_37EB1DD82D494539B8C8B73C5F6A3324"
-            {
-            "SourcePath" = "8:..\\..\\..\\..\\..\\OneDrive - visbo.de\\Bilder\\Saved Pictures\\visbo_icon.ico"
-            "TargetName" = "8:visbo_icon.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4D31D9FC2B238B42542D185E737AAD55"
@@ -798,26 +792,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9354AD14BF684E2CA137FA1172B48870"
-            {
-            "SourcePath" = "8:..\\..\\..\\..\\..\\OneDrive\\VISBO Sales 2019\\Bild Material Allgemein\\VISBO Icons\\Visbo-Database2.ico"
-            "TargetName" = "8:Visbo-Database2.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9BEE8C7795DA25AF484CAC17015C3AF9"
@@ -1077,15 +1051,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO ProjectPublish"
-        "ProductCode" = "8:{23854218-6102-445C-9353-179797CB0867}"
-        "PackageCode" = "8:{58B07B78-4640-4FB2-BF73-0C7B000135B6}"
+        "ProductCode" = "8:{BD373329-F303-4642-B96B-51A6F4B1E815}"
+        "PackageCode" = "8:{70AAACA3-28C3-411A-9626-D53D5062E860}"
         "UpgradeCode" = "8:{9D50FE51-59BB-4B6C-B5C0-B906B864B32A}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:5.0.3"
+        "ProductVersion" = "8:5.0.4"
         "Manufacturer" = "8:VISBO"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1095,7 +1069,7 @@
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:Project Publish"
         "ARPURLINFOABOUT" = "8:https://visbo.de"
-        "ARPPRODUCTICON" = "8:_9354AD14BF684E2CA137FA1172B48870"
+        "ARPPRODUCTICON" = "8:_1F86A399DBE340588348C6B4AF702A8E"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -1413,7 +1387,7 @@
             "Target" = "8:_6E41DD989B3A429AB809A38DB78C3AEC"
             "Folder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
             "WorkingFolder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
-            "Icon" = "8:_37EB1DD82D494539B8C8B73C5F6A3324"
+            "Icon" = "8:_1F86A399DBE340588348C6B4AF702A8E"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_200851B27DE34372BFC4990490CAB6FE"
@@ -1427,7 +1401,7 @@
             "Target" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
             "Folder" = "8:_D8738F09497948E6B0A3E46F4FC8004F"
             "WorkingFolder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
-            "Icon" = "8:_37EB1DD82D494539B8C8B73C5F6A3324"
+            "Icon" = "8:_1F86A399DBE340588348C6B4AF702A8E"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_37B29E7416004457B612AB9991E985EF"
@@ -1441,7 +1415,7 @@
             "Target" = "8:_6E41DD989B3A429AB809A38DB78C3AEC"
             "Folder" = "8:_52E0BF3E69CE42188EF964BB6B6EBB94"
             "WorkingFolder" = "8:_9BDFA9A7F8DB4A379E7D6B03D0D7003A"
-            "Icon" = "8:_37EB1DD82D494539B8C8B73C5F6A3324"
+            "Icon" = "8:_1F86A399DBE340588348C6B4AF702A8E"
             "Feature" = "8:"
             }
         }
