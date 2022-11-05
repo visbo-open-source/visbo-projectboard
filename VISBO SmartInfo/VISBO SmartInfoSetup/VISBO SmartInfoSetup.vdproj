@@ -165,13 +165,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_DC5685FB56BA4732ADEEF91489FCC6B6"
+        "MsmKey" = "8:_D669383AE06A469B90ABB82B0497485E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EC16090E2F4D4273BCC203E9D5C61E5A"
+        "MsmKey" = "8:_DC5685FB56BA4732ADEEF91489FCC6B6"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -813,10 +813,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DC5685FB56BA4732ADEEF91489FCC6B6"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D669383AE06A469B90ABB82B0497485E"
             {
-            "SourcePath" = "8:..\\VISBO SmartInfo\\bin\\Debug\\VISBO SmartInfo.dll.manifest"
-            "TargetName" = "8:VISBO SmartInfo.dll.manifest"
+            "SourcePath" = "8:..\\..\\..\\..\\..\\OneDrive\\Bilder\\Bild Material Allgemein\\Visbo-Database2.ico"
+            "TargetName" = "8:Visbo-Database2.ico"
             "Tag" = "8:"
             "Folder" = "8:_0F0052AC09154808A6BEC8972BA5D171"
             "Condition" = "8:"
@@ -833,10 +833,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EC16090E2F4D4273BCC203E9D5C61E5A"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DC5685FB56BA4732ADEEF91489FCC6B6"
             {
-            "SourcePath" = "8:..\\..\\..\\..\\..\\OneDrive\\VISBO Sales 2019\\Bild Material Allgemein\\Visbo-Database2.ico"
-            "TargetName" = "8:Visbo-Database2.ico"
+            "SourcePath" = "8:..\\VISBO SmartInfo\\bin\\Debug\\VISBO SmartInfo.dll.manifest"
+            "TargetName" = "8:VISBO SmartInfo.dll.manifest"
             "Tag" = "8:"
             "Folder" = "8:_0F0052AC09154808A6BEC8972BA5D171"
             "Condition" = "8:"
@@ -1028,15 +1028,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO SmartInfo"
-        "ProductCode" = "8:{F625E86D-1EB4-4C09-A187-A1BC33EADA75}"
-        "PackageCode" = "8:{5576C6D7-51AD-422D-B024-EA0C27622C2D}"
+        "ProductCode" = "8:{60B7BF59-99D9-49A5-9D41-FC5E3EDBABA6}"
+        "PackageCode" = "8:{628BE424-0403-48ED-AF49-5D7FAF6E0D4C}"
         "UpgradeCode" = "8:{1F84F172-4345-4B08-9877-CA988F235A2F}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:5.0.3"
+        "ProductVersion" = "8:5.0.4"
         "Manufacturer" = "8:VISBO"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1364,7 +1364,7 @@
             "Target" = "8:_0F0052AC09154808A6BEC8972BA5D171"
             "Folder" = "8:_0F0052AC09154808A6BEC8972BA5D171"
             "WorkingFolder" = "8:_0F0052AC09154808A6BEC8972BA5D171"
-            "Icon" = "8:_EC16090E2F4D4273BCC203E9D5C61E5A"
+            "Icon" = "8:_D669383AE06A469B90ABB82B0497485E"
             "Feature" = "8:"
             }
         }
