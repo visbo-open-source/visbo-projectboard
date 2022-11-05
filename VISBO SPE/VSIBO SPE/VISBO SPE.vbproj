@@ -18,10 +18,10 @@
     <PublishUrl>C:\publish\VISBO SPE\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.35</ApplicationVersion>
-    <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
+    <ApplicationVersion>1.0.4.0</ApplicationVersion>
+    <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>1</UpdateInterval>
+    <UpdateInterval>8</UpdateInterval>
     <UpdateIntervalUnits>hours</UpdateIntervalUnits>
     <ProductName>VISBO Project Edit</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
