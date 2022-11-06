@@ -95,9 +95,9 @@
         Set(value As Double)
             If Not IsNothing(value) Then
                 If value > 0 Then
-                    If value < 1.0 Then
+                    If value <= 1.0 Then
                         _shortestDuration = value
-                    ElseIf value > 5.0 Then
+                    ElseIf value >= 5.0 Then
                         _shortestDuration = value
                     Else
                         _shortestDuration = 1.0
