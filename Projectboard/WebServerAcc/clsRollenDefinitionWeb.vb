@@ -111,10 +111,13 @@ Public Class clsRollenDefinitionWeb
         roleDef.employeeNr = Me.employeeNr
 
         roleDef.entryDate = Me.entryDate.ToLocalTime
+
+        Call logger(ptErrLevel.logInfo, "clsRollenDefinition - copyTo", StartofCalendar.ToString)
         If roleDef.entryDate <= Date.MinValue Then
             entryColOfDate = 1
         Else
-            entryColOfDate = getColumnOfDate(roleDef.entryDate)
+            ' ur:4.11.2022: fehler bei Instart?!?!?
+            entryColOfDate = Math.Max(getColumnOfDate(roleDef.entryDate), getColumnOfDate(StartofCalendar))
         End If
 
         roleDef.exitDate = Me.exitDate.ToLocalTime

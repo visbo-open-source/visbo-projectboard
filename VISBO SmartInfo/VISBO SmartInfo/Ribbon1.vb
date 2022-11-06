@@ -611,120 +611,122 @@ Public Class Ribbon1
                         Throw New ArgumentException("Appearance classes do not exist")
                     End If
 
+                    Dim customizationsDate As Date = readCustomizations()
 
-                    Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
-                    If IsNothing(customizations) Then
-                        Throw New ArgumentException("Customization does not exist")
-                    Else
-                        ' alle awinSettings... mit den customizations... besetzen
-                        'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                        '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
-                        'Next
-                        businessUnitDefinitions = customizations.businessUnitDefinitions
+                    ' ur: 4.11.2022:
+                    'Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+                    'If IsNothing(customizations) Then
+                    '    Throw New ArgumentException("Customization does not exist")
+                    'Else
+                    '    ' alle awinSettings... mit den customizations... besetzen
+                    '    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    '    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                    '    'Next
+                    '    businessUnitDefinitions = customizations.businessUnitDefinitions
 
-                        'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
-                        '    customizations.phaseDefinitions.Add(kvp.Value)
-                        'Next
-                        PhaseDefinitions = customizations.phaseDefinitions
+                    '    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                    '    '    customizations.phaseDefinitions.Add(kvp.Value)
+                    '    'Next
+                    '    PhaseDefinitions = customizations.phaseDefinitions
 
-                        'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
-                        '    customizations.milestoneDefinitions.Add(kvp.Value)
-                        'Next
-                        MilestoneDefinitions = customizations.milestoneDefinitions
-                        ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+                    '    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                    '    '    customizations.milestoneDefinitions.Add(kvp.Value)
+                    '    'Next
+                    '    MilestoneDefinitions = customizations.milestoneDefinitions
+                    '    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
 
-                        showtimezone_color = customizations.showtimezone_color
-                        noshowtimezone_color = customizations.noshowtimezone_color
-                        calendarFontColor = customizations.calendarFontColor
-                        nrOfDaysMonth = customizations.nrOfDaysMonth
-                        farbeInternOP = customizations.farbeInternOP
-                        farbeExterne = customizations.farbeExterne
-                        iProjektFarbe = customizations.iProjektFarbe
-                        iWertFarbe = customizations.iWertFarbe
-                        vergleichsfarbe0 = customizations.vergleichsfarbe0
-                        vergleichsfarbe1 = customizations.vergleichsfarbe1
-                        'customizations.vergleichsfarbe2 = vergleichsfarbe2
+                    '    showtimezone_color = customizations.showtimezone_color
+                    '    noshowtimezone_color = customizations.noshowtimezone_color
+                    '    calendarFontColor = customizations.calendarFontColor
+                    '    nrOfDaysMonth = customizations.nrOfDaysMonth
+                    '    farbeInternOP = customizations.farbeInternOP
+                    '    farbeExterne = customizations.farbeExterne
+                    '    iProjektFarbe = customizations.iProjektFarbe
+                    '    iWertFarbe = customizations.iWertFarbe
+                    '    vergleichsfarbe0 = customizations.vergleichsfarbe0
+                    '    vergleichsfarbe1 = customizations.vergleichsfarbe1
+                    '    'customizations.vergleichsfarbe2 = vergleichsfarbe2
 
-                        awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
-                        awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
-                        awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
-                        awinSettings.AmpelGruen = customizations.AmpelGruen
-                        'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-                        awinSettings.AmpelGelb = customizations.AmpelGelb
-                        awinSettings.AmpelRot = customizations.AmpelRot
-                        awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
-                        awinSettings.glowColor = customizations.glowColor
+                    '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                    '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                    '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                    '    awinSettings.AmpelGruen = customizations.AmpelGruen
+                    '    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                    '    awinSettings.AmpelGelb = customizations.AmpelGelb
+                    '    awinSettings.AmpelRot = customizations.AmpelRot
+                    '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                    '    awinSettings.glowColor = customizations.glowColor
 
-                        awinSettings.timeSpanColor = customizations.timeSpanColor
+                    '    awinSettings.timeSpanColor = customizations.timeSpanColor
 
-                        awinSettings.gridLineColor = customizations.gridLineColor
+                    '    awinSettings.gridLineColor = customizations.gridLineColor
 
-                        awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+                    '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
 
-                        awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+                    '    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
 
-                        awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+                    '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
-                        awinSettings.actualDataMonth = customizations.actualDataMonth
-                        ergebnisfarbe1 = customizations.ergebnisfarbe1
-                        ergebnisfarbe2 = customizations.ergebnisfarbe2
-                        weightStrategicFit = customizations.weightStrategicFit
-                        awinSettings.kalenderStart = customizations.kalenderStart
-                        awinSettings.zeitEinheit = customizations.zeitEinheit
-                        awinSettings.kapaEinheit = customizations.kapaEinheit
-                        awinSettings.offsetEinheit = customizations.offsetEinheit
-                        awinSettings.EinzelRessExport = customizations.EinzelRessExport
-                        awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
-                        awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
-                        awinSettings.spaltenbreite = customizations.spaltenbreite
-                        awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
-                        awinSettings.propAnpassRess = customizations.propAnpassRess
-                        awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+                    '    awinSettings.actualDataMonth = customizations.actualDataMonth
+                    '    ergebnisfarbe1 = customizations.ergebnisfarbe1
+                    '    ergebnisfarbe2 = customizations.ergebnisfarbe2
+                    '    weightStrategicFit = customizations.weightStrategicFit
+                    '    awinSettings.kalenderStart = customizations.kalenderStart
+                    '    awinSettings.zeitEinheit = customizations.zeitEinheit
+                    '    awinSettings.kapaEinheit = customizations.kapaEinheit
+                    '    awinSettings.offsetEinheit = customizations.offsetEinheit
+                    '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                    '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                    '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                    '    awinSettings.spaltenbreite = customizations.spaltenbreite
+                    '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                    '    awinSettings.propAnpassRess = customizations.propAnpassRess
+                    '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
 
-                        awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
-                        awinSettings.fullProtocol = customizations.fullProtocol
-                        awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
-                        awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
-                        awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
-                        awinSettings.importUnknownNames = customizations.importUnknownNames
-                        awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+                    '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                    '    awinSettings.fullProtocol = customizations.fullProtocol
+                    '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                    '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                    '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                    '    awinSettings.importUnknownNames = customizations.importUnknownNames
+                    '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
 
-                        awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
-                        awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
-                        awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
-                        awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+                    '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                    '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                    '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                    '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
 
-                        awinSettings.importTyp = customizations.importTyp
+                    '    awinSettings.importTyp = customizations.importTyp
 
-                        awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+                    '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
 
-                        awinSettings.englishLanguage = customizations.englishLanguage
+                    '    awinSettings.englishLanguage = customizations.englishLanguage
 
-                        awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
-                        awinSettings.considerRiskFee = customizations.considerRiskFee
+                    '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                    '    awinSettings.considerRiskFee = customizations.considerRiskFee
 
-                        ' noch zu tun, sonst in readOtherdefinitions
-                        StartofCalendar = awinSettings.kalenderStart
-                        'StartofCalendar = StartofCalendar.ToLocalTime()
+                    '    ' noch zu tun, sonst in readOtherdefinitions
+                    '    StartofCalendar = awinSettings.kalenderStart
+                    '    'StartofCalendar = StartofCalendar.ToLocalTime()
 
-                        historicDate = StartofCalendar
-                        Try
-                            If awinSettings.englishLanguage Then
-                                menuCult = ReportLang(PTSprache.englisch)
-                                repCult = menuCult
-                                awinSettings.kapaEinheit = "PD"
-                            Else
-                                awinSettings.kapaEinheit = "PT"
-                                menuCult = ReportLang(PTSprache.deutsch)
-                                repCult = menuCult
-                            End If
-                        Catch ex As Exception
-                            awinSettings.englishLanguage = False
-                            awinSettings.kapaEinheit = "PT"
-                            menuCult = ReportLang(PTSprache.deutsch)
-                            repCult = menuCult
-                        End Try
-                    End If
+                    '    historicDate = StartofCalendar
+                    '    Try
+                    '        If awinSettings.englishLanguage Then
+                    '            menuCult = ReportLang(PTSprache.englisch)
+                    '            repCult = menuCult
+                    '            awinSettings.kapaEinheit = "PD"
+                    '        Else
+                    '            awinSettings.kapaEinheit = "PT"
+                    '            menuCult = ReportLang(PTSprache.deutsch)
+                    '            repCult = menuCult
+                    '        End If
+                    '    Catch ex As Exception
+                    '        awinSettings.englishLanguage = False
+                    '        awinSettings.kapaEinheit = "PT"
+                    '        menuCult = ReportLang(PTSprache.deutsch)
+                    '        repCult = menuCult
+                    '    End Try
+                    'End If
 
                     ' Lesen der CustomField-Definitions
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
@@ -737,8 +739,18 @@ Public Class Ribbon1
                     End If
 
 
-                    ' lesen der Organisation und Kapazitäten
-                    Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+                    ' lesen der Organisation und Kapazitäten in TSO - Modus
+
+                    ' global variables RoleDefinitions and CostDefinitions now are defined and have values
+                    'Dim currentOrgaDate As Date = readOrganisations()
+
+                    '    old variant, before TSO-Orga:
+                    '   Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+
+                    Dim newestOrgaTS As Date = DateSerial(2200, 12, 31)
+                    Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, False, True, True)
+
                     If IsNothing(currentOrga) Then
 
                     ElseIf currentOrga.count > 0 Then
