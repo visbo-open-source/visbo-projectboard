@@ -6784,9 +6784,7 @@ Public Module Module1
             Dim tabellenzeile As Integer = 2
             Try
                 ' erstmal in Abhängigkeit von der Rolle den Überblick zeichnen  
-                If showEuro And (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
-                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektleitungRestricted) Then
+                If showEuro And Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
 
                     ' Überblick zeichnen ... 
                     Dim curPKI() As Double = {-1, -1, -1, -1, -1, -1}

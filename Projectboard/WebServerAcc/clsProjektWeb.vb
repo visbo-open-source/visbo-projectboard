@@ -417,6 +417,7 @@ Public Class clsProjektWeb
                 If Not IsNothing(vp.managerID) Then
                     'read the userName an put it into leadPerson
 
+
                 End If
 
                 ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren

@@ -111,6 +111,7 @@ Module SIModule1
     Friend myUserName As String = ""
     Friend myUserPWD As String = ""
 
+
     Friend defaultSprache As String = "Original"
     Friend selectedLanguage As String = defaultSprache
 
@@ -598,10 +599,486 @@ Module SIModule1
 
         End If
 
+        If Not appearancesWereRead And tmpResult = True Then
+            ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
+            Dim errMsg As String = ""
+            tmpResult = tmpResult And readOrgaAndAppearances(True, errMsg)
+        End If
+
 
         userIsEntitled = tmpResult
 
     End Function
+
+
+    Friend Function readOrgaAndAppearances(ByVal dbNameIsKnown As Boolean, ByRef errMsg As String) As Boolean
+        Dim wasSuccessful As Boolean = False
+        Dim err As New clsErrorCodeMsg
+        Dim VCId As String = ""
+
+        ' Lesen aller userSettings
+        Call readSettings(dbNameIsKnown)
+
+        ' tk das muss beim Login gemacht werden 
+        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        awinSettings.userNamePWD = My.Settings.userNamePWD
+
+
+        logfileNamePath = createLogfileName()
+
+
+        If awinSettings.visboServer Then
+
+            If logInToMongoDB(True) Then
+                ' weitermachen ...
+
+                Try
+
+                    ' die dem User zugeodneten Visbo Center lesen ...
+                    ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+
+                    If Not dbNameIsKnown Then
+                        Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+
+                        If listOfVCs.Count > 1 Then
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+
+                            If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
+                                ' alles ok 
+                                awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                                Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                                awinSettings.VCid = VCId
+
+                                If Not changeOK Then
+                                    Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                                End If
+                            Else
+                                Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                            End If
+                        ElseIf listOfVCs.Count = 1 Then
+                            awinSettings.databaseName = listOfVCs.First
+                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                            awinSettings.VCid = VCId
+
+                            ' keine VC-Abfrage, da User nur für ein VC Zugriff hat
+                        ElseIf awinSettings.visboServer Then
+                            Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")
+                        Else
+                            ' hier direkter MongoDB-Zugriff - alles ok
+
+                        End If
+                    End If
+
+                    ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
+                    appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+                    If IsNothing(appearanceDefinitions) Then
+                        Throw New ArgumentException("Appearance classes do not exist")
+                    End If
+
+                    Dim customizationsDate As Date = readCustomizations()
+
+                    ' tk das folgende, Auskommentierte sollte eigentlich rausgeschmissen werden .. ist just in Case zur Sicherheit noch drin ... 
+                    ' ur: 4.11.2022:
+                    'Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+                    'If IsNothing(customizations) Then
+                    '    Throw New ArgumentException("Customization does not exist")
+                    'Else
+                    '    ' alle awinSettings... mit den customizations... besetzen
+                    '    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    '    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                    '    'Next
+                    '    businessUnitDefinitions = customizations.businessUnitDefinitions
+
+                    '    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                    '    '    customizations.phaseDefinitions.Add(kvp.Value)
+                    '    'Next
+                    '    PhaseDefinitions = customizations.phaseDefinitions
+
+                    '    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                    '    '    customizations.milestoneDefinitions.Add(kvp.Value)
+                    '    'Next
+                    '    MilestoneDefinitions = customizations.milestoneDefinitions
+                    '    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                    '    showtimezone_color = customizations.showtimezone_color
+                    '    noshowtimezone_color = customizations.noshowtimezone_color
+                    '    calendarFontColor = customizations.calendarFontColor
+                    '    nrOfDaysMonth = customizations.nrOfDaysMonth
+                    '    farbeInternOP = customizations.farbeInternOP
+                    '    farbeExterne = customizations.farbeExterne
+                    '    iProjektFarbe = customizations.iProjektFarbe
+                    '    iWertFarbe = customizations.iWertFarbe
+                    '    vergleichsfarbe0 = customizations.vergleichsfarbe0
+                    '    vergleichsfarbe1 = customizations.vergleichsfarbe1
+                    '    'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                    '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                    '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                    '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                    '    awinSettings.AmpelGruen = customizations.AmpelGruen
+                    '    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                    '    awinSettings.AmpelGelb = customizations.AmpelGelb
+                    '    awinSettings.AmpelRot = customizations.AmpelRot
+                    '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                    '    awinSettings.glowColor = customizations.glowColor
+
+                    '    awinSettings.timeSpanColor = customizations.timeSpanColor
+
+                    '    awinSettings.gridLineColor = customizations.gridLineColor
+
+                    '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+                    '    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+
+                    '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+                    '    awinSettings.actualDataMonth = customizations.actualDataMonth
+                    '    ergebnisfarbe1 = customizations.ergebnisfarbe1
+                    '    ergebnisfarbe2 = customizations.ergebnisfarbe2
+                    '    weightStrategicFit = customizations.weightStrategicFit
+                    '    awinSettings.kalenderStart = customizations.kalenderStart
+                    '    awinSettings.zeitEinheit = customizations.zeitEinheit
+                    '    awinSettings.kapaEinheit = customizations.kapaEinheit
+                    '    awinSettings.offsetEinheit = customizations.offsetEinheit
+                    '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                    '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                    '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                    '    awinSettings.spaltenbreite = customizations.spaltenbreite
+                    '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                    '    awinSettings.propAnpassRess = customizations.propAnpassRess
+                    '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+                    '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                    '    awinSettings.fullProtocol = customizations.fullProtocol
+                    '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                    '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                    '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                    '    awinSettings.importUnknownNames = customizations.importUnknownNames
+                    '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+                    '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                    '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                    '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                    '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+                    '    awinSettings.importTyp = customizations.importTyp
+
+                    '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+                    '    awinSettings.englishLanguage = customizations.englishLanguage
+
+                    '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                    '    awinSettings.considerRiskFee = customizations.considerRiskFee
+
+                    '    ' noch zu tun, sonst in readOtherdefinitions
+                    '    StartofCalendar = awinSettings.kalenderStart
+                    '    'StartofCalendar = StartofCalendar.ToLocalTime()
+
+                    '    historicDate = StartofCalendar
+                    '    Try
+                    '        If awinSettings.englishLanguage Then
+                    '            menuCult = ReportLang(PTSprache.englisch)
+                    '            repCult = menuCult
+                    '            awinSettings.kapaEinheit = "PD"
+                    '        Else
+                    '            awinSettings.kapaEinheit = "PT"
+                    '            menuCult = ReportLang(PTSprache.deutsch)
+                    '            repCult = menuCult
+                    '        End If
+                    '    Catch ex As Exception
+                    '        awinSettings.englishLanguage = False
+                    '        awinSettings.kapaEinheit = "PT"
+                    '        menuCult = ReportLang(PTSprache.deutsch)
+                    '        repCult = menuCult
+                    '    End Try
+                    'End If
+
+                    ' Lesen der CustomField-Definitions
+                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+
+                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                    If IsNothing(customFieldDefinitions) Then
+                        customFieldDefinitions = New clsCustomFieldDefinitions
+                        'Call MsgBox("no Custom-Field-Definitions in database")
+                    End If
+
+
+                    ' lesen der Organisation und Kapazitäten in TSO - Modus
+
+                    ' global variables RoleDefinitions and CostDefinitions now are defined and have values
+                    'Dim currentOrgaDate As Date = readOrganisations()
+
+                    '    old variant, before TSO-Orga:
+                    '   Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+
+                    Dim newestOrgaTS As Date = DateSerial(2200, 12, 31)
+                    Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, False, True, True)
+
+                    If IsNothing(currentOrga) Then
+
+                    ElseIf currentOrga.count > 0 Then
+                        validOrganisations.addOrga(currentOrga)
+                        CostDefinitions = currentOrga.allCosts
+                        RoleDefinitions = currentOrga.allRoles
+                    Else
+                        RoleDefinitions = New clsRollen
+                        CostDefinitions = New clsKostenarten
+                    End If
+
+                    ' lesen der Custom User Roles 
+                    Dim meldungen As New Collection
+                    Try
+
+                        Call setUserRoles(meldungen)
+                    Catch ex As Exception
+                        ' hier bekommt der Nutzer die Rolle Projektleiter 
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.ProjektLeitung
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole - die gelten aktuell nur für Excel Projectboard, haben aber keine auswirkungen auf PPT Report Creation Addin
+                        Call myCustomUserRole.setNonAllowances()
+                    End Try
+
+
+                    wasSuccessful = True
+                    appearancesWereRead = True
+
+                Catch ex As Exception
+                    wasSuccessful = False
+                    errMsg = ex.Message
+                End Try
+
+            Else
+                wasSuccessful = False
+            End If
+
+        Else ' direkter MongoDB-Zugriff und lesen der appearances und customizationSettings from File
+
+            Try
+                Dim customizations As New clsCustomization
+
+                If Not awinsetTypen_Performed Then
+
+                    dbUsername = ""
+                    dbPasswort = ""
+
+                    logfileNamePath = createLogfileName()
+
+                    If logInToMongoDB(True) Then
+                        ' weitermachen ...
+
+                        ' die dem User zugeodneten Visbo Center lesen ...
+                        ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+                        Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+
+                        If listOfVCs.Count > 1 Then
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+
+                            If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
+                                ' alles ok 
+                                awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                                Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                                awinSettings.VCid = VCId
+
+                                If Not changeOK Then
+                                    Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                                End If
+                            Else
+                                Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                            End If
+                        ElseIf listOfVCs.Count = 1 Then
+                            ' keine VC-Abfrage, da User nur für ein VC Zugriff hat
+                        ElseIf awinSettings.visboServer Then
+                            Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")
+                        Else
+                            ' hier direkter MongoDB-Zugriff - alles ok
+
+                        End If
+
+
+                        ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
+
+
+                        appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+                        If IsNothing(appearanceDefinitions) Then
+
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("There are no appearances defined!" & vbCrLf & "Please ask your administrator")
+                            Else
+                                Call MsgBox("Es sind keine Darstellungsklassen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+
+                            End If
+                        Else
+
+                        End If
+
+                        ' tk 14.1.2020
+                        ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
+
+                        customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+                        If IsNothing(customizations) Then
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("There are no customizations defined!" & vbCrLf & "Please ask your administrator")
+                            Else
+                                Call MsgBox("Es sind keine benutzerspezifischen Einstellungen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+
+                            End If
+                        Else
+
+                            StartofCalendar = customizations.kalenderStart
+
+                            ' alle awinSettings... mit den customizations... besetzen
+                            'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                            '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                            'Next
+                            businessUnitDefinitions = customizations.businessUnitDefinitions
+
+                            'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                            '    customizations.phaseDefinitions.Add(kvp.Value)
+                            'Next
+                            PhaseDefinitions = customizations.phaseDefinitions
+
+                            'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                            '    customizations.milestoneDefinitions.Add(kvp.Value)
+                            'Next
+                            MilestoneDefinitions = customizations.milestoneDefinitions
+                            ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                            showtimezone_color = customizations.showtimezone_color
+                            noshowtimezone_color = customizations.noshowtimezone_color
+                            calendarFontColor = customizations.calendarFontColor
+                            nrOfDaysMonth = customizations.nrOfDaysMonth
+                            farbeInternOP = customizations.farbeInternOP
+                            farbeExterne = customizations.farbeExterne
+                            iProjektFarbe = customizations.iProjektFarbe
+                            iWertFarbe = customizations.iWertFarbe
+                            vergleichsfarbe0 = customizations.vergleichsfarbe0
+                            vergleichsfarbe1 = customizations.vergleichsfarbe1
+                            'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                            awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                            awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                            awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                            awinSettings.AmpelGruen = customizations.AmpelGruen
+                            'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                            awinSettings.AmpelGelb = customizations.AmpelGelb
+                            awinSettings.AmpelRot = customizations.AmpelRot
+                            awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                            awinSettings.glowColor = customizations.glowColor
+
+                            awinSettings.timeSpanColor = customizations.timeSpanColor
+
+                            awinSettings.gridLineColor = customizations.gridLineColor
+
+                            awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+                            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+
+                            awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+                            awinSettings.actualDataMonth = customizations.actualDataMonth
+                            ergebnisfarbe1 = customizations.ergebnisfarbe1
+                            ergebnisfarbe2 = customizations.ergebnisfarbe2
+                            weightStrategicFit = customizations.weightStrategicFit
+                            awinSettings.kalenderStart = customizations.kalenderStart
+                            awinSettings.zeitEinheit = customizations.zeitEinheit
+                            awinSettings.kapaEinheit = customizations.kapaEinheit
+                            awinSettings.offsetEinheit = customizations.offsetEinheit
+                            awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                            awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                            awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                            awinSettings.spaltenbreite = customizations.spaltenbreite
+                            awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                            awinSettings.propAnpassRess = customizations.propAnpassRess
+                            awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+                            awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                            awinSettings.fullProtocol = customizations.fullProtocol
+                            awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                            awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                            awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                            awinSettings.importUnknownNames = customizations.importUnknownNames
+                            awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+                            awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                            awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                            awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                            awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+                            awinSettings.importTyp = customizations.importTyp
+
+                            awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+                            awinSettings.englishLanguage = customizations.englishLanguage
+
+                            awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                            awinSettings.considerRiskFee = customizations.considerRiskFee
+
+                            ' noch zu tun, sonst in readOtherdefinitions
+                            StartofCalendar = awinSettings.kalenderStart
+                            'StartofCalendar = StartofCalendar.ToLocalTime()
+
+                            historicDate = StartofCalendar
+                            Try
+                                If awinSettings.englishLanguage Then
+                                    menuCult = ReportLang(PTSprache.englisch)
+                                    repCult = menuCult
+                                    awinSettings.kapaEinheit = "PD"
+                                Else
+                                    awinSettings.kapaEinheit = "PT"
+                                    menuCult = ReportLang(PTSprache.deutsch)
+                                    repCult = menuCult
+                                End If
+                            Catch ex As Exception
+                                awinSettings.englishLanguage = False
+                                awinSettings.kapaEinheit = "PT"
+                                menuCult = ReportLang(PTSprache.deutsch)
+                                repCult = menuCult
+                            End Try
+                        End If
+
+                    End If
+                End If
+
+                ' UserName - Password merken
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                End If
+
+
+                If Not IsNothing(appearanceDefinitions) And Not IsNothing(customizations) Then
+                    ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
+                    wasSuccessful = True
+                    awinsetTypen_Performed = True
+                    appearancesWereRead = True
+                Else
+                    wasSuccessful = False
+                    awinsetTypen_Performed = False
+                    appearancesWereRead = False
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("There are no customizations defined!" & vbCrLf & "Please ask your administrator")
+                    Else
+                        Call MsgBox("Es sind keine benutzerspezifischen Einstellungen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+                    End If
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Fehler beim lesen der Appearances and customizations from MongoDB")
+            End Try
+
+        End If      ' visboServer = true/false
+
+        readOrgaAndAppearances = wasSuccessful
+    End Function
+
 
 
     ''' <summary>
@@ -1130,6 +1607,8 @@ Module SIModule1
                     ' nichts machen, user ist schon berechtigt ...
                 Else
                     noDBAccessInPPT = True
+                    appearancesWereRead = False
+
                     awinSettings.proxyURL = .Tags.Item("PRXYL")
 
                     If Not ((.Tags.Item("DBURL") = bhtcDBURL)) Then
@@ -1269,13 +1748,6 @@ Module SIModule1
         ' zurücksetzen der SmartSlideLists
         smartSlideLists = New clsSmartSlideListen
 
-        ' das ist jetzt nicht mehr notwendig - die Projekte und Timestamps werden in der visboTimeMachine Variablen gehalten 
-        '' wenn bereits die tsCollection existiert, müssen ListOfTS und ListOfProjektHistorien gesichert werden
-        'If tsCollExists Then
-        '    smartSlideLists.ListOfProjektHistorien = former_smartSlideLists.ListOfProjektHistorien
-        '    smartSlideLists.ListOfTS = former_smartSlideLists.ListOfTS
-        'End If
-
         bekannteIDs = New SortedList(Of Integer, String)
 
         Dim aktSlideId As Integer = currentSlide.SlideID
@@ -1295,16 +1767,6 @@ Module SIModule1
         Catch ex As Exception
             importantShapes(ptImportantShapes.todayline) = Nothing
         End Try
-        'ur: 2019-05-29: TryCatch vermeiden
-        'For i = 1 To currentSlide.Shapes.Count
-        '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-
-        '        importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
-        '        Exit For
-        '    Else
-        '        importantShapes(ptImportantShapes.todayline) = Nothing
-        '    End If
-        'Next
 
 
         With currentSlide
@@ -1458,14 +1920,6 @@ Module SIModule1
 
                             Call aktualisiereSortedLists(tmpShape)
 
-                            ' tk 27.3.20 darf nicht wieder auf visible gesetzt werden ... 
-                            ' da sonst das unsichtbar machen von Phasen / Meilensteinen konterkariert wird  
-                            'If Not isPcardInvisible Then
-                            '    If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
-                            '        tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                            '    End If
-                            'End If
-
 
                         ElseIf isVISBOChartElement(tmpShape) Then
                             If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
@@ -1517,10 +1971,10 @@ Module SIModule1
                 vpid = smartSlideLists.getvpID(pvName)
 
                 If Not timeMachine.containsProject(pvName, vpid) Then
+                    ' put placeholder in ..
                     timeMachine.addProject(pvName, vpid)
                 End If
-                'Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
-                'smartSlideLists.addToListOfTS(tsCollection)
+
             Next
 
 
@@ -3100,11 +3554,7 @@ Module SIModule1
 
                                     Dim continueOperation As Boolean = False
                                     Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
 
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
                                         bProj = timeMachine.getFirstContractedVersion(pvName)
                                         lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
@@ -3209,11 +3659,7 @@ Module SIModule1
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
 
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
                                         bProj = timeMachine.getFirstContractedVersion(pvName, vpid)
                                         lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp, vpid)
 
@@ -3418,7 +3864,10 @@ Module SIModule1
 
                         If Not IsNothing(hproj) Then
                             pptShape.TextFrame2.TextRange.Text = hproj.getShapeText
+                        Else
+                            pptShape.TextFrame2.TextRange.Text = "Name not found: " & pptShape.TextFrame2.TextRange.Text
                         End If
+
                     Case ptReportComponents.pfName
 
                         If Not IsNothing(portfolio) Then
@@ -3428,6 +3877,8 @@ Module SIModule1
                                 pptShape.TextFrame2.TextRange.Text = portfolio.constellationName
                             End If
 
+                        Else
+                            pptShape.TextFrame2.TextRange.Text = "Name not found " & pptShape.TextFrame2.TextRange.Text
                         End If
 
                     Case ptReportComponents.prCustomField
@@ -3524,6 +3975,8 @@ Module SIModule1
                                 'pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
                                 ' 23.6.18 nur noch den eigentlichen Ampel-Text schreiben ...
                                 pptShape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         Else
                             ' ist Portfolio
@@ -3532,40 +3985,83 @@ Module SIModule1
 
                     Case ptReportComponents.prBusinessUnit
                         If Not IsNothing(hproj) Then
-                            Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                            pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.businessUnit
+                            Dim descriptor As String = ""
+                            Try
+                                Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
+                                descriptor = substr(0)
+                                ' if it is the same than the initial text then there was no leading descriptor
+                                If descriptor = pptShape.TextFrame2.TextRange.Text Then
+                                    descriptor = ""
+                                Else
+                                    descriptor = descriptor & " "
+                                End If
+                            Catch ex As Exception
+                                descriptor = "Business Unit: "
+                            End Try
+
+                            pptShape.TextFrame2.TextRange.Text = descriptor & hproj.businessUnit
+                        Else
+                            pptShape.TextFrame2.TextRange.Text = " "
                         End If
 
                     Case ptReportComponents.prStand
                         If scInfo.prPF = ptPRPFType.project Then
+
                             If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
+                                Dim descriptor As String = ""
+                                Try
+                                    Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
+                                    descriptor = substr(0)
+                                    ' if it is ending with 'DB' then there was no leading descriptor
+                                    If descriptor.EndsWith("DB") Then
+                                        descriptor = ""
+                                    Else
+                                        descriptor = descriptor & ": "
+                                    End If
+                                Catch ex As Exception
+                                    descriptor = "Version: "
+                                End Try
+
+                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         Else
                             ' ist Portfolio
                             If Not IsNothing(portfolio) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("g", repCult) & ")"
+                                Dim descriptor As String = ""
+                                Try
+                                    Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
+                                    descriptor = substr(0)
+
+                                    If descriptor.EndsWith("DB") Then
+                                        descriptor = ""
+                                    Else
+                                        descriptor = descriptor & ": "
+                                    End If
+                                Catch ex As Exception
+                                    descriptor = "Version:"
+                                End Try
+                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("g", repCult) & ")"
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         End If
+
                     Case ptReportComponents.prDescription
                         If scInfo.prPF = ptPRPFType.project Then
                             If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                ' tk 23.6.18 nur noch den eigentlichen Text schreiben  
+
                                 Dim initialText As String = hproj.description
 
                                 If hproj.variantDescription.Length > 0 Then
-
-                                    pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf &
-                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                    pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf & "Varianten-Beschreibung: " & hproj.variantDescription
+                                Else
+                                    pptShape.TextFrame2.TextRange.Text = initialText
                                 End If
-                                pptShape.TextFrame2.TextRange.Text = initialText
+
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         Else
                             ' ist Portfolio
@@ -3576,18 +4072,54 @@ Module SIModule1
 
                         If scInfo.prPF = ptPRPFType.project Then
                             If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & textZeitraum(hproj.startDate, hproj.endeDate)
 
+                                Dim descriptor As String = ""
+                                Try
+                                    Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
+                                    descriptor = substr(0)
+                                    ' if it the same than the initial text then there was no leading descriptor
+                                    If descriptor = pptShape.TextFrame2.TextRange.Text Then
+                                        descriptor = ""
+                                    Else
+                                        descriptor = descriptor & ": "
+                                    End If
+                                Catch ex As Exception
+                                    descriptor = "Time Span: "
+                                End Try
+
+                                If scInfo.hasValidZeitraum Then
+                                    pptShape.TextFrame2.TextRange.Text = descriptor & textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
+                                Else
+                                    pptShape.TextFrame2.TextRange.Text = descriptor & textZeitraum(hproj.startDate, hproj.endeDate)
+                                End If
+
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         Else
                             ' ist Portfolio
                             If Not IsNothing(portfolio) Then
                                 If scInfo.hasValidZeitraum Then
-                                    pptShape.TextFrame2.TextRange.Text = textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
+                                    Dim descriptor As String = ""
+                                    Try
+                                        Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
+                                        descriptor = substr(0)
+                                        ' if it the same than the initial text then there was no leading descriptor
+                                        If descriptor = pptShape.TextFrame2.TextRange.Text Then
+                                            descriptor = ""
+                                        Else
+                                            descriptor = descriptor & ": "
+                                        End If
+                                    Catch ex As Exception
+                                        descriptor = "Time Span: "
+                                    End Try
+
+                                    pptShape.TextFrame2.TextRange.Text = descriptor & textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
                                 Else
                                     pptShape.TextFrame2.TextRange.Text = "     "
                                 End If
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         End If
 
@@ -3595,9 +4127,25 @@ Module SIModule1
                     Case ptReportComponents.prVerantwortlich
                         If scInfo.prPF = ptPRPFType.project Then
                             If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.leadPerson
 
+                                Dim descriptor As String = ""
+                                Try
+                                    Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
+                                    descriptor = substr(0)
+                                    ' if it the same than the initial text then there was no leading descriptor
+                                    If descriptor = pptShape.TextFrame2.TextRange.Text Then
+                                        descriptor = ""
+                                    Else
+                                        descriptor = descriptor & ": "
+                                    End If
+                                Catch ex As Exception
+                                    descriptor = "Responsible: "
+                                End Try
+
+                                pptShape.TextFrame2.TextRange.Text = descriptor & " " & hproj.leadPerson
+
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = " "
                             End If
                         Else
                             ' ist Portfolio
@@ -3810,10 +4358,9 @@ Module SIModule1
                                         Dim a As Integer = scInfo.hproj.dauerInDays
 
                                         If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
-                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
                                             scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName, scInfo.vpid)
+
                                         ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
-                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
                                             scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp, scInfo.vpid)
                                         End If
 
@@ -3828,21 +4375,6 @@ Module SIModule1
 
                                 ' Alternative 1a - pptApp.activate auskommentiert
                                 Call updateProjectChartInPPT(scInfo, pptShape)
-                                'pptAPP.Activate()
-
-                                ' -----------------------------------------
-                                ' Alternative 2 - funktioniert nicht 
-                                'Call updateProjektChartinPPT2(scInfo, pptShape)
-                                'pptAPP.Activate()
-                                'pptShape.Chart.Refresh()
-                                ' --------------------------------------------
-
-                                ' -----------------------------------------
-                                ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
-                                'Call updateProjectChartInPPT3(scInfo, pptShape)
-                                'pptAPP.Activate()
-                                'pptShape.Chart.Refresh()
-                                ' --------------------------------------------
 
 
                             ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
@@ -7003,15 +7535,7 @@ Module SIModule1
         ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
         Try
             Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
-            ' ur:2019-05-29: TryCatch vermeiden
-            'Dim todayLineShape As PowerPoint.Shape
-            'todayLineShape = Nothing
-            'For i = 1 To currentSlide.Shapes.Count
-            '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-            '        todayLineShape = currentSlide.Shapes.Item("todayLine")
-            '        Exit For
-            '    End If
-            'Next
+
             If Not IsNothing(todayLineShape) Then
                 Call sendTodayLinetoNewPosition(todayLineShape)
             End If
@@ -7042,16 +7566,11 @@ Module SIModule1
         Call buildSmartSlideLists()
 
         ' soll auf alle Fälle angezeigt werden ...
-        'Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        'Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        'Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        'Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
-
-        ' die gelben und roten sollten auf alle Fälle gezeigt werden , die grünen und nicht-bewerteten nur, wenn entsprechend eingestellt 
         Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
         Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        Call faerbeShapes(PTfarbe.yellow, True)
-        Call faerbeShapes(PTfarbe.red, True)
+        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+
 
         Dim presChgListe As SortedList(Of Integer, clsChangeListe)
         'Dim hwind As Integer = pptAPP.ActiveWindow.HWND
@@ -7229,7 +7748,8 @@ Module SIModule1
         Dim left As Single = 75, top As Single = 7, width As Single = 70, height As Single = 20
 
         ' handelt es sich um 23:59 Uhr , dann soll nämlich ohne Time gezeigt werden ... 
-        Dim showTimeAndDate = (DateDiff(DateInterval.Minute, currentTimestamp.Date.AddHours(23).AddMinutes(59), currentTimestamp) <> 0)
+        'Dim showTimeAndDate = (DateDiff(DateInterval.Minute, currentTimestamp.Date.AddHours(23).AddMinutes(59), currentTimestamp) <> 0)
+        Dim showTimeAndDate = False
 
         ' ' gibt es eine todayLine? 
         Dim todayLineShape As PowerPoint.Shape = Nothing
@@ -7250,7 +7770,7 @@ Module SIModule1
 
 
 
-        If IsNothing(tsMsgBox) And (Not IsNothing(importantShapes(ptImportantShapes.todayline)) Or IsNothing(importantShapes(ptImportantShapes.version))) Then
+        If IsNothing(tsMsgBox) And Not IsNothing(importantShapes(ptImportantShapes.todayline)) And IsNothing(importantShapes(ptImportantShapes.version)) Then
             ' erstellen ...
             'tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
             '                          200, 5, 70, 20)
@@ -7264,7 +7784,7 @@ Module SIModule1
                     .TextFrame2.TextRange.Text = currentTimestamp.Date.ToShortDateString
                 End If
 
-                .TextFrame2.TextRange.Font.Size = CSng(schriftGroesse + 6)
+                .TextFrame2.TextRange.Font.Size = CSng(schriftGroesse)
                 .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(trafficLightColors(3))
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
                 .TextFrame2.MarginBottom = 0
@@ -10877,33 +11397,7 @@ Module SIModule1
 
                 End If
             End If
-            'Next
 
-            ' ur:2019-06-04: wird nicht benötigt, wenn nur jede selektierte Slide einzeln upgedated wird
-
-            'If currentSlide.SlideID <> formerSlide.SlideID Then
-
-            '    currentSlide = formerSlide
-            '    currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
-
-            '    smartSlideLists = New clsSmartSlideListen
-
-            '    If Not IsNothing(currentSlide) Then
-            '        If Not (currentSlide.Tags.Item("FROZEN").Length > 0) And (currentSlide.Tags.Item("SMART") = "visbo") Then
-
-            '            If userIsEntitled(errmsg, currentSlide) Then
-
-            '                Call pptAPP_AufbauSmartSlideLists(currentSlide)
-
-            '            Else
-            '                ' hier ggf auf invisible setzen, wenn erforderlich
-            '                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
-            '            End If
-
-            '        End If
-            '    End If
-
-            'End If
 
             ' das Formular ggf, also wenn aktiv,  updaten 
             If Not IsNothing(changeFrm) Then

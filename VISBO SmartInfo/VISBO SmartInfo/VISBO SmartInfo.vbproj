@@ -379,7 +379,9 @@
     <EmbeddedResource Include="ucSearch.resx">
       <DependentUpon>ucSearch.vb</DependentUpon>
     </EmbeddedResource>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.vb</DependentUpon>
     </None>
@@ -401,6 +403,7 @@
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
     <Compile Include="My Project\Settings.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -592,7 +595,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>7E2BA574A41FA2EE605EA51A576FA016FF481A96</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestTimestampUrl>
