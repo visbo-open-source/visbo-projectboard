@@ -31,6 +31,7 @@ Public Class Request
     Private visboUserAgent As String = " (" & System.Environment.OSVersion.ToString & ";" & System.Environment.OSVersion.Platform.ToString & ")"
 
     Private aktVCid As String = ""
+    Private allAktVCUsers As New List(Of clsUserReg)
 
     Private token As String = ""
     Private VCs As New List(Of clsVC)
@@ -706,7 +707,7 @@ Public Class Request
 
                                     ' vp zum webProj aus dem Cache holen (keine Portfolios im Cache)
                                     vp = VRScache.VPsN(webProj.name)
-                                    webProj.copyto(hproj, vp)
+                                    webProj.copyto(hproj, vp, allAktVCUsers)
 
                                     Dim a As Integer = hproj.dauerInDays
                                     Dim key As String = ProjekteCalc.calcProjektKey(hproj)
@@ -767,7 +768,7 @@ Public Class Request
 
                                     hproj = New clsProjekt
 
-                                    webProj.copyto(hproj, vp)
+                                    webProj.copyto(hproj, vp, allAktVCUsers)
                                     Dim a As Integer = hproj.dauerInDays
                                     Dim key As String = ProjekteCalc.calcProjektKey(hproj)
                                     If Not result.ContainsKey(key) Then
@@ -860,7 +861,7 @@ Public Class Request
 
                 If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
-                    webProj.copyto(hproj, vp)
+                    webProj.copyto(hproj, vp, allAktVCUsers)
 
                     result = hproj
                 End If
@@ -910,7 +911,7 @@ Public Class Request
                                        variantName:="")
                 If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
-                    webProj.copyto(hproj, vp)
+                    webProj.copyto(hproj, vp, allAktVCUsers)
 
                     result = hproj
                 End If
@@ -956,7 +957,7 @@ Public Class Request
                             hproj = New clsProjekt
                             Dim vp As clsVP = kvp.Value
 
-                            webProj.copyto(hproj, vp)
+                            webProj.copyto(hproj, vp, allAktVCUsers)
                             ' _Dauer wird gesetzt durch den Aufruf der Property .dauerInDays
 
                             result.Add(hproj, False)
@@ -1111,12 +1112,12 @@ Public Class Request
                                     If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                                         If proj.variantName = "pfv" Then
                                             Dim newwebProj As clsProjektWebLong = proj
-                                            newwebProj.copyto(result, newVP)
+                                            newwebProj.copyto(result, newVP, allAktVCUsers)
                                         End If
                                     Else
                                         If proj.variantName <> "pfv" Then
                                             Dim newwebProj As clsProjektWebLong = proj
-                                            newwebProj.copyto(result, newVP)
+                                            newwebProj.copyto(result, newVP, allAktVCUsers)
                                         End If
                                     End If
                                 Next
@@ -1203,7 +1204,7 @@ Public Class Request
 
                 If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
-                    webProj.copyto(hproj, vp)
+                    webProj.copyto(hproj, vp, allAktVCUsers)
 
                     result = hproj
                 End If
@@ -1818,7 +1819,7 @@ Public Class Request
                     If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
                         'zwischenResult.Add(vpv.timestamp, vpv)
                         Dim hproj As New clsProjekt
-                        vpv.copyto(hproj, vp)
+                        vpv.copyto(hproj, vp, allAktVCUsers)
                         result.Add(hproj.timeStamp, hproj)
                     End If
                 Next
@@ -1836,7 +1837,7 @@ Public Class Request
                     'If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
 
                     Dim hproj As New clsProjekt
-                    vpv.copyto(hproj, vp)
+                    vpv.copyto(hproj, vp, allAktVCUsers)
                     result.AddPfv(hproj)
 
                     'End If
@@ -1948,7 +1949,7 @@ Public Class Request
 
                     ' das erste aus der Liste nehmen
                     If hresult.Count > 0 Then
-                        hresult.Item(0).copyto(hproj, vp)
+                        hresult.Item(0).copyto(hproj, vp, allAktVCUsers)
                     Else
                         hproj = Nothing
                     End If
@@ -2011,7 +2012,7 @@ Public Class Request
                                             storedAtorBefore:=storedAtOrBefore)
                     ' das letzte aus der Liste nehmen
                     If hresult.Count > 0 Then
-                        hresult.Item(hresult.Count - 1).copyto(hproj, vp)
+                        hresult.Item(hresult.Count - 1).copyto(hproj, vp, allAktVCUsers)
                     Else
                         hproj = Nothing
                     End If
@@ -2323,7 +2324,7 @@ Public Class Request
 
                 hproj = New clsProjekt
                 Dim thisVP As clsVP = GETvpid(webproj.name, err)
-                webproj.copyto(hproj, thisVP)
+                webproj.copyto(hproj, thisVP, allAktVCUsers)
 
                 Dim a As Integer = hproj.dauerInDays
                 Dim key As String = ProjekteCalc.calcProjektKey(hproj)
@@ -3500,16 +3501,23 @@ Public Class Request
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
             allUsers = GETallUserOfVC(aktVCid, err)
 
-            For Each pers As clsUserReg In allUsers
-                Dim a As Boolean = LCase(userEmail).Contains(LCase(pers.email))
-                Dim b As Boolean = LCase(userEmail).Contains(LCase(pers.profile.firstname))
-                Dim c As Boolean = LCase(userEmail).Contains(LCase(pers.profile.lastname))
+            If userEmail <> "" Then
 
-                If (LCase(userEmail).Contains((pers.email))) Or
-                    ((LCase(userEmail).Contains(LCase(pers.profile.firstname))) And (LCase(userEmail).Contains(LCase(pers.profile.lastname)))) Then
-                    result.Add(pers)
-                End If
-            Next
+                For Each pers As clsUserReg In allUsers
+                    Dim a As Boolean = LCase(userEmail).Contains(LCase(pers.email))
+                    Dim b As Boolean = LCase(userEmail).Contains(LCase(pers.profile.firstname))
+                    Dim c As Boolean = LCase(userEmail).Contains(LCase(pers.profile.lastname))
+
+                    If (LCase(userEmail).Contains((pers.email))) Or
+                        ((LCase(userEmail).Contains(LCase(pers.profile.firstname))) And (LCase(userEmail).Contains(LCase(pers.profile.lastname)))) Then
+                        result.Add(pers)
+                    End If
+                Next
+            Else
+
+                result = allUsers
+
+            End If
 
 
         Catch ex As Exception
@@ -5008,13 +5016,14 @@ Public Class Request
 
     ''' <summary>
     ''' holt zu dem VisboCenter vcName die zugehörige vcid vom Server
+    ''' außerdem alle User, die in dieses VC eingeladen sind, wird in glob. Variable allAktVCUsers gespeichert
     ''' </summary>
     ''' <param name="vcName"></param>
     ''' <returns></returns>
     Private Function GETvcid(ByVal vcName As String) As String
 
         Dim vcid As String = ""
-
+        Dim err As New clsErrorCodeMsg
         Try
             ' Alle VisboProjects über Server von WebServer/DB holen
             Dim anzLoop As Integer = 0
@@ -5026,6 +5035,7 @@ Public Class Request
                     For Each vc As clsVC In VCs
                         If vc.name = vcName Then
                             vcid = vc._id
+                            allAktVCUsers = GETallUserOfVC(vcid, err)
                             Exit For
                         End If
                     Next
@@ -8418,7 +8428,7 @@ Public Class Request
                             vp = VRScache.VPsId(vpid)
                         End If
 
-                        newWebProj.copyto(newProjekt, vp)
+                        newWebProj.copyto(newProjekt, vp, allAktVCUsers)
                         Dim korrekt As Boolean = newProjekt.isIdenticalTo(projekt)
                         If korrekt Then
                             Call MsgBox("Projekt nach POSTOneVPv gleich dem Ursprünglichen")
@@ -8516,7 +8526,7 @@ Public Class Request
                         vp = VRScache.VPsId(vpid)
                     End If
 
-                    newWebProj.copyto(newProjekt, vp)
+                    newWebProj.copyto(newProjekt, vp, allAktVCUsers)
                     Dim korrekt As Boolean = newProjekt.isIdenticalTo(projekt)
                     If korrekt Then
                         Call MsgBox("Projekt nach POSTOneVPv gleich dem Ursprünglichen")
