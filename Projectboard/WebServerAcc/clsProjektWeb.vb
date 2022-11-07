@@ -418,6 +418,7 @@ Public Class clsProjektWeb
                     For Each usr As clsUserReg In allAktVCUser
                         If usr._id = vp.managerId Then
                             .leadPerson = usr.email
+                            Exit For
                         End If
                     Next
                 End If
