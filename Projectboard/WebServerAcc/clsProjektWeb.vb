@@ -1,4 +1,4 @@
-﻿
+﻿Imports WebServerAcc
 Imports ProjectBoardDefinitions
 
 
@@ -229,10 +229,9 @@ Public Class clsProjektWeb
     ''' kopiert den Inhalt eines Projektes (clsProjektWeb) und Teile von clsVP in clsProjekt
     ''' </summary>
     ''' <param name="projekt"></param>
-    Public Sub copyto(ByRef projekt As clsProjekt, ByVal vp As clsVP)
+    Public Sub copyto(ByRef projekt As clsProjekt, ByVal vp As clsVP, ByVal allAktVCUser As List(Of clsUserReg))
         Dim i As Integer
         Dim tmpstr(5) As String
-
 
         With projekt
 
@@ -414,10 +413,14 @@ Public Class clsProjektWeb
                 .projectType = vp.vpType
                 .kundenNummer = vp.kundennummer
 
-                If Not IsNothing(vp.managerID) Then
+                If Not IsNothing(vp.managerId) Then
                     'read the userName an put it into leadPerson
-
-
+                    For Each usr As clsUserReg In allAktVCUser
+                        If usr._id = vp.managerId Then
+                            .leadPerson = usr.email
+                            Exit For
+                        End If
+                    Next
                 End If
 
                 ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
