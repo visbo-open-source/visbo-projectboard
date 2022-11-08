@@ -5603,11 +5603,15 @@ Public Module Module1
 
         ElseIf detailID = ptReportComponents.prSymFinance Then
             ' es werden Budget, Personalkosten, sosnt. Kosten und Forecast Ergebnis angezeigt
+
+            ' added by tk 8.11-22
+            Dim revenue As Double = System.Math.Round(hproj.getInvoicesPenalties.Sum, mode:=MidpointRounding.ToEven)
             Dim budget As Double, pk As Double, sk As Double, rk As Double, forecast As Double
             Call hproj.calculateRoundedKPI(budget, pk, sk, rk, forecast)
 
             tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
 
+            tmpText = tmpText & "Revenue: " & revenue.ToString & " T€" & vbLf
             tmpText = tmpText & "Budget: " & budget.ToString & " T€" & vbLf
             tmpText = tmpText & "Personnel-Cost: " & pk.ToString & " T€" & vbLf
             tmpText = tmpText & "Other Costs: " & sk.ToString & " T€" & vbLf
@@ -5668,7 +5672,7 @@ Public Module Module1
                         anz = anz + 1
                         ix = ix + 1
 
-                        curDate = sortedListOfMilestones.ElementAt(ix).Key
+                        curDate = sortedListOfTasks.ElementAt(ix).Key
                     Loop
 
                 End If
@@ -6601,15 +6605,15 @@ Public Module Module1
         End If
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs"}
+            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs", "Revenue"}
         Else
-            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten"}
+            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten", "Zahlungseingänge"}
         End If
 
 
 
 
-        Dim txtPKI(5) As String
+        Dim txtPKI(6) As String
 
         txtPKI(0) = repmsg(0) ' Budget
         txtPKI(1) = repmsg(1) ' Personalkosten
@@ -6617,6 +6621,7 @@ Public Module Module1
         txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
         txtPKI(4) = repmsg(4) ' int. Personalkosten
         txtPKI(5) = repmsg(5) ' ext. PErsonalkosten 
+        txtPKI(6) = repmsg(6) ' Zahlungseingänge
 
         Dim curValue As Double = -1.0 ' not defined
         Dim faprValue As Double = -1.0 ' first approved version 
@@ -6787,20 +6792,24 @@ Public Module Module1
                 If showEuro And Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
 
                     ' Überblick zeichnen ... 
-                    Dim curPKI() As Double = {-1, -1, -1, -1, -1, -1}
-                    Dim faprPKI() As Double = {-1, -1, -1, -1, -1, -1}
-                    Dim laprPKI() As Double = {-1, -1, -1, -1, -1, -1}
+                    Dim curPKI() As Double = {-1, -1, -1, -1, -1, -1, -1}
+                    Dim faprPKI() As Double = {-1, -1, -1, -1, -1, -1, -1}
+                    Dim laprPKI() As Double = {-1, -1, -1, -1, -1, -1, -1}
+
 
                     curPKI(0) = trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum
                     curPKI(1) = trimToShowTimeRange(hproj.getAllPersonalKosten, hproj.Start).Sum
                     curPKI(2) = trimToShowTimeRange(hproj.getGesamtAndereKosten, hproj.Start).Sum
                     curPKI(3) = curPKI(0) - (curPKI(1) + curPKI(2))
+                    curPKI(6) = trimToShowTimeRange(hproj.getInvoicesPenalties, hproj.Start).Sum
+
 
                     If considerFapr Then
                         faprPKI(0) = trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum
                         faprPKI(1) = trimToShowTimeRange(bproj.getAllPersonalKosten, bproj.Start).Sum
                         faprPKI(2) = trimToShowTimeRange(bproj.getGesamtAndereKosten, bproj.Start).Sum
                         faprPKI(3) = faprPKI(0) - (faprPKI(1) + faprPKI(2))
+                        faprPKI(6) = trimToShowTimeRange(bproj.getInvoicesPenalties, bproj.Start).Sum
                     End If
 
                     If considerLapr And Not reducedTable Then
@@ -6808,6 +6817,7 @@ Public Module Module1
                         laprPKI(1) = trimToShowTimeRange(lproj.getAllPersonalKosten, lproj.Start).Sum
                         laprPKI(2) = trimToShowTimeRange(lproj.getGesamtAndereKosten, lproj.Start).Sum
                         laprPKI(3) = laprPKI(0) - (laprPKI(1) + laprPKI(2))
+                        laprPKI(6) = trimToShowTimeRange(lproj.getInvoicesPenalties, lproj.Start).Sum
                     End If
 
 
@@ -6829,7 +6839,11 @@ Public Module Module1
                             laprPKI(5) = trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.extern), lproj.Start).Sum
                         End If
 
-
+                        ' schreibe Zahlungseingänge
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(6), faprPKI(6), laprPKI(6), curPKI(6),
+                                                              considerFapr, considerLapr)
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
 
                         ' schreibe Budget 
                         Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(0), faprPKI(0), laprPKI(0), curPKI(0),
@@ -6858,6 +6872,11 @@ Public Module Module1
 
                     Else
                         ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
+                        ' schreibe Zahlungseingänge
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(6), faprPKI(6), laprPKI(6), curPKI(6),
+                                                              considerFapr, considerLapr)
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
 
                         For i = 0 To 3
                             Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
@@ -7246,9 +7265,9 @@ Public Module Module1
         Dim repmsg() As String
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs"}
+            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs", "Revenue"}
         Else
-            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten"}
+            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten", "Zahlungseingänge"}
         End If
 
 

@@ -89,5 +89,8 @@
     <Setting Name="VISBOMode" Type="System.String" Scope="User">
       <Value Profile="(Default)">Demo</Value>
     </Setting>
+    <Setting Name="autoLogin" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

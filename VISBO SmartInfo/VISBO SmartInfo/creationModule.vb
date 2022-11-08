@@ -32,7 +32,8 @@ Module creationModule
 
     Public Sub readSettings(ByVal dbNameIsKnown As Boolean)
         With awinSettings
-
+            ' autoLogin = false , to enforce Login Window to appear
+            .autoLogin = My.Settings.autoLogin
 
             ' ur:2020.12.1: Einstellungen für direkt MongoDB oder ReST-Server Zugriff
             .databaseURL = My.Settings.mongoDBURL
@@ -102,6 +103,8 @@ Module creationModule
             'My.Settings.mongoDBWithSSL = .DBWithSSL
             'My.Settings.mongoDBname = .databaseName
             'My.Settings.awinPath = .awinPath
+            ' 
+            'My.Settings.autoLogin = .autoLogin
 
             ' folgende Settings werden im Link Settings vor dem Erzeugen einen Reports evt. modifiziert
             My.Settings.showProjectLine = .mppShowProjectLine
@@ -1147,7 +1150,12 @@ Module creationModule
 
                                     End With
 
-                                    Call createProjektChartInPPTNew(smartChartInfo, pptShape)
+                                    Dim nolegend As Boolean = False
+                                    If qualifier2 = "noLegend" Then
+                                        noLegend = True
+                                    End If
+
+                                    Call createProjektChartInPPTNew(smartChartInfo, pptShape, nolegend)
 
                                     boxName = ""
 
@@ -6643,14 +6651,14 @@ Module creationModule
                 Dim myText As String = ""
                 Dim myType As PTpptAnnotationType
                 Dim myTitle As String = ""
-                Dim leftPos As Single
+                'Dim leftPos As Single
 
                 If awinSettings.mppShowPhName Then
                     doDraw = True
                     myText = phDescription
                     myType = PTpptAnnotationType.text
                     myTitle = "Beschriftung"
-                    leftPos = CSng(x1)
+
                 ElseIf cphase.invoice.Key > 0 Then
                     doDraw = True
                     myText = cphase.invoice.Key.ToString("##0.#") & " T€"
@@ -6668,7 +6676,7 @@ Module creationModule
                         .Left = CSng(x1)
 
                         If myType = PTpptAnnotationType.invoice Then
-                            leftPos = CSng(x2) - .Width
+                            .Left = CSng(x2) - .Width
                         End If
 
                         If .Left + .Width > rds.drawingAreaRight + 2 Then

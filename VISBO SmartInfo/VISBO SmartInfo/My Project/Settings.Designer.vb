@@ -398,6 +398,18 @@ Partial Friend NotInheritable Class MySettings
             Me("VISBOMode") = value
         End Set
     End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property autoLogin() As Boolean
+        Get
+            Return CType(Me("autoLogin"),Boolean)
+        End Get
+        Set
+            Me("autoLogin") = value
+        End Set
+    End Property
 End Class
 
 Namespace My

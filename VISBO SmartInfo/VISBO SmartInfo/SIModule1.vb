@@ -447,6 +447,11 @@ Module SIModule1
 
         If noDBAccessInPPT Then
 
+            ' tk enforce pwd input
+            ' awinsettings.autoLogin = false
+            'awinSettings.userNamePWD = ""
+            'awinSettings.rememberUserPwd = False
+            'My.Settings.userNamePWD = ""
             noDBAccessInPPT = Not logInToMongoDB(True)
 
             If noDBAccessInPPT Then
@@ -484,13 +489,21 @@ Module SIModule1
                         ' CustomUserRoles holen 
                         ' aber nur wenn es sich um eine Visbo-Server Version handelt ... 
                         If awinSettings.visboServer = True Then
-                            Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
-                            allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
+
+                            With myCustomUserRole
+                                .userName = dbUsername
+                                .customUserRole = ptCustomUserRoles.ProjektLeitung
+                                .specifics = ""
+                            End With
+
+                            ' tk 8.11.22 rausgenommen 
+                            'Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+                            'allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
                         Else
                             With myCustomUserRole
                                 .userName = dbUsername
-                                .customUserRole = ptCustomUserRoles.Alles
+                                .customUserRole = ptCustomUserRoles.ProjektLeitung
                                 .specifics = ""
                             End With
                         End If
@@ -843,7 +856,8 @@ Module SIModule1
                             .userName = dbUsername
                         End With
                         ' jetzt gibt es eine currentUserRole: myCustomUserRole - die gelten aktuell nur für Excel Projectboard, haben aber keine auswirkungen auf PPT Report Creation Addin
-                        Call myCustomUserRole.setNonAllowances()
+                        ' tk das muss hier nicht gesetzt werden - hat in SmartInfo keine Relevanz
+                        'Call myCustomUserRole.setNonAllowances()
                     End Try
 
 
