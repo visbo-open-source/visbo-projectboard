@@ -5155,25 +5155,25 @@ Module SIModule1
         End If
 
         pptChart = pptShape.Chart
-        pptChartData = pptChart.ChartData
+        'pptChartData = pptChart.ChartData
 
-        'ur:2019-09-19 Test: funktionsfähig
-        If Not IsNothing(pptChartData.Workbook) Then
+        ''ur:2019-09-19 Test: funktionsfähig
+        'If Not IsNothing(pptChartData.Workbook) Then
 
-            If Not pptChartData.IsLinked Then
-                With pptChartData
-                    .Activate()
-                    '.ActivateChartDataWindow()
-                    .Workbook.Application.Visible = smartChartsAreEditable
-                    .Workbook.Application.Width = 50
-                    .Workbook.Application.Height = 15
-                    .Workbook.Application.Top = 10
-                    .Workbook.Application.Left = -120
-                    ' .Workbook.Application.WindowState = -4140 '## Minimize Excel
-                End With
-            End If
+        '    If Not pptChartData.IsLinked Then
+        '        With pptChartData
+        '            .Activate()
+        '            '.ActivateChartDataWindow()
+        '            .Workbook.Application.Visible = smartChartsAreEditable
+        '            .Workbook.Application.Width = 50
+        '            .Workbook.Application.Height = 15
+        '            .Workbook.Application.Top = 10
+        '            .Workbook.Application.Left = -120
+        '            ' .Workbook.Application.WindowState = -4140 '## Minimize Excel
+        '        End With
+        '    End If
 
-        End If
+        'End If
 
 
 
@@ -5310,12 +5310,12 @@ Module SIModule1
         diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRedGreen, lengthRedGreen)
 
 
-
+        Dim anz As Integer
         With CType(pptChart, PowerPoint.Chart)
 
             ' remove old series
             ''Try
-            Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+            anz = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
             Do While anz > 0
                 .SeriesCollection(1).Delete()
                 anz = anz - 1
@@ -5325,6 +5325,8 @@ Module SIModule1
             ''End Try
         End With
 
+        ' Kontrolle : 
+        anz = CInt(CType(pptChart.SeriesCollection, PowerPoint.SeriesCollection).Count)
 
         ' jetzt die Farbe bestimme
         Dim balkenFarbe As Integer = bestimmeBalkenFarbe(scInfo)
@@ -5417,6 +5419,7 @@ Module SIModule1
 
                 ' draw Baseline Line 
                 If Not IsNothing(scInfo.vglProj) Then
+
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                         .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
@@ -5449,19 +5452,23 @@ Module SIModule1
 
                     End With
 
-                    ' draw invoices of Baseline 
-                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    If Not IsNothing(scInfo.vglProj) Then
+                        ' draw invoices of Baseline 
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                        .Name = bestimmeLegendNameIPB("BIV") & scInfo.vglProj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeGreen
-                        .Values = formerInvoiceDatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                        .Format.Line.Weight = 1.5
-                        .Format.Line.ForeColor.RGB = visboFarbeGreen
-                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                            .Name = bestimmeLegendNameIPB("BIV") & scInfo.vglProj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeGreen
+                            .Values = formerInvoiceDatenreihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            .Format.Line.Weight = 1.5
+                            .Format.Line.ForeColor.RGB = visboFarbeGreen
+                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
-                    End With
+                        End With
+
+                    End If
+
 
                 End If
 
@@ -5621,7 +5628,9 @@ Module SIModule1
 
         pptChart.Refresh()
 
-        pptChartData.BreakLink()
+        'tk 8.11.22 rausgenommen, auch oben die Definition 
+        '
+        'pptChartData.BreakLink()
 
 
 
