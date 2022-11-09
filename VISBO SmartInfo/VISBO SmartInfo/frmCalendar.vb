@@ -26,8 +26,15 @@ Public Class frmCalendar
         Call getFrmPosition(PTfrm.other, Top, Left)
 
         ' das Datum auf currentTimestamp setzen 
-        DateTimePicker1.Value = currentTimestamp
-        DateTimePicker2.Value = currentTimestamp
+        Try
+            DateTimePicker1.Value = currentTimestamp
+            DateTimePicker2.Value = currentTimestamp
+        Catch ex As Exception
+            currentTimestamp = Date.Now
+            DateTimePicker1.Value = currentTimestamp
+            DateTimePicker2.Value = currentTimestamp
+        End Try
+
 
 
         'If englishLanguage Then

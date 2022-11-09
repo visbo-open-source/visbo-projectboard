@@ -633,16 +633,23 @@ Module SIModule1
         Call readSettings(dbNameIsKnown)
 
         ' tk das muss beim Login gemacht werden 
-        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-        awinSettings.userNamePWD = My.Settings.userNamePWD
-
+        ' tk jetzt wieder rausgenommen, weil das ja im Startup gemacht wird
+        'awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        'awinSettings.userNamePWD = My.Settings.userNamePWD
 
         logfileNamePath = createLogfileName()
 
 
         If awinSettings.visboServer Then
 
-            If logInToMongoDB(True) Then
+            Dim weitermachen As Boolean = Not noDBAccessInPPT
+
+            If noDBAccessInPPT Then
+                weitermachen = logInToMongoDB(True)
+            End If
+
+
+            If weitermachen Then
                 ' weitermachen ...
 
                 Try
@@ -818,15 +825,6 @@ Module SIModule1
                     End If
 
 
-                    ' lesen der Organisation und Kapazitäten in TSO - Modus
-
-                    ' global variables RoleDefinitions and CostDefinitions now are defined and have values
-                    'Dim currentOrgaDate As Date = readOrganisations()
-
-                    '    old variant, before TSO-Orga:
-                    '   Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-
                     Dim newestOrgaTS As Date = DateSerial(2200, 12, 31)
                     Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, False, True, True)
 
@@ -842,23 +840,31 @@ Module SIModule1
                     End If
 
                     ' lesen der Custom User Roles 
-                    Dim meldungen As New Collection
-                    Try
+                    'Dim meldungen As New Collection
+                    'Try
 
-                        Call setUserRoles(meldungen)
-                    Catch ex As Exception
-                        ' hier bekommt der Nutzer die Rolle Projektleiter 
-                        myCustomUserRole = New clsCustomUserRole
+                    '    Call setUserRoles(meldungen)
+                    'Catch ex As Exception
+                    '    ' hier bekommt der Nutzer die Rolle Projektleiter 
+                    '    myCustomUserRole = New clsCustomUserRole
 
-                        With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.ProjektLeitung
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole - die gelten aktuell nur für Excel Projectboard, haben aber keine auswirkungen auf PPT Report Creation Addin
-                        ' tk das muss hier nicht gesetzt werden - hat in SmartInfo keine Relevanz
-                        'Call myCustomUserRole.setNonAllowances()
-                    End Try
+                    '    With myCustomUserRole
+                    '        .customUserRole = ptCustomUserRoles.ProjektLeitung
+                    '        .specifics = ""
+                    '        .userName = dbUsername
+                    '    End With
+                    '    ' jetzt gibt es eine currentUserRole: myCustomUserRole - die gelten aktuell nur für Excel Projectboard, haben aber keine auswirkungen auf PPT Report Creation Addin
+                    '    ' tk das muss hier nicht gesetzt werden - hat in SmartInfo keine Relevanz
+                    '    'Call myCustomUserRole.setNonAllowances()
+                    'End Try
+
+                    myCustomUserRole = New clsCustomUserRole
+
+                    With myCustomUserRole
+                        .customUserRole = ptCustomUserRoles.ProjektLeitung
+                        .specifics = ""
+                        .userName = dbUsername
+                    End With
 
 
                     wasSuccessful = True
@@ -870,7 +876,9 @@ Module SIModule1
                 End Try
 
             Else
+                awinsetTypen_Performed = False
                 wasSuccessful = False
+                appearancesWereRead = False
             End If
 
         Else ' direkter MongoDB-Zugriff und lesen der appearances und customizationSettings from File
@@ -5169,6 +5177,8 @@ Module SIModule1
         End If
 
         pptChart = pptShape.Chart
+
+        ' tk muss das rein oder nicht !? 
         'pptChartData = pptChart.ChartData
 
         ''ur:2019-09-19 Test: funktionsfähig

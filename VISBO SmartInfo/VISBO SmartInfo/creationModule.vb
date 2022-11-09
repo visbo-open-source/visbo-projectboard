@@ -568,7 +568,7 @@ Module creationModule
                             boxName = kennzeichnung
 
                             If .AlternativeText <> "" Then
-                                Call title2kennzQualifierOptions(.AlternativeText, dummy1, dummy2, qualifier2)
+                                Call title2kennzQualifierOptions(.AlternativeText, qualifier2, dummy1, dummy2)
                             End If
 
 
@@ -579,7 +579,7 @@ Module creationModule
                             boxName = kennzeichnung
 
                             If .AlternativeText <> "" Then
-                                Call title2kennzQualifierOptions(.AlternativeText, dummy1, dummy2, qualifier2)
+                                Call title2kennzQualifierOptions(.AlternativeText, qualifier2, dummy1, dummy2)
                             End If
 
                         ElseIf .AlternativeText <> "" Then
@@ -603,7 +603,8 @@ Module creationModule
 
                                     End If
                                 Next
-                                Call title2kennzQualifierOptions(altText2, dummy1, dummy2, qualifier2)
+                                Call title2kennzQualifierOptions(altText1, kennzeichnung, qualifier, options)
+                                Call title2kennzQualifierOptions(altText2, qualifier2, dummy1, dummy2)
 
                             Else
                                 Call title2kennzQualifierOptions(.AlternativeText, kennzeichnung, qualifier, options)
@@ -879,9 +880,12 @@ Module creationModule
                                         Dim tmpProjekt As New clsProjekt
 
                                         Dim minCal As Boolean = False
-                                        If pptShape.AlternativeText.Length > 0 Then
-                                            minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                        If qualifier2.Length > 0 Then
+                                            minCal = (qualifier2.Trim = "minCal")
                                         End If
+                                        'If pptShape.AlternativeText.Length > 0 Then
+                                        '    minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                        'End If
 
                                         Dim pptFirstTime As Boolean = True
                                         Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
@@ -918,9 +922,12 @@ Module creationModule
                                         Dim tmpProjekt As New clsProjekt
 
                                         Dim minCal As Boolean = False
-                                        If pptShape.AlternativeText.Length > 0 Then
-                                            minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                        If qualifier2.Length > 0 Then
+                                            minCal = (qualifier2.Trim = "minCal")
                                         End If
+                                        'If pptShape.AlternativeText.Length > 0 Then
+                                        '    minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                        'End If
 
                                         Dim pptFirstTime As Boolean = True
                                         Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
@@ -1213,7 +1220,7 @@ Module creationModule
 
 
                                     With smartChartInfo
-                                        .q2 = bestimmeRoleQ2(qualifier2, selectedRoles)
+                                        .q2 = bestimmeRoleQ2(options, selectedRoles)
                                         .bigType = ptReportBigTypes.charts
 
                                         ' muss mit dem ersten oder letzten verglichen werden ? 
@@ -2928,6 +2935,8 @@ Module creationModule
                 Catch ex As Exception
 
                 End Try
+            Else
+                .HasLegend = False
             End If
 
             .HasTitle = True
