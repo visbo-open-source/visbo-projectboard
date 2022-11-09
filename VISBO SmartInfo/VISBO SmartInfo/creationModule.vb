@@ -182,7 +182,7 @@ Module creationModule
         'Dim auswahl As Integer
         'Dim compareToID As Integer
 
-        Dim qualifier As String = " ", qualifier2 As String = " "
+        Dim qualifier As String = " ", qualifier2 As String = " ", options As String = ""
         'Dim notYetDone As Boolean = False
         Dim ze As String = " (" & awinSettings.kapaEinheit & ")"
         Dim ke As String = " (T€)"
@@ -334,23 +334,66 @@ Module creationModule
 
                     Dim tmpStr(3) As String
                     Try
-                        'Änderung TK: 220727
-                        If .Title = "" And .AlternativeText <> "" Then
-                            .Title = .AlternativeText
-                        End If
+                        Dim dummy1 As String = ""
+                        Dim dummy2 As String = ""
 
-                        If .Title <> "" Then
-                            tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-                            kennzeichnung = tmpStr(0).Trim
-                        Else
-                            If CBool(.HasTextFrame) Then
-                                Dim dummyStr As String = .TextFrame2.TextRange.Text
-                                tmpStr = dummyStr.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-                                kennzeichnung = tmpStr(0).Trim
-                            Else
-                                kennzeichnung = "nicht identifizierbar"
+                        ' if it is a system where user only can edit .AlternativeText, but .Title is still having something which is identical, at least in the beginning
+                        If pptShape.Title.Length >= 5 And pptShape.AlternativeText.Length >= 5 Then
+                            If .Title.Substring(0, 5) = .AlternativeText.Substring(0, 5) Then
+                                .Title = ""
                             End If
                         End If
+
+
+                        If .Title <> "" Then
+
+                            Call title2kennzQualifierOptions(.Title, kennzeichnung, qualifier, options)
+                            boxName = kennzeichnung
+
+                            If .AlternativeText <> "" Then
+                                Call title2kennzQualifierOptions(.AlternativeText, dummy1, dummy2, qualifier2)
+                            End If
+
+
+                        ElseIf .TextFrame2.TextRange.Text <> "" Then
+                            ' take the visible Text in the box 
+
+                            Call title2kennzQualifierOptions(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, options)
+                            boxName = kennzeichnung
+
+                            If .AlternativeText <> "" Then
+                                Call title2kennzQualifierOptions(.AlternativeText, dummy1, dummy2, qualifier2)
+                            End If
+
+                        ElseIf .AlternativeText <> "" Then
+
+                            ' split the current .AlternativeText in two parts 
+                            Dim altText1 As String = ""
+                            Dim altText2 As String = ""
+
+                            If .AlternativeText.Contains(vbLf) Then
+                                tmpStr = .AlternativeText.Trim.Split(New Char() {CChar(vbLf)})
+                                altText1 = tmpStr(0)
+
+                                For ix As Integer = 1 To tmpStr.Length - 1
+                                    If tmpStr(ix).Length > 0 Then
+                                        If altText2.Length = 0 Then
+                                            altText2 = tmpStr(ix)
+                                        Else
+                                            altText2 = altText2 & vbLf & tmpStr(ix)
+                                        End If
+
+                                    End If
+                                Next
+                                Call title2kennzQualifierOptions(altText2, dummy1, dummy2, qualifier2)
+
+                            Else
+                                Call title2kennzQualifierOptions(.AlternativeText, kennzeichnung, qualifier, options)
+                            End If
+
+                            boxName = kennzeichnung
+                        End If
+
 
                     Catch ex As Exception
                         kennzeichnung = "nicht identifizierbar"
@@ -359,7 +402,6 @@ Module creationModule
                     If kennzeichnung = "Projekt-Name" Or
                         kennzeichnung = "Portfolio-Name" Or
                         kennzeichnung = "Rolle" Or
-                        kennzeichnung = "Skill" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "Phase" Or
                         kennzeichnung = "Custom-Field" Or
@@ -425,11 +467,10 @@ Module creationModule
 
                 ElseIf kennzeichnung = "TableBudgetCostAPVCV" Or
                        kennzeichnung = "Rolle" Or
-                       kennzeichnung = "Skill" Or
                        kennzeichnung = "Kostenart" Or
                        kennzeichnung = "ProjektBedarfsChart" Then
-
-                    roleCostSelNeeded(0) = True
+                    ' it should only be given as text in the Powerpoint Templates. Currently there is no interactive selection 
+                    roleCostSelNeeded(0) = False
                 End If
 
 
@@ -514,27 +555,63 @@ Module creationModule
 
                     With pptShape
                         .Name = "Shape" & .Id.ToString
-                        Dim tst As String = .AlternativeText
+                        'Dim tst As String = .AlternativeText
+                        ' ´kennzeichnung , qualifier, qualifier2 sind in Title oder aber visible Text 
+                        ' wenn beides, dann zählt .Title
+                        ' qualifier3 enthält die Angabe in .AlternativeText
+                        Dim dummy1 As String = ""
+                        Dim dummy2 As String = ""
+
                         If .Title <> "" Then
 
-                            Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
+                            Call title2kennzQualifierOptions(.Title, kennzeichnung, qualifier, options)
                             boxName = kennzeichnung
 
-                        Else
-                            ' Start neu
+                            If .AlternativeText <> "" Then
+                                Call title2kennzQualifierOptions(.AlternativeText, dummy1, dummy2, qualifier2)
+                            End If
 
-                            Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
+
+                        ElseIf .TextFrame2.TextRange.Text <> "" Then
+                            ' take the visible Text in the box 
+
+                            Call title2kennzQualifierOptions(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, options)
                             boxName = kennzeichnung
 
+                            If .AlternativeText <> "" Then
+                                Call title2kennzQualifierOptions(.AlternativeText, dummy1, dummy2, qualifier2)
+                            End If
+
+                        ElseIf .AlternativeText <> "" Then
+
+                            ' split the current .AlternativeText in two parts 
+                            Dim altText1 As String = ""
+                            Dim altText2 As String = ""
+                            Dim tmpstr() As String
+
+                            If .AlternativeText.Contains(vbLf) Then
+                                tmpStr = .AlternativeText.Trim.Split(New Char() {CChar(vbLf)})
+                                altText1 = tmpStr(0)
+
+                                For ix As Integer = 1 To tmpStr.Length - 1
+                                    If tmpstr(ix).Length > 0 Then
+                                        If altText2.Length = 0 Then
+                                            altText2 = tmpstr(ix)
+                                        Else
+                                            altText2 = altText2 & vbLf & tmpstr(ix)
+                                        End If
+
+                                    End If
+                                Next
+                                Call title2kennzQualifierOptions(altText2, dummy1, dummy2, qualifier2)
+
+                            Else
+                                Call title2kennzQualifierOptions(.AlternativeText, kennzeichnung, qualifier, options)
+                            End If
+
+                            boxName = kennzeichnung
                         End If
 
-                        ' wenn .AlternativeText was enthält ; das wird z.Bsp in Tabelle PRojektziele benötigt ...
-
-                        'If .AlternativeText <> "" then
-                        'Änderung TK: 
-                        If .AlternativeText <> "" And .AlternativeText <> .Title Then
-                            qualifier2 = .AlternativeText
-                        End If
 
 
                         top = .Top
@@ -1152,7 +1229,7 @@ Module creationModule
 
                                     Dim nolegend As Boolean = False
                                     If qualifier2 = "noLegend" Then
-                                        noLegend = True
+                                        nolegend = True
                                     End If
 
                                     Call createProjektChartInPPTNew(smartChartInfo, pptShape, nolegend)
@@ -1324,132 +1401,141 @@ Module creationModule
                                     End If
 
 
-                                    ' old 
-
-                                    If qualifier <> "" Then
-                                        Dim smartChartInfo As New clsSmartPPTChartInfo
-                                        With smartChartInfo
-
-                                            If showRangeLeft > 0 Then
-                                                .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
-                                            End If
-                                            If showRangeRight > 0 Then
-                                                .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
-                                            End If
-
-                                            .einheit = PTEinheiten.personentage
-                                            .elementTyp = ptElementTypen.phases
-                                            .pName = getPnameFromKey(currentConstellationPvName)
-                                            .vName = getVariantnameFromKey(currentConstellationPvName)
-                                            .vpid = currentSessionConstellation.vpID
-                                            .prPF = ptPRPFType.portfolio
-                                            .q2 = bestimmeRoleQ2(qualifier, selectedPhases)
-                                            .bigType = ptReportBigTypes.charts
-
-                                            ' bei Portfolio Charts gibt es kein hproj oder vproj 
-                                            .hproj = Nothing
-                                            .vglProj = Nothing
-
-
-                                        End With
-
-                                        If smartChartInfo.q2 <> "" Then
-
-                                            Dim noLegend As Boolean = False
-                                            If qualifier2 = "noLegend" Then
-                                                noLegend = True
-                                            End If
-                                            Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
-
-
-                                        End If
-
-                                    End If
-
-
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                 End Try
 
-
-                            Case "Skill"
 
 
                             Case "Rolle"
 
 
                                 Try
-
                                     ' Text im ShapeContainer / Platzhalter zurücksetzen 
                                     .TextFrame2.TextRange.Text = ""
 
-                                    If qualifier <> "" Then
-                                        Dim smartChartInfo As New clsSmartPPTChartInfo
-                                        With smartChartInfo
+                                    ' Define Default Time-Span as Today - today + 11 months 
+                                    showRangeLeft = getColumnOfDate(Date.Now)
+                                    showRangeRight = getColumnOfDate(Date.Now.AddMonths(11))
 
-                                            If showRangeLeft > 0 Then
-                                                .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
-                                            End If
-                                            If showRangeRight > 0 Then
-                                                .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
-                                            End If
+                                    ' was a timeSpan given? 
+                                    If options.Length > 0 Then
 
-                                            .einheit = PTEinheiten.personentage
-                                            .elementTyp = ptElementTypen.roles
-                                            .pName = getPnameFromKey(currentConstellationPvName)
-                                            .vName = getVariantnameFromKey(currentConstellationPvName)
-                                            .vpid = currentSessionConstellation.vpID
-                                            .prPF = ptPRPFType.portfolio
-                                            .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
-                                            .bigType = ptReportBigTypes.charts
+                                        Dim tmpStr() As String = options.Trim.Split(New Char() {CChar("-"), CChar("–")})
+                                        If tmpstr.Length = 2 Then
+                                            ' only then it can be start- and end-Date
+                                            Try
+                                                Dim leftDate As Date = CDate(tmpstr(0))
+                                                Dim rightDate As Date = CDate(tmpstr(1))
+                                                showRangeLeft = getColumnOfDate(leftDate)
+                                                showRangeRight = getColumnOfDate(rightDate)
 
-                                            ' bei Portfolio Charts gibt es kein hproj oder vproj 
-                                            .hproj = Nothing
-                                            .vglProj = Nothing
-
-
-                                        End With
-
-                                        If smartChartInfo.q2 <> "" Then
-
-                                            Dim roleID As String = RoleDefinitions.parseRoleNameID(smartChartInfo.q2, -1).ToString
-                                            Dim paramRoleIDToAppend As String = ""
-                                            If roleID <> "" Then
-                                                paramRoleIDToAppend = "&roleID=" & roleID
-                                            End If
-
-
-                                            Dim noLegend As Boolean = False
-                                            If qualifier2 = "noLegend" Then
-                                                noLegend = True
-                                            End If
-                                            Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
-
-                                            ' 
-                                            ' tk got the Method from Ute / Projectboard. Do not add an Icon but rather link it to the elready existing shape 
-                                            '
-                                            ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
-                                            '
-                                            Dim beginningDate As String = ""
-                                            Dim endingDate As String = ""
-                                            If Not IsNothing(smartChartInfo.vpid) Then
-                                                Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                                If smartChartInfo.zeitRaumLeft > Date.MinValue Then
-                                                    beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("s")
+                                                If showRangeLeft >= showRangeRight Then
+                                                    Dim saveValue As Integer = showRangeLeft
+                                                    showRangeLeft = showRangeRight
+                                                    If saveValue = showRangeLeft Then
+                                                        showRangeRight = showRangeLeft + 11
+                                                    Else
+                                                        showRangeRight = saveValue
+                                                    End If
                                                 End If
-                                                If smartChartInfo.zeitRaumRight > Date.MinValue Then
-                                                    Dim hzeitRaumRight As Date = smartChartInfo.zeitRaumRight
-                                                    hzeitRaumRight = DateAdd(DateInterval.Month, 1, hzeitRaumRight)
-                                                    endingDate = "&to=" & hzeitRaumRight.ToString("s")
-                                                End If
+                                            Catch ex As Exception
 
-                                                Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & "&unit=1" & paramRoleIDToAppend & beginningDate & endingDate
-                                                Call createHyperlinkInShape(pptShape, visboHyperLinkURL)
-
-                                            End If
+                                            End Try
 
                                         End If
 
+                                    End If
+
+                                    If qualifier <> "" Then
+
+                                        Dim myRoleNameID As String = ""
+
+                                        If RoleDefinitions.containsNameOrID(qualifier) Then
+
+
+                                            Dim teamID As Integer = -1
+                                            Dim myItem As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(qualifier, teamID)
+
+                                            If myItem.isSkill Then
+                                                Dim myEmbracingRole As clsRollenDefinition = RoleDefinitions.getContainingRoleOfSkillMembers(myItem.UID)
+                                                myRoleNameID = RoleDefinitions.bestimmeRoleNameID(myEmbracingRole.UID, myItem.UID)
+                                            Else
+                                                myRoleNameID = RoleDefinitions.bestimmeRoleNameID(myItem.UID, teamID)
+                                            End If
+
+
+                                            Dim smartChartInfo As New clsSmartPPTChartInfo
+                                            With smartChartInfo
+
+                                                If showRangeLeft > 0 Then
+                                                    .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                                End If
+                                                If showRangeRight > 0 Then
+                                                    .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                                End If
+
+                                                .einheit = PTEinheiten.personentage
+                                                .elementTyp = ptElementTypen.roles
+                                                .pName = getPnameFromKey(currentConstellationPvName)
+                                                .vName = getVariantnameFromKey(currentConstellationPvName)
+                                                .vpid = currentSessionConstellation.vpID
+                                                .prPF = ptPRPFType.portfolio
+                                                .q2 = myRoleNameID
+                                                .bigType = ptReportBigTypes.charts
+
+                                                ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                                .hproj = Nothing
+                                                .vglProj = Nothing
+
+
+                                            End With
+
+                                            If smartChartInfo.q2 <> "" Then
+
+                                                Dim roleID As String = RoleDefinitions.parseRoleNameID(smartChartInfo.q2, -1).ToString
+                                                Dim paramRoleIDToAppend As String = ""
+                                                If roleID <> "" Then
+                                                    paramRoleIDToAppend = "&roleID=" & roleID
+                                                End If
+
+
+                                                Dim noLegend As Boolean = False
+                                                If qualifier2 = "noLegend" Then
+                                                    noLegend = True
+                                                End If
+                                                Call createProjektChartInPPTNew(smartChartInfo, pptShape, noLegend:=noLegend)
+
+                                                ' 
+                                                ' tk got the Method from Ute / Projectboard. Do not add an Icon but rather link it to the elready existing shape 
+                                                '
+                                                ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                                                '
+                                                Dim beginningDate As String = ""
+                                                Dim endingDate As String = ""
+                                                If Not IsNothing(smartChartInfo.vpid) Then
+                                                    Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                                    If smartChartInfo.zeitRaumLeft > Date.MinValue Then
+                                                        beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("s")
+                                                    End If
+                                                    If smartChartInfo.zeitRaumRight > Date.MinValue Then
+                                                        Dim hzeitRaumRight As Date = smartChartInfo.zeitRaumRight
+                                                        hzeitRaumRight = DateAdd(DateInterval.Month, 1, hzeitRaumRight)
+                                                        endingDate = "&to=" & hzeitRaumRight.ToString("s")
+                                                    End If
+
+                                                    Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & "&unit=1" & paramRoleIDToAppend & beginningDate & endingDate
+                                                    Call createHyperlinkInShape(pptShape, visboHyperLinkURL)
+
+                                                End If
+
+                                            End If
+                                        Else
+                                            .TextFrame2.TextRange.Text = "unknown Item:" & qualifier
+                                        End If
+
+                                    Else
+                                        .TextFrame2.TextRange.Text = "missing identifer for role/skill:" & qualifier
                                     End If
 
 
@@ -1931,7 +2017,7 @@ Module creationModule
 
         Dim hilfsstring As String = ""
         Dim chtobjName As String = ""
-        Dim smallfontsize As Double
+        'Dim smallfontsize As Double
         Dim singleProject As Boolean
 
 
@@ -7127,7 +7213,7 @@ Module creationModule
 
 
                             Else
-                                    success = False
+                                success = False
                                 Call MsgBox("Problems when reading Portfolio " & pName)
                             End If
                         Next
@@ -7153,6 +7239,66 @@ Module creationModule
         loadPortfolioProjectsInPPT = success
     End Function
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="title"></param>
+    ''' <param name="kennz"></param>
+    ''' <param name="qualifier"></param>
+    ''' <param name="options"></param>
+    ''' <remarks></remarks>
+    Public Sub title2kennzQualifierOptions(ByVal title As String, ByRef kennz As String, ByRef qualifier As String, ByRef options As String)
+        ' Start neu
+        Dim tmpStr() As String
+
+        If title.Contains(vbLf) Then
+            kennz = ""
+            qualifier = ""
+
+            tmpStr = title.Trim.Split(New Char() {CChar(vbLf)})
+
+            For i As Integer = 0 To tmpStr.Length - 1
+                If tmpStr(i).Length > 0 Then
+                    If options.Length = 0 Then
+                        options = tmpStr(i)
+                    Else
+                        options = options & vbLf & tmpStr(i)
+                    End If
+
+                End If
+            Next
+        Else
+            Try
+
+                tmpStr = title.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
+                kennz = tmpStr(0).Trim
+
+            Catch ex As Exception
+                kennz = "nicht identifizierbar"
+                ReDim tmpStr(0)
+                tmpStr(0) = " "
+            End Try
+
+            Try
+                If tmpStr.Length < 2 Then
+                    qualifier = ""
+                    options = ""
+                ElseIf tmpStr.Length = 2 Then
+                    qualifier = tmpStr(1).Trim
+                    options = ""
+                ElseIf tmpStr.Length >= 3 Then
+                    qualifier = tmpStr(1).Trim
+                    options = tmpStr(2).Trim
+                End If
+
+            Catch ex As Exception
+                qualifier = ""
+                options = ""
+            End Try
+        End If
+
+
+    End Sub
 
 
 End Module
