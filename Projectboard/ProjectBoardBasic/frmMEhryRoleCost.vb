@@ -578,27 +578,38 @@ Public Class frmMEhryRoleCost
             currentSkill = RoleDefinitions.getRoledef(skillName)
         End If
 
-        ' get the phase beginning and end to decide whether the role can be planned with
-        Dim hphase As clsPhase = hproj.getPhaseByID(phaseNameID)
-        Dim fromDateCol As Integer = getColumnOfDate(hphase.getStartDate)
-        Dim toDateCol As Integer = getColumnOfDate(hphase.getEndDate)
-        Dim actualDataCol As Integer = getColumnOfDate(hproj.actualDataUntil)
 
-        If currentRole.isActiveRole(Math.Max(fromDateCol, actualDataCol), toDateCol) Then
+        Dim weitermachen As Boolean = False
+
+        If Not IsNothing(hproj) And phaseNameID <> "" Then
+            ' this is not possible when right click in Zeile = 1 , Filtern .. 
+            ' get the phase beginning and end to decide whether the role can be planned with
+            Dim hphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+            Dim fromDateCol As Integer = getColumnOfDate(hphase.getStartDate)
+            Dim toDateCol As Integer = getColumnOfDate(hphase.getEndDate)
+            Dim actualDataCol As Integer = getColumnOfDate(hproj.actualDataUntil)
+            weitermachen = currentRole.isActiveRole(Math.Max(fromDateCol, actualDataCol), toDateCol)
+        Else
+            ' in case it was reached by Right Click in Zeile 1 : Filtering
+            weitermachen = True
+        End If
+
+
+        If weitermachen Then
             Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
             Dim currentNode As TreeNode
             Dim childNode As TreeNode = Nothing
-            Dim weiterMachen As Boolean = False
+            weitermachen = False
 
             If IsNothing(currentSkill) Then
-                weiterMachen = True
+                weitermachen = True
             Else
-                weiterMachen = RoleDefinitions.roleHasSkill(currentRoleUid, currentSkill.UID)
+                weitermachen = RoleDefinitions.roleHasSkill(currentRoleUid, currentSkill.UID)
             End If
             ' wenn eine Skill angegeben ist, dann darf der nur aufgenommen werden, wenn er die Skill hat 
 
-            If weiterMachen Then
+            If weitermachen Then
                 currentNode = parentNode.Nodes.Add(currentRole.name)
                 currentNode.Text = currentRole.name
 
