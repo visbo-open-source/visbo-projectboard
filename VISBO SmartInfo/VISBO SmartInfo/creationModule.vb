@@ -2974,6 +2974,7 @@ Module creationModule
         newPPTChart.Chart.Refresh()
 
 
+
         Call addSmartPPTChartInfo(newPPTChart, sCInfo)
 
 
