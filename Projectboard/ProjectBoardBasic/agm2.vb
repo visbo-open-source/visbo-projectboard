@@ -14113,7 +14113,9 @@ Public Module agm2
                                 hasForecastMonths = cphase.hasForecastMonths
                             End If
 
-                            summeEditierenErlaubt = (awinSettings.allowSumEditing And actualDataRelColumn < 0)
+                            ' tk summe editieren is allowed when the current Phase does not contain any actual data : do not lock, when only the project is having actualData
+                            'summeEditierenErlaubt = (awinSettings.allowSumEditing And actualDataRelColumn < 0)
+                            summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
 
                             Dim indentlevelPhMS As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
