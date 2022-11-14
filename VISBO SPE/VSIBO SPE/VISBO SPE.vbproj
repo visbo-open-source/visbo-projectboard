@@ -217,6 +217,7 @@
     <Compile Include="VISBO_SPE_Utilities.vb" />
     <EmbeddedResource Include="frmAddOrDeleteALine.resx">
       <DependentUpon>frmAddOrDeleteALine.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjectEditSettings.resx">
       <DependentUpon>frmProjectEditSettings.vb</DependentUpon>
@@ -336,7 +337,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>7E2BA574A41FA2EE605EA51A576FA016FF481A96</ManifestCertificateThumbprint>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
