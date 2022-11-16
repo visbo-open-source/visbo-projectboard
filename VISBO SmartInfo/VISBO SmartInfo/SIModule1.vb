@@ -448,10 +448,8 @@ Module SIModule1
         If noDBAccessInPPT Then
 
             ' tk enforce pwd input
-            ' awinsettings.autoLogin = false
-            'awinSettings.userNamePWD = ""
-            'awinSettings.rememberUserPwd = False
-            'My.Settings.userNamePWD = ""
+            awinSettings.autoLogin = My.Settings.autoLogin
+
             noDBAccessInPPT = Not logInToMongoDB(True)
 
             If noDBAccessInPPT Then
@@ -10259,7 +10257,7 @@ Module SIModule1
     ''' <remarks></remarks>
     Public Sub makeVisboShapesVisible(ByVal visible As Microsoft.Office.Core.MsoTriState)
 
-        For Each pptSlide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
+       For Each pptSlide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
 
             For Each pptShape As PowerPoint.Shape In pptSlide.Shapes
                 If isRelevantForProtection(pptShape) Then
