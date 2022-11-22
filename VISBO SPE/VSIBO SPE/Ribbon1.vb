@@ -163,7 +163,7 @@ Public Class Ribbon1
         End Try
 
 
-        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
+        Dim boardWasEmpty As Boolean = editProjekteInSPE.Count = 0
 
         If Not boardWasEmpty Then
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
@@ -177,6 +177,7 @@ Public Class Ribbon1
             End If
             AlleProjekte.Clear()
             ShowProjekte.Clear()
+            editProjekteInSPE.Clear()
             Call clearTable(currentProjektTafelModus)
         End If
 
@@ -186,6 +187,7 @@ Public Class Ribbon1
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
                 ShowProjekte.Add(hproj, False)
+                editProjekteInSPE.Add(hproj, False)
                 AlleProjekte.Add(hproj, False)
             Else
                 Call PBBDatenbankLoadProjekte(Control, False)
@@ -227,6 +229,8 @@ Public Class Ribbon1
         'delete all projects from cache
         AlleProjekte.Clear()
         ShowProjekte.Clear()
+        editProjekteInSPE.Clear()
+
         Try
             Dim currentws As Excel.Worksheet = appInstance.ActiveSheet
 
@@ -249,7 +253,7 @@ Public Class Ribbon1
 
     Public Sub PTProjectCost(control As Office.IRibbonControl)
 
-        If ShowProjekte.Count > 0 Then
+        If editProjekteInSPE.Count > 0 Then
             currentProjektTafelModus = ptModus.massEditCosts
             ' Call MsgBox(ptModus.massEditCosts.ToString)
 
@@ -260,7 +264,7 @@ Public Class Ribbon1
 
     Public Sub PTProjectTime(control As Office.IRibbonControl)
 
-        If ShowProjekte.Count > 0 Then
+        If editProjekteInSPE.Count > 0 Then
             currentProjektTafelModus = ptModus.massEditTermine
             'Call MsgBox(ptModus.massEditTermine.ToString)
 
@@ -271,7 +275,7 @@ Public Class Ribbon1
 
     Public Sub PTProjectResources(control As Office.IRibbonControl)
 
-        If ShowProjekte.Count > 0 Then
+        If editProjekteInSPE.Count > 0 Then
             currentProjektTafelModus = ptModus.massEditRessSkills
             'Call MsgBox(ptModus.massEditRessSkills.ToString)
 
@@ -292,7 +296,7 @@ Public Class Ribbon1
         Dim vname As String = ""
         Dim view As String = "Capacity"
 
-        If ShowProjekte.Count > 0 Then
+        If editProjekteInSPE.Count > 0 Then
             pname = visboZustaende.currentProject.name
             vname = visboZustaende.currentProject.variantName
 
@@ -528,6 +532,9 @@ Public Class Ribbon1
             warningFrm.ShowDialog()
         End If
 
+        ' tk 16.11.22 switch off Budget Chart 
+        awinSettings.fullProtocol = False
+
         Dim timeZoneWasOff As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
         ' whether or there need to be three or four charts
@@ -731,15 +738,16 @@ Public Class Ribbon1
 
             ''ur: 2022.03.29: no longern shown because of new TSO-orga
             '' show the project Profit/Lost Diagram
-            If ShowProjekte.contains(pName) Then
-                hproj = ShowProjekte.getProject(pName)
+            If editProjekteInSPE.contains(pName) Then
+                hproj = editProjekteInSPE.getProject(pName)
+
+                selectedProjekte.Clear(False)
+                selectedProjekte.Add(hproj, False)
 
                 If awinSettings.fullProtocol Then
                     Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, chTop, chLeft, chWidth, chHeight, False, True)
                 End If
 
-                selectedProjekte.Clear(False)
-                selectedProjekte.Add(hproj, False)
             End If
 
 

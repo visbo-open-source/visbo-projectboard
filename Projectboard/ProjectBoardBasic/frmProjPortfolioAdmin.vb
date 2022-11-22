@@ -466,6 +466,47 @@ Public Class frmProjPortfolioAdmin
                 storeToDBasWell.Visible = False
                 chkbxPermanent.Visible = False
 
+            ElseIf aKtionskennung = PTTvActions.loadInSPE Then
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte bzw. Projekt-Varianten zum Bearbeiten laden"
+                Else
+                    .Text = "Load projects and project variants to be edited"
+                End If
+
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = False
+                .SelectionReset.Visible = False
+
+                .collapseCompletely.Visible = False
+                .expandCompletely.Visible = False
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
+
+
+                .OKButton.Visible = True
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Laden"
+                Else
+                    .OKButton.Text = "Load"
+                End If
+
+
+                onlyActive.Visible = False
+                onlyInactive.Visible = False
+                backToInit.Visible = False
+
+                storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
+
             ElseIf aKtionskennung = PTTvActions.loadPV Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -704,6 +745,7 @@ Public Class frmProjPortfolioAdmin
 
         ' bestimmen, ob es sich um quicklist handelt ...
         If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.loadMultiPVInPPT Or
             aKtionskennung = PTTvActions.delFromDB Or
@@ -748,6 +790,7 @@ Public Class frmProjPortfolioAdmin
 
         If aKtionskennung = PTTvActions.chgInSession Or
             aKtionskennung = PTTvActions.delFromSession Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.deleteV Or
             aKtionskennung = PTTvActions.activateV Then
 
@@ -810,6 +853,7 @@ Public Class frmProjPortfolioAdmin
 
         ' hier wird jetzt die Browser Gesamt-Liste bestimmt  
         If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.loadMultiPVInPPT Or
             aKtionskennung = PTTvActions.delFromDB Or
@@ -868,10 +912,6 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
         Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
-        'Call buildTreeview(projektHistorien, TreeViewProjekte, pvNamesList, currentBrowserConstellation, _
-        '                   aKtionskennung, quickList, _
-        '                   storedAtOrBefore)
-
 
 
         stopRecursion = False
@@ -1105,7 +1145,9 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
 
-        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or
+                aKtionskennung = PTTvActions.loadMultiPVInPPT Or
+                aktionskennung = PTTvActions.loadInSPE Then
 
             stopRecursion = True
             Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
@@ -1850,7 +1892,7 @@ Public Class frmProjPortfolioAdmin
 
             End Select
 
-        ElseIf actionCode = PTTvActions.loadMultiPVInPPT Then
+        ElseIf (actionCode = PTTvActions.loadMultiPVInPPT) Or (actionCode = PTTvActions.loadInSPE) Then
             ' Mehrfach Selektion erlaubt  
 
 
@@ -2305,7 +2347,9 @@ Public Class frmProjPortfolioAdmin
         Dim toolTippText As String = "-"
         Dim hproj As clsProjekt
 
-        If aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+        If aKtionskennung = PTTvActions.loadPVInPPT Or
+            aKtionskennung = PTTvActions.loadMultiPVInPPT Or
+            aKtionskennung = PTTvActions.loadInSPE Then
             Exit Sub
         End If
 
@@ -2903,6 +2947,7 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delFromSession Or
             aKtionskennung = PTTvActions.deleteV Or
             aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.loadMultiPVInPPT Then
 
@@ -2973,7 +3018,8 @@ Public Class frmProjPortfolioAdmin
                             'Next
 
 
-                        ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+                        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadInSPE Then
 
                             Dim hproj As clsProjekt = Nothing
                             If ShowProjekte.Count > 0 Then
@@ -3072,8 +3118,11 @@ Public Class frmProjPortfolioAdmin
 
                                     ' laden der Projekt-Variante 
                                     ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
-
-                                    Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
+                                    If aKtionskennung = PTTvActions.loadInSPE Then
+                                        Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, True)
+                                    Else
+                                        Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
+                                    End If
 
                                     ' das für Powerpoint ausgewählte Projekt 
                                     If aKtionskennung = PTTvActions.loadPVInPPT Then
@@ -3112,7 +3161,9 @@ Public Class frmProjPortfolioAdmin
                             Next
 
 
-                        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+                        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or
+                            aKtionskennung = PTTvActions.loadMultiPVInPPT Or
+                            aKtionskennung = PTTvActions.loadInSPE Then
 
                             Dim hproj As clsProjekt = Nothing
                             If ShowProjekte.Count > 0 Then
@@ -3208,7 +3259,7 @@ Public Class frmProjPortfolioAdmin
                                     End If
 
                                     ' laden der Projekt-Variante 
-                                    ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
+                                    ' wenn gefiltert wird, dann wird pfv geladen als  Planungs-Version in AllePRojekte gesteckt 
 
                                     Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
 

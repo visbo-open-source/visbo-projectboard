@@ -28,6 +28,26 @@ Module VISBO_SPE_Utilities
         Try
             Dim err As New clsErrorCodeMsg
 
+            ' tk 16.11.22 necessary for Diagrams , do show only utilization 
+            DiagrammTypen(0) = "Phase"
+            DiagrammTypen(1) = "Rolle"
+            DiagrammTypen(2) = "Kostenart"
+            DiagrammTypen(3) = "Portfolio"
+            DiagrammTypen(4) = "Ergebnis"
+            DiagrammTypen(5) = "Meilenstein"
+            DiagrammTypen(6) = "Meilenstein Trendanalyse"
+            DiagrammTypen(7) = "Phasen-Kategorie"
+            DiagrammTypen(8) = "Meilenstein-Kategorie"
+            DiagrammTypen(9) = "Cash-Flow"
+
+
+            awinSettings.AmpelNichtBewertet = XlRgbColor.rgbLightGrey
+
+
+            awinSettings.fullProtocol = False
+
+            ' end of changes tk 16.11.22
+
 
             Dim anzIEOrdner As Integer = [Enum].GetNames(GetType(PTImpExp)).Length
             ReDim importOrdnerNames(anzIEOrdner - 1)
@@ -365,30 +385,36 @@ Module VISBO_SPE_Utilities
         '' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
         visboZustaende.projectBoardMode = meModus
 
+        ' tk 16.11.2022 use this table as the table for the charts
+        arrWsNames(ptTables.meCharts) = "meAT"
+
 
         enableOnUpdate = False
 
-        If ShowProjekte.Count >= 0 Then
+        If editProjekteInSPE.Count >= 0 Then
 
             Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & ShowProjekte.Count)
 
             ' neue Methode 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            ' For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            ' tk 16.11.22 changed , because in ShowPRojekte are all projects: context and to be edited; 
+            ' in global variable editProjekteinSPE only thse selected for Edit 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In editProjekteInSPE.Liste
                 If Not todoListe.Contains(kvp.Key) Then
                     todoListe.Add(kvp.Key, kvp.Key)
                 End If
             Next
 
-
+            ' tk 16.11.22 diese Abfrage hier rausnehmen - ein ausversehen kann hier nicht mehr passieren ... 
             ' check, ob wirklich alle Projekte editiert werden sollen ... 
-            If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
-                Dim yesNo As Integer
-                yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
-                If yesNo = MsgBoxResult.No Then
-                    enableOnUpdate = True
-                    Exit Sub
-                End If
-            End If
+            'If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
+            '    Dim yesNo As Integer
+            '    yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
+            '    If yesNo = MsgBoxResult.No Then
+            '        enableOnUpdate = True
+            '        Exit Sub
+            '    End If
+            'End If
 
 
 
@@ -400,27 +426,41 @@ Module VISBO_SPE_Utilities
 
                     If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
-                        If showRangeLeft = 0 Then
-                            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+                        ' tk it always should only show exact this timespan , why this overlap mechanics ? 
+                        showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe)
+                        showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe)
 
-                            '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                        Else
-                            ' beim alten ShowRangeLeft lassen, wenn es Überlappungen gibt ..
-                            Dim newLeft As Integer = ShowProjekte.getMinMonthColumn(todoListe)
-                            Dim newRight As Integer = ShowProjekte.getMaxMonthColumn(todoListe)
+                        'If showRangeLeft = 0 Then
+                        '    ' now take editProjekte as the reference to define showRangeLeft and ShowRange Right 
+                        '    'showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                        '    'showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
 
-                            If newLeft >= showRangeRight Or newRight <= showRangeLeft Then
-                                ' neu bestimmen 
-                                '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+                        '    showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe)
+                        '    showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe)
 
-                                showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                                showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+                        '    '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        'Else
+                        '    ' beim alten ShowRangeLeft lassen, wenn es Überlappungen gibt ..
+                        '    'Dim newLeft As Integer = ShowProjekte.getMinMonthColumn(todoListe)
+                        '    'Dim newRight As Integer = ShowProjekte.getMaxMonthColumn(todoListe)
 
-                                '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        '    Dim newLeft As Integer = editProjekteInSPE.getMinMonthColumn(todoListe)
+                        '    Dim newRight As Integer = editProjekteInSPE.getMaxMonthColumn(todoListe)
 
-                            End If
-                        End If
+                        '    If newLeft >= showRangeRight Or newRight <= showRangeLeft Then
+                        '        ' neu bestimmen 
+                        '        '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+
+                        '        'showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                        '        'showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                        '        showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe)
+                        '        showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe)
+
+                        '        '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+                        '    End If
+                        'End If
 
                         '' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
                         '' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
@@ -480,7 +520,7 @@ Module VISBO_SPE_Utilities
 
                         If appInstance.ActiveSheet.name = meWS.Name Then
 
-                            If ShowProjekte.Count = 1 Then
+                            If editProjekteInSPE.Count = 1 Then
                                 CType(meWS.Columns("A"), Excel.Range).Hidden = True
                                 CType(meWS.Columns("B"), Excel.Range).Hidden = True
                                 CType(meWS.Columns("C"), Excel.Range).Hidden = True
@@ -508,7 +548,7 @@ Module VISBO_SPE_Utilities
                             If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
                                 If awinSettings.meExtendedColumnsView = True Then
-                                    If ShowProjekte.Count = 1 Then
+                                    If editProjekteInSPE.Count = 1 Then
                                         .SplitRow = 1
                                         .SplitColumn = 5
                                         .FreezePanes = True
@@ -518,7 +558,7 @@ Module VISBO_SPE_Utilities
                                         .FreezePanes = True
                                     End If
                                 Else
-                                    If ShowProjekte.Count = 1 Then
+                                    If editProjekteInSPE.Count = 1 Then
                                         .SplitRow = 1
                                         .SplitColumn = 4
                                         .FreezePanes = True
@@ -531,7 +571,7 @@ Module VISBO_SPE_Utilities
                                 .DisplayHeadings = False
 
                             ElseIf meModus = ptModus.massEditTermine Then
-                                If ShowProjekte.Count = 1 Then
+                                If editProjekteInSPE.Count = 1 Then
                                     .SplitRow = 1
                                     .SplitColumn = 3
                                     .FreezePanes = True
@@ -542,7 +582,7 @@ Module VISBO_SPE_Utilities
                                 End If
 
                             ElseIf meModus = ptModus.massEditAttribute Then
-                                If ShowProjekte.Count = 1 Then
+                                If editProjekteInSPE.Count = 1 Then
                                     .SplitRow = 1
                                     .SplitColumn = 2
                                     .FreezePanes = True
@@ -792,12 +832,7 @@ Module VISBO_SPE_Utilities
                             protectionText = "Orga-Admin may only view data ..."
                         End If
                     Else
-                        ''isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                        'If isProtectedbyOthers Then
 
-                        '    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
-
-                        'End If
                     End If
 
 
@@ -1055,8 +1090,11 @@ Module VISBO_SPE_Utilities
 
 
                                 ' Ende-Datum 
+                                ' tk ein End-Datum muss auch dann noch verändert werden können , wenn percentDone < 100% ist 
+                                ' identical to handling milestone
+                                Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0) And (cPhase.percentDone = 1)
                                 CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate.ToShortDateString
-                                If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
+                                If isPastElement Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
@@ -1064,7 +1102,6 @@ Module VISBO_SPE_Utilities
                                 Else
                                     If isProtectedbyOthers Then
                                         CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                        'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                     Else
                                         CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
                                     End If
@@ -1323,6 +1360,8 @@ Module VISBO_SPE_Utilities
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
                 ShowProjekte.Add(hproj, False)
+                ' tk 16.11.22 add editProjekteInSPE
+                editProjekteInSPE.AddAnyway(hproj, False)
                 AlleProjekte.Add(hproj, False)
             End If
             spe_vpid = ""

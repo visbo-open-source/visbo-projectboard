@@ -118,6 +118,10 @@ Public Module Module1
     Public Projektvorlagen As New clsProjektvorlagen
     Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
+
+    ' tk 15.11.22 ergänzt für SPE Projektes 
+    Public editProjekteInSPE As New clsProjekte
+
     ' noShowProjekte am 21.3 rausgenommen 
     ''Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
@@ -932,6 +936,7 @@ Public Module Module1
         loadPVInPPT = 11
         loadProjectAsTemplate = 12
         loadMultiPVInPPT = 13
+        loadInSPE = 14
     End Enum
 
     ' tk 16.7.21 - wird benötigt für RPA - robotic process automation

@@ -12618,7 +12618,8 @@ Public Module Projekte
             dauerTextTeil = " " & textZeitraum(pstart, pstart + plen - 1)
         End If
 
-        projektTextTeil = repMessages.getmsg(53)
+        'projektTextTeil = repMessages.getmsg(53)
+        projektTextTeil = Xdatenreihe(3)
 
 
         If hproj.endeDate < Date.Now Then

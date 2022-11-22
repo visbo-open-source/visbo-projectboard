@@ -113,7 +113,7 @@ Public Class Tabelle3
         Try
             'If visboZustaende.projectBoardMode = ptModus.massEditTermine Then
             'CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-            If ShowProjekte.Count = 1 Then
+            If editProjekteInSPE.Count = 1 Then
                 CType(meWS.Columns("A"), Excel.Range).Hidden = True
                 CType(meWS.Columns("B"), Excel.Range).Hidden = True
                 CType(meWS.Columns("C"), Excel.Range).Hidden = True
@@ -189,8 +189,8 @@ Public Class Tabelle3
                 With visboZustaende
 
                     pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
-                    If ShowProjekte.contains(pName) Then
-                        .currentProject = ShowProjekte.getProject(pName)
+                    If editProjekteInSPE.contains(pName) Then
+                        .currentProject = editProjekteInSPE.getProject(pName)
                         .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
                     End If
 
@@ -944,7 +944,7 @@ Public Class Tabelle3
 
         appInstance.EnableEvents = True
 
-        If ShowProjekte.Count = 1 Then
+        If editProjekteInSPE.Count = 1 Then
             CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
             CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
             CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
