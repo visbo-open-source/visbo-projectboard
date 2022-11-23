@@ -270,8 +270,9 @@ Public Module awinDiagrams
         ElseIf prcTyp = DiagrammTypen(4) Then
             'chtobjName = "Ergebnis-Übersicht"
             'diagramTitle = "Ergebnis-Übersicht"
-            chtobjName = repMessages.getmsg(113)
-            diagramTitle = repMessages.getmsg(113)
+            'chtobjName = repMessages.getmsg(113)
+            chtobjName = "Overview"
+            diagramTitle = chtobjName
 
 
         ElseIf prcTyp = DiagrammTypen(5) Then
@@ -315,8 +316,9 @@ Public Module awinDiagrams
 
 
         Else
-            chtobjName = repMessages.getmsg(114)
-            diagramTitle = repMessages.getmsg(114)
+            'chtobjName = repMessages.getmsg(114)
+            chtobjName = "Overview"
+            diagramTitle = chtobjName
         End If
 
         ' jetzt den Namen aus optischen Gründen ändern 
@@ -643,7 +645,8 @@ Public Module awinDiagrams
                             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                 '.name = prcName & " intern "
                                 '.Name = prcName & repMessages.getmsg(115)
-                                .Name = repMessages.getmsg(115)
+                                '.Name = repMessages.getmsg(115)
+                                .Name = "intern"
                                 .Interior.Color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
@@ -653,7 +656,8 @@ Public Module awinDiagrams
                             If edatenreihe.Sum > 0 Then
                                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                     '.name = "Kosten durch Überlastung "
-                                    .Name = repMessages.getmsg(152)
+                                    '.Name = repMessages.getmsg(152)
+                                    .Name = "Overload Cost"
                                     .Interior.Color = farbeExterne
                                     .Values = edatenreihe
                                     .XValues = Xdatenreihe
@@ -819,7 +823,8 @@ Public Module awinDiagrams
                         With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             .HasDataLabels = False
                             '.name = "Risiko Abschlag"
-                            .Name = repMessages.getmsg(117)
+                            '.Name = repMessages.getmsg(117)
+                            .Name = "Risk fee"
                             .Interior.Color = ergebnisfarbe2
                             .Values = edatenreihe
                             .XValues = Xdatenreihe
@@ -923,11 +928,8 @@ Public Module awinDiagrams
                             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                 .HasDataLabels = False
                                 '.name = "Kapazität incl. Externe"
-                                If awinSettings.englishLanguage Then
-                                    .Name = "intern"
-                                Else
-                                    .Name = "intern"
-                                End If
+
+                                .Name = "intern"
                                 '.Name = repMessages.getmsg(118)
 
                                 .Values = kdatenreiheIntern
@@ -951,10 +953,11 @@ Public Module awinDiagrams
 
                             If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                                 '.name = "Leistbarkeitsgrenze"
-                                .Name = repMessages.getmsg(119)
+                                '.Name = repMessages.getmsg(119)
+                                .Name = "feasibility"
                             Else
-                                '.name = "Interne Kapazität"
-                                .Name = repMessages.getmsg(260)
+                                .Name = "Capacity"
+                                '.Name = repMessages.getmsg(260)
                             End If
 
                             '.Border.Color = rollenKapaFarbe
@@ -1397,15 +1400,16 @@ Public Module awinDiagrams
                 'diagramTitle = "Kosten-Übersicht"
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
             ElseIf prcTyp = DiagrammTypen(4) Then
-                'diagramTitle = "Ergebnis-Übersicht"
-                diagramTitle = repMessages.getmsg(113)
+                diagramTitle = "Overview"
+                'diagramTitle = repMessages.getmsg(113)
             ElseIf prcTyp = DiagrammTypen(5) Then
                 chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
 
 
             Else
-                diagramTitle = repMessages.getmsg(114)
+                diagramTitle = "Overview"
+                'diagramTitle = repMessages.getmsg(114)
             End If
         Else
             If prcTyp = DiagrammTypen(1) Then
@@ -1744,7 +1748,8 @@ Public Module awinDiagrams
 
                         '.name = prcName & " intern "
                         '.Name = prcName & repMessages.getmsg(115)
-                        .Name = repMessages.getmsg(115)
+                        '.Name = repMessages.getmsg(115)
+                        .Name = "intern"
                         .Interior.Color = objektFarbe
                         .Values = datenreihe
                         .XValues = Xdatenreihe
@@ -1755,7 +1760,8 @@ Public Module awinDiagrams
                     If edatenreihe.Sum > 0 Then
                         With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             '.name = "Kosten durch Überlastung "
-                            .Name = repMessages.getmsg(152)
+                            '.Name = repMessages.getmsg(152)
+                            .Name = "Overload Cost"
                             .Interior.Color = farbeExterne
                             .Values = edatenreihe
                             .XValues = Xdatenreihe
@@ -1961,7 +1967,8 @@ Public Module awinDiagrams
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .HasDataLabels = False
                     '.name = "Risiko Abschlag"
-                    .Name = repMessages.getmsg(117)
+                    '.Name = repMessages.getmsg(117)
+                    .Name = "risk fee"
                     .Interior.Color = ergebnisfarbe2
                     .Values = edatenreihe
                     .XValues = Xdatenreihe
@@ -2017,10 +2024,12 @@ Public Module awinDiagrams
 
                     If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                         '.name = "Leistbarkeitsgrenze"
-                        .Name = repMessages.getmsg(119)
+                        '.Name = repMessages.getmsg(119)
+                        .Name = "feasibility"
                     Else
                         '.name = "Interne Kapazität"
-                        .Name = repMessages.getmsg(260)
+                        '.Name = repMessages.getmsg(260)
+                        .Name = "Capacity"
                     End If
 
                     '.Border.Color = rollenKapaFarbe
