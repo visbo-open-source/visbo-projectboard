@@ -106,8 +106,6 @@ Public Module awinDiagrams
     End Sub
 
 
-
-
     ''' <summary>
     ''' erzeugt ein Phasen-/Rollen-/Kostenart - Diagramm
     ''' bekommt Parameter für die darzustellenden Rollen mit, die Position, ob es ein Cockpit Chart ist und um welchen Diagramm-Typ es sich handelt
@@ -133,8 +131,6 @@ Public Module awinDiagrams
                                        Optional ByVal givenTitleSize As Double = 12.0,
                                        Optional ByVal noLegend As Boolean = False,
                                        Optional ByVal isMESkillChart As Boolean = False)
-
-
 
         Dim von As Integer, bis As Integer
 
@@ -272,10 +268,10 @@ Public Module awinDiagrams
 
 
         ElseIf prcTyp = DiagrammTypen(4) Then
-            chtobjName = "Overview"
-            diagramTitle = "Overview"
-            'chtobjName = repMessages.getmsg(113)
-            'diagramTitle = repMessages.getmsg(113)
+            'chtobjName = "Ergebnis-Übersicht"
+            'diagramTitle = "Ergebnis-Übersicht"
+            chtobjName = repMessages.getmsg(113)
+            diagramTitle = repMessages.getmsg(113)
 
 
         ElseIf prcTyp = DiagrammTypen(5) Then
@@ -319,9 +315,8 @@ Public Module awinDiagrams
 
 
         Else
-            'chtobjName = repMessages.getmsg(114)
-            chtobjName = "Overview"
-            diagramTitle = "Overview"
+            chtobjName = repMessages.getmsg(114)
+            diagramTitle = repMessages.getmsg(114)
         End If
 
         ' jetzt den Namen aus optischen Gründen ändern 
@@ -429,7 +424,7 @@ Public Module awinDiagrams
                                     'objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
                                     objektFarbe = appearanceDefinitions.liste.Item("Phasen Default").FGcolor
                                 Else
-                                    objektFarbe = XlRgbColor.rgbLightGrey
+                                    objektFarbe = awinSettings.AmpelNichtBewertet
                                 End If
 
                             Else
@@ -447,7 +442,7 @@ Public Module awinDiagrams
                                 'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
                                 objektFarbe = appearanceDefinitions.liste.Item(prcName).FGcolor
                             Else
-                                objektFarbe = XlRgbColor.rgbLightGrey
+                                objektFarbe = awinSettings.AmpelNichtBewertet
                             End If
 
                             datenreihe = ShowProjekte.getCountPhaseCategoriesInMonth(prcName)
@@ -601,7 +596,7 @@ Public Module awinDiagrams
                                     'objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
                                     objektFarbe = appearanceDefinitions.liste.Item("Meilenstein Default").FGcolor
                                 Else
-                                    objektFarbe = XlRgbColor.rgbLightGrey
+                                    objektFarbe = awinSettings.AmpelNichtBewertet
                                 End If
 
                             Else
@@ -619,7 +614,7 @@ Public Module awinDiagrams
                                 'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
                                 objektFarbe = appearanceDefinitions.liste.Item(prcName).FGcolor
                             Else
-                                objektFarbe = XlRgbColor.rgbLightGrey
+                                objektFarbe = awinSettings.AmpelNichtBewertet
                             End If
 
                             datenreihe = ShowProjekte.getCountMilestoneCategoriesInMonth(prcName)
@@ -648,8 +643,7 @@ Public Module awinDiagrams
                             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                 '.name = prcName & " intern "
                                 '.Name = prcName & repMessages.getmsg(115)
-                                '.Name = repMessages.getmsg(115)
-                                .Name = "intern"
+                                .Name = repMessages.getmsg(115)
                                 .Interior.Color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
@@ -659,8 +653,7 @@ Public Module awinDiagrams
                             If edatenreihe.Sum > 0 Then
                                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                     '.name = "Kosten durch Überlastung "
-                                    '.Name = repMessages.getmsg(152)
-                                    .Name = " Overload Cost"
+                                    .Name = repMessages.getmsg(152)
                                     .Interior.Color = farbeExterne
                                     .Values = edatenreihe
                                     .XValues = Xdatenreihe
@@ -753,20 +746,15 @@ Public Module awinDiagrams
                                     If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                         ' repmsg!
                                         ' tk: repmsg muss nagepasst werden, wenn es nicht da ist 
-                                        If awinSettings.englishLanguage Then
-                                            .Name = legendName & ": placeholder"
+                                        If repMessages.getmsg(276) <> "" Then
+                                            .Name = legendName & ": " & repMessages.getmsg(276)
                                         Else
-                                            .Name = legendName & ": Platzhalter"
+                                            If awinSettings.englishLanguage Then
+                                                .Name = legendName & ": placeholder"
+                                            Else
+                                                .Name = legendName & ": Platzhalter"
+                                            End If
                                         End If
-                                        'If repMessages.getmsg(276) <> "" Then
-                                        '    .Name = legendName & ": " & repMessages.getmsg(276)
-                                        'Else
-                                        '    If awinSettings.englishLanguage Then
-                                        '        .Name = legendName & ": placeholder"
-                                        '    Else
-                                        '        .Name = legendName & ": Platzhalter"
-                                        '    End If
-                                        'End If
 
                                     ElseIf prcTyp = DiagrammTypen(1) And teamID > 0 Then
                                         .Name = "Skill"
@@ -809,7 +797,7 @@ Public Module awinDiagrams
                                         ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
 
 
-                                        .Interior.Color = XlRgbColor.rgbDarkRed
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
                                         .Values = edatenreihe
                                         .XValues = Xdatenreihe
                                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -963,11 +951,10 @@ Public Module awinDiagrams
 
                             If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                                 '.name = "Leistbarkeitsgrenze"
-                                '.Name = repMessages.getmsg(119)
-                                .Name = "Capacity"
+                                .Name = repMessages.getmsg(119)
                             Else
-                                .Name = "Capacity"
-                                '.Name = repMessages.getmsg(260)
+                                '.name = "Interne Kapazität"
+                                .Name = repMessages.getmsg(260)
                             End If
 
                             '.Border.Color = rollenKapaFarbe
@@ -1330,7 +1317,6 @@ Public Module awinDiagrams
         End With
 
 
-
         ReDim Xdatenreihe(bis - von)
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
@@ -1411,8 +1397,8 @@ Public Module awinDiagrams
                 'diagramTitle = "Kosten-Übersicht"
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
             ElseIf prcTyp = DiagrammTypen(4) Then
-                diagramTitle = "Overview"
-                'diagramTitle = repMessages.getmsg(113)
+                'diagramTitle = "Ergebnis-Übersicht"
+                diagramTitle = repMessages.getmsg(113)
             ElseIf prcTyp = DiagrammTypen(5) Then
                 chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
@@ -1523,7 +1509,7 @@ Public Module awinDiagrams
                             'objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
                             objektFarbe = appearanceDefinitions.liste.Item("Phasen Default").FGcolor
                         Else
-                            objektFarbe = XlRgbColor.rgbLightGrey
+                            objektFarbe = awinSettings.AmpelNichtBewertet
                         End If
 
                     Else
@@ -1551,7 +1537,7 @@ Public Module awinDiagrams
                         'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
                         objektFarbe = appearanceDefinitions.liste.Item(prcName).FGcolor
                     Else
-                        objektFarbe = XlRgbColor.rgbLightGrey
+                        objektFarbe = awinSettings.AmpelNichtBewertet
                     End If
 
                     datenreihe = ShowProjekte.getCountPhaseCategoriesInMonth(prcName)
@@ -1722,7 +1708,7 @@ Public Module awinDiagrams
                             'objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
                             objektFarbe = appearanceDefinitions.liste.Item("Meilenstein Default").FGcolor
                         Else
-                            objektFarbe = XlRgbColor.rgbLightGrey
+                            objektFarbe = awinSettings.AmpelNichtBewertet
                         End If
 
                     Else
@@ -1739,7 +1725,7 @@ Public Module awinDiagrams
                         'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
                         objektFarbe = appearanceDefinitions.liste.Item(prcName).FGcolor
                     Else
-                        objektFarbe = XlRgbColor.rgbLightGrey
+                        objektFarbe = awinSettings.AmpelNichtBewertet
                     End If
 
                     datenreihe = ShowProjekte.getCountMilestoneCategoriesInMonth(prcName)
@@ -1758,8 +1744,7 @@ Public Module awinDiagrams
 
                         '.name = prcName & " intern "
                         '.Name = prcName & repMessages.getmsg(115)
-                        '.Name = repMessages.getmsg(115)
-                        .Name = "intern"
+                        .Name = repMessages.getmsg(115)
                         .Interior.Color = objektFarbe
                         .Values = datenreihe
                         .XValues = Xdatenreihe
@@ -1770,8 +1755,7 @@ Public Module awinDiagrams
                     If edatenreihe.Sum > 0 Then
                         With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             '.name = "Kosten durch Überlastung "
-                            '.Name = repMessages.getmsg(152)
-                            .Name = " Overload Cost"
+                            .Name = repMessages.getmsg(152)
                             .Interior.Color = farbeExterne
                             .Values = edatenreihe
                             .XValues = Xdatenreihe
@@ -1910,7 +1894,7 @@ Public Module awinDiagrams
                                 End If
                             End If
 
-                            .Interior.Color = XlRgbColor.rgbLightGrey
+                            .Interior.Color = objektFarbe
                             .Values = datenreihe
                             .XValues = Xdatenreihe
                             If myCollection.Count = 1 Then
@@ -1945,7 +1929,7 @@ Public Module awinDiagrams
                                 End If
 
 
-                                .Interior.Color = XlRgbColor.rgbLightGrey
+                                .Interior.Color = awinSettings.AmpelNichtBewertet
                                 .Values = edatenreihe
                                 .XValues = Xdatenreihe
                                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -2033,10 +2017,10 @@ Public Module awinDiagrams
 
                     If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                         '.name = "Leistbarkeitsgrenze"
-                        .Name = "Capacity"
+                        .Name = repMessages.getmsg(119)
                     Else
-                        .Name = "Capacity"
-                        '.Name = repMessages.getmsg(260)
+                        '.name = "Interne Kapazität"
+                        .Name = repMessages.getmsg(260)
                     End If
 
                     '.Border.Color = rollenKapaFarbe
