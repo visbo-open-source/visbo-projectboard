@@ -8224,12 +8224,19 @@ Public Module Module1
 
                 If visboClient = divClients(client.VisboSPE) Then
                     visboClientTxt = "VISBO Project Edit / "
+                    If editProjekteInSPE.Count > 0 And ShowProjekte.Count > editProjekteInSPE.Count Then
+                        visboClientTxt = "VISBO Project Edit-in-Context / "
+                    End If
                 End If
 
-                If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
+                ' If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
+                If visboClient = divClients(client.VisboSPE) And editProjekteInSPE.Count = 1 Then
 
-                    Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
-                    Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    Dim hproj As clsProjekt = editProjekteInSPE.Liste.ElementAt(0).Value
+                    'Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    ' getShapeText gibt den PRojektNamen zurück in der Form name [varianten-Name], wenn es einen Varianten-Namen gibt
+                    ' sonst nur der Name 
+                    Dim printProjName As String = hproj.getShapeText
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then
