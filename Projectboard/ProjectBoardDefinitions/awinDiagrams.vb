@@ -1283,7 +1283,7 @@ Public Module awinDiagrams
         'Dim width As Double
         'Dim left As Double
         Dim myCollection As Collection
-        Dim isCockpitChart As Boolean
+
         Dim isWeightedValues As Boolean = False
         Dim VarValues() As Double
         Dim prcTyp As String
@@ -1330,16 +1330,6 @@ Public Module awinDiagrams
         End With
 
 
-
-        If istCockpitDiagramm(chtobj) Then
-            ' dann ist es ein Cockpit Chart ....
-            isCockpitChart = True
-        Else
-            isCockpitChart = False
-
-            'width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-
-        End If
 
         ReDim Xdatenreihe(bis - von)
         ReDim datenreihe(bis - von)

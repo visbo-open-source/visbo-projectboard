@@ -43,8 +43,13 @@ Module VISBO_SPE_Utilities
 
             awinSettings.AmpelNichtBewertet = XlRgbColor.rgbLightGrey
 
-
             awinSettings.fullProtocol = False
+            visboFarbeBlau = RGB(69, 140, 203)
+            visboFarbeOrange = RGB(247, 148, 30)
+            visboFarbeNone = RGB(127, 127, 127)
+            visboFarbeGreen = RGB(0, 176, 80)
+            visboFarbeYellow = RGB(255, 197, 13)
+            visboFarbeRed = RGB(255, 0, 0)
 
             ' end of changes tk 16.11.22
 
