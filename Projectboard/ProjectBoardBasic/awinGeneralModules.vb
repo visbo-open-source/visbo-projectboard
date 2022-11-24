@@ -8682,7 +8682,7 @@ Public Module awinGeneralModules
         Dim err As New clsErrorCodeMsg
 
         Dim jetzt As Date = Now
-        Dim zeitStempel As Date
+        Dim zeitStempel As Date = Date.Now
 
         enableOnUpdate = False
 
@@ -8864,8 +8864,6 @@ Public Module awinGeneralModules
                         End Try
 
                     Next
-
-                    zeitStempel = AlleProjekte.First.timeStamp
 
                     ' Leerzeile einfügen
                     outputline = "  "
@@ -9185,8 +9183,6 @@ Public Module awinGeneralModules
 
                     End If
 
-
-                    zeitStempel = AlleProjekte.First.timeStamp
 
                     ' Leerzeile einfügen
                     outputline = "  "
