@@ -121,6 +121,12 @@
   <data name="noun_bottleneck_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\noun-bottleneck-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="noun_chart_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\noun-chart-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="noun_gantt_chart_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\noun-gantt-chart-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="noun_money_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\noun-money-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -129,6 +135,9 @@
   </data>
   <data name="noun_stop_watch_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\noun-stop-watch-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="String" xml:space="preserve">
+    <value />
   </data>
   <data name="visbo_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\visbo_icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

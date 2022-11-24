@@ -65,6 +65,10 @@ Public Class Ribbon1
                 imageSuper_GetImage = My.Resources.noun_bottleneck_100x100
             Case "Pt6G6B6"
                 imageSuper_GetImage = My.Resources.visbo_icon_transparent_Bild
+            Case "Pt6G6B9"
+                imageSuper_GetImage = My.Resources.noun_chart_100x100
+            Case "Pt6G6B8"
+                imageSuper_GetImage = My.Resources.noun_gantt_chart_100x100
             Case "Pt6G6B7"
                 imageSuper_GetImage = My.Resources.noun_settings_100x100
         End Select
