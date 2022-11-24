@@ -1364,9 +1364,12 @@ Module VISBO_SPE_Utilities
             Call CType(databaseAcc, DBAccLayer.Request).retrieveOneVPandSetaktVCid(spe_vpid, err)
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
-                ShowProjekte.Add(hproj, False)
+                ShowProjekte.AddAnyway(hproj, False)
                 ' tk 16.11.22 add editProjekteInSPE
                 editProjekteInSPE.AddAnyway(hproj, False)
+                If AlleProjekte.Containskey(calcProjektKey(hproj)) Then
+                    AlleProjekte.Remove(calcProjektKey(hproj), False)
+                End If
                 AlleProjekte.Add(hproj, False)
             End If
             spe_vpid = ""

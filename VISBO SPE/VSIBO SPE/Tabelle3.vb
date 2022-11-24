@@ -169,7 +169,7 @@ Public Class Tabelle3
 
                     pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
                     If editProjekteInSPE.contains(pName) Then
-                        .currentProject = editProjekteInSPE.getProject(pName)
+                        .currentProject = ShowProjekte.getProject(pName)
                         .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
                     End If
 
