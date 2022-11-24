@@ -107,6 +107,7 @@ Public Class Tabelle3
         '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
 
         appInstance.EnableEvents = True
+
         Dim aa As Boolean = appInstance.EnableEvents
 
         ' jetzt die Spalte 6 einblenden bzw. ausblenden 
@@ -143,30 +144,8 @@ Public Class Tabelle3
             Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
         End Try
 
-        Try
-            ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
-            ' die dürfen auch nicht gelöscht werden 
-            With meWS
-                .Protect(Password:="x", UserInterfaceOnly:=True,
-                         AllowFormattingCells:=True,
-                         AllowFormattingColumns:=True,
-                         AllowInsertingColumns:=False,
-                         AllowInsertingRows:=False,
-                         AllowDeletingColumns:=False,
-                         AllowDeletingRows:=False,
-                         AllowSorting:=False,
-                         AllowFiltering:=True)
-                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
-                .EnableAutoFilter = True
-            End With
-
-
-        Catch ex As Exception
-
-        End Try
-
-
-        appInstance.EnableEvents = formerEE
+        ' old position of try .. mit .protect etc
+        ' end of old position
 
         ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
         Try
@@ -221,6 +200,46 @@ Public Class Tabelle3
         If Not IsNothing(appInstance.ActiveCell) Then
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
         End If
+
+        ' tk 23.11.22. now set width of columns so that it looks good ... 
+        Try
+            Dim w1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
+            Dim w2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
+            Dim w3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+
+            CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).AutoFit()
+
+            Dim c1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
+            Dim c2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
+            Dim c3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
+            ' die dürfen auch nicht gelöscht werden 
+            With meWS
+                .Protect(Password:="x", UserInterfaceOnly:=True,
+                         AllowFormattingCells:=True,
+                         AllowFormattingColumns:=True,
+                         AllowInsertingColumns:=False,
+                         AllowInsertingRows:=False,
+                         AllowDeletingColumns:=False,
+                         AllowDeletingRows:=False,
+                         AllowSorting:=False,
+                         AllowFiltering:=True)
+                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
+                .EnableAutoFilter = True
+            End With
+
+
+        Catch ex As Exception
+
+        End Try
 
 
         If Application.ScreenUpdating = False Then
@@ -981,6 +1000,14 @@ Public Class Tabelle3
 
         Try
             appInstance.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
+
+        ' tk 23.11.22 do not update screen ...
+        ' is again activated in Activate event of each table 
+        Try
+            appInstance.ScreenUpdating = False
         Catch ex As Exception
 
         End Try

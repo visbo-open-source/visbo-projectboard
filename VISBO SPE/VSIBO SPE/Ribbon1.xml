@@ -37,7 +37,7 @@
 					<separator id="Pt6G6B0s3"/>
           <button id="Pt6G6B6" label="WebUI" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectGoToWebUI" />
           <separator id="Pt6G6B0s4"/>
-          <button id="Pt6G6B7" label="Settings"  size ="large"  getImage="imageSuper_GetImage"  onAction="PTProjectEditSettings" supertip="these settings only affect appointments (Time)"/>
+          <button id="Pt6G6B7" label="Settings"  size ="large"  getImage="imageSuper_GetImage"  onAction="PTProjectEditSettings" supertip="settings which affect resource allocation when changes occur"/>
 				</group>
 			</tab>
 		</tabs>

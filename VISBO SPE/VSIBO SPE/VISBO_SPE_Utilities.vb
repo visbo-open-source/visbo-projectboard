@@ -657,7 +657,7 @@ Module VISBO_SPE_Utilities
         End If
 
 
-        appInstance.ScreenUpdating = True
+        'appInstance.ScreenUpdating = True
         If appInstance.ScreenUpdating = False Then
             appInstance.ScreenUpdating = True
         End If
