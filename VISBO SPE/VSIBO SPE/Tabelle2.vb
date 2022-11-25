@@ -64,7 +64,7 @@ Public Class Tabelle2
             Try
                 If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
                     CType(meWS.Columns("F"), Excel.Range).EntireColumn.Hidden = True
-                    If ShowProjekte.Count = 1 Then
+                    If editProjekteInSPE.Count = 1 Then
                         CType(meWS.Columns("A"), Excel.Range).Hidden = True
                         CType(meWS.Columns("B"), Excel.Range).Hidden = True
                         CType(meWS.Columns("C"), Excel.Range).Hidden = True
@@ -79,7 +79,7 @@ Public Class Tabelle2
                     Else
                         CType(meWS.Columns("F"), Excel.Range).Hidden = True
                     End If
-                    If ShowProjekte.Count = 1 Then
+                    If editProjekteInSPE.Count = 1 Then
                         CType(meWS.Columns("A"), Excel.Range).Hidden = True
                         CType(meWS.Columns("B"), Excel.Range).Hidden = True
                         CType(meWS.Columns("C"), Excel.Range).Hidden = True
@@ -1660,6 +1660,14 @@ Public Class Tabelle2
 
         End Try
 
+        ' tk 23.11.22 do not update screen ...
+        ' is again activated in Activate event of each table 
+        Try
+            appInstance.ScreenUpdating = False
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 
@@ -1841,33 +1849,34 @@ Public Class Tabelle2
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
 
-            'If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
+            If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
 
-            '    ' umgesetzte timeZone
-            '    Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+                ' umgesetzte timeZone
+                Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
-            '    Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+                ' tk 16.11 
+                'Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
-            '    If pNameChanged Then
-            '        selectedProjekte.Clear(False)
-            '        selectedProjekte.Add(.currentProject, False)
-            '    End If
+                If pNameChanged Then
+                    selectedProjekte.Clear(False)
+                    selectedProjekte.Add(.currentProject, False)
+                End If
 
-            '    If Not IsNothing(rcNameID) Then
+                If Not IsNothing(rcNameID) Then
 
-            '        If rcNameID <> "" Then
-            '            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
-            '        End If
-            '    End If
-
-
-            '    If Not IsNothing(formProjectInfo1) Then
-            '        Call updateProjectInfo1(.currentProject, .currentProjectinSession)
-            '        ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
-            '    End If
+                    If rcNameID <> "" Then
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                    End If
+                End If
 
 
-            'End If
+                'If Not IsNothing(formProjectInfo1) Then
+                '    Call updateProjectInfo1(.currentProject, .currentProjectinSession)
+                '    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+                'End If
+
+
+            End If
 
 
         End With

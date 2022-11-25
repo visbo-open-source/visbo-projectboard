@@ -24,7 +24,7 @@
       <Value Profile="(Default)">C:\VISBO\VISBO Config Data\RPA\settings</Value>
     </Setting>
     <Setting Name="VisboURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://dev.visbo.net/api</Value>
+      <Value Profile="(Default)">https://my.visbo.net/api</Value>
     </Setting>
     <Setting Name="proxyURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />

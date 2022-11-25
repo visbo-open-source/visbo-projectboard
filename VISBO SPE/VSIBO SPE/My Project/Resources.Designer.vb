@@ -61,11 +61,40 @@ Namespace My.Resources
         End Property
         
         '''<summary>
+        '''  Sucht eine lokalisierte Zeichenfolge, die  ähnelt.
+        '''</summary>
+        Friend ReadOnly Property _String() As String
+            Get
+                Return ResourceManager.GetString("String", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
         Friend ReadOnly Property noun_bottleneck_100x100() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("noun_bottleneck_100x100", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property noun_chart_100x100() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("noun_chart_100x100", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property noun_gantt_chart_100x100() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("noun_gantt_chart_100x100", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property

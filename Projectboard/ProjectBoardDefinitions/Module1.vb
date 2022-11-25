@@ -118,6 +118,10 @@ Public Module Module1
     Public Projektvorlagen As New clsProjektvorlagen
     Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
+
+    ' tk 15.11.22 ergänzt für SPE Projektes 
+    Public editProjekteInSPE As New clsProjekte
+
     ' noShowProjekte am 21.3 rausgenommen 
     ''Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
@@ -932,6 +936,7 @@ Public Module Module1
         loadPVInPPT = 11
         loadProjectAsTemplate = 12
         loadMultiPVInPPT = 13
+        loadInSPE = 14
     End Enum
 
     ' tk 16.7.21 - wird benötigt für RPA - robotic process automation
@@ -8219,12 +8224,19 @@ Public Module Module1
 
                 If visboClient = divClients(client.VisboSPE) Then
                     visboClientTxt = "VISBO Project Edit / "
+                    If editProjekteInSPE.Count > 0 And ShowProjekte.Count > editProjekteInSPE.Count Then
+                        visboClientTxt = "VISBO Project Edit-in-Context / "
+                    End If
                 End If
 
-                If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
+                ' If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
+                If visboClient = divClients(client.VisboSPE) And editProjekteInSPE.Count = 1 Then
 
-                    Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
-                    Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    Dim hproj As clsProjekt = editProjekteInSPE.Liste.ElementAt(0).Value
+                    'Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    ' getShapeText gibt den PRojektNamen zurück in der Form name [varianten-Name], wenn es einen Varianten-Namen gibt
+                    ' sonst nur der Name 
+                    Dim printProjName As String = hproj.getShapeText
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then

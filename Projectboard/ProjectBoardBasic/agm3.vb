@@ -5776,6 +5776,16 @@ Public Module agm3
                         Dim prCheckSumPT As Double = newProj.getAlleRessourcen.Sum
                         Dim prCheckSumTE As Double = newProj.getGesamtAndereKosten.Sum
 
+                        ' tk 23.11.22 now check whether or not a desired budget need to be calculated
+                        Try
+                            If budget = 0 And profit > 0 Then
+                                newProj.Erloes = newProj.getSummeKosten * (1 + profit)
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+
                         ' now protocol after project is created 
                         outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & ";"
                         Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
