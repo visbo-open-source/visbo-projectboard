@@ -8717,6 +8717,8 @@ Public Module awinGeneralModules
                                     Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
                                     If Not writeProtections.isProtected(pvName, dbUsername) Then
 
+                                        hproj.timeStamp = jetzt
+
                                         Dim storeNeeded As Boolean = False
                                         Dim kdNrToStore As Boolean = False
                                         Dim standInDB As clsProjekt = Nothing
