@@ -773,7 +773,9 @@ Public Module awinDiagrams
                                         If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Or teamID > 0 Then
                                             .ChartType = Excel.XlChartType.xlColumnStacked
                                         Else
-                                            .ChartType = Excel.XlChartType.xlColumnClustered
+                                            ' tk 25.11.22
+                                            '.ChartType = Excel.XlChartType.xlColumnClustered
+                                            .ChartType = Excel.XlChartType.xlColumnStacked
                                         End If
                                     Else
                                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1908,7 +1910,9 @@ Public Module awinDiagrams
                                     (selectedProjekte.Count > 0 And awinSettings.showValuesOfSelected And teamID <= 0) Then
                                     .ChartType = Excel.XlChartType.xlColumnStacked
                                 Else
-                                    .ChartType = Excel.XlChartType.xlColumnClustered
+                                    '.ChartType = Excel.XlChartType.xlColumnClustered
+                                    ' tk 25.11.22 das muss doch auch aufeinander gepackt werden 
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
                                 End If
                             Else
                                 .ChartType = Excel.XlChartType.xlColumnStacked
