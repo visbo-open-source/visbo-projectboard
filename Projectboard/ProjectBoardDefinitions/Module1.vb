@@ -232,7 +232,8 @@ Public Module Module1
     Public chartWidth As Double = 140 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public chartHeight As Double = 120 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
-    ' dieser Array dient zur Aufnahme der Spaltenbreiten für MassEditRC (0), massEditTE (1), massEditAT (2)
+    ' dieser Array dient zur Aufnahme der Spaltenbreiten für MassEditRC (0),
+    ' (1), massEditAT (2)
     ' der Wert massColFontValues(x, 0) repräsentiert jetzt den ActiveWindow.Zoom Faktor  
     Public massColFontValues(2, 100) As Double
 

@@ -77,11 +77,12 @@ Public Class Tabelle3
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(ptTables.meTE)), Excel.Worksheet)
 
-
+        ' TODO  delete ???
         ' jetzt den Schutz aufheben , falls einer definiert ist 
         If meWS.ProtectContents Then
             meWS.Unprotect(Password:="x")
         End If
+
 
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
@@ -118,10 +119,12 @@ Public Class Tabelle3
                 CType(meWS.Columns("A"), Excel.Range).Hidden = True
                 CType(meWS.Columns("B"), Excel.Range).Hidden = True
                 CType(meWS.Columns("C"), Excel.Range).Hidden = True
+                CType(meWS.Columns("L"), Excel.Range).Hidden = True
             Else
                 CType(meWS.Columns("A"), Excel.Range).Hidden = False
                 CType(meWS.Columns("B"), Excel.Range).Hidden = False
                 CType(meWS.Columns("c"), Excel.Range).Hidden = False
+                CType(meWS.Columns("L"), Excel.Range).Hidden = True
             End If
 
             'End If
@@ -129,23 +132,32 @@ Public Class Tabelle3
 
         End Try
 
-
-        ' jetzt den AutoFilter setzen 
         Try
 
-            ' jetzt die Autofilter aktivieren ... 
-            If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
 
-                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
+            ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
+            ' die dürfen auch nicht gelöscht werden 
+            With meWS
+                .Protect(Password:="x", UserInterfaceOnly:=True,
+                         AllowFormattingCells:=True,
+                         AllowFormattingColumns:=True,
+                         AllowInsertingColumns:=False,
+                         AllowInsertingRows:=False,
+                         AllowDeletingColumns:=False,
+                         AllowDeletingRows:=False,
+                         AllowSorting:=False,
+                         AllowFiltering:=True)
+                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
+                .EnableAutoFilter = True
+            End With
 
-            End If
 
         Catch ex As Exception
-            Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
+
         End Try
 
-        ' old position of try .. mit .protect etc
-        ' end of old position
+
+        appInstance.EnableEvents = formerEE
 
         ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
         Try
@@ -967,10 +979,12 @@ Public Class Tabelle3
             CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
             CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
             CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
+            CType(meWS.Columns(12), Excel.Range).EntireColumn.Hidden = True
         Else
             CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = False
             CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = False
             CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = False
+            CType(meWS.Columns(12), Excel.Range).EntireColumn.Hidden = True
         End If
 
     End Sub

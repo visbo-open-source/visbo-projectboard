@@ -179,10 +179,9 @@ Public Class clsMeilenstein
                                 stillOK = False
                             End If
                         Loop
-
+                    Else
+                        stillOK = False
                     End If
-
-
 
                 End If
 
@@ -198,8 +197,6 @@ Public Class clsMeilenstein
             Catch ex As Exception
                 stillOK = False
             End Try
-
-
 
             isIdenticalTo = stillOK
 
