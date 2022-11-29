@@ -14492,6 +14492,16 @@ Public Module agm2
 
             appInstance.EnableEvents = True
 
+            Try
+                ' on setzen des AutoFilter Modus ... 
+                If CType(currentWS, Excel.Worksheet).AutoFilterMode = False Then
+                    'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                    CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                End If
+            Catch ex As Exception
+
+            End Try
+
         Catch ex As Exception
             appInstance.EnableEvents = True
         End Try
@@ -14502,7 +14512,7 @@ Public Module agm2
     End Sub
 
     ''' <summary>
-    ''' schreibt eine Zeile für den MassenEditOnlien Ressourcen oder Kosten 
+    ''' schreibt eine Zeile für den MassenEditOnline Ressourcen oder Kosten 
     ''' </summary>
     ''' <param name="wsName"></param>
     ''' <param name="hproj"></param>
