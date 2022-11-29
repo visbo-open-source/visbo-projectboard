@@ -423,6 +423,7 @@ Public Class Tabelle2
 
         Dim criteriaFulfilled As Boolean = False
         Dim criteriaFilterRequest As Boolean = ((Target.Row = 1) And (Target.Column = columnRC))
+        Dim criteriaAddDeleteLine As Boolean = ((Target.Column > 0) And (Target.Column < columnRC) And (Target.Row > 1))
 
         If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
             criteriaFulfilled = (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1) And (CBool(Target.Locked) = False)
@@ -740,7 +741,9 @@ Public Class Tabelle2
         Else
 
             ' Behandlung für Zeile hinzufügen/löschen
-            If (Target.Column > 0) And (Target.Column <= 5) Then
+            If criteriaAddDeleteLine = True Then
+
+                '' UR: 2022.11.29 If (Target.Column > 0) And (Target.Column <= 5) And (Target.Row > 1) And Then
 
                 ' Cursor is positioned in the column of BusinessUnit,ProjectName, variantName, or Phasename
                 ' here the rightClick means + for Add a Line and - for Delete a Line
@@ -762,7 +765,7 @@ Public Class Tabelle2
 
         End If
 
-        appInstance.EnableEvents = former_EE
+            appInstance.EnableEvents = former_EE
 
     End Sub
 
@@ -1461,10 +1464,18 @@ Public Class Tabelle2
 
             ElseIf Target.Rows.Count > 1 Then
 
-                    'appInstance.Undo()
-                    'Call MsgBox("bitte nur eine Zelle selektieren ...")
-                    appInstance.Undo()
-                'Target.Cells(1, 1).value = visboZustaende.oldValue
+                Dim errMsg As String = "Ändern der Ressourcen / Kosten nur innerhalb einer Zeile möglich !"
+                If awinSettings.englishLanguage Then
+                    errMsg = "Editing resources / cost only is able in one line !"
+                End If
+                Call MsgBox(errMsg)
+
+                appInstance.ScreenUpdating = False
+                Call massEditRcTeAt(currentProjektTafelModus)
+
+                meWS.Activate()
+                appInstance.ScreenUpdating = True
+
             End If
 
 
@@ -1477,6 +1488,7 @@ Public Class Tabelle2
         End Try
 
         appInstance.EnableEvents = True
+
     End Sub
 
     ''' <summary>
