@@ -1029,7 +1029,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:VISBO SmartInfo"
         "ProductCode" = "8:{60B7BF59-99D9-49A5-9D41-FC5E3EDBABA6}"
-        "PackageCode" = "8:{628BE424-0403-48ED-AF49-5D7FAF6E0D4C}"
+        "PackageCode" = "8:{C693E6EF-E8E2-4430-A1FF-0E6AAB69395E}"
         "UpgradeCode" = "8:{1F84F172-4345-4B08-9877-CA988F235A2F}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
@@ -1052,7 +1052,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:1"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:"
+        "PostBuildEvent" = "8:\"C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.19041.0\\x86\\signtool.exe\" sign /a  $(BuiltOuputPath)"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"

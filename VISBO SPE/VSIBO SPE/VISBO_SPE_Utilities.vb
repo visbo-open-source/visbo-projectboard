@@ -1135,11 +1135,13 @@ Module VISBO_SPE_Utilities
 
                                 ' der Dokumenten Link 
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cPhase.DocURL
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).EntireColumn.Hidden = True
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
                                     'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+
                                 End If
 
 
@@ -1195,6 +1197,12 @@ Module VISBO_SPE_Utilities
             Next
 
 
+            ' jetzt den Schutz aufheben , falls einer definiert ist 
+            'ur:22-11-25 neu
+            If currentWS.ProtectContents Then
+                currentWS.Unprotect(Password:="x")
+            End If
+
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
             Dim infoDataBlock As Excel.Range
@@ -1213,9 +1221,33 @@ Module VISBO_SPE_Utilities
 
                 ' die Besonderheiten abbilden 
 
+
+                appInstance.EnableEvents = True
+                Try
+                    CType(currentWS, Excel.Worksheet).Columns(2).EntireColumn.AutoFit()
+                    CType(currentWS, Excel.Worksheet).Columns(4).EntireColumn.AutoFit()
+                    CType(currentWS, Excel.Worksheet).Columns(8).EntireColumn.AutoFit()
+                    CType(currentWS, Excel.Worksheet).Columns(9).EntireColumn.AutoFit()
+
+                    ' wenn zu breit, dann maximum setzen
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth > 50 Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth = 50
+                    End If
+
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth > 75 Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth = 75
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+                'appInstance.EnableEvents = False
+
+
                 ' Phasen bzw. Meilenstein Name
                 With CType(infoDataBlock.Columns(4), Excel.Range)
-                    .WrapText = True
+                    '.WrapText = True
                 End With
 
                 ' Erläuterung
@@ -1229,8 +1261,10 @@ Module VISBO_SPE_Utilities
 
                 ' percent Done 
                 With CType(infoDataBlock.Columns(11), Excel.Range)
+                    .HorizontalAlignment = XlHAlign.xlHAlignRight
                     .NumberFormat = "0#%"
                 End With
+
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
                 If massColFontValues(1, 2) > 0 Then
@@ -1241,16 +1275,20 @@ Module VISBO_SPE_Utilities
                     Next
 
                 Else
-                    ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
-                    Try
-                        firstHundredColumns.AutoFit()
-                    Catch ex As Exception
+                    '' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
+                    'appInstance.EnableEvents = True
+                    'Try
+                    '    CType(currentWS, Excel.Worksheet).Columns.EntireColumn.AutoFit()
+                    '    'firstHundredColumns.AutoFit()
+                    'Catch ex As Exception
 
-                    End Try
+                    'End Try
 
-
+                    'appInstance.EnableEvents = False
 
                 End If
+
+
 
             End With
 
