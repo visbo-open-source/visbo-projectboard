@@ -167,8 +167,6 @@ Public Class ThisWorkbook
 
             End If
 
-
-
             ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             If My.Settings.rememberUserPWD Then
@@ -177,13 +175,6 @@ Public Class ThisWorkbook
                 awinSettings.userNamePWD = ""
             End If
 
-            ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
-            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-            If My.Settings.rememberUserPWD Then
-                awinSettings.userNamePWD = My.Settings.userNamePWD
-            Else
-                awinSettings.userNamePWD = ""
-            End If
 
             appInstance.EnableEvents = False
             Call speSetTypen(spe_ott)

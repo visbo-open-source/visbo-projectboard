@@ -1093,7 +1093,7 @@ Public Class Tabelle3
                 End If
 
 
-                If Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate) Then
+                If (Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate)) And (Target.Row > 1) Then
 
                     If visboZustaende.currentZeileIsMilestone Then
 
