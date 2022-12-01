@@ -134,6 +134,7 @@ Public Module ProjekteCalc
                                        ByVal valueToSubstitute As Double) As SortedList(Of Double, Integer)
 
         Dim result As New SortedList(Of Double, Integer)
+        Dim delta As Double = 0.0000001
 
         Dim prioPeopleIDs As New List(Of Integer)
 
@@ -169,6 +170,12 @@ Public Module ProjekteCalc
                 valueToSubstitute = valueToSubstitute - myValue
 
                 If myValue > 0 Then
+                    ' make sure that myValue is not already existing
+                    If result.ContainsKey(myValue) Then
+                        Do Until Not result.ContainsKey(myValue)
+                            myValue = myValue + delta
+                        Loop
+                    End If
                     result.Add(myValue, prioPersonID)
                 End If
 
@@ -186,15 +193,32 @@ Public Module ProjekteCalc
                 If Not prioPeopleIDs.Contains(candidate.Value) Then
                     If candidate.Key >= valueToSubstitute Then
                         If ((result.Count > 0) Or (isAmongTopGroup(projectScopeCandidates, candidate.Value))) Then
+                            ' make sure that myValue is not already existing
+                            If result.ContainsKey(valueToSubstitute) Then
+                                Do Until Not result.ContainsKey(valueToSubstitute)
+                                    valueToSubstitute = valueToSubstitute + delta
+                                Loop
+                            End If
                             result.Add(valueToSubstitute, candidate.Value)
                             valueToSubstitute = 0
                         Else
                             Dim myValue As Double = System.Math.Truncate(0.6 * valueToSubstitute)
+                            If result.ContainsKey(myValue) Then
+                                Do Until Not result.ContainsKey(myValue)
+                                    myValue = myValue + delta
+                                Loop
+                            End If
                             result.Add(myValue, candidate.Value)
                             valueToSubstitute = valueToSubstitute - myValue
                         End If
                     Else
-                        result.Add(candidate.Key, candidate.Value)
+                        Dim altValue As Double = candidate.Key
+                        If result.ContainsKey(altValue) Then
+                            Do Until Not result.ContainsKey(altValue)
+                                altValue = altValue + delta
+                            Loop
+                        End If
+                        result.Add(altValue, candidate.Value)
                         valueToSubstitute = valueToSubstitute - candidate.Key
                     End If
                 End If

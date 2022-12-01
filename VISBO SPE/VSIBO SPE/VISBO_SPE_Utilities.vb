@@ -150,10 +150,13 @@ Module VISBO_SPE_Utilities
             arrWsNames(6) = "meTE"                          ' Edit Termine
             'arrWsNames(7) = "Darstellungsklassen"           ' wird in awinsettypen hinter MPT kopiert; nimmt für die Laufzeit die Darstellungsklassen auf 
             'arrWsNames(8) = "Phasen-Mappings"               ' in Customization
-            arrWsNames(9) = "meAT"                          ' Edit Attribute 
+            ' tk 25.11.22
+            'arrWsNames(9) = "meAT"                          ' Edit Attribute 
+            arrWsNames(9) = "Tabelle1"
             'arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
             '' arrWsNames(11) = 
-            arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
+            ' tk 25.11.22 
+            arrWsNames(ptTables.meCharts) = "Tabelle1"                     ' Massen-Edit Charts 
             arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
             arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
             'arrWsNames(14) = "Objekte" ' depr
@@ -390,8 +393,8 @@ Module VISBO_SPE_Utilities
         '' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
         visboZustaende.projectBoardMode = meModus
 
-        ' tk 16.11.2022 use this table as the table for the charts
-        arrWsNames(ptTables.meCharts) = "meAT"
+        '' tk 16.11.2022 use this table as the table for the charts
+        'arrWsNames(ptTables.meCharts) = "meAT"
 
 
         enableOnUpdate = False
