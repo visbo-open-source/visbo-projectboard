@@ -919,14 +919,26 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
 
 
-                            ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
+                            ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren
+                            ' Datumsformat je nach Sprache setzen
+                            If awinSettings.englishLanguage Then
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            Else
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            End If
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                             'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                             Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0) And (cMilestone.percentDone = 1)
 
-                            ' Ende-Datum 
+                            ' Ende-Datum
+                            ' Datumsformat je nach Sprache setzen
+                            If awinSettings.englishLanguage Then
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            Else
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            End If
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
                             If isPastElement Then
                                 ' Sperren ...
@@ -1081,7 +1093,14 @@ Module VISBO_SPE_Utilities
 
 
                                 ' Startdatum 
-                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
+                                ' Format bestimmen je nach Language?!?
+                                If awinSettings.englishLanguage Then
+                                    CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                Else
+                                    CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                End If
+
+                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
@@ -1098,10 +1117,19 @@ Module VISBO_SPE_Utilities
 
 
                                 ' Ende-Datum 
+
+                                ' Datumsformat je nach Sprache setzen
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                Else
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                End If
+                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate
+
                                 ' tk ein End-Datum muss auch dann noch verändert werden können , wenn percentDone < 100% ist 
                                 ' identical to handling milestone
                                 Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0) And (cPhase.percentDone = 1)
-                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate.ToShortDateString
+
                                 If isPastElement Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
