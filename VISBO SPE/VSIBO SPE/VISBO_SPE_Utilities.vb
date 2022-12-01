@@ -1345,6 +1345,16 @@ Module VISBO_SPE_Utilities
             ' TODO: hide or make visible of the columns
             appInstance.EnableEvents = True
 
+            Try
+                ' on setzen des AutoFilter Modus ... 
+                If CType(currentWS, Excel.Worksheet).AutoFilterMode = False Then
+                    'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                    CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                End If
+            Catch ex As Exception
+
+            End Try
+
 
 
         Catch ex As Exception
