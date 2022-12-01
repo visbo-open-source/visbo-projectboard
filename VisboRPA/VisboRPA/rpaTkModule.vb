@@ -1502,6 +1502,10 @@ Module rpaTkModule
                     ' now Create a Variant from that , if it is not already the very same variant
                     If myProj.variantName <> projectVariantName Then
                         myProj = myProj.createVariant(projectVariantName, "auto-created variant")
+
+                        ' now put it into ShowProjekte , AlleProjekte
+                        ShowProjekte.AddAnyway(myProj)
+                        AlleProjekte.Add(myProj)
                     End If
 
 
@@ -1907,9 +1911,6 @@ Module rpaTkModule
 
 
             For Each si As String In skillIDs
-                If Not skillList.Contains(si) Then
-                    skillList.Add(si)
-                End If
 
                 ' new  
                 If Not skillList.Contains(si) Then
