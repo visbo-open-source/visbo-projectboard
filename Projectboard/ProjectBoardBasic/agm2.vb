@@ -14962,7 +14962,12 @@ Public Module agm2
                             Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0) And (cMilestone.percentDone = 1)
 
                             ' Ende-Datum 
-                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                            If awinSettings.englishLanguage Then
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            Else
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            End If
+                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate
                             If isPastElement Then
                                 ' Sperren ...
                                 CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
@@ -15114,7 +15119,12 @@ Public Module agm2
 
 
                                 ' Startdatum 
-                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                Else
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                End If
+                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
@@ -15131,7 +15141,12 @@ Public Module agm2
 
 
                                 ' Ende-Datum 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate.ToShortDateString
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                Else
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                End If
+                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True

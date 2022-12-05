@@ -10,6 +10,7 @@ Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
+Imports System.Globalization
 
 Public Module agm3
 
@@ -2020,6 +2021,7 @@ Public Module agm3
         Dim err As New clsErrorCodeMsg
         Dim old_oPCollectionCount As Integer = oPCollection.Count
 
+        Dim culture As CultureInfo = System.Globalization.CultureInfo.CurrentUICulture
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -2034,7 +2036,7 @@ Public Module agm3
         Dim whiteColor As Integer = 2
         Dim currentWS As Excel.Worksheet
         Dim index As Integer
-        Dim tmpDate As Date
+        Dim tmpDate As DateTime
 
         Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
         Dim anzMonthDays As Integer = 0
@@ -2122,11 +2124,13 @@ Public Module agm3
                                     anzDays = 1
                                 Else
                                     If CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text <> "" Then
-                                        Dim monthName As String = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text
-                                        ' ''Dim strDate As String = "01." & monthName & " " & year
-                                        ' ''Dim hdate As DateTime = DateValue(strDate)
 
-                                        Dim isdate As Boolean = DateTime.TryParse(monthName & " " & year.ToString, tmpDate)
+                                        ' Monat nachsehen und dann die für diesen Monat relevanten Tage herausfinden
+                                        Dim monthName As String = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                        ' culture setzen, damit die Funktion DateTime.TryParse richtiges Ergebnis liefert
+                                        culture = CultureInfo.CreateSpecificCulture("de-DE")
+                                        Dim isdate As Boolean = DateTime.TryParse("01." & monthName & "." & year.ToString, culture, DateTimeStyles.None, tmpDate)
+
                                         If isdate Then
                                             colDate = getColumnOfDate(tmpDate)
                                             anzMonthDays = DateTime.DaysInMonth(year, Month(tmpDate))
