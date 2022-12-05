@@ -5206,6 +5206,7 @@ Public Module agm3
         Dim profit As Double = -1.0
         Dim kunde As String = ""
         Dim businessUnit As String = ""
+        Dim responsiblePerson As String = ""
 
         Dim projectDimension As Integer = 0
 
@@ -5281,8 +5282,10 @@ Public Module agm3
 
                     ' check PName
                     If Not isValidProjectName(pName) Then
-                        outputline = "invalid Project-Name ... Exit ... : " & pName & " in File " & dateiName
-                        Throw New Exception(outputline)
+                        Dim invalidName As String = pName
+                        pName = makeValidProjectName(pName)
+                        outputline = "Project-Name changed: from invalid " & invalidName & " to " & pName
+                        Call logger(ptErrLevel.logWarning, outputline, "readCostAssertionWithConfig", 0)
                     End If
 
                     ' read Start and Ende: this and all following information has to be on the same Worksheet ! 
@@ -5292,35 +5295,41 @@ Public Module agm3
                     myRowNr = searchColumn.Find(What:=startDefinition.Identifier).Row
                     offsets = startDefinition.getRowColumnOffset
                     startAndEndDate = currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value
-                    Dim hstr() As String = Split(startAndEndDate, "-")
-                    If hstr.Length < 2 Then
-                        startDate = CDate(hstr(0).Trim)
-                        endDate = CDate(hstr(0).Trim)
-                    Else
-                        startDate = CDate(hstr(0).Trim)
-                        endDate = CDate(hstr(1).Trim)
+                    ' check whether it contains something at all 
+                    If Not IsNothing(startAndEndDate) Then
+                        If startAndEndDate.Trim.Length > 0 Then
+                            Dim hstr() As String = Split(startAndEndDate, "-")
+                            If hstr.Length = 2 Then
+                                startDate = CDate(hstr(0).Trim)
+                                endDate = CDate(hstr(1).Trim)
+                            Else
+                                endDate = CDate(hstr(0).Trim)
+                            End If
+
+                            ' check Validity
+                            If getColumnOfDate(startDate) <= 0 Or getColumnOfDate(startDate) > getColumnOfDate(endDate) Then
+                                outputline = "invalid Start and/or End-Dates  ... Exit ... : " & startDate.ToShortDateString & " - " & endDate.ToShortDateString & " in File " & dateiName
+                                Throw New Exception(outputline)
+                            End If
+                        End If
                     End If
 
-                    ' check Validity
-                    If getColumnOfDate(startDate) <= 0 Or getColumnOfDate(startDate) > getColumnOfDate(endDate) Then
-                        outputline = "invalid Start and/or End-Dates  ... Exit ... : " & startDate.ToShortDateString & " - " & endDate.ToShortDateString & " in File " & dateiName
-                        Throw New Exception(outputline)
-                    End If
 
 
                     ' read Datum: 
-                    Try
-                        currentWS = projectWB.Worksheets(datumsDefinition.sheetDescript)
-                        searchColNr = datumsDefinition.column.von
-                        searchColumn = currentWS.Columns(searchColNr)
-                        myRowNr = searchColumn.Find(What:=datumsDefinition.Identifier).Row
-                        offsets = datumsDefinition.getRowColumnOffset
-                        creationDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
-                    Catch ex As Exception
+                    creationDate = Date.Now
+                    'Try
+                    '    currentWS = projectWB.Worksheets(datumsDefinition.sheetDescript)
+                    '    searchColNr = datumsDefinition.column.von
+                    '    searchColumn = currentWS.Columns(searchColNr)
+                    '    myRowNr = searchColumn.Find(What:=datumsDefinition.Identifier).Row
+                    '    offsets = datumsDefinition.getRowColumnOffset
+                    '    creationDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                    'Catch ex As Exception
 
-                        creationDate = Date.Now
+                    '    creationDate = Date.Now
 
-                    End Try
+                    'End Try
 
 
 
@@ -5339,8 +5348,11 @@ Public Module agm3
                     ' check vName
                     If vName <> "" Then
                         If Not isValidProjectName(vName) Then
-                            outputline = "invalid Variant-Name ... Exit ... : " & vName & " in File " & dateiName
-                            Throw New Exception(outputline)
+
+                            Dim invalidName As String = pName
+                            vName = makeValidProjectName(vName)
+                            outputline = "Variant-Name changed: from invalid " & invalidName & " to " & vName
+                            Call logger(ptErrLevel.logWarning, outputline, "readCostAssertionWithConfig", 0)
                         End If
                     End If
 
@@ -5425,23 +5437,47 @@ Public Module agm3
                         pTemplate = ""
                     End If
 
-                    If Not Projektvorlagen.Contains(pTemplate) Then
-                        If awinSettings.englishLanguage Then
-                            outputline = "The project template '" & pTemplate & "' does not exist "
-                        Else
-                            outputline = "Die Projektvorlage '" & pTemplate & "' existiert nicht"
-                        End If
-                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
-                        Throw New Exception(outputline)
-                    End If
+
 
                     ' now check whether pName, vName already exists ... 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now, pNr)
-                    If Not IsNothing(hproj) Then
-                        ' not allowed .. 
-                        outputline = "Project with given Name and Variant-Name or Project No. already exists ... Exit ... : " & pName & "[ " & vName & " ] in File " & dateiName
-                        Throw New Exception(outputline)
+                    Dim standInDBvname As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now, pNr)
+                    Dim standInDB As clsProjekt = Nothing
+
+                    If vName = "" Then
+                        standInDB = standInDBvname
+                    Else
+                        standInDB = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, pNr)
                     End If
+
+                    Dim hproj As clsProjekt = Nothing
+
+                    If Not IsNothing(standInDBvname) Then
+                        ' then the project resp. project-variant is updated ... 
+                        If awinSettings.englishLanguage Then
+                            outputline = "project updated : " & standInDBvname.getShapeText
+                        Else
+                            outputline = "Projekt aktualisiert : " & standInDBvname.getShapeText
+                        End If
+                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
+                    ElseIf Not IsNothing(standInDB) And vName <> "" Then
+                        ' then a new variant is created based on the base variant
+                        standInDBvname = standInDB.createVariant(vName, "")
+                    End If
+
+                    If IsNothing(standInDBvname) Then
+                        ' now there has to exist a template, if not then exit with throw exception 
+                        ' because then there is no project already as base and there is no template a project may be created from
+                        If Not Projektvorlagen.Contains(pTemplate) Then
+                            If awinSettings.englishLanguage Then
+                                outputline = "The project template '" & pTemplate & "' does not exist "
+                            Else
+                                outputline = "Die Projektvorlage '" & pTemplate & "' existiert nicht"
+                            End If
+                            Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
+                            Throw New Exception(outputline)
+                        End If
+                    End If
+
 
                     ' hier müssen nun die anderen Tabellenblätter geöffnet werden
 
@@ -5671,11 +5707,59 @@ Public Module agm3
                         appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
                     End If
 
+                    ' now check whether or not the project , project variant did already exist 
+                    ' and, if so, if the project needs to be adjusted to new start and end dates 
+                    Dim newProj As clsProjekt = Nothing
 
-                    Dim newProj As clsProjekt = erstelleProjektAusVorlage(Nothing, pName, pTemplate, startDate, endDate, 0, 2, 5, 5, Nothing, pDescription, "", pNr, True)
+                    If IsNothing(standInDBvname) Then
+                        newProj = erstelleProjektAusVorlage(Nothing, pName, pTemplate, startDate, endDate, 0, 2, 5, 5, Nothing, pDescription, "", pNr, True)
+                    Else
+                        ' the project resp project variant does already exist, now check whether it needs to get new start and end date 
+                        ' but only when there are no 
+                        ' if project is already ordered or is having actualData then only end Date maybe changed, if project 
+                        Try
+                            If standInDBvname.hasActualValues Then
+                                ' if at all: only endDate may be prolonged 
+                                If DateDiff(DateInterval.Month, standInDBvname.actualDataUntil, endDate) > 0 Then
+                                    newProj = moveProject(standInDBvname, standInDBvname.startDate, endDate)
+                                Else
+                                    newProj = standInDBvname
+                                End If
+                            Else
+                                Dim moveIT As Boolean = getColumnOfDate(startDate) >= 1 Or getColumnOfDate(endDate) > 1
+                                If moveIT Then
+                                    ' did start or end date change at all ? 
+                                    If getColumnOfDate(startDate) <= 0 Then
+                                        startDate = standInDBvname.startDate
+                                    End If
+                                    If getColumnOfDate(endDate) > 1 Then
+                                        endDate = standInDBvname.endeDate
+                                    End If
 
+                                    ' now check whether it is necessary at all to move the project 
+                                    If DateDiff(DateInterval.Day, standInDBvname.startDate, startDate) <> 0 Or
+                                        DateDiff(DateInterval.Day, standInDBvname.endeDate, endDate) <> 0 Then
+                                        newProj = moveProject(standInDBvname, startDate, endDate)
+                                    Else
+                                        newProj = standInDBvname
+                                    End If
+                                Else
+                                    newProj = standInDBvname
+                                End If
 
-                    ' alle Rollen aus dem newProj herauslöschen
+                            End If
+                        Catch ex As Exception
+                            newProj = standInDBvname
+                        End Try
+
+                    End If
+
+                    ' now check whether there are new settings which have not yet been set ..
+                    If businessUnit <> "" And newProj.businessUnit <> businessUnit Then
+                        newProj.businessUnit = businessUnit
+                    End If
+
+                    ' delete all roles and alle Rollen aus dem newProj herauslöschen
                     For Each ph In newProj.AllPhases
                         ph.clearCosts()
                         ph.clearRoles()
@@ -5688,17 +5772,7 @@ Public Module agm3
                     For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseRoleValues
                         If Not newProj.containsPhase(kvp.Key, False) Then
                             'Fehlermeldung 
-                            outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project template. Role Assignments are ignored."
-                            meldungen.Add(outputline)
-                            Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
-                        End If
-                    Next
-
-                    ''check if all mentioned Phases exist in the newProj (out of the template)
-                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseCostValues
-                        If Not newProj.containsPhase(kvp.Key, False) Then
-                            'Fehlermeldung
-                            outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project template. Cost Assignments are ignored."
+                            outputline = "The phase with name '" & kvp.Key & "' does not exist in the chosen project resp project template. Role Assignments are ignored."
                             meldungen.Add(outputline)
                             Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
                         End If
@@ -5778,7 +5852,7 @@ Public Module agm3
 
                         ' tk 23.11.22 now check whether or not a desired budget need to be calculated
                         Try
-                            If budget = 0 And profit > 0 Then
+                            If newProj.Erloes = 0 Or (budget = 0 And profit > 0) Then
                                 newProj.Erloes = newProj.getSummeKosten * (1 + profit)
                             End If
                         Catch ex As Exception

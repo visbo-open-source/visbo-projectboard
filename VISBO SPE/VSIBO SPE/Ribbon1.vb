@@ -82,10 +82,11 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Public Sub PTProjectLoad(Control As Office.IRibbonControl)
 
-        Dim projektespeichern As New frmProjekteSpeichern
-        Dim returnValue As DialogResult
-        Dim cancelAbbruch As Boolean = False
-        Dim err As New clsErrorCodeMsg
+        ' tk commented out 5.12.2022
+        'Dim returnValue As DialogResult
+        'Dim projektespeichern As New frmProjekteSpeichern
+        'Dim cancelAbbruch As Boolean = False
+        'Dim err As New clsErrorCodeMsg
 
 
         Try
@@ -166,41 +167,53 @@ Public Class Ribbon1
             appInstance.ShowChartTipValues = True
         End Try
 
+        ' tk 5.12.2022 it should be possible to load addional projects to simple Edit ... 
+        ' even when context is already loaded and so on ... 
+        ' use case is for example: in Web-UI a bottleneck is recognized . 3 projects do contribute to that 
+        ' one of the projects gets loaded from the WEb-UI by Menu item "Edit PRoject"  the other two are subsequently loaded 
 
-        Dim boardWasEmpty As Boolean = editProjekteInSPE.Count = 0
+        ' that is why only the Call to load additional projects is done ...
 
-        If Not boardWasEmpty Then
-            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
-                returnValue = projektespeichern.ShowDialog
+        Call PBBDatenbankLoadProjekte(Control, False)
 
-                If returnValue = DialogResult.Yes Then
+        ' Begin of changes tk 5.12.2022
 
-                    Call StoreAllProjectsinDB()
+        'Dim boardWasEmpty As Boolean = editProjekteInSPE.Count = 0
 
-                End If
-            End If
-            AlleProjekte.Clear()
-            ShowProjekte.Clear()
-            editProjekteInSPE.Clear()
-            Call clearTable(currentProjektTafelModus)
-        End If
+        'If Not boardWasEmpty Then
+        '    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
+        '        returnValue = projektespeichern.ShowDialog
 
-        If spe_vpid <> "" And spe_vpvid <> "" Then
+        '        If returnValue = DialogResult.Yes Then
 
-            'holen des Projekte mit vpid... und vpvid...
-            Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
-            If Not IsNothing(hproj) Then
-                ShowProjekte.Add(hproj, False)
-                editProjekteInSPE.Add(hproj, False)
-                AlleProjekte.Add(hproj, False)
-            Else
-                Call PBBDatenbankLoadProjekte(Control, False)
-            End If
-            spe_vpid = ""
-            spe_vpvid = ""
-        Else
-            Call PBBDatenbankLoadProjekte(Control, False)
-        End If
+        '            Call StoreAllProjectsinDB()
+
+        '        End If
+        '    End If
+        '    AlleProjekte.Clear()
+        '    ShowProjekte.Clear()
+        '    editProjekteInSPE.Clear()
+        '    Call clearTable(currentProjektTafelModus)
+        'End If
+
+        'If spe_vpid <> "" And spe_vpvid <> "" Then
+
+        '    'holen des Projekte mit vpid... und vpvid...
+        '    Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
+        '    If Not IsNothing(hproj) Then
+        '        ShowProjekte.Add(hproj, False)
+        '        editProjekteInSPE.Add(hproj, False)
+        '        AlleProjekte.Add(hproj, False)
+        '    Else
+        '        Call PBBDatenbankLoadProjekte(Control, False)
+        '    End If
+        '    spe_vpid = ""
+        '    spe_vpvid = ""
+        'Else
+        '    Call PBBDatenbankLoadProjekte(Control, False)
+        'End If
+
+        ' end of changes tk 5.12.2022
 
         appInstance.EnableEvents = True
 

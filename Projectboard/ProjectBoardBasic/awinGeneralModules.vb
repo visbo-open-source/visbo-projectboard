@@ -4493,7 +4493,7 @@ Public Module awinGeneralModules
         Dim key As String = calcProjektKey(pName, vName)
 
 
-        If AlleProjekte.hasAnyConflictsWith(key, False) Then
+        If (AlleProjekte.hasAnyConflictsWith(key, False) And (Not calledFromPPTorSPE)) Then
             Dim outputLine As String = "Projekt " & pName & " kann nicht geladen werden. ist bereits in Summary Projekt enthalten"
             outputCollection.Add(outputLine)
         Else
