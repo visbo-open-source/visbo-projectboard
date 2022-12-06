@@ -162,7 +162,11 @@ Public Class Ribbon1
             '   Call MsgBox(ex.Message)
             appInstance.Quit()
         Finally
-            appInstance.ScreenUpdating = True
+
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
+
             appInstance.ShowChartTipNames = True
             appInstance.ShowChartTipValues = True
         End Try
@@ -174,7 +178,12 @@ Public Class Ribbon1
 
         ' that is why only the Call to load additional projects is done ...
 
+
         Call PBBDatenbankLoadProjekte(Control, False)
+        If editProjekteInSPE.Count > 0 Then
+            Call clearTable(currentProjektTafelModus)
+        End If
+
 
         ' Begin of changes tk 5.12.2022
 
@@ -217,10 +226,18 @@ Public Class Ribbon1
 
         appInstance.EnableEvents = True
 
-        If AlleProjekte.Count > 0 Then
+        If editProjekteInSPE.Count > 0 Then
             ' Termine edit aufschalten
-            visboZustaende.currentProject = AlleProjekte.getProject(0)
+            If appInstance.ScreenUpdating = True Then
+                appInstance.ScreenUpdating = False
+            End If
+
+            visboZustaende.currentProject = editProjekteInSPE.getProject(1)
             Call massEditRcTeAt(currentProjektTafelModus)
+
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
         End If
 
     End Sub
@@ -273,8 +290,14 @@ Public Class Ribbon1
         If editProjekteInSPE.Count > 0 Then
             currentProjektTafelModus = ptModus.massEditCosts
             ' Call MsgBox(ptModus.massEditCosts.ToString)
-
+            If appInstance.ScreenUpdating = True Then
+                appInstance.ScreenUpdating = False
+            End If
             Call massEditRcTeAt(ptModus.massEditCosts)
+
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
         End If
 
     End Sub
@@ -282,10 +305,18 @@ Public Class Ribbon1
     Public Sub PTProjectTime(control As Office.IRibbonControl)
 
         If editProjekteInSPE.Count > 0 Then
-            currentProjektTafelModus = ptModus.massEditTermine
-            'Call MsgBox(ptModus.massEditTermine.ToString)
 
+            If appInstance.ScreenUpdating = True Then
+                appInstance.ScreenUpdating = False
+            End If
+
+            currentProjektTafelModus = ptModus.massEditTermine
             Call massEditRcTeAt(ptModus.massEditTermine)
+
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
+
         End If
 
     End Sub
@@ -293,10 +324,16 @@ Public Class Ribbon1
     Public Sub PTProjectResources(control As Office.IRibbonControl)
 
         If editProjekteInSPE.Count > 0 Then
-            currentProjektTafelModus = ptModus.massEditRessSkills
-            'Call MsgBox(ptModus.massEditRessSkills.ToString)
+            If appInstance.ScreenUpdating = True Then
+                appInstance.ScreenUpdating = False
+            End If
 
+            currentProjektTafelModus = ptModus.massEditRessSkills
             Call massEditRcTeAt(ptModus.massEditRessSkills)
+
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
         End If
 
     End Sub
