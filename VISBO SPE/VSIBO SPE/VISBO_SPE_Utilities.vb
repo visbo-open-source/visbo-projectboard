@@ -939,7 +939,7 @@ Module VISBO_SPE_Utilities
                             Else
                                 CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
                             End If
-                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate
                             If isPastElement Then
                                 ' Sperren ...
                                 CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
