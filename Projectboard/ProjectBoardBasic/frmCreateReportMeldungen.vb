@@ -4,6 +4,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 Public Class frmCreateReportMeldungen
 
 
+    Private report_allLanguage_messages As New clsReportMessages
+
     Private report_DE_messages As New clsReportMessages
     Private report_en_messages As New clsReportMessages
     Private report_fr_messages As New clsReportMessages
@@ -42,33 +44,33 @@ Public Class frmCreateReportMeldungen
 
                     For zeile = rowOffset To lastrow
 
+                        Dim messageDef As New clsReportMessage
                         If lastcolumn > 0 Then
 
-                            'msgDE = CType(.Cells(zeile, columnOffset + PTSprache.deutsch).Value, String).Trim
-                            msgDE = CType(.Cells(zeile, columnOffset + PTSprache.deutsch).Value, String)
-                            report_DE_messages.Liste.Add(zeile, msgDE)
+                            messageDef.german = CType(.Cells(zeile, columnOffset + PTSprache.deutsch).Value, String)
+                            'report_DE_messages.Liste.Add(zeile, messageDef.german)
 
                         End If
 
                         If lastcolumn > 1 Then
 
-                            'msgEN = CType(.Cells(zeile, columnOffset + PTSprache.englisch).Value, String).Trim
-                            msgEN = CType(.Cells(zeile, columnOffset + PTSprache.englisch).Value, String)
-                            report_en_messages.Liste.Add(zeile, msgEN)
+                            messageDef.english = CType(.Cells(zeile, columnOffset + PTSprache.englisch).Value, String)
+                            'report_en_messages.Liste.Add(zeile, messageDef.english)
                         End If
                         If lastcolumn > 2 Then
 
-                            'msgFR = CType(.Cells(zeile, columnOffset + PTSprache.fanzösisch).Value, String).Trim
-                            msgFR = CType(.Cells(zeile, columnOffset + PTSprache.französisch).Value, String)
-                            report_fr_messages.Liste.Add(zeile, msgFR)
+                            messageDef.french = CType(.Cells(zeile, columnOffset + PTSprache.französisch).Value, String)
+                            'report_fr_messages.Liste.Add(zeile, messageDef.french)
                         End If
 
                         If lastcolumn > 3 Then
 
-                            'msgES = CType(.Cells(zeile, columnOffset + PTSprache.spanisch).Value, String).Trim
-                            msgES = CType(.Cells(zeile, columnOffset + PTSprache.spanisch).Value, String)
-                            report_es_messages.Liste.Add(zeile, msgES)
+                            messageDef.spanish = CType(.Cells(zeile, columnOffset + PTSprache.spanisch).Value, String)
+                            'report_es_messages.Liste.Add(zeile, messageDef.spanish)
                         End If
+
+                        report_allLanguage_messages.Liste.Add(zeile, messageDef)
+
                     Next zeile
 
                 End With
@@ -78,12 +80,13 @@ Public Class frmCreateReportMeldungen
                 ReportMessagesFile.Close(SaveChanges:=False)
 
                 Try
-                    Call XMLExportReportMsg(report_DE_messages, repMsgFileName, ReportLang(PTSprache.deutsch).Name)
-                    Call XMLExportReportMsg(report_en_messages, repMsgFileName, ReportLang(PTSprache.englisch).Name)
-                    Call XMLExportReportMsg(report_fr_messages, repMsgFileName, ReportLang(PTSprache.französisch).Name)
-                    Call XMLExportReportMsg(report_es_messages, repMsgFileName, ReportLang(PTSprache.spanisch).Name)
+                    Call XMLExportReportMsg(report_allLanguage_messages, repMsgFileName, "allLanguage")
+                    'Call XMLExportReportMsg(report_DE_messages, repMsgFileName, ReportLang(PTSprache.deutsch).Name)
+                    'Call XMLExportReportMsg(report_en_messages, repMsgFileName, ReportLang(PTSprache.englisch).Name)
+                    'Call XMLExportReportMsg(report_fr_messages, repMsgFileName, ReportLang(PTSprache.französisch).Name)
+                    'Call XMLExportReportMsg(report_es_messages, repMsgFileName, ReportLang(PTSprache.spanisch).Name)
 
-                    Call MsgBox(" Die Message der Datei '" & FileReportMessages.Text & "' wurden eingelesen " & vbLf & _
+                    Call MsgBox(" Die Message der Datei '" & FileReportMessages.Text & "' wurden eingelesen " & vbLf &
                                 " und übersetzt!")
 
                     My.Computer.FileSystem.DeleteFile(FileReportMessages.Text)

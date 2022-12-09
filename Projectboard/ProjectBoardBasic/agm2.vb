@@ -15968,6 +15968,7 @@ Public Module agm2
 
             Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
+            curUserDir = Environment.GetEnvironmentVariable("USERPROFILE")
 
             If awinSettings.awinPath = "" Then
                 ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
@@ -16159,13 +16160,15 @@ Public Module agm2
             DiagrammTypen(8) = "Meilenstein-Kategorie"
             DiagrammTypen(9) = "Cash-Flow"
 
+            'ur:091222: nicht mehr für ProjectPublish nötig
+            If Not special = "BHTC" Then
+                Try
+                    repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+                    Call setLanguageMessages()
+                Catch ex As Exception
 
-            Try
-                repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
-                Call setLanguageMessages()
-            Catch ex As Exception
-
-            End Try
+                End Try
+            End If
 
             autoSzenarioNamen(0) = "vor Optimierung"
             autoSzenarioNamen(1) = "1. Optimum"
@@ -16238,35 +16241,35 @@ Public Module agm2
                 ' ab jetzt braucht man keine Lizenzen mehr ... 
 
 
-                If special = "BHTC" Then
+                'If special = "BHTC" Then
 
-                    Dim user As String = myWindowsName
-                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
+                '    Dim user As String = myWindowsName
+                '    Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
 
-                    ' Lesen des Lizenzen-Files
+                '    ' Lesen des Lizenzen-Files
 
-                    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+                '    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
-                    ' Prüfen der Lizenzen
-                    If Not lizenzen.validLicence(user, komponente) Then
+                '    ' Prüfen der Lizenzen
+                '    If Not lizenzen.validLicence(user, komponente) Then
 
-                        Call logger(ptErrLevel.logError, "Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+                '        Call logger(ptErrLevel.logError, "Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
 
-                        ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                        ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-                        Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                                    & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                '        ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                '        ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                '        Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                '                    & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
 
-                    End If
+                '    End If
 
-                    ' Lizenz ist ok
+                '    ' Lizenz ist ok
 
-                Else
-                    ' Für Pilotkunden soll keine Lizenz erforderlich sein
+                'Else
+                '    ' Für Pilotkunden soll keine Lizenz erforderlich sein
 
-                    ' also:
-                    ' Lizenz ist ok
-                End If
+                '    ' also:
+                '    ' Lizenz ist ok
+                'End If
 
 
 
@@ -16684,29 +16687,29 @@ Public Module agm2
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
-                                customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
-                                If IsNothing(customFieldDefinitions) Then
-                                    ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                                    Try
-                                        Call readCustomFieldDefinitions(wsName4)
-                                    Catch ex As Exception
+                            If IsNothing(customFieldDefinitions) Then
+                                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
 
-                                    End Try
-                                ElseIf customFieldDefinitions.count = 0 Then
-                                    Try
-                                        Call readCustomFieldDefinitions(wsName4)
-                                    Catch ex As Exception
+                                End Try
+                            ElseIf customFieldDefinitions.count = 0 Then
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
 
-                                    End Try
-                                End If
-                            Catch ex As Exception
+                                End Try
+                            End If
+                        Catch ex As Exception
 
-                            End Try
+                        End Try
 
 
-                        Else
-                            awinSettings.readCostRolesFromDB = False
+                    Else
+                        awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
                         Else
@@ -16809,6 +16812,8 @@ Public Module agm2
                     Try
                         ' die Info, welche Sprache gelten soll, ist in ReadOtherDefinitions ...
 
+                        repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
+
                         repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
                         Call setLanguageMessages()
 
@@ -16905,7 +16910,25 @@ Public Module agm2
                         Call MsgBox("readVorlagen: BHTC")
                     End If
                     If Not (visboClient = divClients(client.VisboSmartInfo)) Then
-                        Call readVorlagen(False)
+
+                        Dim readDate As Date = readProjectTemplates()
+                        Dim msgtxt As String
+                        If Projektvorlagen.Count > 0 Then
+                            If awinSettings.englishLanguage Then
+                                msgtxt = Projektvorlagen.Count.ToString & "project templates read"
+                            Else
+                                msgtxt = "Es wurden " & Projektvorlagen.Count.ToString & " Projektvorlagen von ihrem VC gelesen"
+                            End If
+                            Call logger(ptErrLevel.logInfo, "awinsetTypen", msgtxt)
+                        Else
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "No project templates were found in your VC"
+                            Else
+                                msgtxt = "Es wurden keine Projektvorlagen von ihrem VC gefunden"
+                            End If
+                            Call logger(ptErrLevel.logInfo, "awinsetTypen", msgtxt)
+                        End If
+                        'Call readVorlagen(False)
                     End If
                 End If
 

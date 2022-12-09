@@ -3534,7 +3534,8 @@ Public Class Request
                                                ByRef customfieldsResult As clsCustomFieldDefinitions,
                                                ByRef customizationResult As clsCustomization,
                                                ByRef customrolesResult As clsCustomUserRoles,
-                                               ByRef organisationResult As clsOrganisation
+                                               ByRef organisationResult As clsOrganisation,
+                                               ByRef reportMsgResult As clsReportMessages
                                                ) As Object
 
         Dim result As New List(Of Object)
@@ -3587,6 +3588,14 @@ Public Class Request
                                 Dim hobj As String = CType(setting, List(Of clsVCSettingEverything)).ElementAt(i).value.ToString
                                 webCustomUserRoles = JsonConvert.DeserializeObject(Of clsCustomUserRolesWeb)(hobj)
                                 webCustomUserRoles.copyTo(customrolesResult)
+
+                            Case settingTypes(ptSettingTypes.reportMessages)
+
+                                Dim webReportMessages As New clsReportMessagesWeb
+                                settingID = CType(setting, List(Of clsVCSettingEverything)).ElementAt(i)._id
+                                Dim hobj As String = CType(setting, List(Of clsVCSettingEverything)).ElementAt(i).value.ToString
+                                webReportMessages = JsonConvert.DeserializeObject(Of clsReportMessagesWeb)(hobj)
+                                'webReportMessages.copyto(reportMsgResult)
 
                             Case settingTypes(ptSettingTypes.organisation)
 
@@ -4205,6 +4214,49 @@ Public Class Request
     End Function
 
 
+    Public Function retrieveReportMessages(ByRef err As clsErrorCodeMsg) As clsReportMessages
+
+        Dim result As New clsReportMessages
+        Dim zwResult As New SortedList(Of Integer, clsReportMessage)
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.reportMessages)
+        Dim name As String = type
+        Dim webReportMessages As New clsReportMessagesWeb
+        Try
+
+            setting = New List(Of clsVCSettingCustomroles)
+            setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+            If Not IsNothing(setting) Then
+
+                anzSetting = CType(setting, List(Of clsVCSettingReportMsg)).Count
+
+                If anzSetting > 0 Then
+
+                    settingID = CType(setting, List(Of clsVCSettingReportMsg)).ElementAt(0)._id
+                    webReportMessages = CType(setting, List(Of clsVCSettingReportMsg)).ElementAt(0).value
+                    'webReportMessages.copyto(zwResult)
+
+                Else
+                    result = New clsReportMessages
+                    'If err.errorCode = 403 Then
+                    '    Call MsgBox(err.errorMsg)
+                    'End If
+                    settingID = ""
+                End If
+
+            Else
+
+            End If
+
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "retrieveCustomUserRoles", ex.Message)
+            'Call MsgBox(err.errorMsg)
+        End Try
+        retrieveReportMessages = result
+    End Function
 
 
     Public Function retrieveCustomSettingsRPAFromDB(ByVal name As String,
@@ -7182,6 +7234,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customSettingRPA)
                     result = CType(result, clsVCSettingCustomSettingsRPA)
 
+                Case settingTypes(ptSettingTypes.reportMessages)
+                    result = CType(result, clsVCSettingReportMsg)
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -7264,6 +7319,9 @@ Public Class Request
                         Case settingTypes(ptSettingTypes.customSettingRPA)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomSettingRPA)(Antwort)
                             result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomSettingsRPA))
+                        Case settingTypes(ptSettingTypes.reportMessages)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingReportMessages)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingReportMsg))
                         Case Else
                             Call MsgBox("searched settingType = " & type)
                     End Select
