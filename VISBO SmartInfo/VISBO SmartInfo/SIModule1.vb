@@ -865,6 +865,15 @@ Module SIModule1
                     End With
 
 
+                    Try
+                        ' die Info, welche Sprache gelten soll, ist in customizations...
+                        repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
+                        'repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+                        Call setLanguageMessages()
+                    Catch ex As Exception
+
+                    End Try
+
                     wasSuccessful = True
                     appearancesWereRead = True
 
@@ -1065,6 +1074,18 @@ Module SIModule1
                             End Try
                         End If
 
+
+                        Try
+                            ' die Info, welche Sprache gelten soll, ist in customizations...
+
+                            repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
+
+                            'repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+                            Call setLanguageMessages()
+
+                        Catch ex As Exception
+
+                        End Try
                     End If
                 End If
 
