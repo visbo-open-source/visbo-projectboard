@@ -16161,14 +16161,16 @@ Public Module agm2
             DiagrammTypen(9) = "Cash-Flow"
 
             'ur:091222: nicht mehr für ProjectPublish nötig
-            If Not special = "BHTC" Then
-                Try
-                    repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
-                    Call setLanguageMessages()
-                Catch ex As Exception
+            ' für Projectboard später gelesen aus VC
 
-                End Try
-            End If
+            'If Not special = "BHTC" Then
+            '    Try
+            '        repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+            '        Call setLanguageMessages()
+            '    Catch ex As Exception
+
+            '    End Try
+            'End If
 
             autoSzenarioNamen(0) = "vor Optimierung"
             autoSzenarioNamen(1) = "1. Optimum"
@@ -16814,7 +16816,7 @@ Public Module agm2
 
                         repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
 
-                        repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+                        'repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
                         Call setLanguageMessages()
 
                     Catch ex As Exception

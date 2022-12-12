@@ -4236,7 +4236,7 @@ Public Class Request
 
                     settingID = CType(setting, List(Of clsVCSettingReportMsg)).ElementAt(0)._id
                     webReportMessages = CType(setting, List(Of clsVCSettingReportMsg)).ElementAt(0).value
-                    'webReportMessages.copyto(zwResult)
+                    webReportMessages.copyto(result.Liste)
 
                 Else
                     result = New clsReportMessages

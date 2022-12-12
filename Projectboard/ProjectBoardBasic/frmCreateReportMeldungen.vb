@@ -47,14 +47,14 @@ Public Class frmCreateReportMeldungen
                         Dim messageDef As New clsReportMessage
                         If lastcolumn > 0 Then
 
-                            messageDef.german = CType(.Cells(zeile, columnOffset + PTSprache.deutsch).Value, String)
+                            messageDef.Deutsch = CType(.Cells(zeile, columnOffset + PTSprache.deutsch).Value, String)
                             'report_DE_messages.Liste.Add(zeile, messageDef.german)
 
                         End If
 
                         If lastcolumn > 1 Then
 
-                            messageDef.english = CType(.Cells(zeile, columnOffset + PTSprache.englisch).Value, String)
+                            messageDef.Englisch = CType(.Cells(zeile, columnOffset + PTSprache.englisch).Value, String)
                             'report_en_messages.Liste.Add(zeile, messageDef.english)
                         End If
                         If lastcolumn > 2 Then

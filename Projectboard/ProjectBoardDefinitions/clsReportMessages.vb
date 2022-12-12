@@ -9,11 +9,19 @@ Public Class clsReportMessages
 
 
 
-    Public ReadOnly Property Liste As SortedList(Of Integer, clsReportMessage)
+    Public Property Liste As SortedList(Of Integer, clsReportMessage)
 
         Get
             Liste = _allReportMsg
         End Get
+        Set(value As SortedList(Of Integer, clsReportMessage))
+            If Not IsNothing(value) Then
+                _allReportMsg = value
+            Else
+                _allReportMsg = New SortedList(Of Integer, clsReportMessage)
+            End If
+        End Set
+
 
     End Property
 
@@ -26,9 +34,9 @@ Public Class clsReportMessages
             Dim i As Integer = 0
             If nr > 0 And _allReportMsg.Count >= nr Then
                 If awinSettings.englishLanguage Then
-                    hmsg = _allReportMsg.Item(nr).english
+                    hmsg = _allReportMsg.Item(nr).Englisch
                 Else
-                    hmsg = _allReportMsg.Item(nr).german
+                    hmsg = _allReportMsg.Item(nr).Deutsch
                 End If
                 hstr = Split(hmsg, "& vblf &", -1)
                 While i < hstr.Length

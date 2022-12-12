@@ -1,11 +1,11 @@
 ﻿Public Class clsReportMessage
-    Public Property german As String
-    Public Property english As String
+    Public Property Deutsch As String
+    Public Property Englisch As String
     Public Property french As String
     Public Property spanish As String
     Sub New()
-        _german = "undefiniert"
-        _english = "undefined"
+        _Deutsch = "undefiniert"
+        _Englisch = "undefined"
         _french = "indéfini"
         _spanish = "indefinido"
     End Sub
