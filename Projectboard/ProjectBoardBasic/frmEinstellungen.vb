@@ -155,6 +155,8 @@ Public Class frmEinstellungen
 
     Private Sub SprachAusw_SelectedIndexChanged(sender As Object, e As EventArgs) Handles SprachAusw.SelectedIndexChanged
 
+        Dim err As New clsErrorCodeMsg
+
         Select Case SprachAusw.SelectedIndex
             Case PTSprache.deutsch
                 repCult = ReportLang(SprachAusw.SelectedIndex)
@@ -171,13 +173,33 @@ Public Class frmEinstellungen
 
         awinSettings.ReportLanguage = repCult.Name
 
-        repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+        Try
 
-        Call setLanguageMessages()
+            ' die Info, welche Sprache gelten soll, ist in ReadOtherDefinitions ...
 
-        'statusLabel.Text = "Spracheinstellung aktuell auf " & repCult.DisplayName & " gesetzt!!"
+            repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
 
-        'Me.Close()
+            Dim msgtxt As String = "Lesen von " & repMessages.Liste.Count & "ReportMessages erfolgreich durchgeführt"
+            If awinSettings.englishLanguage Then
+                msgtxt = "Reading of " & repMessages.Liste.Count & "ReportMessages successfully"
+            End If
+
+            Call logger(ptErrLevel.logInfo, "retrieveReportMessages", msgtxt)
+
+            'repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+            Call setLanguageMessages()
+
+        Catch ex As Exception
+
+        End Try
+
+        ''repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+
+        'Call setLanguageMessages()
+
+        ''statusLabel.Text = "Spracheinstellung aktuell auf " & repCult.DisplayName & " gesetzt!!"
+
+        ''Me.Close()
 
     End Sub
 

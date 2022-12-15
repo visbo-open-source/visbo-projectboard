@@ -6167,7 +6167,8 @@ Public Module testModule
                                             End If
                                             If smartChartInfo.zeitRaumRight > Date.MinValue Then
                                                 Dim hzeitRaumRight As Date = smartChartInfo.zeitRaumRight
-                                                hzeitRaumRight = DateAdd(DateInterval.Month, 1, hzeitRaumRight)
+                                                ' ur: 20221215: otherwise the range in ppt and WebUI are not the same
+                                                'hzeitRaumRight = DateAdd(DateInterval.Month, 1, hzeitRaumRight)
                                                 endingDate = "&to=" & hzeitRaumRight.ToString("s")
                                             End If
 

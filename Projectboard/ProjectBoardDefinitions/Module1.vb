@@ -65,7 +65,7 @@ Public Module Module1
     ' gibt an, in welchem Modus sich aktuell die Projekt-Tafe befindet 
     Public currentProjektTafelModus As Integer
 
-    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    'Definition der Klasse für die ReportMessages ( müssen in  gelesen werden aus dem VCSetting reportMessages)
     Public repMessages As clsReportMessages
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
