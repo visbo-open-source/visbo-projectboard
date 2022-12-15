@@ -868,6 +868,13 @@ Module SIModule1
                     Try
                         ' die Info, welche Sprache gelten soll, ist in customizations...
                         repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
+
+                        Dim msgtxt As String = "Lesen von " & repMessages.Liste.Count & "ReportMessages erfolgreich durchgeführt"
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Reading of " & repMessages.Liste.Count & "ReportMessages successfully"
+                        End If
+                        Call logger(ptErrLevel.logInfo, "retrieveReportMessages", msgtxt)
+
                         'repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
                         Call setLanguageMessages()
                     Catch ex As Exception
