@@ -15965,12 +15965,20 @@ Public Module agm2
 
             End If
 
+            ' find current Directory of the User
             Dim curUserDir As String = ""
-            'Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            Try
+                curUserDir = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
-            If curUserDir = "" Or IsNothing(curUserDir) Then
+                If curUserDir = "" Or IsNothing(curUserDir) Then
+                    curUserDir = Environment.GetEnvironmentVariable("VISBOPROFILE")
+                End If
+
+            Catch ex As Exception
                 curUserDir = Environment.GetEnvironmentVariable("VISBOPROFILE")
-            End If
+            End Try
+
+
 
             If awinSettings.awinPath = "" Then
                 ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
