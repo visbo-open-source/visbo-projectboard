@@ -15965,8 +15965,23 @@ Public Module agm2
 
             End If
 
+            ' find current Directory of the User
+            Dim curUserDir As String = ""
+            Try
+                curUserDir = Environment.GetEnvironmentVariable("VISBOPROFILE")
 
-            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                If IsNothing(curUserDir) Then
+                    curUserDir = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                Else
+                    If curUserDir = "" Or IsNothing(curUserDir) Then
+                        curUserDir = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                    End If
+                End If
+
+            Catch ex As Exception
+                curUserDir = Environment.GetEnvironmentVariable("VISBOPROFILE")
+            End Try
+
 
 
             If awinSettings.awinPath = "" Then
@@ -15987,8 +16002,18 @@ Public Module agm2
                     End If
                 End If
             Else
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+                If Not IsNothing(curUserDir) Then
+                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+                Else
+                    Dim msgtxt As String = "die Umgebungsvariable VISBOPROFILE ist nicht definiert"
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "the environment variable VISBOPROFILE does not exist"
+                    End If
+                    Throw New ArgumentException(msgtxt)
+                    ' awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+                End If
             End If
+
 
 
             If Not awinPath.EndsWith("\") Then
@@ -16053,21 +16078,16 @@ Public Module agm2
             End If
 
 
-            ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
+            '' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
 
-            reportOrdnerName = awinPath & "Reports\"
-            Try
-                My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
-            Catch ex As Exception
-
-            End Try
-
-            ' tk 17.8.21 logfileORdnerName ist "" , deshalb ausgeblendet .. jetzt wird ja der logger verwendet ...
+            'reportOrdnerName = awinPath & "Reports\"
             'Try
-            '    My.Computer.FileSystem.CreateDirectory(logfileOrdnerName)
+            '    My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
             'Catch ex As Exception
 
             'End Try
+
+
 
             importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
             importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
@@ -16096,7 +16116,7 @@ Public Module agm2
             exportOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Export\Scenario Definitions"
 
 
-            '' FileNamen zusammenbauen
+            '' FileNamen des logfiles zusammenbauen
             logfileNamePath = createLogfileName("")
 
             If special = "ProjectBoard" Then
@@ -16129,6 +16149,15 @@ Public Module agm2
                     End Try
                 Next
 
+                ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
+
+                reportOrdnerName = awinPath & "Reports\"
+                Try
+                    My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+                Catch ex As Exception
+
+                End Try
+
             End If ' if special
 
             StartofCalendar = StartofCalendar.Date
@@ -16139,13 +16168,6 @@ Public Module agm2
             LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
             LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
             LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
-
-            ' 14.11.16 tk nicht mehr notwenig , wird in Module initial gesetzt 
-            ''ProjektStatus(0) = "geplant"
-            ''ProjektStatus(1) = "beauftragt"
-            ''ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
-            ''ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
-            ''ProjektStatus(4) = "abgeschlossen"
 
 
             DiagrammTypen(0) = "Phase"
@@ -16159,13 +16181,17 @@ Public Module agm2
             DiagrammTypen(8) = "Meilenstein-Kategorie"
             DiagrammTypen(9) = "Cash-Flow"
 
+            'ur:091222: nicht mehr für ProjectPublish nötig
+            ' für Projectboard später gelesen aus VC
 
-            Try
-                repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
-                Call setLanguageMessages()
-            Catch ex As Exception
+            'If Not special = "BHTC" Then
+            '    Try
+            '        repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
+            '        Call setLanguageMessages()
+            '    Catch ex As Exception
 
-            End Try
+            '    End Try
+            'End If
 
             autoSzenarioNamen(0) = "vor Optimierung"
             autoSzenarioNamen(1) = "1. Optimum"
@@ -16226,50 +16252,6 @@ Public Module agm2
                 ''Call logfileOpen()
 
                 Call logger(ptErrLevel.logInfo, "Windows-User: ", myWindowsName, anzFehler)
-
-
-                '' '--------------------------------------------------------------------------------
-                '   Testen, ob der User die passende Lizenz besitzt
-                '' '--------------------------------------------------------------------------------
-
-                ' -----------------------------------------------------
-                ' Speziell für Pilot-Kunden
-                ' -----------------------------------------------------
-                ' ab jetzt braucht man keine Lizenzen mehr ... 
-
-
-                If special = "BHTC" Then
-
-                    Dim user As String = myWindowsName
-                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
-
-                    ' Lesen des Lizenzen-Files
-
-                    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
-
-                    ' Prüfen der Lizenzen
-                    If Not lizenzen.validLicence(user, komponente) Then
-
-                        Call logger(ptErrLevel.logError, "Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
-
-                        ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                        ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-                        Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                                    & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-
-                    End If
-
-                    ' Lizenz ist ok
-
-                Else
-                    ' Für Pilotkunden soll keine Lizenz erforderlich sein
-
-                    ' also:
-                    ' Lizenz ist ok
-                End If
-
-
-
 
 
             End If ' if special = "ProjectBoard"
@@ -16340,8 +16322,6 @@ Public Module agm2
                 loginErfolgreich = logInToMongoDB(True)
 
                 ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
-
-
 
                 If loginErfolgreich Then
 
@@ -16509,126 +16489,6 @@ Public Module agm2
 
                     Dim result As Date = readCustomizations()
 
-                    'If Not IsNothing(customizations) Then
-                    '    ' alle awinSettings... mit den customizations... besetzen
-                    '    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                    '    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
-                    '    'Next
-                    '    businessUnitDefinitions = customizations.businessUnitDefinitions
-
-                    '    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
-                    '    '    customizations.phaseDefinitions.Add(kvp.Value)
-                    '    'Next
-                    '    PhaseDefinitions = customizations.phaseDefinitions
-
-                    '    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
-                    '    '    customizations.milestoneDefinitions.Add(kvp.Value)
-                    '    'Next
-                    '    MilestoneDefinitions = customizations.milestoneDefinitions
-                    '    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
-
-                    '    showtimezone_color = customizations.showtimezone_color
-                    '    noshowtimezone_color = customizations.noshowtimezone_color
-                    '    calendarFontColor = customizations.calendarFontColor
-                    '    nrOfDaysMonth = customizations.nrOfDaysMonth
-                    '    farbeInternOP = customizations.farbeInternOP
-                    '    farbeExterne = customizations.farbeExterne
-                    '    iProjektFarbe = customizations.iProjektFarbe
-                    '    iWertFarbe = customizations.iWertFarbe
-                    '    vergleichsfarbe0 = customizations.vergleichsfarbe0
-                    '    vergleichsfarbe1 = customizations.vergleichsfarbe1
-                    '    'customizations.vergleichsfarbe2 = vergleichsfarbe2
-
-                    '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
-                    '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
-                    '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
-                    '    awinSettings.AmpelGruen = customizations.AmpelGruen
-                    '    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-                    '    awinSettings.AmpelGelb = customizations.AmpelGelb
-                    '    awinSettings.AmpelRot = customizations.AmpelRot
-                    '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
-                    '    awinSettings.glowColor = customizations.glowColor
-
-                    '    awinSettings.timeSpanColor = customizations.timeSpanColor
-                    '    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
-
-                    '    awinSettings.gridLineColor = customizations.gridLineColor
-
-                    '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-                    '    ' ur:20210729 kommt nun eigentlich von Organisation
-                    '    ' ur:20220322 now it is back to customization
-                    '    If awinSettings.ActualdataOrgaUnits = "" Then
-                    '        If customizations.isActualDataRelevant <> "" Then
-                    '            awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
-                    '        Else
-                    '            awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-                    '        End If
-                    '    End If
-                    '    awinSettings.onePersonOneRole = customizations.onePersonOneRole
-                    '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
-
-                    '    awinSettings.actualDataMonth = customizations.actualDataMonth
-                    '    ergebnisfarbe1 = customizations.ergebnisfarbe1
-                    '    ergebnisfarbe2 = customizations.ergebnisfarbe2
-                    '    weightStrategicFit = customizations.weightStrategicFit
-                    '    awinSettings.kalenderStart = customizations.kalenderStart
-                    '    awinSettings.zeitEinheit = customizations.zeitEinheit
-                    '    awinSettings.kapaEinheit = customizations.kapaEinheit
-                    '    awinSettings.offsetEinheit = customizations.offsetEinheit
-                    '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
-                    '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
-                    '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
-                    '    awinSettings.spaltenbreite = customizations.spaltenbreite
-                    '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
-                    '    awinSettings.propAnpassRess = customizations.propAnpassRess
-                    '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
-
-                    '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
-                    '    awinSettings.fullProtocol = customizations.fullProtocol
-                    '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
-                    '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
-                    '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
-                    '    awinSettings.importUnknownNames = customizations.importUnknownNames
-                    '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
-
-                    '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
-                    '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
-                    '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
-                    '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
-
-                    '    awinSettings.importTyp = customizations.importTyp
-
-                    '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
-
-                    '    awinSettings.englishLanguage = customizations.englishLanguage
-
-                    '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
-                    '    awinSettings.considerRiskFee = customizations.considerRiskFee
-
-                    '    ' noch zu tun, sonst in readOtherdefinitions
-                    '    StartofCalendar = awinSettings.kalenderStart
-                    '    'StartofCalendar = StartofCalendar.ToLocalTime()
-
-                    '    historicDate = StartofCalendar
-                    '    Try
-                    '        If awinSettings.englishLanguage Then
-                    '            menuCult = ReportLang(PTSprache.englisch)
-                    '            repCult = menuCult
-                    '            awinSettings.kapaEinheit = "PD"
-                    '        Else
-                    '            awinSettings.kapaEinheit = "PT"
-                    '            menuCult = ReportLang(PTSprache.deutsch)
-                    '            repCult = menuCult
-                    '        End If
-                    '    Catch ex As Exception
-                    '        awinSettings.englishLanguage = False
-                    '        awinSettings.kapaEinheit = "PT"
-                    '        menuCult = ReportLang(PTSprache.deutsch)
-                    '        repCult = menuCult
-                    '    End Try
-                    'Else
-                    '    noCustomizationFound = True
-                    'End If
                     Call logger(ptErrLevel.logInfo, "awinsetTypen", "customizations now set")
 
                 End If
@@ -16650,19 +16510,8 @@ Public Module agm2
                     ' jetzt werden die ORganisationen ausgelesen 
                     ' die aktuell gültige und die nächste, sofern schon verfügbar
 
-                    ' ur: before TSOrganisation
-                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
                     Dim newestOrgaTS As Date = DateSerial(2200, 12, 31)
                     currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, False, True, True)
-
-                    'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, True)
-
-                    'nextOrga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", newestOrgaTS, err, True, True, True)
-                    'If nextOrga.count > 0 Then
-                    '    validOrganisations.addOrga(nextOrga)
-                    '    tsOfnextOrga = nextOrga.validFrom
-                    'End If
 
                     If currentOrga.count > 0 Then
 
@@ -16684,42 +16533,61 @@ Public Module agm2
 
                         ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
-                                customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                            ' Lesen vom VCSetting CustomField
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
-                                If IsNothing(customFieldDefinitions) Then
-                                    ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                                    Try
-                                        Call readCustomFieldDefinitions(wsName4)
-                                    Catch ex As Exception
+                            If IsNothing(customFieldDefinitions) Then
+                                ' nochmal versuchen von der Datei ProjectBoard Customization.xlsx
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
 
-                                    End Try
-                                ElseIf customFieldDefinitions.count = 0 Then
-                                    Try
-                                        Call readCustomFieldDefinitions(wsName4)
-                                    Catch ex As Exception
+                                End Try
+                            ElseIf customFieldDefinitions.count = 0 Then
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
 
-                                    End Try
-                                End If
-                            Catch ex As Exception
+                                End Try
+                            End If
+                            Call logger(ptErrLevel.logInfo, "retrieveCustomFieldsFromDB", "Reading of " & customFieldDefinitions.count & " CustomFieldDefinitions successfully")
+                        Catch ex As Exception
 
-                            End Try
+                        End Try
 
 
-                        Else
-                            awinSettings.readCostRolesFromDB = False
+                    Else
+                        awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
                         Else
                             Call MsgBox("Es existiert keine Organisation im System!")
                         End If
 
-
-                        ' Auslesen der Custom Field Definitions aus Customization-File
+                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                         Try
-                            Call readCustomFieldDefinitions(wsName4)
+                            ' Lesen vom VCSetting CustomField
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                            If IsNothing(customFieldDefinitions) Then
+                                ' nochmal versuchen von der Datei ProjectBoard Customization.xlsx
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
+
+                                End Try
+                            ElseIf customFieldDefinitions.count = 0 Then
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                            Call logger(ptErrLevel.logInfo, "retrieveCustomFieldsFromDB", "Reading of " & customFieldDefinitions.count & " CustomFieldDefinitions successfully")
                         Catch ex As Exception
 
                         End Try
+
 
                     End If
 
@@ -16809,7 +16677,16 @@ Public Module agm2
                     Try
                         ' die Info, welche Sprache gelten soll, ist in ReadOtherDefinitions ...
 
-                        repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+                        repMessages = CType(databaseAcc, DBAccLayer.Request).retrieveReportMessages(err)
+
+                        Dim msgtxt As String = "Lesen von " & repMessages.Liste.Count & "ReportMessages erfolgreich durchgeführt"
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Reading of " & repMessages.Liste.Count & "ReportMessages successfully"
+                        End If
+
+                        Call logger(ptErrLevel.logInfo, "retrieveReportMessages", msgtxt)
+
+                        'repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
                         Call setLanguageMessages()
 
                     Catch ex As Exception
@@ -16825,12 +16702,15 @@ Public Module agm2
 
                                 wsName15 = CType(appInstance.Worksheets(arrWsNames(15)),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                If Not IsNothing(wsName15) Then
 
-                                ' Auslesen der MissingPhase Definitionen 
-                                Call readPhaseDefinitions(wsName15, True)
+                                    ' Auslesen der MissingPhase Definitionen 
+                                    Call readPhaseDefinitions(wsName15, True)
 
-                                ' Auslesen der Meilenstein Definitionen 
-                                Call readMilestoneDefinitions(wsName15, True)
+                                    ' Auslesen der Meilenstein Definitionen 
+                                    Call readMilestoneDefinitions(wsName15, True)
+                                End If
+
                             Catch ex1 As Exception
 
                                 ' wenn das Sheet nicht existiert, muss es angelegt werden 
@@ -16849,8 +16729,6 @@ Public Module agm2
                                 End With
 
                             End Try
-
-
 
                         Catch ex As Exception
 
@@ -16896,16 +16774,31 @@ Public Module agm2
 
                 End If ' if special="ProjectBoard"
 
-
-
-
                 ' hier werden nur für VISBO 1-Click PPT die vorlagen gelesen
                 If special = "BHTC" Then
                     If awinSettings.visboDebug Then
                         Call MsgBox("readVorlagen: BHTC")
                     End If
                     If Not (visboClient = divClients(client.VisboSmartInfo)) Then
-                        Call readVorlagen(False)
+
+                        Dim readDate As Date = readProjectTemplates()
+                        Dim msgtxt As String
+                        If Projektvorlagen.Count > 0 Then
+                            If awinSettings.englishLanguage Then
+                                msgtxt = Projektvorlagen.Count.ToString & "project templates read"
+                            Else
+                                msgtxt = "Es wurden " & Projektvorlagen.Count.ToString & " Projektvorlagen von ihrem VC gelesen"
+                            End If
+                            Call logger(ptErrLevel.logInfo, "awinsetTypen", msgtxt)
+                        Else
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "No project templates were found in your VC"
+                            Else
+                                msgtxt = "Es wurden keine Projektvorlagen von ihrem VC gefunden"
+                            End If
+                            Call logger(ptErrLevel.logInfo, "awinsetTypen", msgtxt)
+                        End If
+                        'Call readVorlagen(False)
                     End If
                 End If
 
@@ -18083,57 +17976,45 @@ Public Module agm2
 
         Try
 
+            If Not IsNothing(wsname) Then
+                With wsname
 
-            With wsname
-
-                Dim customFieldRange As Excel.Range = .Range("awin_CustomField_Definitions")
-                Dim anzZeilen As Integer = customFieldRange.Rows.Count
-                Dim c As Excel.Range
+                    Dim customFieldRange As Excel.Range = .Range("awin_CustomField_Definitions")
+                    Dim anzZeilen As Integer = customFieldRange.Rows.Count
+                    Dim c As Excel.Range
 
 
-                For i = 2 To anzZeilen - 1
-                    c = CType(customFieldRange.Cells(i, 1), Excel.Range)
+                    For i = 2 To anzZeilen - 1
+                        c = CType(customFieldRange.Cells(i, 1), Excel.Range)
 
-                    Dim uid As Integer = i - 1
-                    Dim cfType As Integer = -1
-                    Dim cfName As String = ""
-                    Dim ok As Boolean = False
-                    Try
-                        cfName = CStr(CType(customFieldRange.Cells(i, 1), Excel.Range).Value)
-                        cfType = CInt(CType(customFieldRange.Cells(i, 2), Excel.Range).Value)
-                        ok = True
-                    Catch ex As Exception
-
-                    End Try
-
-                    If ok And cfName <> "" And isValidCustomField(cfType) Then
-
-                        ' jetzt die CustomField Definition hinzufügen 
+                        Dim uid As Integer = i - 1
+                        Dim cfType As Integer = -1
+                        Dim cfName As String = ""
+                        Dim ok As Boolean = False
                         Try
-                            customFieldDefinitions.add(cfName, cfType, uid)
+                            cfName = CStr(CType(customFieldRange.Cells(i, 1), Excel.Range).Value)
+                            cfType = CInt(CType(customFieldRange.Cells(i, 2), Excel.Range).Value)
+                            ok = True
                         Catch ex As Exception
-                            Call MsgBox(ex.Message)
+
                         End Try
 
+                        If ok And cfName <> "" And isValidCustomField(cfType) Then
 
-                    End If
+                            ' jetzt die CustomField Definition hinzufügen 
+                            Try
+                                customFieldDefinitions.add(cfName, cfType, uid)
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
 
-                Next
 
-            End With
+                        End If
 
+                    Next
 
-            'Dim err As New clsErrorCodeMsg
-            'Dim ts As Date = CDate("1.1.1900")
-            'Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
-            'Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
-            '                                                                               CStr(settingTypes(ptSettingTypes.customfields)),
-            '                                                                               customFieldsName,
-            '                                                                               ts,
-            '                                                                               err)
-            'If Not result Then
-            '    Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & vbCrLf & err.errorMsg)
-            'End If
+                End With
+            End If
 
 
         Catch ex As Exception

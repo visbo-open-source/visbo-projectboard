@@ -5,15 +5,23 @@ Imports System.Xml.Schema
 <Serializable()>
 Public Class clsReportMessages
 
-    Private _allReportMsg As SortedList(Of Integer, String)
+    Private _allReportMsg As SortedList(Of Integer, clsReportMessage)
 
 
 
-    Public ReadOnly Property Liste As SortedList(Of Integer, String)
+    Public Property Liste As SortedList(Of Integer, clsReportMessage)
 
         Get
             Liste = _allReportMsg
         End Get
+        Set(value As SortedList(Of Integer, clsReportMessage))
+            If Not IsNothing(value) Then
+                _allReportMsg = value
+            Else
+                _allReportMsg = New SortedList(Of Integer, clsReportMessage)
+            End If
+        End Set
+
 
     End Property
 
@@ -25,8 +33,11 @@ Public Class clsReportMessages
             Dim ergmsg As String = ""
             Dim i As Integer = 0
             If nr > 0 And _allReportMsg.Count >= nr Then
-
-                hmsg = _allReportMsg.Item(nr)
+                If awinSettings.englishLanguage Then
+                    hmsg = _allReportMsg.Item(nr).Englisch
+                Else
+                    hmsg = _allReportMsg.Item(nr).Deutsch
+                End If
                 hstr = Split(hmsg, "& vblf &", -1)
                 While i < hstr.Length
                     If i = 0 Then
@@ -50,7 +61,7 @@ Public Class clsReportMessages
     End Sub
 
     Public Sub New()
-        _allReportMsg = New SortedList(Of Integer, String)
+        _allReportMsg = New SortedList(Of Integer, clsReportMessage)
 
     End Sub
 

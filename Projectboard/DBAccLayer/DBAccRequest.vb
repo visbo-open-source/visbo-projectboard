@@ -2757,7 +2757,8 @@ Public Class Request
                                                ByRef customfieldsResult As clsCustomFieldDefinitions,
                                                ByRef customizationResult As clsCustomization,
                                                ByRef customrolesResult As clsCustomUserRoles,
-                                               ByRef organisationResult As clsOrganisation
+                                               ByRef organisationResult As clsOrganisation,
+                                               ByRef reportMsgResult As clsReportMessages
                                                ) As Object
 
         Dim result As New List(Of Object)
@@ -2770,7 +2771,8 @@ Public Class Request
                                                                                            customfieldsResult,
                                                                                            customizationResult,
                                                                                            customrolesResult,
-                                                                                           organisationResult)
+                                                                                           organisationResult,
+                                                                                           reportMsgResult)
 
 
                     If Not IsNothing(result) Then
@@ -2790,7 +2792,8 @@ Public Class Request
                                                                                            customfieldsResult,
                                                                                            customizationResult,
                                                                                            customrolesResult,
-                                                                                           organisationResult)
+                                                                                           organisationResult,
+                                                                                           reportMsgResult)
                                     End If
 
                                 Case Else ' all others
@@ -3146,7 +3149,51 @@ Public Class Request
         retrieveCapasFromDB = result
     End Function
 
+    Public Function retrieveReportMessages(ByRef err As clsErrorCodeMsg) As clsReportMessages
 
+        Dim result As New clsReportMessages
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveReportMessages(err)
+
+                    If Not IsNothing(result) Then
+
+                        If result.Liste.Count <= 0 Then
+
+                            Select Case err.errorCode
+
+                                Case 200 ' success
+                                     ' nothing to do
+
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveReportMessages(err)
+                                    End If
+
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
+
+                        End If
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' nothing can be done for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        retrieveReportMessages = result
+    End Function
 
     Public Function retrieveConfigurationsFromDB(ByVal name As String,
                                          ByVal timestamp As Date,

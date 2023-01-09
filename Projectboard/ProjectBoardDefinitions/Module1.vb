@@ -65,7 +65,7 @@ Public Module Module1
     ' gibt an, in welchem Modus sich aktuell die Projekt-Tafe befindet 
     Public currentProjektTafelModus As Integer
 
-    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    'Definition der Klasse für die ReportMessages ( müssen in  gelesen werden aus dem VCSetting reportMessages)
     Public repMessages As clsReportMessages
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
@@ -322,7 +322,7 @@ Public Module Module1
         acd = 1 ' ggf später für ActualData 
     End Enum
 
-    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts", "importConfiguration", "customSettingRPA"}
+    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts", "importConfiguration", "customSettingRPA", "reportMessages"}
 
     Public Enum ptSettingTypes
         customfields = 0
@@ -336,6 +336,7 @@ Public Module Module1
         generalexcelcharts = 8
         importConfiguration = 9
         customSettingRPA = 10
+        reportMessages = 11
     End Enum
 
     Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}

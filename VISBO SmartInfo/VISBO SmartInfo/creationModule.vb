@@ -1558,12 +1558,13 @@ Module creationModule
                                 Try
 
                                     If boxName = kennzeichnung Then
-                                        If englishLanguage Then
-                                            boxName = "Ampel-Farbe"
-                                        Else
-                                            boxName = "Traffic Light"
-                                        End If
-                                        'boxName = repMessages.getmsg(230)
+                                        ' reportMessages now read from VCSetting
+                                        'If englishLanguage Then
+                                        '    boxName = "Ampel-Farbe"
+                                        'Else
+                                        '    boxName = "Traffic Light"
+                                        'End If
+                                        boxName = repMessages.getmsg(230)
                                     End If
 
                                     Select Case hproj.ampelStatus
@@ -1598,12 +1599,13 @@ Module creationModule
                                 Try
 
                                     If boxName = kennzeichnung Then
-                                        If englishLanguage Then
-                                            boxName = "Ampel-Text"
-                                        Else
-                                            boxName = "Traffic Light Explanation"
-                                        End If
-                                        'boxName = repMessages.getmsg(225)
+                                        ' reportMessages now read from VCSetting
+                                        'If englishLanguage Then
+                                        '    boxName = "Ampel-Text"
+                                        'Else
+                                        '    boxName = "Traffic Light Explanation"
+                                        'End If
+                                        boxName = repMessages.getmsg(225)
                                     End If
                                     '.TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
                                     ' keine String Ampel-Text mehr rein-machen
@@ -1628,12 +1630,13 @@ Module creationModule
                                 Try
 
                                     If boxName = kennzeichnung Then
+                                        ' reportMessages now read from VCSetting
                                         If englishLanguage Then
                                             boxName = "Business-Unit:"
                                         Else
                                             boxName = "Business-Unit:"
                                         End If
-                                        'boxName = repMessages.getmsg(226)
+                                        boxName = repMessages.getmsg(226)
                                     End If
                                     .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
 
@@ -1655,12 +1658,13 @@ Module creationModule
 
                                 Try
                                     If boxName = kennzeichnung Then
-                                        If englishLanguage Then
-                                            boxName = "Beschreibung"
-                                        Else
-                                            boxName = "Description"
-                                        End If
-                                        'boxName = repMessages.getmsg(227)
+                                        ' reportMessages now read from VCSetting
+                                        'If englishLanguage Then
+                                        '    boxName = "Beschreibung"
+                                        'Else
+                                        '    boxName = "Description"
+                                        'End If
+                                        boxName = repMessages.getmsg(227)
                                     End If
                                     '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description
                                     ' jetzt ohne boxName ...
@@ -1825,12 +1829,13 @@ Module creationModule
 
                                 Try
                                     If boxName = kennzeichnung Then
-                                        If englishLanguage Then
-                                            boxName = "Version:"
-                                        Else
-                                            boxName = "Stand:"
-                                        End If
-                                        'boxName = repMessages.getmsg(223)
+                                        ' reportMessages now read from VCSetting
+                                        'If englishLanguage Then
+                                        '    boxName = "Version:"
+                                        'Else
+                                        '    boxName = "Stand:"
+                                        'End If
+                                        boxName = repMessages.getmsg(223)
                                     End If
 
                                     .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
@@ -1853,12 +1858,13 @@ Module creationModule
 
                                 Try
                                     If boxName = kennzeichnung Then
-                                        If englishLanguage Then
-                                            boxName = "Project Time:"
-                                        Else
-                                            boxName = "Laufzeit:"
-                                        End If
-                                        'boxName = repMessages.getmsg(228)
+                                        ' reportMessages now read from VCSetting
+                                        'If englishLanguage Then
+                                        '    boxName = "Project Time:"
+                                        'Else
+                                        '    boxName = "Laufzeit:"
+                                        'End If
+                                        boxName = repMessages.getmsg(228)
                                     End If
                                     .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.startDate, hproj.endeDate)
 
@@ -1880,12 +1886,13 @@ Module creationModule
 
                                 Try
                                     If boxName = kennzeichnung Then
-                                        If englishLanguage Then
-                                            boxName = "Verantwortlich:"
-                                        Else
-                                            boxName = "Responsible:"
-                                        End If
-                                        'boxName = repMessages.getmsg(229)
+                                        ' reportMessages now read from VCSetting
+                                        'If englishLanguage Then
+                                        '    boxName = "Verantwortlich:"
+                                        'Else
+                                        '    boxName = "Responsible:"
+                                        'End If
+                                        boxName = repMessages.getmsg(229)
                                     End If
                                     .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
 
