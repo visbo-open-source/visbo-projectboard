@@ -95,7 +95,7 @@ Public Class ThisAddIn
                     My.Settings.userNamePWD = ""
                 End If
                 My.Settings.Save()
-
+                Call logger(ptErrLevel.logInfo, "ShutDown", "vollständiger Name des logfiles = " & logfileNamePath)
 
                 Dim err As New clsErrorCodeMsg
 

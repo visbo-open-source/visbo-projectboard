@@ -96,6 +96,19 @@ Public Class clsVCSettingConfiguration
     End Sub
 
 End Class
+''' <summary>
+''' Definitionen, die ursprünglich im Report-Texte.xlsx gespeichert waren
+''' </summary>
+Public Class clsVCSettingReportMsg
+
+    Inherits clsVCSetting
+    Public Property value As clsReportMessagesWeb
+
+    Sub New()
+        _value = New clsReportMessagesWeb
+    End Sub
+
+End Class
 
 Public Class clsVCSettingCustomSettingsRPA
     Inherits clsVCSetting

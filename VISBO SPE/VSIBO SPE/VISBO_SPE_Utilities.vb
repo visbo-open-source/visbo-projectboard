@@ -876,15 +876,27 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
 
 
-                            ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
+                            ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren
+                            ' Datumsformat je nach Sprache setzen
+                            If awinSettings.englishLanguage Then
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            Else
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            End If
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                             'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                             Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0) And (cMilestone.percentDone = 1)
 
-                            ' Ende-Datum 
-                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                            ' Ende-Datum
+                            ' Datumsformat je nach Sprache setzen
+                            If awinSettings.englishLanguage Then
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            Else
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            End If
+                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate
                             If isPastElement Then
                                 ' Sperren ...
                                 CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
@@ -1038,7 +1050,14 @@ Module VISBO_SPE_Utilities
 
 
                                 ' Startdatum 
-                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
+                                ' Format bestimmen je nach Language?!?
+                                If awinSettings.englishLanguage Then
+                                    CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                Else
+                                    CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                End If
+
+                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
@@ -1055,7 +1074,13 @@ Module VISBO_SPE_Utilities
 
 
                                 ' Ende-Datum 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate.ToShortDateString
+                                ' Datumsformat je nach Sprache setzen
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                Else
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                End If
+                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
@@ -1299,6 +1324,16 @@ Module VISBO_SPE_Utilities
 
             ' TODO: hide or make visible of the columns
             appInstance.EnableEvents = True
+
+            Try
+                ' on setzen des AutoFilter Modus ... 
+                If CType(currentWS, Excel.Worksheet).AutoFilterMode = False Then
+                    'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                    CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                End If
+            Catch ex As Exception
+
+            End Try
 
 
 
