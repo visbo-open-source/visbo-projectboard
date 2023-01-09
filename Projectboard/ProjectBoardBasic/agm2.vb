@@ -15968,10 +15968,14 @@ Public Module agm2
             ' find current Directory of the User
             Dim curUserDir As String = ""
             Try
-                curUserDir = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                curUserDir = Environment.GetEnvironmentVariable("VISBOPROFILE")
 
-                If curUserDir = "" Or IsNothing(curUserDir) Then
-                    curUserDir = Environment.GetEnvironmentVariable("VISBOPROFILE")
+                If IsNothing(curUserDir) Then
+                    curUserDir = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                Else
+                    If curUserDir = "" Or IsNothing(curUserDir) Then
+                        curUserDir = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                    End If
                 End If
 
             Catch ex As Exception
@@ -15998,8 +16002,18 @@ Public Module agm2
                     End If
                 End If
             Else
-                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+                If Not IsNothing(curUserDir) Then
+                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+                Else
+                    Dim msgtxt As String = "die Umgebungsvariable VISBOPROFILE ist nicht definiert"
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "the environment variable VISBOPROFILE does not exist"
+                    End If
+                    Throw New ArgumentException(msgtxt)
+                    ' awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+                End If
             End If
+
 
 
             If Not awinPath.EndsWith("\") Then
