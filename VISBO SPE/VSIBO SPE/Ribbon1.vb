@@ -74,6 +74,22 @@ Public Class Ribbon1
         End Select
     End Function
 
+    Function isVisible(control As IRibbonControl) As Boolean
+
+        If control.Id = "Pt6G6B10" Then
+            ' auto-Allocate 
+            isVisible = (currentProjektTafelModus = ptModus.massEditRessSkills)
+        ElseIf control.Id = "Pt6G6B8" Then
+            ' Load Context
+            isVisible = (currentProjektTafelModus = ptModus.massEditRessSkills) And projectConstellations.Count = 0
+        Else
+            isVisible = True
+        End If
+
+
+    End Function
+
+
 
     ''' <summary>
     ''' lädt die gewählten Projekte und gewählten Varianten in die Session
@@ -240,6 +256,69 @@ Public Class Ribbon1
             End If
         End If
 
+
+    End Sub
+
+    ''' <summary>
+    ''' does an Auto-Allocation for each project in editProjekteInSPE
+    ''' i.e each 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTAutoAlloc(control As Office.IRibbonControl)
+
+        Dim errMsg As String = ""
+        Dim allowOvertime As Boolean = awinSettings.meAllowOverTime
+
+        Try
+            If currentProjektTafelModus = ptModus.massEditRessSkills Then
+
+                If projectConstellations.Count = 1 Then
+                    ' only then there is a Portfolio loaded in Context 
+
+                    If editProjekteInSPE.Count > 0 Then
+
+                        If appInstance.ScreenUpdating = True Then
+                            appInstance.ScreenUpdating = False
+                        End If
+
+                        ' now auto-allocate each project in ediTProjekteInSPE
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In editProjekteInSPE.Liste
+                            Call ShowProjekte.autoAllocate(kvp.Key, "", allowOvertime, errMsg)
+                        Next
+
+                        ' now re-build the table 
+                        If editProjekteInSPE.Count > 0 Then
+                            Call clearTable(currentProjektTafelModus)
+                        End If
+
+                        visboZustaende.currentProject = editProjekteInSPE.getProject(1)
+                        Call massEditRcTeAt(currentProjektTafelModus)
+
+                        If appInstance.ScreenUpdating = False Then
+                            appInstance.ScreenUpdating = True
+                        End If
+
+                        If appInstance.EnableEvents = False Then
+                            appInstance.EnableEvents = True
+                        End If
+
+                    End If
+
+                Else
+                    Call MsgBox("please load Context first ..")
+                End If
+
+            Else
+                Call MsgBox("only active in resource mode ..")
+            End If
+        Catch ex As Exception
+
+            Call MsgBox("Error occurred .. better leave without storing ... ")
+
+        End Try
+
+
+
     End Sub
 
 
@@ -300,6 +379,9 @@ Public Class Ribbon1
             End If
         End If
 
+        ' nww invalidate 
+        Me.ribbon.Invalidate()
+
     End Sub
 
     Public Sub PTProjectTime(control As Office.IRibbonControl)
@@ -319,6 +401,9 @@ Public Class Ribbon1
 
         End If
 
+        ' nww invalidate 
+        Me.ribbon.Invalidate()
+
     End Sub
 
     Public Sub PTProjectResources(control As Office.IRibbonControl)
@@ -335,6 +420,9 @@ Public Class Ribbon1
                 appInstance.ScreenUpdating = True
             End If
         End If
+
+        ' nww invalidate 
+        Me.ribbon.Invalidate()
 
     End Sub
 
@@ -565,6 +653,8 @@ Public Class Ribbon1
             Call MsgBox("Datebase Connection lost ...")
         End If
 
+        ' nww invalidate 
+        Me.ribbon.Invalidate()
 
 
     End Sub

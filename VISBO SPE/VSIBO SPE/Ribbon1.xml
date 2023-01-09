@@ -32,8 +32,9 @@
 					<button id="Pt6G6B5" label="Resources" size ="large"  getImage="imageSuper_GetImage" onAction="PTProjectResources"  supertip ="The resource requirements for the selected projects can be edited here"/>
 					<button id="Pt6G6B4" label="Time" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectTime" supertip="The beginning and the end for the phases and milestones of the selected projects can be edited here"/>
 					<separator id="Pt6G6B0s2"/>
-					<!--<button id="Pt6G6B9" label="Charts" size ="large"   getImage="imageSuper_GetImage" onAction="PTSPEshowCharts" />-->
-					<button id="Pt6G6B8" label="Context" size ="large"   getImage="imageSuper_GetImage" onAction="PTLoadPiC_ConstellationFromDB" />
+					<!--<button id="Pt6G6B9" label="Charts" size ="large"   getImage="imageSuper_GetImage" onAction="PTSPEshowCharts" />-->          
+					<button id="Pt6G6B8" label="Context" getVisible="isVisible"  size ="large"   getImage="imageSuper_GetImage" onAction="PTLoadPiC_ConstellationFromDB" />
+          <button id="Pt6G6B10" label="Auto-Allocate" getVisible="isVisible" size ="large" getImage="imageSuper_GetImage" onAction="PTAutoAlloc" />
 					<separator id="Pt6G6B0s3"/>
 					<button id="Pt6G6B6" label="WebUI" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectGoToWebUI" />
 					<separator id="Pt6G6B0s4"/>
