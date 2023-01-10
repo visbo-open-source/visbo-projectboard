@@ -36,7 +36,7 @@
     <PublishUrl>C:\publish\VISBO Project Publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>5.0.4.0</ApplicationVersion>
+    <ApplicationVersion>5.1.0.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -303,7 +303,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6334D5A79DB937F4C9FD78299300750E5E846E2A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>75220B92C6B747DCE63AD7FFAEA368C221639C8F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <MyType>Windows</MyType>

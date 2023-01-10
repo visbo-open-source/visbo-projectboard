@@ -8002,145 +8002,161 @@ Public Module awinDiagrams
         Select Case kennz
             Case "I"
                 'Ist Werte 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Actual-to-date"
-                Else
-                    tmpResult = "Ist-Werte"
-                    'tmpResult = "Ist-Werte (AC)"
-                End If
+                tmpResult = repMessages.getmsg(278)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Actual-to-date"
+                'Else
+                '    tmpResult = "Ist-Werte"
+                '    'tmpResult = "Ist-Werte (AC)"
+                'End If
 
             Case "IS"
                 'Ist Werte 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Actual-to-date (Sum OF Portfolio)"
-                Else
-                    tmpResult = "Ist-Werte (Summe Portfolio)"
-                    'tmpResult = "Ist-Werte (Portfolio Summe)"
-                End If
+                tmpResult = repMessages.getmsg(279)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Actual-to-date (Sum OF Portfolio)"
+                'Else
+                '    tmpResult = "Ist-Werte (Summe Portfolio)"
+                '    'tmpResult = "Ist-Werte (Portfolio Summe)"
+                'End If
 
             Case "P"
                 ' Planung Projekt
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Forecast (ETC)"
-                Else
-                    tmpResult = "Forecast (ETC)"
-                    ' tmpResult = "Planung (ETC)"
-                End If
+                tmpResult = repMessages.getmsg(280)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Forecast (ETC)"
+                'Else
+                '    tmpResult = "Forecast (ETC)"
+                '    ' tmpResult = "Planung (ETC)"
+                'End If
 
             Case "PA"
                 ' bei kumulierten Werten 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Actual and Forecast (EAC)"
-                Else
-                    tmpResult = "Ist und Plan (EAC)"
-                    ' tmpResult = "Planung (ETC)"
-                End If
+                tmpResult = repMessages.getmsg(281)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Actual and Forecast (EAC)"
+                'Else
+                '    tmpResult = "Actual and Forecast (EAC)"
+                '    ' tmpResult = "Planung (ETC)"
+                'End If
 
 
             Case "LP"
                 'letzte Planung
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Last ETC"
-                Else
-                    tmpResult = "Letzter ETC"
-                    ' tmpResult = "Planung (ETC)"
-                End If
+                tmpResult = repMessages.getmsg(282)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Last ETC"
+                'Else
+                '    tmpResult = "Letzter ETC"
+                '    ' tmpResult = "Planung (ETC)"
+                'End If
 
 
             Case "PS"
-                ' Planung Portfolio 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Monthly Needs (Sum of Portfolio)"
-                Else
-                    tmpResult = "monatl. Bedarfe (alle Projekte des Portfolios)"
-                    'tmpResult = "Planung (Portfolio Summe)"
-                End If
+                ' Planung Portfolio
+                tmpResult = repMessages.getmsg(283)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Monthly Needs (Sum of Portfolio)"
+                'Else
+                '    tmpResult = "monatl. Bedarfe (alle Projekte des Portfolios)"
+                '    'tmpResult = "Planung (Portfolio Summe)"
+                'End If
 
             Case "B"
                 ' Beauftragung 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Baseline (BAC)"
-                Else
-                    tmpResult = "Baseline (BAC)"
-                    ' tmpResult = "Baseline"
-                End If
+                tmpResult = repMessages.getmsg(284)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Baseline (BAC)"
+                'Else
+                '    tmpResult = "Baseline (BAC)"
+                '    ' tmpResult = "Baseline"
+                'End If
 
             Case "BG"
-                ' Budget , Auftragswert 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Budget (Order-Value)"
-                Else
-                    tmpResult = "Budget (Auftragswert)"
-                    ' tmpResult = "Baseline"
-                End If
+                '  Auftragswert 
+                tmpResult = repMessages.getmsg(285)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Order-Value"
+                'Else
+                '    tmpResult = "Auftragswert"
+                '    ' tmpResult = "Baseline"
+                'End If
 
             Case "BIV"
                 ' Beauftragung Invoices
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Invoices (Baseline)"
-                Else
-                    tmpResult = "Rechnungen (Baseline)"
-                    ' tmpResult = "Baseline"
-                End If
-
+                tmpResult = repMessages.getmsg(286)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Invoices (Baseline)"
+                'Else
+                '    tmpResult = "Rechnungen (Baseline)"
+                '    ' tmpResult = "Baseline"
+                'End If
+                ' hier bin ich ????
             Case "PIV"
                 ' Planung Invoices
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Invoices (cur. Plan)"
-                Else
-                    tmpResult = "Rechnungen (akt. Plan)"
-                    ' tmpResult = "Baseline"
-                End If
+                tmpResult = repMessages.getmsg(287)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Invoices (cur. Plan)"
+                'Else
+                '    tmpResult = "Rechnungen (akt. Plan)"
+                '    ' tmpResult = "Baseline"
+                'End If
 
             Case "C"
-                ' Capacity  
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Total Capacity"
-                Else
-                    tmpResult = "Gesamt Kapazität"
-                    'tmpResult = "Gesmat-Kapazität"
-                End If
+                ' Capacity
+                tmpResult = repMessages.getmsg(288)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Total Capacity"
+                'Else
+                '    tmpResult = "Gesamt Kapazität"
+                '    'tmpResult = "Gesmat-Kapazität"
+                'End If
 
             Case "CI"
-                ' Capacity  
-                If awinSettings.englishLanguage Then
-                    tmpResult = "intern Capacity"
-                Else
-                    tmpResult = "interne Kapazität"
-                    'tmpResult = "Gesmat-Kapazität"
-                End If
+                ' Capacity
+                tmpResult = repMessages.getmsg(289)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "intern Capacity"
+                'Else
+                '    tmpResult = "interne Kapazität"
+                '    'tmpResult = "Gesmat-Kapazität"
+                'End If
 
             Case "OC" ' Other Cost
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Sum of Portfolio"
-                Else
-                    tmpResult = "Summe Portfolio"
-                    'tmpResult = "interne Kapa"
-                End If
+                tmpResult = repMessages.getmsg(290)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Sum of Portfolio"
+                'Else
+                '    tmpResult = "Summe Portfolio"
+                '    'tmpResult = "interne Kapa"
+                'End If
 
             Case "TC" ' total Cost
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Sum of Portfolio"
-                Else
-                    tmpResult = "Summe Portfolio"
-                    'tmpResult = "interne Kapa"
-                End If
+                tmpResult = repMessages.getmsg(290)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Sum of Portfolio"
+                'Else
+                '    tmpResult = "Summe Portfolio"
+                '    'tmpResult = "interne Kapa"
+                'End If
 
             Case "FC" ' total Cost
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Sum of all intern employees"
-                Else
-                    tmpResult = "Summe interner Mitarbeiter"
-                    'tmpResult = "interne Kapa"
-                End If
+                tmpResult = repMessages.getmsg(291)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Sum of all intern employees"
+                'Else
+                '    tmpResult = "Summe interner Mitarbeiter"
+                '    'tmpResult = "interne Kapa"
+                'End If
 
             Case "Nr" ' just Number 
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Monthly Sum"
-                Else
-                    tmpResult = "Summe pro Monat"
-                    'tmpResult = "interne Kapa"
-                End If
+                tmpResult = repMessages.getmsg(292)
+                'If awinSettings.englishLanguage Then
+                '    tmpResult = "Monthly Sum"
+                'Else
+                '    tmpResult = "Summe pro Monat"
+                '    'tmpResult = "interne Kapa"
+                'End If
             Case Else
 
                 tmpResult = kennz

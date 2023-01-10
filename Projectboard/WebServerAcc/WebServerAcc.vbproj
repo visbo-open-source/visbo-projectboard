@@ -94,6 +94,7 @@
     <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
+    <Compile Include="clsReportMessagesWeb.vb" />
     <Compile Include="clsResultWeb.vb" />
     <Compile Include="clsRollenDefinitionWeb.vb" />
     <Compile Include="clsStringBoolean.vb" />
@@ -131,6 +132,7 @@
     <Compile Include="clsWebVCSettingCustomSettingRPA.vb" />
     <Compile Include="clsWebVCSettingEverything.vb" />
     <Compile Include="clsWebVCSettingOrganisation.vb" />
+    <Compile Include="clsWebVCSettingReportMessages.vb" />
     <Compile Include="clsWebVCTSOrganisation.vb" />
     <Compile Include="clsWebVPf.vb" />
     <Compile Include="clsWebVPlock.vb" />

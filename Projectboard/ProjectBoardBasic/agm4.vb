@@ -853,9 +853,9 @@ Public Module agm4
                     Dim vorlagenDauer = projVorlage.dauerInDays
 
                     Projektvorlagen.Add(projVorlage)
-
+                    Call logger(ptErrLevel.logInfo, "readProjectTemplates", "Reading project template " & kvp.Value.name & " successful")
                 Else
-                    Call logger(ptErrLevel.logError, "readProjectTemplates", "Creating a project template fromm project " & kvp.Value.name & " crashed")
+                    Call logger(ptErrLevel.logError, "readProjectTemplates", "Creating a project template from project " & kvp.Value.name & " crashed")
                     result = Date.MinValue
                 End If
             Next
