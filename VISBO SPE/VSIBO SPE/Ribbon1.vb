@@ -57,6 +57,7 @@ Public Class Ribbon1
 
         imageSuper_GetImage = My.Resources.noun_money_100x100
         Select Case control.Id
+
             Case "Pt6G6B3"
                 imageSuper_GetImage = My.Resources.noun_money_100x100
             Case "Pt6G6B4"
@@ -69,8 +70,11 @@ Public Class Ribbon1
                 imageSuper_GetImage = My.Resources.noun_chart_100x100
             Case "Pt6G6B8"
                 imageSuper_GetImage = My.Resources.noun_gantt_chart_100x100
+            Case "Pt6G6B10"
+                imageSuper_GetImage = My.Resources.noun_people_grey
             Case "Pt6G6B7"
                 imageSuper_GetImage = My.Resources.noun_settings_100x100
+
         End Select
     End Function
 
