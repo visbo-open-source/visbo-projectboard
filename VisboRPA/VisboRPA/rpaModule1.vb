@@ -4259,8 +4259,8 @@ Module rpaModule1
             Dim dateiName As String = ""
             Dim listofArchivAllg As New List(Of String)
             Dim outPutCollection As New Collection
-            Dim configProposalImport As String = "configCalcTemplateImport.xlsx"
-
+            Dim configProposalImportName As String = "configCalcTemplateImport.xlsx"
+            Dim configProposalImport As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, configProposalImportName)
 
             Dim outputLine As String = ""
 
