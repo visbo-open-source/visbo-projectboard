@@ -5048,7 +5048,7 @@ Module rpaModule1
 
                 'FileExtension ansehen
                 Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
-                Select Case fileExt
+                Select Case LCase(fileExt)
                     Case ".xlsx", ".xlsm"
 
                         myName = My.Computer.FileSystem.GetName(fullFileName)
