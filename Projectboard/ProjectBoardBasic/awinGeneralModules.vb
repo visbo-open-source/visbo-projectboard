@@ -8720,8 +8720,8 @@ Public Module awinGeneralModules
                         ' es handelt sich bereits um die pfv Variante 
                         ' prüfen auf Rolle 
 
-                        ' nur speichern, wenn es sich um ein Projekt, nicht um ein Portfolio handelt ...
-                        If hproj.projectType = ptPRPFType.project Then
+                        ' nur speichern, wenn es sich um ein Projekt, nicht um ein Portfolio handelt ...und wenn es nicht den status = finished hat
+                        If (hproj.projectType = ptPRPFType.project) And (hproj.vpStatus <> VProjectStatus(PTVPStati.finished)) Then
 
                             formerVName = hproj.variantName
 
@@ -8836,12 +8836,22 @@ Public Module awinGeneralModules
 
                                                 Case 409 ' VisboProjectVersion was already updated in between
                                                     If awinSettings.englishLanguage Then
-                                                        outputline = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
+                                                        outputline = "!! Project was already updated in between : " & hproj.name & ", " & hproj.variantName
                                                         outPutCollection.Add(outputline)
                                                     Else
                                                         outputline = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
                                                         outPutCollection.Add(outputline)
                                                     End If
+
+                                                Case 412 ' VisboProjectVersion was already updated inbetween
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "!! Project cannot be updated : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    Else
+                                                        outputline = "!!  Projekt kann nicht verändert werden : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    End If
+
 
                                                 Case 423 ' Visbo Project (Portfolio) is locked by another user
                                                     If awinSettings.englishLanguage Then
@@ -8876,6 +8886,17 @@ Public Module awinGeneralModules
                             '  den Varianten-Namen zurücksetzen
                             hproj.variantName = formerVName
 
+                        Else
+
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.finished) Then
+                                If awinSettings.englishLanguage Then
+                                    outputline = "not stored: finished project cannot be changed: " & hproj.name & ", " & hproj.variantName
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "nicht gespeichert: beendetes Projekt kann nicht geändert werden: " & hproj.name & ", " & hproj.variantName
+                                    outPutCollection.Add(outputline)
+                                End If
+                            End If
 
                         End If
 
