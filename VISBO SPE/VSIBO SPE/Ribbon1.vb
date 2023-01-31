@@ -284,6 +284,8 @@ Public Class Ribbon1
     Public Sub PTProjectEditSettings(control As Office.IRibbonControl)
         Dim settingsEdit As New frmProjectEditSettings
         settingsEdit.ShowDialog()
+
+        Call massEditRcTeAt(currentProjektTafelModus)
     End Sub
 
     Public Sub PTProjectGoToWebUI(control As Office.IRibbonControl)
