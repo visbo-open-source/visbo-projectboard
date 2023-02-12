@@ -1575,7 +1575,7 @@ Public Class Request
 
 
                 ' Es wurde pfv-Variante  angelegt
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And result = True Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And result = True And projekt.variantName = "pfv" Then
 
                     ' Nachsehen, ob StandardVariante bereits existiert, oder nicht
                     projekt.variantName = standardVariante

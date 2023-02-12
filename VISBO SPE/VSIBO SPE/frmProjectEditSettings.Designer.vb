@@ -112,7 +112,7 @@ Partial Class frmProjectEditSettings
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmProjectEditSettings"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Settings"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)
