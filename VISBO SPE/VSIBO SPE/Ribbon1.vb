@@ -213,9 +213,12 @@ Public Class Ribbon1
         If AlleProjekte.Count > 0 Then
             ' Mouse auf Wartemodus setzen
             appInstance.Cursor = Excel.XlMousePointer.xlWait
-            'Projekte speichern
-            Call StoreAllProjectsinDB()
+            Try
+                'Projekte speichern
+                Call StoreAllProjectsinDB()
+            Catch ex As Exception
 
+            End Try
             ' Mouse wieder auf Normalmodus setzen
             appInstance.Cursor = Excel.XlMousePointer.xlDefault
         End If
@@ -284,6 +287,8 @@ Public Class Ribbon1
     Public Sub PTProjectEditSettings(control As Office.IRibbonControl)
         Dim settingsEdit As New frmProjectEditSettings
         settingsEdit.ShowDialog()
+
+        Call massEditRcTeAt(currentProjektTafelModus)
     End Sub
 
     Public Sub PTProjectGoToWebUI(control As Office.IRibbonControl)

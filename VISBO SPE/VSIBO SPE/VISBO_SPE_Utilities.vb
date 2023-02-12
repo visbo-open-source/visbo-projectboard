@@ -990,6 +990,35 @@ Module VISBO_SPE_Utilities
 
                             ' wenn Meilensteine Invoices / Penalties haben können 
                             If awinSettings.enableInvoices Then
+                                '
+                                'Format setzen
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).NumberFormat = Format("##,##0.0# T€")
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                Else
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).NumberFormat = Format("##.##0,0# T€")
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                End If
+
+                                CType(currentWS.Cells(zeile, 14), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).NumberFormat = Format("##,##0.0# T€")
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                Else
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).NumberFormat = Format("##.##0,0# T€")
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                End If
+
+
+                                If awinSettings.englishLanguage Then
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                                Else
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                                End If
+
                                 ' der Rechnungsbetrag und Zahlungsziel 
                                 If Not IsNothing(cMilestone.invoice) Then
                                     If cMilestone.invoice.Key > 0 Then
@@ -1172,6 +1201,35 @@ Module VISBO_SPE_Utilities
 
                                 ' wenn Phasen Invoices / Penalties haben können 
                                 If awinSettings.enableInvoices Then
+                                    '
+                                    'Format setzen
+
+                                    If awinSettings.englishLanguage Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).NumberFormat = Format("##,##0.0# T€")
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                    Else
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).NumberFormat = Format("##.##0,0# T€")
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                    End If
+
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+
+                                    If awinSettings.englishLanguage Then
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).NumberFormat = Format("##,##0.0# T€")
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                    Else
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).NumberFormat = Format("##.##0,0# T€")
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                    End If
+
+                                    If awinSettings.englishLanguage Then
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                                    Else
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                                    End If
+
                                     ' der Rechnungsbetrag und Zahlungsziel 
                                     If Not IsNothing(cPhase.invoice) Then
                                         If cPhase.invoice.Key > 0 Then
@@ -1236,8 +1294,8 @@ Module VISBO_SPE_Utilities
             Dim firstHundredColumns As Excel.Range = Nothing
 
             With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten)), Excel.Range)
-                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
+                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten - 4)), Excel.Range)
+                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten - 4)), Excel.Range)
 
                 firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
 

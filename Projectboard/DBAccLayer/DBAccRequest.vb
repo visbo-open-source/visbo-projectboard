@@ -1021,6 +1021,10 @@ Public Class Request
 
                                 'Call MsgBox(err.errorMsg)
 
+                            Case 412  ' conflict
+                                Call logger(ptErrLevel.logWarning, "storeProjectToDB", projekt.name & "[" & projekt.variantName & "] : " & err.errorMsg)
+
+
                             Case 403  ' no Permission
                                 Call logger(ptErrLevel.logWarning, "storeProjectToDB", projekt.name & "[" & projekt.variantName & "] : " & err.errorMsg)
 

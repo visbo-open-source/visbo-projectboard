@@ -83,7 +83,7 @@ Partial Class frmAddOrDeleteALine
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmAddOrDeleteALine"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "+/- a Line"
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)
