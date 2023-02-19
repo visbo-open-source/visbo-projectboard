@@ -1041,6 +1041,9 @@ Public Module Module1
         ' represents the weser ressourcenplan
         visboWWWRessourcen = 28
 
+        ' dataQuality Check 
+        visboDataQualityCheck = 29
+
     End Enum
 
     ''' <summary>

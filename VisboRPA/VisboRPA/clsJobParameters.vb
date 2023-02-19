@@ -229,8 +229,19 @@ Public Class clsJobParameters
         End Set
     End Property
 
-
+    Private _templateName As String
+    Public Property templateName As String
+        Get
+            templateName = _templateName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _templateName = value
+            End If
+        End Set
+    End Property
     Sub New()
+
 
         _sortItem = ""
         _allowedOverloadMonth = 1.0
@@ -246,6 +257,7 @@ Public Class clsJobParameters
         _portfolioName = ""
         _portfolioVariantName = "Var1"
         _defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
+        _templateName = "TMS"
 
     End Sub
 

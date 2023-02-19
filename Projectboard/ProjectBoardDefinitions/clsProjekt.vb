@@ -2858,6 +2858,7 @@ Public Class clsProjekt
     ''' <summary>
     ''' returns the percentage how many past plan-Elements are really set to %Done = 1
     ''' past is defined by comparison planelement date vs timestamp 
+    ''' if there are no past elements yet, a -1 is returned
     ''' </summary>
     ''' <returns></returns>
     Public Function getdoneQualityKPI() As Double
@@ -2865,7 +2866,7 @@ Public Class clsProjekt
         Dim anzPastElements As Integer = 0
         Dim anzGoodElements As Integer = 0
         ' if there is no past element yet, quality is returned as 100%
-        Dim qualityKPI As Double = 1.0
+        Dim qualityKPI As Double = -1.0
 
         Dim refDate As Date = timeStamp
 
@@ -2901,7 +2902,7 @@ Public Class clsProjekt
     ''' quality check whether or not there is huge difference and the project has a unnecessary extensiuon 
     ''' </summary>
     ''' <returns></returns>
-    Public Function getInnerStartEndDate() As Date()
+    Public Function getInnerStartEndDate(Optional ByVal considerLeafsOnly As Boolean = True) As Date()
         Dim myInnerStartDate As Date = endeDate
         Dim myInnerEndDate As Date = startDate
         Dim result() As Date
@@ -2910,22 +2911,27 @@ Public Class clsProjekt
         For Each cPhase As clsPhase In AllPhases
 
             If cPhase.nameID <> rootPhaseName Then
-                If DateDiff(DateInterval.Day, cPhase.getStartDate, myInnerStartDate) < 0 Then
-                    myInnerStartDate = cPhase.getStartDate
+                If (hierarchy.getChildIDsOf(cPhase.nameID, False).Count + hierarchy.getChildIDsOf(cPhase.nameID, True).Count = 0) Or
+                    Not considerLeafsOnly Then
+
+                    If DateDiff(DateInterval.Day, cPhase.getStartDate, myInnerStartDate) > 0 Then
+                        myInnerStartDate = cPhase.getStartDate
+                    End If
+
+                    If DateDiff(DateInterval.Day, cPhase.getEndDate, myInnerEndDate) < 0 Then
+                        myInnerEndDate = cPhase.getEndDate
+                    End If
                 End If
 
-                If DateDiff(DateInterval.Day, cPhase.getEndDate, myInnerEndDate) > 0 Then
-                    myInnerEndDate = cPhase.getEndDate
-                End If
             End If
 
 
             For Each ms As clsMeilenstein In cPhase.meilensteinListe
-                If DateDiff(DateInterval.Day, ms.getDate, myInnerStartDate) < 0 Then
+                If DateDiff(DateInterval.Day, ms.getDate, myInnerStartDate) > 0 Then
                     myInnerStartDate = ms.getDate
                 End If
 
-                If DateDiff(DateInterval.Day, ms.getDate, myInnerEndDate) > 0 Then
+                If DateDiff(DateInterval.Day, ms.getDate, myInnerEndDate) < 0 Then
                     myInnerEndDate = ms.getDate
                 End If
             Next

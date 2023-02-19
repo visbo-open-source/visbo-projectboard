@@ -302,7 +302,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboModifierCapacities)
                     allOk = True
-                    allOk = processModifierExternContracts(fname, importDate, errMessages)
+                    allOk = processModifierCapacities(fname, importDate, errMessages)
                     'Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
 
                 Case CInt(PTRpa.visboExternalContracts)
@@ -402,9 +402,16 @@ Module rpaModule1
 
 
                 Case CInt(PTRpa.visboCostAssertion)
-                    allOk = True
+
                     allOk = processCostAssertion(fname, myActivePortfolio, collectFolder, importDate)
-                    'Call logger(ptErrLevel.logError, "Import Cost-Assertion  ", " not yet integrated !")
+
+
+                Case CInt(PTRpa.visboDataQualityCheck)
+                    Try
+                        allOk = processDataQualityCheck()
+                    Catch ex As Exception
+
+                    End Try
 
                 Case Else
                     Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
@@ -1353,11 +1360,16 @@ Module rpaModule1
                         If result = PTRpa.visboUnknown Then
                             result = checkInstartProposal(currentWB)
                         End If
+
                         ' Check auf Weser Ressourcenplanung 
                         If result = PTRpa.visboUnknown Then
                             result = checkWWWRessourcen(currentWB)
                         End If
 
+                        ' Check auf Data Quality Check (Currently BHTC) 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkDataQuality(currentWB)
+                        End If
 
                         currentWB.Close(SaveChanges:=False)
 
@@ -1947,6 +1959,27 @@ Module rpaModule1
         checkActualData2 = result
     End Function
 
+    Private Function checkDataQuality(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Data Quality Check"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                result = PTRpa.visboDataQualityCheck
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkDataQuality = result
+
+    End Function
     ''' <summary>
     '''  checks whether or not a file is a Weser Ressourcenplanung
     ''' </summary>
@@ -2792,7 +2825,14 @@ Module rpaModule1
 
     End Function
 
-    Private Function processModifierExternContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    ''' <summary>
+    ''' modifies capacities of all person resources , be it interns or externs 
+    ''' </summary>
+    ''' <param name="myName"></param>
+    ''' <param name="importDate"></param>
+    ''' <param name="errMessages"></param>
+    ''' <returns></returns>
+    Private Function processModifierCapacities(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
         Dim listOfArchivFiles As New List(Of String)
         Dim result As Boolean = False
@@ -2822,7 +2862,7 @@ Module rpaModule1
                 result = readKapaModifier(myName, listOfArchivExtern, errMessages)
 
                 If result Then
-                    Call logger(ptErrLevel.logInfo, "Import external contracts from file " & myName & " successful", "processModifierExternContracts", anzFehler)
+                    Call logger(ptErrLevel.logInfo, "Import capacities from file " & myName & " successful", "processModifierCapacities", anzFehler)
                 End If
 
                 If listOfArchivExtern.Count > 0 Then
@@ -2845,38 +2885,38 @@ Module rpaModule1
                             resultSum = storeCapasOfRoles()
 
                             If resultSum = True Then
-                                Call logger(ptErrLevel.logInfo, "ok, external Contracts " & myName & " successfully updated ...", "", -1)
+                                Call logger(ptErrLevel.logInfo, "ok, capacities " & myName & " successfully updated ...", "", -1)
                                 listOfArchivFiles = listOfArchivExtern
 
                             Else
-                                Call logger(ptErrLevel.logError, "Error when writing Capacities of external contract " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                Call logger(ptErrLevel.logError, "Error when writing capacities " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
                                 listOfArchivFiles = listOfArchivExtern
                             End If
 
                             result = resultSum
 
                         Else
-                            Call logger(ptErrLevel.logError, "ok, external Contracts " & myName & " temporarily updated ...", "", -1)
+                            Call logger(ptErrLevel.logError, "ok, capacities " & myName & " temporarily updated ...", "", -1)
 
                         End If
 
                     Else
 
-                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+                        Call showOutPut(outputCollection, "Importing capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "processModifierCapacities: ", outputCollection)
 
                     End If
                 Else
                     If outputCollection.Count > 0 Then
 
                         Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+                        Call logger(ptErrLevel.logError, "processModifierCapacities: ", outputCollection)
                     Else
 
                         If awinSettings.englishLanguage Then
-                            Call logger(ptErrLevel.logError, "no Files to import ...", "processModifierExternContracts: ", anzFehler)
+                            Call logger(ptErrLevel.logError, "no Files to import ...", "processModifierCapacities: ", anzFehler)
                         Else
-                            Call logger(ptErrLevel.logError, "es gab keine Dateien zum Einlesen ... ", "processModifierExternContracts: ", anzFehler)
+                            Call logger(ptErrLevel.logError, "es gab keine Dateien zum Einlesen ... ", "processModifierCapacities: ", anzFehler)
                         End If
                     End If
 
@@ -2892,20 +2932,20 @@ Module rpaModule1
 
         Else
             If awinSettings.englishLanguage Then
-                Call logger(ptErrLevel.logError, "No valid organization! Please import one first!", "processModifierExternContracts: ", anzFehler)
+                Call logger(ptErrLevel.logError, "No valid organization! Please import one first!", "processModifierCapacities: ", anzFehler)
             Else
-                Call logger(ptErrLevel.logError, "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren", "processModifierExternContracts: ", anzFehler)
+                Call logger(ptErrLevel.logError, "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren", "processModifierCapacities: ", anzFehler)
             End If
 
 
             Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
             outputCollection.Add(errMsg)
             Call showOutPut(outputCollection, "Importing Capacities", "")
-            Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+            Call logger(ptErrLevel.logError, "processModifierCapacities: ", outputCollection)
 
         End If
 
-        processModifierExternContracts = result
+        processModifierCapacities = result
     End Function
 
 
