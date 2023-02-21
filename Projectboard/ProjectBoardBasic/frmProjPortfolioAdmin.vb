@@ -505,6 +505,14 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    storeToDBasWell.Text = "Session löschen"
+                'Else
+                '    storeToDBasWell.Text = "Clear Session"
+                'End If
+
+                ' for Spe it is used for "Clear Session - this is pre-set
+
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.loadPV Then
@@ -5026,6 +5034,13 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBasWell.CheckedChanged
 
+        'If aKtionskennung = PTTvActions.loadInSPE Then
+        '    ' if checked then it is meant to clear session
+
+        '    If storeToDBasWell.Checked Then
+        '        Call emptyAllVISBOStructures(True)
+        '    End If
+        'Else
         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
             If storeToDBasWell.Checked Then
                 Me.OKButton.Text = "in Session und DB speichern"
@@ -5039,6 +5054,9 @@ Public Class frmProjPortfolioAdmin
                 Me.OKButton.Text = "Save to Session"
             End If
         End If
+        'End If
+
+
 
     End Sub
 
@@ -5748,6 +5766,10 @@ Public Class frmProjPortfolioAdmin
     End Sub
 
     Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub chkbxPermanent_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxPermanent.CheckedChanged
 
     End Sub
 End Class
