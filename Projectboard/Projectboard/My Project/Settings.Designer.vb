@@ -223,7 +223,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Demo")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("noDemo")>  _
     Public Property VISBOMode() As String
         Get
             Return CType(Me("VISBOMode"),String)
