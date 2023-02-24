@@ -2274,11 +2274,12 @@ Module rpaModule1
     ''' <returns></returns>
     Private Function checkCostAssertion(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
-        Dim possibleTableNames() As String = {"Stammdaten", "Electric Cost Assertion", "Mechanic Cost Assertion", "Non-Design Cost Assertion"}
+        Dim requiredTableName As String = "Stammdaten"
+        Dim possibleTableNames() As String = {"Assertion", "to-do", "Kalkulation", "Calculation"}
         Dim verifiedStructure As Boolean = False
         Try
 
-            Dim currentWS As xlns.Worksheet = Nothing
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets, xlns.Sheets).Item(requiredTableName)
             Dim found As Boolean = False
 
 
@@ -2287,7 +2288,7 @@ Module rpaModule1
             Else
                 For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
                     For Each tblname As String In possibleTableNames
-                        If tmpSheet.Name.StartsWith(tblname) Then
+                        If tmpSheet.Name.ToLower.Contains(tblname.ToLower) Then
                             found = True
                             currentWS = tmpSheet
                             Exit For
@@ -2863,6 +2864,11 @@ Module rpaModule1
 
                 If result Then
                     Call logger(ptErrLevel.logInfo, "Import capacities from file " & myName & " successful", "processModifierCapacities", anzFehler)
+                Else
+                    Call logger(ptErrLevel.logError, "Import capacities from file " & myName & " NOT successful", "processModifierCapacities", anzFehler)
+                    For Each singleMsg As String In errMessages
+                        Call logger(ptErrLevel.logError, singleMsg, "processModifierCapacities", anzFehler)
+                    Next
                 End If
 
                 If listOfArchivExtern.Count > 0 Then
