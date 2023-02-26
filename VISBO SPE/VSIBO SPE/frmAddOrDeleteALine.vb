@@ -3,6 +3,8 @@
 Public Class frmAddOrDeleteALine
 
     Public position As Excel.Range
+    Private frmtop As Integer
+    Private frmleft As Integer
     Public addLine As Boolean
     Public deleteLine As Boolean
     Private Sub frmAddOrDeleteALine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -12,9 +14,15 @@ Public Class frmAddOrDeleteALine
         'Selection.RowHeight = hoehe * 29.5
         'Position für Formular bestimmen
         Dim cw As Double = position.ColumnWidth
+        Dim startPos As FormStartPosition = MyBase.StartPosition
 
-        Me.Top = position.Top + 200
-        Me.Left = position.Left + position.Width + cw + 20
+        'If frmtop = 0 And frmleft = 0 Then
+        '    frmtop = Me.Top - 100
+        '    frmleft = Me.Left - 500
+        'End If
+
+        Me.Top = 45
+        Me.Left = Me.Left - 400
 
 
     End Sub
@@ -30,9 +38,8 @@ Public Class frmAddOrDeleteALine
     End Sub
 
     Private Sub frmAddOrDeleteALine_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
-        Dim top As Double = Me.Top
-        Dim left As Double = Me.Left
-
+        frmtop = Me.Top
+        frmleft = Me.Left
     End Sub
 
 
