@@ -143,6 +143,49 @@ Module rpaTkModule
         checkFindBestStarts = result
     End Function
 
+    Public Function checkBaselineCreation(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+
+        Dim blattName As String = "Baseline Creation"
+
+        Try
+
+            If CType(currentWB.ActiveSheet, xlns.Worksheet).Name = blattName Then
+                result = PTRpa.visboCreateBaselineProjects
+            Else
+                result = PTRpa.visboUnknown
+            End If
+
+
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkBaselineCreation = result
+    End Function
+    Public Function checkRename(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+
+        Dim blattName As String = "Rename Projects"
+
+        Try
+
+            If CType(currentWB.ActiveSheet, xlns.Worksheet).Name = blattName Then
+                result = PTRpa.visboRenameProjects
+            Else
+                result = PTRpa.visboUnknown
+            End If
+
+
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+
+        checkRename = result
+    End Function
     Public Function checkAutoAllocate(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim blattName0 As String = "VISBO Auto-Allocate"

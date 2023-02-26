@@ -1,7 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Public Class clsJobParameters
 
-    Public kennung As PTRpa
+    Friend kennung As PTRpa
 
 
     Private _allowedOverloadMonth As Double

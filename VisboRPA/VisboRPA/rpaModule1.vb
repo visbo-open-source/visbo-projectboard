@@ -46,6 +46,108 @@ Module rpaModule1
 
     Public watchDialog As VisboRPAStart
 
+
+    Public Enum PTRpa
+        ' represents the standard VISBO Projectbrief with Stammdaten, Ressources, Termine, Attribute 
+        visboProject = 0
+
+        ' represents the standard VISBO Excel project with just only name and Schedules, Appearances, and the like 
+        visboExcelSchedules = 1
+
+        ' represents the standard MS Project *.mpp File 
+        visboMPP = 2
+
+        ' represents the Jira File, as customized in JiraConfig customized  
+        visboJira = 3
+
+        ' represents the Instart AngebotsKalkulation Template 
+        visboInstartProposal = 4
+
+        ' represents the VISBO AngebotsKalkulation Template 
+        visboProposal = 5
+
+        ' represents the Telair Tagetik New Projects List
+        visboNewTagetik = 6
+
+        ' represents the Telair Update Project File
+        visboUpdateTagetik = 7
+
+        ' represents the standard VISBO Project Creation by BatchList 
+        visboProjectList = 8
+
+        ' represents the AllianzType Istdaten Import 
+        visboActualData1 = 9
+
+        ' represents the InstartType Istdaten Import 
+        visboActualData2 = 10
+
+        ' represents the Telair Istdaten Import 
+        visboActualData3 = 11
+
+        ' represents the initial VISBO Excel Organisation
+        visboInitialOrga = 12
+
+        ' represents the roundtrip VISBO Excel Organisation
+        visboRoundtripOrga = 13
+
+        ' represents the default Urlaubskalender from VISBO 
+        visboDefaultCapacity = 14
+
+        ' represents the Zeuss Urlaubskalender from VISBO 
+        visboZeussCapacity = 15
+
+        ' represents the Instart Type of Urlaubs-Information 
+        visboEGeckoCapacity = 16
+
+        ' represents the Allianz-Type Daten of Externe Rahmenverträge 
+        visboExternalContracts = 17
+
+        ' represents the classic modifier strcture 
+        visboModifierCapacities = 18
+
+        ' represents the unknown 
+        visboUnknown = 19
+
+        ' visbo Find Project Starts
+        visboFindProjectStart = 20
+
+        ' represents the CostAssertion of Telair
+        visboCostAssertion = 21
+
+
+        ' represents the Automatic Team Allocation
+        visboSuggestResourceAllocation = 22
+
+        ' represent the setitngs 
+        visboJsonSetting = 23
+
+        ' represents the Auto-Distribution
+        visboAutoAdjust = 24
+
+        ' create hedged variants 
+        visboCreateHedgedVariant = 25
+
+        ' visbo Find Project Starts with regard of frequency Phases, milestones
+        visboFindProjectStartPM = 26
+
+        ' find feasible Portfolio
+        visboFindfeasiblePortfolio = 27
+
+        ' represents the weser ressourcenplan
+        visboWWWRessourcen = 28
+
+        ' dataQuality Check 
+        visboDataQualityCheck = 29
+
+        ' rename projects in Batch
+        visboRenameProjects = 30
+
+        ' create baselines in Batch
+        visboCreateBaselineProjects = 31
+
+    End Enum
+
+
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
         ' in most cases new project and portfolio versions will be written 
@@ -409,6 +511,20 @@ Module rpaModule1
                 Case CInt(PTRpa.visboDataQualityCheck)
                     Try
                         allOk = processDataQualityCheck()
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboRenameProjects)
+                    Try
+                        allOk = processRenameProjects()
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboCreateBaselineProjects)
+                    Try
+                        'allOk = processCreateBaselines()
                     Catch ex As Exception
 
                     End Try
@@ -1369,6 +1485,16 @@ Module rpaModule1
                         ' Check auf Data Quality Check (Currently BHTC) 
                         If result = PTRpa.visboUnknown Then
                             result = checkDataQuality(currentWB)
+                        End If
+
+                        ' Check auf Rename Projects 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkRename(currentWB)
+                        End If
+
+                        ' Check auf Create Baseline Projects 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkBaselineCreation(currentWB)
                         End If
 
                         currentWB.Close(SaveChanges:=False)
@@ -4789,7 +4915,96 @@ Module rpaModule1
         processUpdateTagetik = allOk
     End Function
 
+    Public Function processRenameProjects(Optional ByVal blattName As String = "Rename Projects") As Boolean
 
+        Dim atleastOneError As Boolean = False
+
+        Dim zeile As Integer = 2
+
+        Dim currentProjectName As String = ""
+        Dim newProjectName As String = ""
+        Dim err As New clsErrorCodeMsg
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattName = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattName),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+
+                        Try
+
+                            currentProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            newProjectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                            If currentProjectName <> "" And newProjectName <> "" And currentProjectName <> newProjectName Then
+                                ' check1: does current Project exist? 
+
+                                'If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt, Err) Then
+                                '    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, "", jetzt, Err)
+                                'End If
+                                Dim check1 As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, "", Date.Now, err)
+                                Dim check2 As Boolean = Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(newProjectName, "", Date.Now, err)
+                                If check1 And check2 Then
+
+                                    If CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(currentProjectName, newProjectName, dbUsername, err) Then
+                                        Call logger(ptErrLevel.logInfo, "Rename success: ", currentProjectName & " -> " & newProjectName)
+                                    Else
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Rename Failed: " & currentProjectName & " -> " & newProjectName, err.errorMsg)
+                                    End If
+
+                                Else
+                                    If Not check1 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Project to rename does not exist: ", currentProjectName)
+                                    End If
+                                    If Not check2 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Project with new name does already exist: ", newProjectName)
+                                    End If
+                                End If
+                            Else
+                                ' logging: no valid rename Parameters
+                                atleastOneError = True
+                                Call logger(ptErrLevel.logError, "no valid renaming parameters : ", currentProjectName & " -> " & newProjectName)
+                            End If
+
+                        Catch ex As Exception
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                        End Try
+
+                        zeile = zeile + 1
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+            atleastOneError = True
+            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+        End Try
+
+        processRenameProjects = Not atleastOneError
+
+    End Function
 
     Public Function processCostAssertion(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
