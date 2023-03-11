@@ -51,12 +51,15 @@
     ''' <remarks></remarks>
     Public Sub remove(ByVal dateItem As Date)
 
-        _liste.Remove(dateItem)
+        If _liste.ContainsKey(dateItem) Then
+            _liste.Remove(dateItem)
+        End If
+
 
     End Sub
 
     ''' <summary>
-    ''' gibt das Element zurück, das tsDate as Schlüssel hat 
+    ''' gibt das Element zurück, das tsDate ais Schlüssel hat 
     ''' </summary>
     ''' <param name="tsDate"></param>
     ''' <value></value>
@@ -71,6 +74,101 @@
             End If
         End Get
     End Property
+
+    ''' <summary>
+    ''' returns the project which is immediatedly before the given timestamp
+    ''' returns nothing, if no such project exists
+    ''' </summary>
+    ''' <param name="tsDate"></param>
+    ''' <returns></returns>
+    Public Function getProjectbefore(ByVal tsDate As Date) As clsProjekt
+
+        Dim result As clsProjekt = Nothing
+
+        Try
+            If _liste.Count > 0 Then
+                ' check whether this is possible at all ... 
+                If DateDiff(DateInterval.Second, _liste.ElementAt(0).Key, tsDate) > 0 Then
+
+
+                    For ix As Integer = 1 To _liste.Count - 1
+                        If DateDiff(DateInterval.Second, _liste.ElementAt(ix).Key, tsDate) <= 0 Then
+                            ' it is ix-1
+                            result = _liste.ElementAt(ix - 1).Value
+                            Exit For
+                        End If
+                    Next
+
+                Else
+                    result = Nothing
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        getProjectbefore = result
+    End Function
+
+    ''' <summary>
+    ''' returns the project which is having a timestamp after immediatedly after tsdate
+    ''' </summary>
+    ''' <param name="tsDate"></param>
+    ''' <returns></returns>
+    Public Function getProjectAfter(ByVal tsDate As Date) As clsProjekt
+
+        Dim result As clsProjekt = Nothing
+
+        Try
+            If _liste.Count > 0 Then
+                ' check whether this is possible at all ... 
+                If DateDiff(DateInterval.Second, _liste.Last.Key, tsDate) < 0 Then
+
+                    For ix As Integer = _liste.Count - 2 To 0
+                        If DateDiff(DateInterval.Second, _liste.ElementAt(ix).Key, tsDate) < 0 Then
+                            ' it is ix+1
+                            result = _liste.ElementAt(ix + 1).Value
+                            Exit For
+                        End If
+                    Next
+
+                Else
+                    result = Nothing
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+        getProjectAfter = result
+    End Function
+
+    ''' <summary>
+    ''' returns a sorted list of projects with timestamps being after the tsdate timestamp 
+    ''' </summary>
+    ''' <param name="tsDate"></param>
+    ''' <returns></returns>
+    Public Function getProjectsAfter(ByVal tsDate As Date) As SortedList(Of Date, clsProjekt)
+        Dim result As New SortedList(Of Date, clsProjekt)
+
+        Try
+            If _liste.Count > 0 Then
+                If DateDiff(DateInterval.Second, _liste.Last.Key, tsDate) < 0 Then
+                    ' there are any projects fulfilling the criteria
+                    For ix As Integer = 0 To _liste.Count - 1
+                        If DateDiff(DateInterval.Second, _liste.ElementAt(ix).Key, tsDate) < 0 Then
+                            result.Add(_liste.ElementAt(ix).Key, _liste.ElementAt(ix).Value)
+                        End If
+                    Next
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        getProjectsAfter = result
+    End Function
     Public ReadOnly Property getZeitraum As String
         Get
 

@@ -145,6 +145,9 @@ Module rpaModule1
         ' create baselines in Batch
         visboCreateBaselineProjects = 31
 
+        ' assign attributes such as buinsessUnits in batchmode
+        visboAssignAttributes = 32
+
     End Enum
 
 
@@ -524,7 +527,14 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboCreateBaselineProjects)
                     Try
-                        'allOk = processCreateBaselines()
+                        allOk = processCreateBaselines()
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboAssignAttributes)
+                    Try
+                        allOk = processAssignAttributes()
                     Catch ex As Exception
 
                     End Try
@@ -1497,6 +1507,9 @@ Module rpaModule1
                             result = checkBaselineCreation(currentWB)
                         End If
 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkAssignAttributes(currentWB)
+                        End If
                         currentWB.Close(SaveChanges:=False)
 
                     Catch ex As Exception
@@ -4402,6 +4415,7 @@ Module rpaModule1
     End Function
 
 
+
     Public Function processInstartProposal(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
@@ -4915,6 +4929,405 @@ Module rpaModule1
         processUpdateTagetik = allOk
     End Function
 
+    ''' <summary>
+    ''' does create retrospectively baselines for given project. 
+    ''' All versions later than the desired date for baseline are deleted, 
+    ''' then a baseline is created, the the versions are restored
+    ''' and so are their key metric values to the just created baseline
+    ''' </summary>
+    ''' <param name="blattName"></param>
+    ''' <returns></returns>
+    Public Function processCreateBaselines(Optional blattName As String = "Baseline Creation")
+        Dim atleastOneError As Boolean = False
+
+        Dim zeile As Integer = 2
+
+        Dim currentProjectName As String = ""
+        Dim currentVariantName As String = ""
+        Dim baselineDate As Date = Nothing
+
+
+        Dim err As New clsErrorCodeMsg
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattName = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattName),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+
+                        Try
+
+                            currentProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                            Try
+                                If Not IsNothing(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                    currentVariantName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                Else
+                                    currentVariantName = ""
+                                End If
+                            Catch ex As Exception
+                                currentVariantName = ""
+                            End Try
+
+
+                            Try
+                                If Not IsNothing(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                    baselineDate = CDate(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Date.AddHours(23).AddMinutes(59)
+                                Else
+                                    baselineDate = Date.MinValue
+                                End If
+                            Catch ex As Exception
+                                baselineDate = Date.MinValue
+                            End Try
+
+
+
+
+
+                            ' check1: does project exist at all 
+                            ' check2: does the timestamp exist at all
+
+                            ' versionsToRestore as Date()
+                            Dim versionsToRestore As New Collection
+                            Dim heute As Date = Date.Now
+                            Dim vpID As String = ""
+
+                            Dim check1 As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, currentVariantName, Date.Now, err)
+
+                            If check1 Then
+                                ' add check: if a baseline already exists: the baselineDate has to be later than the last baseline
+                                Dim history As clsProjektHistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(currentProjectName, currentVariantName, StartofCalendar, Date.Now, err)
+
+
+
+                                If history.Count > 0 Then
+
+                                    ' in case Date.MinValue: look for timestamp later than 3 months after project start 
+                                    If IsNothing(baselineDate) Then
+                                        baselineDate = history.Last.startDate.AddMonths(3)
+                                    End If
+
+                                    If baselineDate = Date.MinValue Then
+                                        baselineDate = history.Last.startDate.AddMonths(3)
+                                    End If
+
+                                    Dim useAsBaselineProject As clsProjekt = history.getProjectbefore(baselineDate)
+                                    If IsNothing(useAsBaselineProject) Then
+                                        useAsBaselineProject = history.getProjectAfter(baselineDate)
+                                    End If
+
+                                    If IsNothing(useAsBaselineProject) Then
+                                        useAsBaselineProject = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(currentProjectName, currentVariantName, vpID, baselineDate.AddSeconds(10), err)
+                                    End If
+
+                                    Dim ok As Boolean
+                                    If Not IsNothing(useAsBaselineProject) Then
+                                        ' get all timestamps after the baselineDate, because they need to be deleted and the restored again ..
+                                        Dim myfollowingprojects As SortedList(Of Date, clsProjekt) = history.getProjectsAfter(baselineDate)
+                                        Dim myCopiedProjects As New SortedList(Of Date, clsProjekt)
+
+                                        Dim noErrors As Boolean = True
+                                        For Each ckvp As KeyValuePair(Of Date, clsProjekt) In myfollowingprojects
+                                            Dim tmpProj As clsProjekt = ckvp.Value.createVariant("tmp", "")
+                                            tmpProj.variantName = ""
+
+                                            If ckvp.Value.isIdenticalTo(tmpProj) Then
+                                                tmpProj.timeStamp = ckvp.Key
+                                                myCopiedProjects.Add(ckvp.Key, tmpProj)
+                                            Else
+                                                noErrors = False
+                                            End If
+                                        Next
+
+                                        If noErrors Then
+                                            '
+                                            ' now delete all vpv timestamps after baselineDate
+                                            '
+                                            For Each kvp As KeyValuePair(Of Date, clsProjekt) In myfollowingprojects
+                                                If kvp.Key = kvp.Value.timeStamp Then
+                                                    Try
+                                                        If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(kvp.Value.name, kvp.Value.variantName, kvp.Key, dbUsername, err) Then
+                                                            Call logger(ptErrLevel.logInfo, "Project Version deleted ", kvp.Value.name & " " & kvp.Value.variantName)
+                                                        Else
+                                                            Call logger(ptErrLevel.logError, "Project Version could not be deleted ", kvp.Value.name & " " & kvp.Value.variantName & " " & err.errorMsg)
+                                                        End If
+                                                    Catch ex As Exception
+                                                        Call logger(ptErrLevel.logError, "Project Version could not be deleted ", kvp.Value.name & " " & kvp.Value.variantName & " " & ex.Message)
+                                                    End Try
+
+                                                Else
+                                                    ' timestamps are not identical 
+                                                End If
+
+                                            Next
+
+                                            '
+                                            ' now write the baseline
+                                            '
+                                            Dim myBaselineProject As clsProjekt = useAsBaselineProject.createVariant("pfv", "Plan Version used: " & baselineDate.ToString)
+                                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                                            myBaselineProject.timeStamp = baselineDate
+
+
+                                            Dim mergedProj As clsProjekt = Nothing
+                                            Try
+                                                ok = CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(myBaselineProject, dbUsername, mergedProj, err)
+
+                                                If ok Then
+                                                    Call logger(ptErrLevel.logInfo, "Baseline stored ", myBaselineProject.name & " " & myBaselineProject.timeStamp.ToString)
+                                                Else
+                                                    Call logger(ptErrLevel.logError, "Baseline not stored ", myBaselineProject.name & " " & err.errorMsg)
+                                                End If
+
+                                                ' now delete the latest , auto-created plan-version with current time-stamp
+                                                ' was created because a baseline was written
+                                                vpID = ""
+                                                Dim mylatestProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(currentProjectName, "", vpID, Date.Now, err)
+                                                ok = CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(currentProjectName, "", mylatestProj.timeStamp, dbUsername, err)
+                                                If ok Then
+                                                    Call logger(ptErrLevel.logInfo, "Version deleted ", currentProjectName & " " & mylatestProj.timeStamp.ToString)
+                                                Else
+                                                    Call logger(ptErrLevel.logError, "Version delete failed ", currentProjectName & " " & mylatestProj.timeStamp.ToString & " " & err.errorMsg)
+                                                End If
+
+                                                ' now create tmp Variant 
+                                                Dim savemyLatestPRoj As clsProjekt = mylatestProj.createVariant("tmp", "")
+                                                savemyLatestPRoj.variantName = ""
+                                                savemyLatestPRoj.timeStamp = baselineDate.AddSeconds(5)
+
+                                                myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                                                ok = CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(savemyLatestPRoj, dbUsername, mergedProj, err)
+                                                If ok Then
+                                                    Call logger(ptErrLevel.logInfo, "Version stored ", savemyLatestPRoj.name & " " & savemyLatestPRoj.timeStamp.ToString)
+                                                Else
+                                                    Call logger(ptErrLevel.logError, "Version not stored ", savemyLatestPRoj.name & " " & err.errorMsg)
+                                                End If
+                                            Catch ex As Exception
+                                                Call logger(ptErrLevel.logError, "Baseline Version could not be stored ", myBaselineProject.name & " " & myBaselineProject.timeStamp.ToString & " " & ex.Message)
+                                            End Try
+
+
+                                            ' now write all the deleted vpv versions 
+                                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                                            For Each kvp As KeyValuePair(Of Date, clsProjekt) In myCopiedProjects
+
+                                                Try
+                                                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername, mergedProj, err) Then
+                                                        Call logger(ptErrLevel.logInfo, "Project Version stored", kvp.Value.name & " " & kvp.Value.timeStamp.ToString)
+                                                    Else
+                                                        Call logger(ptErrLevel.logError, "Project Version NOT stored", kvp.Value.name & " " & kvp.Value.timeStamp.ToString & " " & err.errorMsg)
+                                                    End If
+
+                                                Catch ex As Exception
+                                                    Call logger(ptErrLevel.logError, "Project Version could not be stored ", kvp.Value.name & " " & kvp.Value.timeStamp.ToString & " " & ex.Message)
+                                                End Try
+
+
+                                            Next
+
+                                        Else
+                                            Call logger(ptErrLevel.logError, "Project Copy did not produce identical versions, no actions taken", currentProjectName)
+                                        End If
+
+
+                                    End If
+
+                                Else
+                                    ' now it seems to exist exactly one version, use that and create a baseline from It 
+                                End If
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Projekt existiert nicht:  ", currentProjectName)
+                            End If
+
+
+
+                        Catch ex As Exception
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                        End Try
+
+                        zeile = zeile + 1
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+            atleastOneError = True
+            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+        End Try
+
+
+        processCreateBaselines = Not atleastOneError
+    End Function
+
+    ''' <summary>
+    ''' assigns attributes in batch
+    ''' </summary>
+    ''' <param name="blattName"></param>
+    ''' <returns></returns>
+    Public Function processAssignAttributes(Optional ByVal blattName As String = "Assign Attributes") As Boolean
+
+        Dim atleastOneError As Boolean = False
+
+        Dim zeile As Integer = 2
+
+        Dim myProjectName As String = ""
+
+        Dim mybusinessUnit As String = ""
+        Dim myResponsible As String = ""
+        Dim responsible As String = ""
+        Dim strategyFit As Double = 0.0
+        Dim riskKPI As Double = 0.0
+
+        Dim err As New clsErrorCodeMsg
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattName = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattName),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+
+                        Try
+
+                            myProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            mybusinessUnit = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            myResponsible = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            ' set myCustom User Role 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                            If myProjectName <> "" Then
+                                ' check1: does current Project exist? 
+
+                                ' check1: does oldName exist at all?
+
+                                Dim vpID As String = ""
+                                Dim myProject As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(myProjectName, " ", vpID, Date.Now, err)
+                                Dim check1 As Boolean = Not IsNothing(myProject)
+
+                                Dim check2 As Boolean = False
+                                Dim i As Integer = 1
+                                While i <= businessUnitDefinitions.Count And Not check2
+
+                                    If businessUnitDefinitions.ElementAt(i - 1).Value.name = mybusinessUnit Then
+                                        check2 = True
+                                    Else
+                                        i = i + 1
+                                    End If
+
+                                End While
+
+
+                                If check1 And check2 Then
+
+                                    Dim storeRequired As Boolean = (myProject.businessUnit <> mybusinessUnit) Or ((myProject.leadPerson <> myResponsible) And (myResponsible <> ""))
+                                    Dim outputCollection As New Collection
+                                    msgTxt = ""
+                                    If storeRequired Then
+                                        If myProject.businessUnit <> mybusinessUnit And mybusinessUnit <> "" Then
+                                            myProject.businessUnit = mybusinessUnit
+                                            msgTxt = mybusinessUnit & " "
+                                        End If
+
+                                        If myProject.leadPerson <> myResponsible And myResponsible <> "" Then
+                                            myProject.leadPerson = myResponsible
+                                            msgTxt = msgTxt & myResponsible
+                                        End If
+
+                                        Try
+                                            Dim mergedProj As clsProjekt = Nothing
+                                            'If storeSingleProjectToDB(myProject, outputCollection) Then
+                                            myProject.timeStamp = Date.Now
+                                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(myProject, dbUsername, mergedProj, err, True) Then
+                                                msgTxt = msgTxt & " was assigned to " & myProject.name
+                                                Call logger(ptErrLevel.logInfo, "project stored ", msgTxt)
+                                            Else
+                                                Call logger(ptErrLevel.logError, "project store with new business Unit failed: " & msgTxt, outputCollection)
+
+                                            End If
+                                        Catch ex As Exception
+                                            Call logger(ptErrLevel.logError, "project store with new business Unit failed: " & msgTxt, outputCollection)
+                                        End Try
+
+                                    Else
+                                        Call logger(ptErrLevel.logInfo, "project has already  ", mybusinessUnit)
+                                    End If
+
+                                Else
+                                    If Not check1 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Project does not exist: ", myProjectName)
+                                    End If
+                                    If Not check2 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Business Unit not known: ", myProjectName & " " & mybusinessUnit)
+                                    End If
+                                End If
+                            Else
+                                ' logging: no valid rename Parameters
+                                atleastOneError = True
+                                Call logger(ptErrLevel.logError, "No project name Given in Zeile : ", zeile.ToString)
+                            End If
+
+                        Catch ex As Exception
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                        End Try
+
+                        zeile = zeile + 1
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+            atleastOneError = True
+            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+        End Try
+
+        processAssignAttributes = Not atleastOneError
+    End Function
+
+
+    ''' <summary>
+    ''' does rename projects in batch. 
+    ''' in the table there need to be oldname , newName
+    ''' oldname need to exist, newname must not exist
+    ''' </summary>
+    ''' <param name="blattName"></param>
+    ''' <returns></returns>
     Public Function processRenameProjects(Optional ByVal blattName As String = "Rename Projects") As Boolean
 
         Dim atleastOneError As Boolean = False
@@ -4952,11 +5365,11 @@ Module rpaModule1
                             If currentProjectName <> "" And newProjectName <> "" And currentProjectName <> newProjectName Then
                                 ' check1: does current Project exist? 
 
-                                'If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt, Err) Then
-                                '    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, "", jetzt, Err)
-                                'End If
+                                ' check1: does oldName exist at all?
                                 Dim check1 As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, "", Date.Now, err)
+                                ' check2: is newName not yet existent? 
                                 Dim check2 As Boolean = Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(newProjectName, "", Date.Now, err)
+
                                 If check1 And check2 Then
 
                                     If CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(currentProjectName, newProjectName, dbUsername, err) Then

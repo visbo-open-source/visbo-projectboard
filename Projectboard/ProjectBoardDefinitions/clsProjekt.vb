@@ -2897,6 +2897,85 @@ Public Class clsProjekt
         getdoneQualityKPI = qualityKPI
 
     End Function
+
+    ''' <summary>
+    ''' retunrs a KPI indicating how many of the provided milestone- and phase-names do occur in the project
+    ''' maxOccurence describes the max amount of occurrences of any of those standardized elements 
+    ''' </summary>
+    ''' <param name="msNames"></param>
+    ''' <param name="phNames"></param>
+    ''' <param name="maxOccurrences"></param>
+    ''' <returns></returns>
+    Public Function containsStdElemKPI(ByVal msNames As Collection, ByVal phNames As Collection,
+                                       ByRef maxOccurrences As Integer,
+                                       ByRef missingNames As Collection,
+                                       ByRef multipleOccurences As Collection)
+
+        maxOccurrences = 0
+
+        Dim result As Double = 0.0
+        Dim totalCount As Integer = msNames.Count + phNames.Count
+        Dim anzFound As Integer = 0
+
+        If totalCount > 0 Then
+
+            For Each msName As String In msNames
+
+                Try
+                    Dim indices As Integer() = Me.hierarchy.getMilestoneHryIndices(msName)
+                    If indices(0) > 0 Then
+                        ' found ..
+                        anzFound = anzFound + 1
+                        If maxOccurrences = 0 Then
+                            maxOccurrences = 1
+                        End If
+
+                        ' no check how often
+                        If indices.Length > 1 Then
+                            maxOccurrences = System.Math.Max(maxOccurrences, indices.Length)
+                            multipleOccurences.Add(msName)
+                        End If
+                    Else
+                        missingNames.Add(msName)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+            Next
+
+            For Each phName As String In phNames
+
+                Try
+                    Dim indices As Integer() = Me.hierarchy.getPhaseHryIndices(phName, "")
+                    If indices(0) > 0 Then
+                        ' found ..
+                        anzFound = anzFound + 1
+                        If maxOccurrences = 0 Then
+                            maxOccurrences = 1
+                        End If
+
+                        ' no check how often
+                        If indices.Length > 1 Then
+                            maxOccurrences = System.Math.Max(maxOccurrences, indices.Length)
+                            multipleOccurences.Add(phName)
+                        End If
+                    Else
+                        missingNames.Add(phName)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            result = anzFound / totalCount
+        End If
+
+        containsStdElemKPI = result
+
+    End Function
     ''' <summary>
     ''' returns the startdate and enddate when start and end of project is not taken into account
     ''' quality check whether or not there is huge difference and the project has a unnecessary extensiuon 
