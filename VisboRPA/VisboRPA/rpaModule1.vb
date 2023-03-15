@@ -2319,8 +2319,9 @@ Module rpaModule1
 
                 ' errechne das Budget für die Vorlage aus den Ressource-Needs
                 Dim calcTempErloes As Double = vproj.getGesamtKostenBedarf.Sum()
+                vproj.Erloes = calcTempErloes
 
-                template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, calcTempErloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
+                template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
                 If Not IsNothing(template) Then
                     template.name = vproj.VorlagenName
                     template.projectType = ptPRPFType.projectTemplate
