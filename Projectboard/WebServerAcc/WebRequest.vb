@@ -1379,6 +1379,12 @@ Public Class Request
                     VP.kundennummer = ""
                 End If
 
+                If Not IsNothing(projekt.description) Then
+                    VP.description = projekt.description
+                Else
+                    VP.description = ""
+                End If
+
                 ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
                 If Not IsNothing(projekt.businessUnit) Then
                     Dim bu As New clsCustomFieldStr
@@ -1475,24 +1481,22 @@ Public Class Request
             Else
                 Try
                     ' KundenNummer in vorhandenem VP ergänzen
-
                     If (aktvp.kundennummer = "") And (projekt.kundenNummer <> "") Then
 
                         aktvp.kundennummer = projekt.kundenNummer
                         Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
-
                     Else
-
                         If attrToStore Then
-
                             If String.Compare(aktvp.kundennummer, projekt.kundenNummer) <> 0 Then
                                 aktvp.kundennummer = projekt.kundenNummer
                                 Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                             End If
-
                         End If
                         ' nothing to do
                     End If
+
+                    ' vp.description will not be changed with a project-update
+                    ' this can be done in the WebUI
 
                 Catch ex As Exception
                     Call MsgBox("Fehler beim Update von VP")
