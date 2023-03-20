@@ -3,6 +3,7 @@
     Public Property name As String
     Public Property kundennummer As String
     Public Property managerId As String
+    Public Property description As String
     Public Property vcid As String
     Public Property vpvCount As Integer
     Public Property vpType As Integer
@@ -27,6 +28,7 @@
         _name = "not named"
         _kundennummer = ""
         _managerId = ""
+        _description = "no description defined"
         _vcid = "not yet defined"
         _vpvCount = 0
         _vpType = 0

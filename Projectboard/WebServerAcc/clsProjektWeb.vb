@@ -412,6 +412,7 @@ Public Class clsProjektWeb
             If Not IsNothing(vp) Then
                 .projectType = vp.vpType
                 .kundenNummer = vp.kundennummer
+                .description = vp.description
 
                 If Not IsNothing(vp.managerId) Then
                     'read the userName an put it into leadPerson

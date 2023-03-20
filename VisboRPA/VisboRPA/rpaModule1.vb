@@ -2315,6 +2315,12 @@ Module rpaModule1
                 Dim myProject As clsProjekt = Nothing
                 ' zunächst die eingelesene Vorlage in die Liste der Projektvorlagen hinzufügen
                 Projektvorlagen.Add(vproj)
+
+
+                ' errechne das Budget für die Vorlage aus den Ressource-Needs
+                Dim calcTempErloes As Double = vproj.getGesamtKostenBedarf.Sum()
+                vproj.Erloes = calcTempErloes
+
                 template = erstelleProjektAusVorlage(myProject, vproj.VorlagenName, vproj.VorlagenName, startDate, endDate, vproj.Erloes, 0, 5.0, 5.0, "0", vproj.VorlagenName, "", "", True)
                 If Not IsNothing(template) Then
                     template.name = vproj.VorlagenName
