@@ -143,6 +143,66 @@ Module rpaTkModule
         checkFindBestStarts = result
     End Function
 
+    Public Function checkBaselineCreation(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+
+        Dim blattName As String = "Baseline Creation"
+
+        Try
+
+            If CType(currentWB.ActiveSheet, xlns.Worksheet).Name = blattName Then
+                result = PTRpa.visboCreateBaselineProjects
+            Else
+                result = PTRpa.visboUnknown
+            End If
+
+
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkBaselineCreation = result
+    End Function
+    Public Function checkRename(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+
+        Dim blattName As String = "Rename Projects"
+
+        Try
+
+            If CType(currentWB.ActiveSheet, xlns.Worksheet).Name = blattName Then
+                result = PTRpa.visboRenameProjects
+            Else
+                result = PTRpa.visboUnknown
+            End If
+
+
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+
+        checkRename = result
+    End Function
+
+    Public Function checkAssignAttributes(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim blattName As String = "Assign Attributes"
+        Try
+
+            If CType(currentWB.ActiveSheet, xlns.Worksheet).Name = blattName Then
+                result = PTRpa.visboAssignAttributes
+            Else
+                result = PTRpa.visboUnknown
+            End If
+
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+        checkAssignAttributes = result
+    End Function
     Public Function checkAutoAllocate(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim blattName0 As String = "VISBO Auto-Allocate"
@@ -580,6 +640,51 @@ Module rpaTkModule
 
                             If Not IsNothing(.Cells(9, 2).value) Then
                                 result.defaultDeltaInDays = CInt(.Cells(9, 2).value)
+                            End If
+
+                        Case PTRpa.visboDataQualityCheck
+
+                            If blattName = "Data Quality Check" Then
+                                result.portfolioName = CStr(.Cells(1, 2).value).Trim
+                                result.templateName = CStr(.Cells(2, 2).value).Trim
+
+                            ElseIf blattName = "Parameters" Then
+                                Dim lastMsRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+                                Dim lastPhRow As Integer = CType(.Cells(2000, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                                Dim zeile As Integer = 2
+                                ' read all Milestone Names
+                                While zeile <= lastMsRow
+
+                                    Dim msName As String = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                                    Try
+                                        If msName.Trim <> "" Then
+                                            result.AddMilestone(msName)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    zeile = zeile + 1
+                                End While
+
+                                zeile = 2
+                                ' read all PhaseName
+                                While zeile <= lastPhRow
+
+                                    Dim phName As String = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                                    Try
+                                        If phName.Trim <> "" Then
+                                            result.AddPhase(phName)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    zeile = zeile + 1
+                                End While
                             End If
 
 
@@ -1502,6 +1607,10 @@ Module rpaTkModule
                     ' now Create a Variant from that , if it is not already the very same variant
                     If myProj.variantName <> projectVariantName Then
                         myProj = myProj.createVariant(projectVariantName, "auto-created variant")
+
+                        ' now put it into ShowProjekte , AlleProjekte
+                        ShowProjekte.AddAnyway(myProj)
+                        AlleProjekte.Add(myProj)
                     End If
 
 
@@ -1596,6 +1705,31 @@ Module rpaTkModule
         Call emptyRPASession()
 
         processAutoAllocatePortfolio = result
+
+    End Function
+
+
+    Public Function processDataQualityCheck() As Boolean
+        Dim result As Boolean = True
+        Dim Err As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+
+        Try
+            Dim myKennung As PTRpa = PTRpa.visboDataQualityCheck
+            Dim jobParameters As clsJobParameters = getJobParameters("Data Quality Check", myKennung)
+            Dim phMsParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
+
+            Call logger(ptErrLevel.logInfo, "starting with Data Quality Check for projects of Portfolio " & jobParameters.portfolioName, " start of Operation ... ")
+
+            Call writeDataQualityCheck(jobParameters.portfolioName, myTemplate:=jobParameters.templateName, msNames:=phMsParameters.milestones, phNames:=phMsParameters.phases)
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "Calling Quality Check File", ex.Message)
+            result = False
+        End Try
+
+        Call emptyRPASession()
+
+        processDataQualityCheck = result
 
     End Function
 
@@ -1907,9 +2041,6 @@ Module rpaTkModule
 
 
             For Each si As String In skillIDs
-                If Not skillList.Contains(si) Then
-                    skillList.Add(si)
-                End If
 
                 ' new  
                 If Not skillList.Contains(si) Then
@@ -3130,6 +3261,373 @@ Module rpaTkModule
 
 
     End Function
+
+    ''' <summary>
+    ''' creates a quality check file for all bhtc projects
+    ''' </summary>
+    ''' <param name="myPortfolioName"></param>
+    ''' <param name="myPortfolioVName"></param>
+    ''' <param name="myTemplate"></param>
+    Public Sub writeDataQualityCheck(ByVal myPortfolioName As String,
+                                     Optional ByVal myPortfolioVName As String = "",
+                                     Optional ByVal myTemplate As String = "TMS",
+                                     Optional ByVal msNames As Collection = Nothing,
+                                     Optional ByVal phNames As Collection = Nothing)
+
+        Dim portfolio As clsConstellation = Nothing
+        Dim err As New clsErrorCodeMsg
+        Dim allOK As Boolean = True
+        Dim tmpID As String = ""
+        Dim expFName As String = ""
+        Dim heute As Date = Date.Now
+        Dim tmpVPID As String = ""
+
+        If IsNothing(msNames) Then
+            msNames = New Collection
+        End If
+
+        If IsNothing(phNames) Then
+            phNames = New Collection
+        End If
+
+        ' needs to be parameterized  
+        Dim myPreferredPortfolioToName As String = "BHTC Active Projects"
+        Dim pfTimeStamp As Date
+        Dim myPreferredPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myPreferredPortfolioToName, tmpVPID, pfTimeStamp, err, variantName:="", storedAtOrBefore:=heute)
+
+        Dim reportWB As xlns.Workbook = Nothing
+
+        ' now get Portfolio from VISBO cloud 
+
+        Dim pvName As String = calcPortfolioKey(myPortfolioName, myPortfolioVName)
+
+        Dim compareTemplate As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(myTemplate, tmpID, heute, err)
+
+        Dim myConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(heute, err)
+
+
+        If myConstellations.Contains(pvName) And Not IsNothing(compareTemplate) Then
+
+            Dim myConstellation As clsConstellation = myConstellations.getConstellation(myPortfolioName, myPortfolioVName)
+            ' if successful: create / open Excel Export File 
+
+            expFName = logfileFolder & "\" & "Quality Check " & myConstellation.constellationName & ".xlsx"
+
+            ' hier muss jetzt das entsprechende File aufgemacht werden ...
+            ' das File 
+            Try
+
+                reportWB = appInstance.Workbooks.Add()
+                CType(reportWB.Worksheets.Item(1), xlns.Worksheet).Name = "VISBO"
+                reportWB.SaveAs(Filename:=expFName, ConflictResolution:=xlns.XlSaveConflictResolution.xlLocalSessionChanges)
+
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "Creating Excel File Output File", " failed ..")
+                Call logger(ptErrLevel.logError, "Creating Excel File Output File", ex.Message)
+                appInstance.EnableEvents = True
+                allOK = False
+            End Try
+
+            If allOK Then
+                Dim ws As xlns.Worksheet = CType(reportWB.Worksheets("VISBO"), xlns.Worksheet)
+
+                ' now write Headerline 
+                Dim zeile As Integer = 1
+                Dim spalte As Integer = 1
+                ws.Cells(zeile, 1).value = "Project-Name"
+                ws.Cells(zeile, 2).value = "VISBO ID"
+
+                ws.Cells(zeile, 3).value = "State"
+                CType(ws.Cells(zeile, 3), xlns.Range).AddComment("VISBO state")
+
+                ws.Cells(zeile, 4).value = "Start Date"
+                CType(ws.Cells(zeile, 4), xlns.Range).AddComment("if it differs much from inner Start Date: check MS Project setting <Project Information> and publish to VISBO again")
+
+                ws.Cells(zeile, 5).value = "End Date"
+                CType(ws.Cells(zeile, 5), xlns.Range).AddComment("if it differs much from inner End Date: check MS Project setting <Project Information> and publish to VISBO again ")
+
+                ws.Cells(zeile, 6).value = "Inner Start "
+                CType(ws.Cells(zeile, 6), xlns.Range).AddComment("earliest occuring date of any published task / milestone in MS Project Plan")
+
+                ws.Cells(zeile, 7).value = "Inner End "
+                CType(ws.Cells(zeile, 7), xlns.Range).AddComment("latest occuring date of any published task / milestone in MS Project Plan")
+
+                ws.Cells(zeile, 8).value = "is current or future Project?"
+                CType(ws.Cells(zeile, 8), xlns.Range).AddComment("Yes, if today < innerEndDate")
+
+                ws.Cells(zeile, 9).value = "Has Template Structure?"
+                CType(ws.Cells(zeile, 9), xlns.Range).AddComment("Yes, if structure/hierarchy of template is 100% identical to current plan")
+
+                ws.Cells(zeile, 10).value = "Template Name"
+                CType(ws.Cells(zeile, 10), xlns.Range).AddComment("the Name of the template used to compare the current plan structure ")
+
+                ws.Cells(zeile, 11).value = "contains standard-Elements"
+                ws.Cells(zeile, 12).value = "Missing Names"
+                ws.Cells(zeile, 13).value = "Max Occurrence"
+
+                ws.Cells(zeile, 14).value = "%Done Quality"
+                CType(ws.Cells(zeile, 11), xlns.Range).AddComment("how many published plan-elements with a date < last publish date do have 100%-Done attribute?")
+
+                ws.Cells(zeile, 15).value = "last Publish"
+                CType(ws.Cells(zeile, 12), xlns.Range).AddComment("when was the last VISBO publish / store of schedules, resources, deliverables of the project")
+
+                ws.Cells(zeile, 16).value = "Comparability Index"
+                CType(ws.Cells(zeile, 13), xlns.Range).AddComment("when was the last VISBO publish / modification of the project")
+
+                ws.Cells(zeile, 17).value = "is Part of Portfolio"
+                CType(ws.Cells(zeile, 14), xlns.Range).AddComment("first found portfolio the project is in (Name=<test dataquality> is not considered")
+
+                ws.Cells(zeile, 18).value = "is Part of other Portfolios"
+                CType(ws.Cells(zeile, 15), xlns.Range).AddComment("other portfolios containing the project")
+
+
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
+
+                    zeile = zeile + 1
+                    Dim pName As String = getPnameFromKey(kvp.Key)
+                    Dim vName As String = getVariantnameFromKey(kvp.Key)
+                    ' read it , but do not put into AlleProjekte 
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+
+                    If Not IsNothing(hproj) Then
+                        ' now find out whether or no there is a given template Name
+                        If hproj.VorlagenName <> "" Then
+                            Try
+                                Dim tmpProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(hproj.VorlagenName, tmpID, heute, err)
+                                If Not IsNothing(tmpProj) Then
+                                    compareTemplate = tmpProj
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                        Dim innerStartEndDate() As Date = hproj.getInnerStartEndDate
+
+                        Dim myState As String = hproj.vpStatus
+
+
+                        ' now writing 
+                        ws.Cells(zeile, 1).value = hproj.name
+                        ws.Cells(zeile, 2).value = hproj.vpID
+                        ws.Cells(zeile, 3).value = hproj.vpStatus
+                        ws.Cells(zeile, 4).value = hproj.startDate
+                        ws.Cells(zeile, 5).value = hproj.endeDate
+                        ws.Cells(zeile, 6).value = innerStartEndDate(0)
+                        ws.Cells(zeile, 7).value = innerStartEndDate(1)
+
+                        ' now check whether it seems to be an active project 
+                        Dim isActive As Boolean = DateDiff(DateInterval.Day, innerStartEndDate(0), heute) >= 0 And
+                                                    DateDiff(DateInterval.Day, innerStartEndDate(1), heute) <= 0
+
+                        If isActive Then
+                            ws.Cells(zeile, 8).value = "Yes"
+                        Else
+                            ws.Cells(zeile, 8).value = "No"
+                        End If
+
+                        ' now check whether it complies to TMS structure and  to which one 
+                        Try
+                            Dim hasTMS As Boolean = hproj.hasStructureOf(compareTemplate)
+
+                            If hasTMS Then
+                                ws.Cells(zeile, 9).value = "Yes"
+                            Else
+                                ws.Cells(zeile, 9).value = "No"
+                            End If
+
+                        Catch ex As Exception
+                            ws.Cells(zeile, 9).value = "?"
+                        End Try
+
+                        Try
+                            If Not IsNothing(compareTemplate) Then
+                                ws.Cells(zeile, 10).value = compareTemplate.VorlagenName
+                            Else
+                                ws.Cells(zeile, 10).value = ""
+                            End If
+
+                        Catch ex As Exception
+                            ws.Cells(zeile, 10).value = "?"
+                        End Try
+
+                        ' check the contains Standard-Elements 
+                        Try
+                            If msNames.Count + phNames.Count > 0 Then
+                                Dim maxOccurrences As Integer = 0
+                                Dim missingNames As New Collection
+                                Dim multipleOccurences As New Collection
+                                Dim containsStdElemKPI As Double = hproj.containsStdElemKPI(msNames, phNames, maxOccurrences, missingNames, multipleOccurences)
+                                ws.Cells(zeile, 11).value = containsStdElemKPI.ToString("0.0%")
+
+                                ' call logger ...
+
+                                Dim missingNamesString As String = ""
+                                For Each missingN As String In missingNames
+                                    If missingNamesString = "" Then
+                                        missingNamesString = missingN
+                                    Else
+                                        missingNamesString = missingNamesString & "; " & missingN
+                                    End If
+                                Next
+
+                                ws.Cells(zeile, 12).value = missingNamesString
+                                ws.Cells(zeile, 13).value = maxOccurrences.ToString
+
+                                If missingNames.Count > 0 Then
+                                    Call logger(ptErrLevel.logInfo, "missingNames " & hproj.name, missingNames)
+                                End If
+                                If multipleOccurences.Count > 0 Then
+                                    Call logger(ptErrLevel.logInfo, "multiple occurences  " & hproj.name, multipleOccurences)
+                                End If
+                            Else
+                                ws.Cells(zeile, 11).value = "n.a"
+                                ws.Cells(zeile, 12).value = "n.a"
+                                ws.Cells(zeile, 13).value = "n.a"
+                            End If
+
+
+                        Catch ex As Exception
+                            ws.Cells(zeile, 11).value = "?"
+                            ws.Cells(zeile, 12).value = "?"
+                            ws.Cells(zeile, 13).value = "?"
+                        End Try
+
+                        ' check the %-Done Quality of Past Elements : Past meaning elements before hproj.timestamp
+                        Try
+                            Dim doneQualityKPI As Double = hproj.getdoneQualityKPI()
+                            If doneQualityKPI >= 0 Then
+                                ws.Cells(zeile, 14).value = doneQualityKPI.ToString("0.0%")
+                            Else
+                                ws.Cells(zeile, 14).value = "n.a"
+                            End If
+
+                        Catch ex As Exception
+                            ws.Cells(zeile, 14).value = "?"
+                        End Try
+
+
+                        ' Check the last publish - again an indicator of how reliable data is ... 
+                        ws.Cells(zeile, 15).value = hproj.timeStamp
+
+                        'check the Comparability Index: keep the current and compare with former versions. How many elements of former versions are in current version ? 
+                        Try
+                            Dim resultString As String = ""
+                            Dim timeStampString As String = ""
+                            Dim lookForTimeStamp As Date = hproj.timeStamp.AddMonths(-1)
+                            Dim compareVersion As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
+
+                            Do While Not IsNothing(compareVersion)
+
+                                If resultString = "" Then
+                                    timeStampString = compareVersion.timeStamp.ToShortDateString
+                                    resultString = hproj.getCompareKPI(compareVersion).ToString("00%")
+                                Else
+                                    timeStampString = timeStampString & " / " & compareVersion.timeStamp.ToShortDateString
+                                    resultString = resultString & " / " & hproj.getCompareKPI(compareVersion).ToString("00%")
+                                End If
+
+                                lookForTimeStamp = compareVersion.timeStamp.AddMonths(-1)
+                                compareVersion = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
+                            Loop
+
+                            CType(ws.Cells(zeile, 16), xlns.Range).AddComment(timeStampString)
+                            CType(ws.Cells(zeile, 16), xlns.Range).Value = "'" & resultString
+
+                        Catch ex As Exception
+                            Call logger(ptErrLevel.logError, "Write Column 16  ", ex.Message)
+                        End Try
+
+
+                        Try
+                            ' now check in which portfolio that project is in 
+                            'ws.Cells(zeile, 12).value = "is Part of Portfolio"
+                            'ws.Cells(zeile, 13).value = "is Part of other Portfolios"
+                            Dim containedIn As String = ""
+                            Dim containedAlsoIn As String = ""
+                            Dim first As Boolean = True
+
+                            Try
+                                If Not IsNothing(myPreferredPortfolio) Then
+                                    If myPreferredPortfolio.contains(kvp.Key, True) Then
+                                        containedIn = myPreferredPortfolio.constellationName
+                                        first = False
+                                    End If
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
+
+                            For Each pfKVP As KeyValuePair(Of String, clsConstellation) In myConstellations.Liste
+                                ' kvp.key does contain the pvName of currently considered project
+
+                                If pfKVP.Value.constellationName.ToLower = "test dataquality" Or
+                                    (pfKVP.Value.constellationName.ToLower = myPreferredPortfolioToName.ToLower And pfKVP.Value.variantName = "") Then
+                                    ' Skip , do Nothing
+                                Else
+                                    If pfKVP.Value.contains(kvp.Key, True) Then
+                                        If first Then
+                                            containedIn = pfKVP.Value.constellationName
+                                            first = False
+                                        Else
+                                            Dim outPutName As String = ""
+                                            If pfKVP.Value.variantName = "" Then
+                                                outPutName = pfKVP.Value.constellationName
+                                            Else
+                                                outPutName = calcProjektKey(pfKVP.Value.constellationName, pfKVP.Value.variantName)
+                                            End If
+                                            If containedAlsoIn = "" Then
+                                                containedAlsoIn = outPutName
+                                            Else
+                                                containedAlsoIn = containedAlsoIn & "; " & outPutName
+                                            End If
+                                        End If
+                                    End If
+                                End If
+
+                            Next
+
+                            ws.Cells(zeile, 17).value = containedIn
+                            ws.Cells(zeile, 18).value = containedAlsoIn
+                        Catch ex As Exception
+
+                        End Try
+                    Else
+                        ' could not read the name 
+                        ws.Cells(zeile, 1).value = pName
+                        ws.Cells(zeile, 2).value = "key: " & kvp.Key & " failed"
+                    End If
+
+
+                Next
+
+            End If
+
+        Else
+            Dim msgTxt As String = "Load Portfolio " & myPortfolioName & " failed .."
+            Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
+            allOK = False
+        End If
+
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(reportWB.Worksheets("VISBO"), xlns.Worksheet).AutoFilterMode = True Then
+                CType(reportWB.Worksheets("VISBO"), xlns.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            reportWB.Close(SaveChanges:=True)
+            Call logger(ptErrLevel.logInfo, "Quality Check Successful, stored in ", expFName)
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "Store Excel File ", " failed ..")
+        End Try
+
+        appInstance.EnableEvents = True
+
+    End Sub
+
 
 
 End Module

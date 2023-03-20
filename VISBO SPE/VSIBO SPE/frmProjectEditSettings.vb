@@ -26,17 +26,21 @@ Public Class frmProjectEditSettings
         newCalculation.Checked = Not awinSettings.noNewCalculation
         invoices.Checked = awinSettings.enableInvoices
         adjustChilds.Checked = awinSettings.autoAjustChilds
+        ' tk added 23.11.22: to be able to allow over-Utilization
+        allowOverUtilization.Checked = awinSettings.meAllowOverTime
 
         If currentProjektTafelModus <> ptModus.massEditTermine Then
             AdjustResourceNeeds.Enabled = False
             newCalculation.Enabled = False
             invoices.Enabled = False
             adjustChilds.Enabled = False
+            allowOverUtilization.Enabled = True
         Else
             AdjustResourceNeeds.Enabled = True
             newCalculation.Enabled = True
             invoices.Enabled = True
             adjustChilds.Enabled = True
+            allowOverUtilization.Enabled = False
         End If
     End Sub
 
@@ -45,6 +49,8 @@ Public Class frmProjectEditSettings
         awinSettings.noNewCalculation = Not newCalculation.Checked
         awinSettings.enableInvoices = invoices.Checked
         awinSettings.autoAjustChilds = adjustChilds.Checked
+        ' tk added 23.11.22 to be able to allow more days when capacity is available
+        awinSettings.meAllowOverTime = allowOverUtilization.Checked
 
         topPos = Me.Top
         leftPos = Me.Left

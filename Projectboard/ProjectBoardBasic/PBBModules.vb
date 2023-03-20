@@ -1241,14 +1241,13 @@ Public Module PBBModules
         Dim loadProjectsForm As New frmProjPortfolioAdmin
 
         Try
+            If Control.Id = "Pt6G6B0" Then
+                ' call from SPE 
+                loadProjectsForm.aKtionskennung = PTTvActions.loadInSPE
+            Else
+                loadProjectsForm.aKtionskennung = PTTvActions.loadPV
+            End If
 
-            With loadProjectsForm
-
-                .aKtionskennung = PTTvActions.loadPV
-
-                '' '' ''.portfolioName.Visible = False
-                '' '' ''.Label1.Visible = False
-            End With
 
             returnValue = loadProjectsForm.ShowDialog
 

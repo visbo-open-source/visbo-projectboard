@@ -2775,6 +2775,253 @@ Public Class clsProjekt
 
         End Get
     End Property
+    Public Function getCompareKPI(ByVal vproj As clsProjekt) As Double
+        Dim result As Double = 0.0
+        Dim totalAnz As Integer = 0
+        Dim anzNotOk As Integer = 0
+
+        If Not IsNothing(vproj) Then
+            For Each vPhase As clsPhase In vproj.AllPhases
+                totalAnz = totalAnz + 1
+                If vPhase.nameID <> rootPhaseName Then
+
+                    Dim vBreadCrumb As String = vproj.hierarchy.getBreadCrumb(vPhase.nameID)
+                    Dim myPhase As clsPhase = getPhaseByID(vPhase.nameID)
+                    If Not IsNothing(myPhase) Then
+                        If hierarchy.getBreadCrumb(myPhase.nameID) <> vproj.hierarchy.getBreadCrumb(vPhase.nameID) Then
+                            anzNotOk = anzNotOk + 1
+                        End If
+                    Else
+                        anzNotOK = anzNotOK + 1
+                    End If
+                End If
+
+                For Each vMs As clsMeilenstein In vPhase.meilensteinListe
+                    totalAnz = totalAnz + 1
+                    Dim vBreadCrumb As String = vproj.hierarchy.getBreadCrumb(vMs.nameID)
+                    Dim myMs As clsMeilenstein = getMilestoneByID(vMs.nameID)
+                    If Not IsNothing(myMs) Then
+                        If hierarchy.getBreadCrumb(myMs.nameID) <> vproj.hierarchy.getBreadCrumb(vMs.nameID) Then
+                            anzNotOk = anzNotOk + 1
+                        End If
+                    Else
+                        anzNotOk = anzNotOk + 1
+                    End If
+                Next
+            Next
+
+        End If
+
+        result = 1 - anzNotOk / totalAnz
+        getCompareKPI = result
+
+    End Function
+    ''' <summary>
+    ''' returns true if the project has the same or at least a very similar structure than the template. 
+    ''' very similar means: at least 
+    ''' </summary>
+    ''' <param name="vproj"></param>
+    ''' <returns></returns>
+    Public Function hasStructureOf(ByVal vproj As clsProjektvorlage) As Boolean
+        Dim result As Boolean = True
+        Dim totalanz As Integer = 0
+        Dim anzNotOK As Integer = 0
+
+        If Not IsNothing(vproj) Then
+
+            For Each vPhase As clsPhase In vproj.AllPhases
+                totalanz = totalanz + 1
+                If vPhase.nameID <> rootPhaseName Then
+                    Dim myPhase As clsPhase = getPhaseByID(vPhase.nameID)
+                    If Not IsNothing(myPhase) Then
+                        If hierarchy.getBreadCrumb(myPhase.nameID) <> vproj.hierarchy.getBreadCrumb(vPhase.nameID) Then
+                            anzNotOK = anzNotOK + 1
+                        End If
+                    Else
+                        anzNotOK = anzNotOK + 1
+                    End If
+                End If
+            Next
+
+
+        End If
+        If anzNotOK > 0 Then
+            ' if more or equal to 30% are notOK , then it does count as false
+            If anzNotOK / totalanz >= 0.3 Then
+                result = False
+            End If
+        End If
+
+        hasStructureOf = result
+    End Function
+
+    ''' <summary>
+    ''' returns the percentage how many past plan-Elements are really set to %Done = 1
+    ''' past is defined by comparison planelement date vs timestamp 
+    ''' if there are no past elements yet, a -1 is returned
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getdoneQualityKPI() As Double
+
+        Dim anzPastElements As Integer = 0
+        Dim anzGoodElements As Integer = 0
+        ' if there is no past element yet, quality is returned as 100%
+        Dim qualityKPI As Double = -1.0
+
+        Dim refDate As Date = timeStamp
+
+        For Each cPhase As clsPhase In AllPhases
+
+
+            If DateDiff(DateInterval.Day, cPhase.getEndDate, refDate) > 0 Then
+                anzPastElements = anzPastElements + 1
+                If cPhase.percentDone = 1.0 Then
+                    anzGoodElements = anzGoodElements + 1
+                End If
+            End If
+
+            For Each ms As clsMeilenstein In cPhase.meilensteinListe
+                If DateDiff(DateInterval.Day, ms.getDate, refDate) > 0 Then
+                    anzPastElements = anzPastElements + 1
+                    If ms.percentDone = 1.0 Then
+                        anzGoodElements = anzGoodElements + 1
+                    End If
+                End If
+            Next
+        Next
+
+        If anzPastElements > 0 Then
+            qualityKPI = anzGoodElements / anzPastElements
+        End If
+
+        getdoneQualityKPI = qualityKPI
+
+    End Function
+
+    ''' <summary>
+    ''' retunrs a KPI indicating how many of the provided milestone- and phase-names do occur in the project
+    ''' maxOccurence describes the max amount of occurrences of any of those standardized elements 
+    ''' </summary>
+    ''' <param name="msNames"></param>
+    ''' <param name="phNames"></param>
+    ''' <param name="maxOccurrences"></param>
+    ''' <returns></returns>
+    Public Function containsStdElemKPI(ByVal msNames As Collection, ByVal phNames As Collection,
+                                       ByRef maxOccurrences As Integer,
+                                       ByRef missingNames As Collection,
+                                       ByRef multipleOccurences As Collection)
+
+        maxOccurrences = 0
+
+        Dim result As Double = 0.0
+        Dim totalCount As Integer = msNames.Count + phNames.Count
+        Dim anzFound As Integer = 0
+
+        If totalCount > 0 Then
+
+            For Each msName As String In msNames
+
+                Try
+                    Dim indices As Integer() = Me.hierarchy.getMilestoneHryIndices(msName)
+                    If indices(0) > 0 Then
+                        ' found ..
+                        anzFound = anzFound + 1
+                        If maxOccurrences = 0 Then
+                            maxOccurrences = 1
+                        End If
+
+                        ' no check how often
+                        If indices.Length > 1 Then
+                            maxOccurrences = System.Math.Max(maxOccurrences, indices.Length)
+                            multipleOccurences.Add(msName)
+                        End If
+                    Else
+                        missingNames.Add(msName)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+            Next
+
+            For Each phName As String In phNames
+
+                Try
+                    Dim indices As Integer() = Me.hierarchy.getPhaseHryIndices(phName, "")
+                    If indices(0) > 0 Then
+                        ' found ..
+                        anzFound = anzFound + 1
+                        If maxOccurrences = 0 Then
+                            maxOccurrences = 1
+                        End If
+
+                        ' no check how often
+                        If indices.Length > 1 Then
+                            maxOccurrences = System.Math.Max(maxOccurrences, indices.Length)
+                            multipleOccurences.Add(phName)
+                        End If
+                    Else
+                        missingNames.Add(phName)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            result = anzFound / totalCount
+        End If
+
+        containsStdElemKPI = result
+
+    End Function
+    ''' <summary>
+    ''' returns the startdate and enddate when start and end of project is not taken into account
+    ''' quality check whether or not there is huge difference and the project has a unnecessary extensiuon 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getInnerStartEndDate(Optional ByVal considerLeafsOnly As Boolean = True) As Date()
+        Dim myInnerStartDate As Date = endeDate
+        Dim myInnerEndDate As Date = startDate
+        Dim result() As Date
+        ReDim result(1)
+
+        For Each cPhase As clsPhase In AllPhases
+
+            If cPhase.nameID <> rootPhaseName Then
+                If (hierarchy.getChildIDsOf(cPhase.nameID, False).Count + hierarchy.getChildIDsOf(cPhase.nameID, True).Count = 0) Or
+                    Not considerLeafsOnly Then
+
+                    If DateDiff(DateInterval.Day, cPhase.getStartDate, myInnerStartDate) > 0 Then
+                        myInnerStartDate = cPhase.getStartDate
+                    End If
+
+                    If DateDiff(DateInterval.Day, cPhase.getEndDate, myInnerEndDate) < 0 Then
+                        myInnerEndDate = cPhase.getEndDate
+                    End If
+                End If
+
+            End If
+
+
+            For Each ms As clsMeilenstein In cPhase.meilensteinListe
+                If DateDiff(DateInterval.Day, ms.getDate, myInnerStartDate) > 0 Then
+                    myInnerStartDate = ms.getDate
+                End If
+
+                If DateDiff(DateInterval.Day, ms.getDate, myInnerEndDate) < 0 Then
+                    myInnerEndDate = ms.getDate
+                End If
+            Next
+        Next
+
+        result(0) = myInnerStartDate
+        result(1) = myInnerEndDate
+
+        getInnerStartEndDate = result
+
+    End Function
 
     ''' <summary>
     ''' gibt die KeyMetric für TimeCompletion zurück auf die einzelnen Monate des Projektes

@@ -10348,7 +10348,7 @@ Public Module agm2
                         End Try
 
 
-                        If endeZeile > 0 Then
+                        If endeZeile > 2 Then
 
                             lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
@@ -10430,14 +10430,15 @@ Public Module agm2
                                             End Try
                                         Else
                                             noError = False
-                                            errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                            errMsg = "Name " & subRoleName & " is combinedRole; combinedRoles are calculated automatically" & " (File " & dateiName & " )"
                                             meldungen.Add(errMsg)
                                         End If
                                     Else
                                         If subRoleName.Length > 0 Then
                                             noError = False
-                                            errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                            errMsg = "Name " & subRoleName & " does not exist ..." & " (File " & dateiName & " )"
                                             meldungen.Add(errMsg)
+                                        Else
                                         End If
                                     End If
 

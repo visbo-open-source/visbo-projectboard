@@ -118,6 +118,10 @@ Public Module Module1
     Public Projektvorlagen As New clsProjektvorlagen
     Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
+
+    ' tk 15.11.22 ergänzt für SPE Projektes 
+    Public editProjekteInSPE As New clsProjekte
+
     ' noShowProjekte am 21.3 rausgenommen 
     ''Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
@@ -934,6 +938,7 @@ Public Module Module1
         loadPVInPPT = 11
         loadProjectAsTemplate = 12
         loadMultiPVInPPT = 13
+        loadInSPE = 14
     End Enum
 
     ' tk 16.7.21 - wird benötigt für RPA - robotic process automation
@@ -945,97 +950,6 @@ Public Module Module1
         telairActualData = 5 ' TimeSheets in Excel 
         eGeckoCapa = 6
         instartCalcTemplate = 7
-    End Enum
-
-    Public Enum PTRpa
-        ' represents the standard VISBO Projectbrief with Stammdaten, Ressources, Termine, Attribute 
-        visboProject = 0
-
-        ' represents the standard VISBO Excel project with just only name and Schedules, Appearances, and the like 
-        visboExcelSchedules = 1
-
-        ' represents the standard MS Project *.mpp File 
-        visboMPP = 2
-
-        ' represents the Jira File, as customized in JiraConfig customized  
-        visboJira = 3
-
-        ' represents the Instart AngebotsKalkulation Template 
-        visboInstartProposal = 4
-
-        ' represents the VISBO AngebotsKalkulation Template 
-        visboProposal = 5
-
-        ' represents the Telair Tagetik New Projects List
-        visboNewTagetik = 6
-
-        ' represents the Telair Update Project File
-        visboUpdateTagetik = 7
-
-        ' represents the standard VISBO Project Creation by BatchList 
-        visboProjectList = 8
-
-        ' represents the AllianzType Istdaten Import 
-        visboActualData1 = 9
-
-        ' represents the InstartType Istdaten Import 
-        visboActualData2 = 10
-
-        ' represents the Telair Istdaten Import 
-        visboActualData3 = 11
-
-        ' represents the initial VISBO Excel Organisation
-        visboInitialOrga = 12
-
-        ' represents the roundtrip VISBO Excel Organisation
-        visboRoundtripOrga = 13
-
-        ' represents the default Urlaubskalender from VISBO 
-        visboDefaultCapacity = 14
-
-        ' represents the Zeuss Urlaubskalender from VISBO 
-        visboZeussCapacity = 15
-
-        ' represents the Instart Type of Urlaubs-Information 
-        visboEGeckoCapacity = 16
-
-        ' represents the Allianz-Type Daten of Externe Rahmenverträge 
-        visboExternalContracts = 17
-
-        ' represents the classic modifier strcture 
-        visboModifierCapacities = 18
-
-        ' represents the unknown 
-        visboUnknown = 19
-
-        ' visbo Find Project Starts
-        visboFindProjectStart = 20
-
-        ' represents the CostAssertion of Telair
-        visboCostAssertion = 21
-
-
-        ' represents the Automatic Team Allocation
-        visboSuggestResourceAllocation = 22
-
-        ' represent the setitngs 
-        visboJsonSetting = 23
-
-        ' represents the Auto-Distribution
-        visboAutoAdjust = 24
-
-        ' create hedged variants 
-        visboCreateHedgedVariant = 25
-
-        ' visbo Find Project Starts with regard of frequency Phases, milestones
-        visboFindProjectStartPM = 26
-
-        ' find feasible Portfolio
-        visboFindfeasiblePortfolio = 27
-
-        ' represents the weser ressourcenplan
-        visboWWWRessourcen = 28
-
     End Enum
 
     ''' <summary>
@@ -8221,12 +8135,19 @@ Public Module Module1
 
                 If visboClient = divClients(client.VisboSPE) Then
                     visboClientTxt = "VISBO Project Edit / "
+                    If editProjekteInSPE.Count > 0 And ShowProjekte.Count > editProjekteInSPE.Count Then
+                        visboClientTxt = "VISBO Project Edit-in-Context / "
+                    End If
                 End If
 
-                If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
+                ' If visboClient = divClients(client.VisboSPE) And ShowProjekte.Count = 1 Then
+                If visboClient = divClients(client.VisboSPE) And editProjekteInSPE.Count = 1 Then
 
-                    Dim hproj As clsProjekt = ShowProjekte.Liste.ElementAt(0).Value
-                    Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    Dim hproj As clsProjekt = editProjekteInSPE.Liste.ElementAt(0).Value
+                    'Dim printProjName As String = hproj.name & "/" & hproj.variantName
+                    ' getShapeText gibt den PRojektNamen zurück in der Form name [varianten-Name], wenn es einen Varianten-Namen gibt
+                    ' sonst nur der Name 
+                    Dim printProjName As String = hproj.getShapeText
                     Select Case tableTyp
                         Case ptTables.meRC
                             If awinSettings.englishLanguage Then

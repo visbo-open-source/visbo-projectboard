@@ -73,9 +73,39 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property noun_chart_100x100() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("noun_chart_100x100", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property noun_gantt_chart_100x100() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("noun_gantt_chart_100x100", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property noun_money_100x100() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("noun_money_100x100", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property noun_people_grey() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("noun_people_grey", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property

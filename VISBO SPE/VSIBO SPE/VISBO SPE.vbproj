@@ -19,7 +19,7 @@
     <PublishUrl>C:\publish\VISBO SPE\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.1.0.2</ApplicationVersion>
+    <ApplicationVersion>1.2.0.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>8</UpdateInterval>
@@ -188,6 +188,11 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Ribbon1.vb" />
     <Compile Include="Tabelle1.Designer.vb">
       <DependentUpon>Tabelle1.Designer.xml</DependentUpon>
@@ -222,21 +227,17 @@
     <Compile Include="VISBO_SPE_Utilities.vb" />
     <EmbeddedResource Include="frmAddOrDeleteALine.resx">
       <DependentUpon>frmAddOrDeleteALine.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjectEditSettings.resx">
       <DependentUpon>frmProjectEditSettings.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="My Project\Resources.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <None Include="app.config" />
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -266,7 +267,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Ribbon1.xml" />
+    <EmbeddedResource Include="Ribbon1.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\visbo_icon.ico" />
@@ -316,6 +319,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\visbo_icon_transparent_Bild.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-chart_100x100.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-chart-100x100.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-chart-100x100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun-gantt-chart-100x100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noun_people_grey.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

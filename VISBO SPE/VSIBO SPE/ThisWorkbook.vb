@@ -180,6 +180,9 @@ Public Class ThisWorkbook
 
             appInstance.EnableEvents = False
             Call speSetTypen(spe_ott)
+
+            Call logger(ptErrLevel.logInfo, "Startup- nach speSetTypen", "English Language =  " & awinSettings.englishLanguage.ToString)
+
             appInstance.EnableEvents = True
 
             appInstance.Visible = True

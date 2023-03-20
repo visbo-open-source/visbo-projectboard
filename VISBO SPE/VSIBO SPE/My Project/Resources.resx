@@ -121,6 +121,12 @@
   <data name="noun_bottleneck_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\noun-bottleneck-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="noun_chart_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\noun-chart-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="noun_gantt_chart_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\noun-gantt-chart-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="noun_money_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\noun-money-100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -141,5 +147,8 @@
   </data>
   <data name="visbo_icon_transparent_flat_64x64" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\visbo_icon_transparent_flat 64x64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="noun_people_grey" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\noun_people_grey.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

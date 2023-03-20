@@ -14,6 +14,7 @@
         End Set
     End Property
 
+    ' needed for Auto-Allocate 
     Private _peopleSuggestions As SortedList(Of String, Double)
     Public Property peopleSuggestions As SortedList(Of String, Double)
         Get

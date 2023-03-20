@@ -28,6 +28,7 @@ Partial Class frmProjectEditSettings
         Me.invoices = New System.Windows.Forms.CheckBox()
         Me.newCalculation = New System.Windows.Forms.CheckBox()
         Me.AdjustResourceNeeds = New System.Windows.Forms.CheckBox()
+        Me.allowOverUtilization = New System.Windows.Forms.CheckBox()
         Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -36,13 +37,14 @@ Partial Class frmProjectEditSettings
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.allowOverUtilization)
         Me.Panel1.Controls.Add(Me.adjustChilds)
         Me.Panel1.Controls.Add(Me.invoices)
         Me.Panel1.Controls.Add(Me.newCalculation)
         Me.Panel1.Controls.Add(Me.AdjustResourceNeeds)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(427, 126)
+        Me.Panel1.Size = New System.Drawing.Size(480, 146)
         Me.Panel1.TabIndex = 0
         '
         'adjustChilds
@@ -50,9 +52,9 @@ Partial Class frmProjectEditSettings
         Me.adjustChilds.AutoSize = True
         Me.adjustChilds.Location = New System.Drawing.Point(12, 87)
         Me.adjustChilds.Name = "adjustChilds"
-        Me.adjustChilds.Size = New System.Drawing.Size(390, 19)
+        Me.adjustChilds.Size = New System.Drawing.Size(305, 19)
         Me.adjustChilds.TabIndex = 3
-        Me.adjustChilds.Text = "Date changes also affect the subordinate tasks (only used for Time)"
+        Me.adjustChilds.Text = "Date changes also affect dates of subordinate tasks"
         Me.adjustChilds.UseVisualStyleBackColor = True
         '
         'invoices
@@ -60,9 +62,9 @@ Partial Class frmProjectEditSettings
         Me.invoices.AutoSize = True
         Me.invoices.Location = New System.Drawing.Point(12, 62)
         Me.invoices.Name = "invoices"
-        Me.invoices.Size = New System.Drawing.Size(257, 19)
+        Me.invoices.Size = New System.Drawing.Size(181, 19)
         Me.invoices.TabIndex = 2
-        Me.invoices.Text = "Process invoices and contractual penalties"
+        Me.invoices.Text = "Show invoices and penalties"
         Me.invoices.UseVisualStyleBackColor = True
         '
         'newCalculation
@@ -72,9 +74,9 @@ Partial Class frmProjectEditSettings
         Me.newCalculation.AutoSize = True
         Me.newCalculation.Location = New System.Drawing.Point(12, 37)
         Me.newCalculation.Name = "newCalculation"
-        Me.newCalculation.Size = New System.Drawing.Size(358, 19)
+        Me.newCalculation.Size = New System.Drawing.Size(430, 19)
         Me.newCalculation.TabIndex = 1
-        Me.newCalculation.Text = "Distribute values automatically over time  (only used for Time)"
+        Me.newCalculation.Text = "Distribute values automatically over time  (when phase dates are changed)"
         Me.newCalculation.UseVisualStyleBackColor = True
         '
         'AdjustResourceNeeds
@@ -82,17 +84,27 @@ Partial Class frmProjectEditSettings
         Me.AdjustResourceNeeds.AutoSize = True
         Me.AdjustResourceNeeds.Location = New System.Drawing.Point(12, 12)
         Me.AdjustResourceNeeds.Name = "AdjustResourceNeeds"
-        Me.AdjustResourceNeeds.Size = New System.Drawing.Size(335, 19)
+        Me.AdjustResourceNeeds.Size = New System.Drawing.Size(455, 19)
         Me.AdjustResourceNeeds.TabIndex = 0
-        Me.AdjustResourceNeeds.Text = "Adjust resource needs proportionally (only used for Time)"
+        Me.AdjustResourceNeeds.Text = "Adjust resource needs proportionally (when phases are extended or shortened)"
         Me.AdjustResourceNeeds.UseVisualStyleBackColor = True
+        '
+        'allowOverUtilization
+        '
+        Me.allowOverUtilization.AutoSize = True
+        Me.allowOverUtilization.Location = New System.Drawing.Point(12, 114)
+        Me.allowOverUtilization.Name = "allowOverUtilization"
+        Me.allowOverUtilization.Size = New System.Drawing.Size(137, 19)
+        Me.allowOverUtilization.TabIndex = 4
+        Me.allowOverUtilization.Text = "Allow over-utilization"
+        Me.allowOverUtilization.UseVisualStyleBackColor = True
         '
         'frmProjectEditSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(429, 126)
+        Me.ClientSize = New System.Drawing.Size(482, 146)
         Me.Controls.Add(Me.Panel1)
         Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
@@ -114,4 +126,5 @@ Partial Class frmProjectEditSettings
     Friend WithEvents invoices As CheckBox
     Friend WithEvents newCalculation As CheckBox
     Friend WithEvents AdjustResourceNeeds As CheckBox
+    Friend WithEvents allowOverUtilization As CheckBox
 End Class
