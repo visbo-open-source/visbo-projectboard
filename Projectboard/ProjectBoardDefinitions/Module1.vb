@@ -6607,23 +6607,26 @@ Public Module Module1
         End If
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs", "Revenue"}
+            repmsg = {"Invoices / Expected Benefits", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs", "Revenue"}
         Else
-            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten", "Zahlungseingänge"}
+            repmsg = {"Geldzufluss / erwarteter Nutzen", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten", "Zahlungseingänge"}
         End If
 
 
 
 
-        Dim txtPKI(6) As String
+        Dim txtPKI(5) As String
 
-        txtPKI(0) = repmsg(0) ' Budget
+        ' tk 20.3.23 , instead of budget show sum of invoices / benefits 
+
+        txtPKI(0) = repmsg(0) ' Geldzufluss / Nutzen 
         txtPKI(1) = repmsg(1) ' Personalkosten
         txtPKI(2) = repmsg(2) ' Sonstige Kosten
         txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
         txtPKI(4) = repmsg(4) ' int. Personalkosten
         txtPKI(5) = repmsg(5) ' ext. PErsonalkosten 
-        txtPKI(6) = repmsg(6) ' Zahlungseingänge
+        ' not any more necessary , .erloes is identical to geldzufluss  
+        'txtPKI(6) = repmsg(6) ' Zahlungseingänge
 
         Dim curValue As Double = -1.0 ' not defined
         Dim faprValue As Double = -1.0 ' first approved version 
@@ -6799,27 +6802,30 @@ Public Module Module1
                     Dim laprPKI() As Double = {-1, -1, -1, -1, -1, -1, -1}
 
 
-                    curPKI(0) = trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum
+                    'curPKI(0) = trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum
+                    curPKI(0) = trimToShowTimeRange(hproj.getInvoicesPenalties, hproj.Start).Sum
                     curPKI(1) = trimToShowTimeRange(hproj.getAllPersonalKosten, hproj.Start).Sum
                     curPKI(2) = trimToShowTimeRange(hproj.getGesamtAndereKosten, hproj.Start).Sum
                     curPKI(3) = curPKI(0) - (curPKI(1) + curPKI(2))
-                    curPKI(6) = trimToShowTimeRange(hproj.getInvoicesPenalties, hproj.Start).Sum
+                    'curPKI(6) = trimToShowTimeRange(hproj.getInvoicesPenalties, hproj.Start).Sum
 
 
                     If considerFapr Then
-                        faprPKI(0) = trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum
+                        'faprPKI(0) = trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum
+                        faprPKI(0) = trimToShowTimeRange(bproj.getInvoicesPenalties, bproj.Start).Sum
                         faprPKI(1) = trimToShowTimeRange(bproj.getAllPersonalKosten, bproj.Start).Sum
                         faprPKI(2) = trimToShowTimeRange(bproj.getGesamtAndereKosten, bproj.Start).Sum
                         faprPKI(3) = faprPKI(0) - (faprPKI(1) + faprPKI(2))
-                        faprPKI(6) = trimToShowTimeRange(bproj.getInvoicesPenalties, bproj.Start).Sum
+                        'faprPKI(6) = trimToShowTimeRange(bproj.getInvoicesPenalties, bproj.Start).Sum
                     End If
 
                     If considerLapr And Not reducedTable Then
-                        laprPKI(0) = trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum
+                        'laprPKI(0) = trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum
+                        laprPKI(0) = trimToShowTimeRange(lproj.getInvoicesPenalties, lproj.Start).Sum
                         laprPKI(1) = trimToShowTimeRange(lproj.getAllPersonalKosten, lproj.Start).Sum
                         laprPKI(2) = trimToShowTimeRange(lproj.getGesamtAndereKosten, lproj.Start).Sum
                         laprPKI(3) = laprPKI(0) - (laprPKI(1) + laprPKI(2))
-                        laprPKI(6) = trimToShowTimeRange(lproj.getInvoicesPenalties, lproj.Start).Sum
+                        'laprPKI(6) = trimToShowTimeRange(lproj.getInvoicesPenalties, lproj.Start).Sum
                     End If
 
 
@@ -6842,12 +6848,12 @@ Public Module Module1
                         End If
 
                         ' schreibe Zahlungseingänge
-                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(6), faprPKI(6), laprPKI(6), curPKI(6),
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(0), faprPKI(0), laprPKI(0), curPKI(0),
                                                               considerFapr, considerLapr)
                         tabelle.Rows.Add()
                         tabellenzeile = tabellenzeile + 1
 
-                        ' schreibe Budget 
+                        ' schreibe Geldeingang / Benefit 
                         Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(0), faprPKI(0), laprPKI(0), curPKI(0),
                                                               considerFapr, considerLapr)
                         tabelle.Rows.Add()
@@ -6875,12 +6881,12 @@ Public Module Module1
                     Else
                         ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
                         ' schreibe Zahlungseingänge
-                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(6), faprPKI(6), laprPKI(6), curPKI(6),
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(0), faprPKI(0), laprPKI(0), curPKI(0),
                                                               considerFapr, considerLapr)
                         tabelle.Rows.Add()
                         tabellenzeile = tabellenzeile + 1
 
-                        For i = 0 To 3
+                        For i = 1 To 3
                             Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
                                                               considerFapr, considerLapr)
                             tabelle.Rows.Add()
@@ -7267,18 +7273,11 @@ Public Module Module1
         Dim repmsg() As String
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs", "Revenue"}
+            repmsg = {"Invoices / Expected Benefits", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs", "Revenue"}
         Else
-            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten", "Zahlungseingänge"}
+            repmsg = {"Geldzufluss / erwarteter Nutzen", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten", "Zahlungseingänge"}
         End If
 
-
-        ' old seit 28.05.20 
-        'If awinSettings.englishLanguage Then
-        '    repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
-        'Else
-        '    repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
-        'End If
 
         Dim roleBezeichner As String = ""
 
