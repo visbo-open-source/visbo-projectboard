@@ -32,7 +32,7 @@ Partial Class frmProjPortfolioAdmin
         Me.txtBoxVariantName = New System.Windows.Forms.TextBox()
         Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
-        Me.storeToDBasWell = New System.Windows.Forms.CheckBox()
+        Me.storeToDBOrClearSession = New System.Windows.Forms.CheckBox()
         Me.backToInit = New System.Windows.Forms.PictureBox()
         Me.onlyInactive = New System.Windows.Forms.PictureBox()
         Me.onlyActive = New System.Windows.Forms.PictureBox()
@@ -68,7 +68,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Panel1.Controls.Add(Me.txtBoxVariantName)
         Me.Panel1.Controls.Add(Me.chkbxPermanent)
         Me.Panel1.Controls.Add(Me.requiredDate)
-        Me.Panel1.Controls.Add(Me.storeToDBasWell)
+        Me.Panel1.Controls.Add(Me.storeToDBOrClearSession)
         Me.Panel1.Controls.Add(Me.backToInit)
         Me.Panel1.Controls.Add(Me.onlyInactive)
         Me.Panel1.Controls.Add(Me.onlyActive)
@@ -139,14 +139,14 @@ Partial Class frmProjPortfolioAdmin
         '
         'storeToDBasWell
         '
-        Me.storeToDBasWell.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.storeToDBasWell.AutoSize = True
-        Me.storeToDBasWell.Location = New System.Drawing.Point(230, 546)
-        Me.storeToDBasWell.Name = "storeToDBasWell"
-        Me.storeToDBasWell.Size = New System.Drawing.Size(96, 17)
-        Me.storeToDBasWell.TabIndex = 89
-        Me.storeToDBasWell.Text = "store to VISBO"
-        Me.storeToDBasWell.UseVisualStyleBackColor = True
+        Me.storeToDBOrClearSession.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.storeToDBOrClearSession.AutoSize = True
+        Me.storeToDBOrClearSession.Location = New System.Drawing.Point(230, 546)
+        Me.storeToDBOrClearSession.Name = "storeToDBasWell"
+        Me.storeToDBOrClearSession.Size = New System.Drawing.Size(96, 17)
+        Me.storeToDBOrClearSession.TabIndex = 89
+        Me.storeToDBOrClearSession.Text = "store to VISBO"
+        Me.storeToDBOrClearSession.UseVisualStyleBackColor = True
         '
         'backToInit
         '
@@ -335,7 +335,7 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents Panel1 As Windows.Forms.Panel
     Friend WithEvents chkbxPermanent As Windows.Forms.CheckBox
     Friend WithEvents requiredDate As Windows.Forms.DateTimePicker
-    Friend WithEvents storeToDBasWell As Windows.Forms.CheckBox
+    Friend WithEvents storeToDBOrClearSession As Windows.Forms.CheckBox
     Friend WithEvents backToInit As Windows.Forms.PictureBox
     Friend WithEvents onlyInactive As Windows.Forms.PictureBox
     Friend WithEvents onlyActive As Windows.Forms.PictureBox
