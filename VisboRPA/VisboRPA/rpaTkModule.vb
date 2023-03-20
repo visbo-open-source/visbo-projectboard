@@ -1721,7 +1721,7 @@ Module rpaTkModule
 
             Call logger(ptErrLevel.logInfo, "starting with Data Quality Check for projects of Portfolio " & jobParameters.portfolioName, " start of Operation ... ")
 
-            Call writeDataQualityCheck(jobParameters.portfolioName, myTemplate:=jobParameters.templateName)
+            Call writeDataQualityCheck(jobParameters.portfolioName, myTemplate:=jobParameters.templateName, msNames:=phMsParameters.milestones, phNames:=phMsParameters.phases)
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "Calling Quality Check File", ex.Message)
             result = False
@@ -3291,7 +3291,7 @@ Module rpaTkModule
         End If
 
         ' needs to be parameterized  
-        Dim myPreferredPortfolioToName As String = "Portfolio active projects"
+        Dim myPreferredPortfolioToName As String = "BHTC Active Projects"
         Dim pfTimeStamp As Date
         Dim myPreferredPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myPreferredPortfolioToName, tmpVPID, pfTimeStamp, err, variantName:="", storedAtOrBefore:=heute)
 
@@ -3362,21 +3362,22 @@ Module rpaTkModule
                 CType(ws.Cells(zeile, 10), xlns.Range).AddComment("the Name of the template used to compare the current plan structure ")
 
                 ws.Cells(zeile, 11).value = "contains standard-Elements"
-                ws.Cells(zeile, 12).value = "Max Occurrence"
+                ws.Cells(zeile, 12).value = "Missing Names"
+                ws.Cells(zeile, 13).value = "Max Occurrence"
 
-                ws.Cells(zeile, 13).value = "%Done Quality"
+                ws.Cells(zeile, 14).value = "%Done Quality"
                 CType(ws.Cells(zeile, 11), xlns.Range).AddComment("how many published plan-elements with a date < last publish date do have 100%-Done attribute?")
 
-                ws.Cells(zeile, 14).value = "last Publish"
+                ws.Cells(zeile, 15).value = "last Publish"
                 CType(ws.Cells(zeile, 12), xlns.Range).AddComment("when was the last VISBO publish / store of schedules, resources, deliverables of the project")
 
-                ws.Cells(zeile, 15).value = "Comparability Index"
+                ws.Cells(zeile, 16).value = "Comparability Index"
                 CType(ws.Cells(zeile, 13), xlns.Range).AddComment("when was the last VISBO publish / modification of the project")
 
-                ws.Cells(zeile, 16).value = "is Part of Portfolio"
+                ws.Cells(zeile, 17).value = "is Part of Portfolio"
                 CType(ws.Cells(zeile, 14), xlns.Range).AddComment("first found portfolio the project is in (Name=<test dataquality> is not considered")
 
-                ws.Cells(zeile, 17).value = "is Part of other Portfolios"
+                ws.Cells(zeile, 18).value = "is Part of other Portfolios"
                 CType(ws.Cells(zeile, 15), xlns.Range).AddComment("other portfolios containing the project")
 
 
@@ -3459,8 +3460,21 @@ Module rpaTkModule
                                 Dim multipleOccurences As New Collection
                                 Dim containsStdElemKPI As Double = hproj.containsStdElemKPI(msNames, phNames, maxOccurrences, missingNames, multipleOccurences)
                                 ws.Cells(zeile, 11).value = containsStdElemKPI.ToString("0.0%")
-                                ws.Cells(zeile, 12).value = maxOccurrences.ToString
+
                                 ' call logger ...
+
+                                Dim missingNamesString As String = ""
+                                For Each missingN As String In missingNames
+                                    If missingNamesString = "" Then
+                                        missingNamesString = missingN
+                                    Else
+                                        missingNamesString = missingNamesString & "; " & missingN
+                                    End If
+                                Next
+
+                                ws.Cells(zeile, 12).value = missingNamesString
+                                ws.Cells(zeile, 13).value = maxOccurrences.ToString
+
                                 If missingNames.Count > 0 Then
                                     Call logger(ptErrLevel.logInfo, "missingNames " & hproj.name, missingNames)
                                 End If
@@ -3470,30 +3484,32 @@ Module rpaTkModule
                             Else
                                 ws.Cells(zeile, 11).value = "n.a"
                                 ws.Cells(zeile, 12).value = "n.a"
+                                ws.Cells(zeile, 13).value = "n.a"
                             End If
 
 
                         Catch ex As Exception
+                            ws.Cells(zeile, 11).value = "?"
                             ws.Cells(zeile, 12).value = "?"
-                            ws.Cells(zeile, 12).value = ""
+                            ws.Cells(zeile, 13).value = "?"
                         End Try
 
                         ' check the %-Done Quality of Past Elements : Past meaning elements before hproj.timestamp
                         Try
                             Dim doneQualityKPI As Double = hproj.getdoneQualityKPI()
                             If doneQualityKPI >= 0 Then
-                                ws.Cells(zeile, 13).value = doneQualityKPI.ToString("0.0%")
+                                ws.Cells(zeile, 14).value = doneQualityKPI.ToString("0.0%")
                             Else
-                                ws.Cells(zeile, 13).value = "n.a"
+                                ws.Cells(zeile, 14).value = "n.a"
                             End If
 
                         Catch ex As Exception
-                            ws.Cells(zeile, 13).value = "?"
+                            ws.Cells(zeile, 14).value = "?"
                         End Try
 
 
                         ' Check the last publish - again an indicator of how reliable data is ... 
-                        ws.Cells(zeile, 14).value = hproj.timeStamp
+                        ws.Cells(zeile, 15).value = hproj.timeStamp
 
                         'check the Comparability Index: keep the current and compare with former versions. How many elements of former versions are in current version ? 
                         Try
@@ -3516,11 +3532,11 @@ Module rpaTkModule
                                 compareVersion = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
                             Loop
 
-                            CType(ws.Cells(zeile, 15), xlns.Range).AddComment(timeStampString)
-                            CType(ws.Cells(zeile, 15), xlns.Range).Value = "'" & resultString
+                            CType(ws.Cells(zeile, 16), xlns.Range).AddComment(timeStampString)
+                            CType(ws.Cells(zeile, 16), xlns.Range).Value = "'" & resultString
 
                         Catch ex As Exception
-                            Call logger(ptErrLevel.logError, "Write Column 15  ", ex.Message)
+                            Call logger(ptErrLevel.logError, "Write Column 16  ", ex.Message)
                         End Try
 
 
@@ -3573,8 +3589,8 @@ Module rpaTkModule
 
                             Next
 
-                            ws.Cells(zeile, 16).value = containedIn
-                            ws.Cells(zeile, 17).value = containedAlsoIn
+                            ws.Cells(zeile, 17).value = containedIn
+                            ws.Cells(zeile, 18).value = containedAlsoIn
                         Catch ex As Exception
 
                         End Try

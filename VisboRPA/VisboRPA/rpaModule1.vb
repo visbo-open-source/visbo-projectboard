@@ -866,6 +866,7 @@ Module rpaModule1
 
         Try
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
                 Dim outputCollection As New Collection
                 Dim hproj As clsProjekt = Nothing
                 Dim Err As New clsErrorCodeMsg
@@ -5006,8 +5007,10 @@ Module rpaModule1
                             Dim vpID As String = ""
 
                             Dim check1 As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, currentVariantName, Date.Now, err)
+                            ' only valid if there does not yet exist any baseline
+                            Dim check2 As Boolean = Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, "pfv", Date.Now, err)
 
-                            If check1 Then
+                            If check1 And check2 Then
                                 ' add check: if a baseline already exists: the baselineDate has to be later than the last baseline
                                 Dim history As clsProjektHistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(currentProjectName, currentVariantName, StartofCalendar, Date.Now, err)
 
@@ -5142,7 +5145,8 @@ Module rpaModule1
                                             Call logger(ptErrLevel.logError, "Project Copy did not produce identical versions, no actions taken", currentProjectName)
                                         End If
 
-
+                                    Else
+                                        Call logger(ptErrLevel.logError, "There is no version at or before  ", baselineDate.ToString)
                                     End If
 
                                 Else
@@ -5150,7 +5154,13 @@ Module rpaModule1
                                 End If
 
                             Else
-                                Call logger(ptErrLevel.logError, "Projekt existiert nicht:  ", currentProjectName)
+                                If Not check1 Then
+                                    Call logger(ptErrLevel.logError, "Project does not exist:  ", currentProjectName)
+                                End If
+
+                                If Not check2 Then
+                                    Call logger(ptErrLevel.logError, "Project Baseline already exists ", currentProjectName)
+                                End If
                             End If
 
 
