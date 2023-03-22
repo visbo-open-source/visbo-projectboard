@@ -645,10 +645,28 @@ Module rpaTkModule
                         Case PTRpa.visboDataQualityCheck
 
                             If blattName = "Data Quality Check" Then
-                                result.portfolioName = CStr(.Cells(1, 2).value).Trim
-                                result.templateName = CStr(.Cells(2, 2).value).Trim
+
+                                If Not IsNothing(.Cells(1, 2).value) Then
+                                    result.portfolioName = CStr(.Cells(1, 2).value).Trim
+                                Else
+                                    result.portfolioName = ""
+                                End If
+
+                                If Not IsNothing(.Cells(2, 2).value) Then
+                                    result.portfolioVariantName = CStr(.Cells(2, 2).value).Trim
+                                Else
+                                    result.portfolioVariantName = ""
+                                End If
+
+                                If Not IsNothing(.Cells(3, 2).value) Then
+                                    result.templateName = CStr(.Cells(3, 2).value).Trim
+                                Else
+                                    result.templateName = ""
+                                End If
+
 
                             ElseIf blattName = "Parameters" Then
+
                                 Dim lastMsRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
                                 Dim lastPhRow As Integer = CType(.Cells(2000, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
 
@@ -656,7 +674,12 @@ Module rpaTkModule
                                 ' read all Milestone Names
                                 While zeile <= lastMsRow
 
-                                    Dim msName As String = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                    Dim msName As String = ""
+                                    If Not IsNothing(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                        msName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                    Else
+                                        msName = ""
+                                    End If
 
                                     Try
                                         If msName.Trim <> "" Then
@@ -673,7 +696,12 @@ Module rpaTkModule
                                 ' read all PhaseName
                                 While zeile <= lastPhRow
 
-                                    Dim phName As String = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                    Dim phName As String = ""
+                                    If Not IsNothing(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                        phName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                    Else
+                                        phName = ""
+                                    End If
 
                                     Try
                                         If phName.Trim <> "" Then
@@ -1719,9 +1747,14 @@ Module rpaTkModule
             Dim jobParameters As clsJobParameters = getJobParameters("Data Quality Check", myKennung)
             Dim phMsParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
 
-            Call logger(ptErrLevel.logInfo, "starting with Data Quality Check for projects of Portfolio " & jobParameters.portfolioName, " start of Operation ... ")
+            msgTxt = jobParameters.portfolioName
+            If jobParameters.portfolioVariantName <> "" Then
+                msgTxt = msgTxt & " (" & jobParameters.portfolioVariantName & ")"
+            End If
+            Call logger(ptErrLevel.logInfo, "starting with Data Quality Check for projects of Portfolio " & msgTxt, " start of Operation ... ")
 
-            Call writeDataQualityCheck(jobParameters.portfolioName, myTemplate:=jobParameters.templateName, msNames:=phMsParameters.milestones, phNames:=phMsParameters.phases)
+            Call writeDataQualityCheck(jobParameters.portfolioName, myPortfolioVName:=jobParameters.portfolioVariantName,
+                                       myTemplate:=jobParameters.templateName, msNames:=phMsParameters.milestones, phNames:=phMsParameters.phases)
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "Calling Quality Check File", ex.Message)
             result = False
@@ -3291,9 +3324,10 @@ Module rpaTkModule
         End If
 
         ' needs to be parameterized  
-        Dim myPreferredPortfolioToName As String = "BHTC Active Projects"
+        Dim myPreferredPortfolioToName As String = myActivePortfolio
         Dim pfTimeStamp As Date
         Dim myPreferredPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myPreferredPortfolioToName, tmpVPID, pfTimeStamp, err, variantName:="", storedAtOrBefore:=heute)
+        Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myPortfolioName, tmpVPID, pfTimeStamp, err, variantName:=myPortfolioVName, storedAtOrBefore:=heute)
 
         Dim reportWB As xlns.Workbook = Nothing
 
@@ -3306,9 +3340,8 @@ Module rpaTkModule
         Dim myConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(heute, err)
 
 
-        If myConstellations.Contains(pvName) And Not IsNothing(compareTemplate) Then
+        If Not IsNothing(myConstellation) And Not IsNothing(compareTemplate) Then
 
-            Dim myConstellation As clsConstellation = myConstellations.getConstellation(myPortfolioName, myPortfolioVName)
             ' if successful: create / open Excel Export File 
 
             expFName = logfileFolder & "\" & "Quality Check " & myConstellation.constellationName & ".xlsx"
@@ -3362,23 +3395,31 @@ Module rpaTkModule
                 CType(ws.Cells(zeile, 10), xlns.Range).AddComment("the Name of the template used to compare the current plan structure ")
 
                 ws.Cells(zeile, 11).value = "contains standard-Elements"
+                CType(ws.Cells(zeile, 11), xlns.Range).AddComment(" to which percentage standard names do exist in the current plan?")
+
                 ws.Cells(zeile, 12).value = "Missing Names"
+                CType(ws.Cells(zeile, 12), xlns.Range).AddComment("which standard names are missing? ")
+
                 ws.Cells(zeile, 13).value = "Max Occurrence"
+                CType(ws.Cells(zeile, 13), xlns.Range).AddComment("max count of occurrences of any standard name")
 
                 ws.Cells(zeile, 14).value = "%Done Quality"
-                CType(ws.Cells(zeile, 11), xlns.Range).AddComment("how many published plan-elements with a date < last publish date do have 100%-Done attribute?")
+                CType(ws.Cells(zeile, 14), xlns.Range).AddComment("how many published plan-elements with a date < last publish date do have 100%-Done attribute?")
 
                 ws.Cells(zeile, 15).value = "last Publish"
-                CType(ws.Cells(zeile, 12), xlns.Range).AddComment("when was the last VISBO publish / store of schedules, resources, deliverables of the project")
+                CType(ws.Cells(zeile, 15), xlns.Range).AddComment("when was the last VISBO publish / store of schedules, resources, deliverables of the project")
 
-                ws.Cells(zeile, 16).value = "Comparability Index"
-                CType(ws.Cells(zeile, 13), xlns.Range).AddComment("when was the last VISBO publish / modification of the project")
+                ws.Cells(zeile, 16).value = "Comparability Index Project Versions"
+                CType(ws.Cells(zeile, 16), xlns.Range).AddComment("checks the similarity between former versions and current project version; 100%: all names of former version are existing in current version")
 
-                ws.Cells(zeile, 17).value = "is Part of Portfolio"
-                CType(ws.Cells(zeile, 14), xlns.Range).AddComment("first found portfolio the project is in (Name=<test dataquality> is not considered")
+                ws.Cells(zeile, 17).value = "Comparability Index Baseline vs current Plan Version"
+                CType(ws.Cells(zeile, 17), xlns.Range).AddComment("checks the similarity between baseline and current project version; 100%: all names of baseline are existing in current version")
 
-                ws.Cells(zeile, 18).value = "is Part of other Portfolios"
-                CType(ws.Cells(zeile, 15), xlns.Range).AddComment("other portfolios containing the project")
+                ws.Cells(zeile, 18).value = "is Part of Portfolio"
+                CType(ws.Cells(zeile, 18), xlns.Range).AddComment("first found portfolio the project is in (Name=<test dataquality> is not considered")
+
+                ws.Cells(zeile, 19).value = "is Part of other Portfolios"
+                CType(ws.Cells(zeile, 19), xlns.Range).AddComment("other portfolios containing the project")
 
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
@@ -3512,6 +3553,7 @@ Module rpaTkModule
                         ws.Cells(zeile, 15).value = hproj.timeStamp
 
                         'check the Comparability Index: keep the current and compare with former versions. How many elements of former versions are in current version ? 
+
                         Try
                             Dim resultString As String = ""
                             Dim timeStampString As String = ""
@@ -3539,9 +3581,30 @@ Module rpaTkModule
                             Call logger(ptErrLevel.logError, "Write Column 16  ", ex.Message)
                         End Try
 
-
+                        ' now check the comparability index between Project and baseline ... 
                         Try
-                            ' now check in which portfolio that project is in 
+                            Dim resultString As String = "n.a"
+                            Dim commentString As String = "no baseline to compare with"
+                            Dim lookForTimeStamp As Date = Date.Now
+                            Dim compareVersion As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, ptVariantFixNames.pfv.ToString, hproj.vpID, lookForTimeStamp, err)
+
+                            If Not IsNothing(compareVersion) Then
+                                commentString = compareVersion.timeStamp.ToShortDateString
+                                resultString = hproj.getCompareKPI(compareVersion).ToString("00%")
+                            End If
+
+
+                            CType(ws.Cells(zeile, 17), xlns.Range).AddComment(commentString)
+                            CType(ws.Cells(zeile, 17), xlns.Range).Value = "'" & resultString
+
+                        Catch ex As Exception
+                            Call logger(ptErrLevel.logError, "Write Column 17  ", ex.Message)
+                        End Try
+
+
+                        ' now check in which portfolio that project is in 
+                        Try
+
                             'ws.Cells(zeile, 12).value = "is Part of Portfolio"
                             'ws.Cells(zeile, 13).value = "is Part of other Portfolios"
                             Dim containedIn As String = ""
@@ -3589,8 +3652,8 @@ Module rpaTkModule
 
                             Next
 
-                            ws.Cells(zeile, 17).value = containedIn
-                            ws.Cells(zeile, 18).value = containedAlsoIn
+                            ws.Cells(zeile, 18).value = containedIn
+                            ws.Cells(zeile, 19).value = containedAlsoIn
                         Catch ex As Exception
 
                         End Try
@@ -3606,9 +3669,17 @@ Module rpaTkModule
             End If
 
         Else
-            Dim msgTxt As String = "Load Portfolio " & myPortfolioName & " failed .."
-            Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
-            allOK = False
+            If IsNothing(myConstellation) Then
+                Dim msgTxt As String = "Load Portfolio " & myPortfolioName
+                Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
+                allOK = False
+            End If
+
+            If IsNothing(compareTemplate) Then
+                Dim msgTxt As String = "Reference Template " & myTemplate & " does not exist  .."
+                Call logger(ptErrLevel.logError, "Get Reference Template " & myActivePortfolio, " failed ..")
+                allOK = False
+            End If
         End If
 
 
