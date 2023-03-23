@@ -18131,6 +18131,88 @@ Public Module Projekte
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Ressourcen")
         End Try
 
+        ' ----------------------------------------------------------------------------- 
+        ' hier werden die Umsatz/Nutzen und Strafzahlungen geschrieben 
+        ' 
+        Try
+            Dim umsatzWs As Excel.Worksheet = Nothing
+            Try
+                umsatzWs = CType(appInstance.ActiveWorkbook.Worksheets("Umsatz"), Excel.Worksheet)
+            Catch ex As Exception
+                umsatzWs = Nothing
+            End Try
+
+            If IsNothing(umsatzWs) Then
+                ' create the Sheet
+                umsatzWs = CType(appInstance.ActiveWorkbook.Worksheets.Add(), Excel.Worksheet)
+                umsatzWs.Name = "Umsatz"
+
+                With umsatzWs
+                    .Cells(1, 1).value = "Element Name-ID"
+                    .Cells(1, 2).value = "Umsatz / Benefit (T€)"
+                    .Cells(1, 3).value = "Zahlungsziel (in Tagen)"
+                    .Cells(1, 4).value = "Strafzahlung"
+                    .Cells(1, 5).value = "bei Termin später als"
+                End With
+            End If
+
+            With umsatzWs
+
+                .Unprotect(Password:="x")
+
+                rng = CType(.Range(.Cells(2, 1), .Cells(10000, 100)), Excel.Range)
+                rng.Clear()
+
+                Dim invoiceZeile As Integer = 2
+                For Each cphase As clsPhase In hproj.AllPhases
+
+                    If cphase.invoice.Key > 0 Or cphase.penalty.Value > 0 Then
+                        ' jetzt schreiben
+                        .Cells(invoiceZeile, 1).value = cphase.nameID
+
+                        If cphase.invoice.Key > 0 Then
+                            .Cells(invoiceZeile, 2).value = cphase.invoice.Key
+                            .Cells(invoiceZeile, 3).value = cphase.invoice.Value
+                        End If
+
+                        If cphase.penalty.Value > 0 Then
+                            .Cells(invoiceZeile, 4).value = cphase.penalty.Value
+                            .Cells(invoiceZeile, 5).value = cphase.penalty.Key
+
+                        End If
+
+                        invoiceZeile = invoiceZeile + 1
+                    End If
+
+                    For Each ms As clsMeilenstein In cphase.meilensteinListe
+                        If ms.invoice.Key > 0 Or ms.penalty.Value > 0 Then
+                            ' jetzt schreiben
+                            .Cells(invoiceZeile, 1).value = ms.name
+
+                            If ms.invoice.Key > 0 Then
+                                .Cells(invoiceZeile, 2).value = ms.invoice.Key
+                                .Cells(invoiceZeile, 3).value = ms.invoice.Value
+                            End If
+
+                            If ms.penalty.Value > 0 Then
+                                .Cells(invoiceZeile, 4).value = ms.penalty.Value
+                                .Cells(invoiceZeile, 5).value = ms.penalty.Key
+                            End If
+
+                            invoiceZeile = invoiceZeile + 1
+                        End If
+                    Next
+
+                Next
+
+            End With
+
+
+        Catch ex As Exception
+
+        End Try
+
+
         ' --------------------------------------------------
         ' jetzt werden die Settings in das unsichtbare Worksheet ("Settings") geschrieben 
         '

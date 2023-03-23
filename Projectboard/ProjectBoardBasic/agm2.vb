@@ -5776,7 +5776,8 @@ Public Module agm2
                     Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
 
                     If outputCollection.Count > 0 Then
-                        showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "")
+                        Call logger(ptErrLevel.logError, "Ressourcenbedarfe lesen", outputCollection)
+                        'showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "")
                     End If
 
                 Catch ex As Exception
@@ -5789,6 +5790,35 @@ Public Module agm2
             ' ------------------------------------------------------------------
             '   Ende Einlesen Ressourcen
             ' -------------------------------------------------------------------
+
+
+            ' ------------------------------------------------------------------
+            ' Einlesen Invoices und Penalties
+            ' ------------------------------------------------------------------
+            Dim wsUmsatz As Excel.Worksheet = Nothing
+
+            Try
+                wsUmsatz = CType(appInstance.ActiveWorkbook.Worksheets("Umsatz"),
+                                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+                If Not IsNothing(wsUmsatz) Then
+                    Dim outputCollection As New Collection
+                    Call readVISBOInvoicesPenalties(wsUmsatz, outputCollection, hproj)
+
+                    If outputCollection.Count > 0 Then
+                        Call logger(ptErrLevel.logError, "Umsatz lesen", outputCollection)
+                    End If
+                End If
+            Catch ex As Exception
+                wsUmsatz = Nothing
+
+            End Try
+
+            ' ------------------------------------------------------------------
+            ' ENDE Einlesen Invoices und Penalties
+            ' ------------------------------------------------------------------
+
 
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy " & ex.Message, hproj.name, anzFehler)
@@ -8261,6 +8291,152 @@ Public Module agm2
 
 
     End Sub
+
+    Public Sub readVISBOInvoicesPenalties(ByVal ws As Excel.Worksheet, ByRef outputCollection As Collection, ByRef hproj As clsProjekt)
+
+        Dim firstRow As Integer = 2
+        Dim lastRow As Integer = CType(ws.Cells(40000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+        Dim logmsg As String = ""
+
+        Dim planElement As String
+        Dim invoice As Double
+        Dim zahlungsziel As Integer
+        Dim penalty As Double
+        Dim penaltyDate As Date
+        ' With umsatzWs
+        '1. Spalte: Element Name
+        '2. Spalte: Umsatz / Benefit (T€)
+        '3. Spalte: Zahlungsziel (in Tagen)
+        '4. Spalte: Strafzahlung
+        '5. Spalte: bei Termin später als
+
+        For iz As Integer = firstRow To lastRow
+            Try
+                If Not IsNothing(CType(ws.Cells(iz, 1), Excel.Range).Value) Then
+                    planElement = CStr(CType(ws.Cells(iz, 1), Excel.Range).Value).Trim
+                Else
+                    planElement = ""
+                End If
+
+                If planElement = "." Then
+                    planElement = rootPhaseName
+                End If
+
+            Catch ex As Exception
+                planElement = ""
+            End Try
+
+            If planElement <> "" Then
+                Try
+                    If Not IsNothing(CType(ws.Cells(iz, 2), Excel.Range).Value) Then
+                        invoice = CDbl(CType(ws.Cells(iz, 2), Excel.Range).Value)
+                    Else
+                        invoice = 0.0
+                    End If
+                Catch ex As Exception
+                    logmsg = "wrong invoice in " & iz & ",2 "
+                    outputCollection.Add(logmsg)
+                    invoice = 0.0
+                End Try
+
+
+                Try
+                    If Not IsNothing(CType(ws.Cells(iz, 3), Excel.Range).Value) Then
+                        zahlungsziel = CInt(CType(ws.Cells(iz, 3), Excel.Range).Value)
+                    Else
+                        zahlungsziel = 0
+                    End If
+                Catch ex As Exception
+                    logmsg = "wrong terms of payment in " & iz & ",3 "
+                    outputCollection.Add(logmsg)
+                    zahlungsziel = 0
+                End Try
+
+                Try
+                    If Not IsNothing(CType(ws.Cells(iz, 4), Excel.Range).Value) Then
+                        penalty = CDbl(CType(ws.Cells(iz, 4), Excel.Range).Value)
+                    Else
+                        penalty = 0.0
+                    End If
+                Catch ex As Exception
+                    logmsg = "wrong penalty in " & iz & ",4 "
+                    outputCollection.Add(logmsg)
+                    penalty = 0.0
+                End Try
+
+                Try
+                    If penalty <> 0 Then
+                        If Not IsNothing(CType(ws.Cells(iz, 5), Excel.Range).Value) Then
+                            penaltyDate = CDate(CType(ws.Cells(iz, 5), Excel.Range).Value)
+                        Else
+                            penaltyDate = Date.MaxValue
+                        End If
+                    End If
+
+                Catch ex As Exception
+                    logmsg = "wrong penalty Date in " & iz & ",5 "
+                    outputCollection.Add(logmsg)
+                    penaltyDate = Date.MaxValue
+                End Try
+
+                Dim cPhase As clsPhase = Nothing
+                Dim ms As clsMeilenstein = Nothing
+                Dim isMilestone As Boolean = False
+                Dim ok As Boolean = False
+
+                If istElemID(planElement) Then
+                    isMilestone = elemIDIstMeilenstein(planElement)
+                    If isMilestone Then
+                        ms = hproj.getMilestoneByID(planElement)
+                    Else
+                        cPhase = hproj.getPhaseByID(planElement)
+                    End If
+
+                Else
+                    ' user did a input just by name 
+                    cPhase = hproj.getPhase(planElement)
+                    If IsNothing(cPhase) Then
+                        ms = hproj.getMilestone(planElement)
+                    End If
+                End If
+
+                ok = Not IsNothing(ms) Or Not IsNothing(cPhase)
+
+                If ok Then
+                    If Not IsNothing(cPhase) Then
+                        If invoice > 0 Then
+                            Dim invKvp As New KeyValuePair(Of Double, Integer)(invoice, zahlungsziel)
+                            cPhase.invoice = invKvp
+                        End If
+
+                        If penalty > 0 And penaltyDate < Date.MaxValue Then
+                            Dim penkvp As New KeyValuePair(Of Date, Double)(penaltyDate, penalty)
+                            cPhase.penalty = penkvp
+                        End If
+
+                    ElseIf Not IsNothing(ms) Then
+                        If invoice > 0 Then
+                            Dim invKvp As New KeyValuePair(Of Double, Integer)(invoice, zahlungsziel)
+                            ms.invoice = invKvp
+                        End If
+
+                        If penalty > 0 And penaltyDate < Date.MaxValue Then
+                            Dim penkvp As New KeyValuePair(Of Date, Double)(penaltyDate, penalty)
+                            ms.penalty = penkvp
+                        End If
+                    End If
+                Else
+                    logmsg = "element not found " & planElement
+                    outputCollection.Add(logmsg)
+                End If
+
+            End If
+
+
+        Next
+
+    End Sub
+
 
     ''' <summary>
     ''' gemacht um eine Tabelle mit Ressourcen Angaben einzulesen ...
