@@ -288,6 +288,7 @@ Public Class Tabelle3
 
                                     ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
                                     Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+                                    Dim offsetChange As Long = DateDiff(DateInterval.Day, cphase.getStartDate.Date, newStartDate.Date)
                                     Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
                                     Dim autoAdjustChilds As Boolean = True
 
@@ -304,7 +305,7 @@ Public Class Tabelle3
                                     ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
 
                                     Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
-                                    cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+                                    cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds, offsetChange)
 
                                     ' tk 4.1.20 eigentlich braucht man das hier nicht mehr ... 
                                     'Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
@@ -314,7 +315,7 @@ Public Class Tabelle3
                                     'End If
 
                                     ' jetzt werden die Excel Zeilen aktualisiert 
-                                    If autoAdjustChilds And nameIDCollection.Count > 0 Then
+                                    If nameIDCollection.Count > 0 Then
                                         ' 
                                         Try
                                             Dim currentChildRow As Integer = Target.Row + 1

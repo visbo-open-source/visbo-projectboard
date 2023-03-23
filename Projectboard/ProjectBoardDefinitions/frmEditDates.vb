@@ -2,6 +2,7 @@
     Public IsMilestone As Boolean = False
     Public allowedDateLeft As Date
     Public allowedDateRight As Date
+    Public maxPossibleStartDate As Date
 
     Private Sub frmEditDates_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -10,6 +11,8 @@
         If visboClient = divClients(client.VisboSPE) Then
             chkbx_adjustChilds.Visible = False
             chkbxAutoDistr.Visible = False
+        Else
+            awinSettings.autoAjustChilds = chkbx_adjustChilds.Checked
         End If
 
         If allowedDateLeft > Date.MinValue Then
@@ -64,15 +67,40 @@
             End If
         Else
             ' es handelt sich um eine Phase
-            If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
-                allIsOk = True
-            Else
-                Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
-                If awinSettings.englishLanguage Then
-                    errMsg = "end-date should be later or equal to start-date ..."
+
+            If visboClient = divClients(client.VisboSPE) Then
+                If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+                    If Not IsNothing(maxPossibleStartDate) And DateDiff(DateInterval.Day, CDate(maxPossibleStartDate), CDate(startdatePicker.Value)) <= 0 Then
+
+                        allIsOk = True
+                    Else
+                        Dim errMsg As String = "Start-Datum darf nicht nach dem Start-Datum der untergeordneten Phase liegen ..."
+                        If awinSettings.englishLanguage Then
+                            errMsg = "start-date should be earlier or equal to start-date of the child ..."
+                        End If
+                        Call MsgBox(errMsg)
+                    End If
+                Else
+                    Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "end-date should be later or equal to start-date ..."
+                    End If
+                    Call MsgBox(errMsg)
                 End If
-                Call MsgBox(errMsg)
+            Else
+                ' visboClient other
+                If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+                    allIsOk = True
+                Else
+                    Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "end-date should be later or equal to start-date ..."
+                    End If
+                    Call MsgBox(errMsg)
+                End If
             End If
+
+
         End If
 
         If allIsOk Then
@@ -98,5 +126,9 @@
 
     Private Sub chkbxAutoDistr_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxAutoDistr.CheckedChanged
 
+    End Sub
+
+    Private Sub chkbx_adjustChilds_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_adjustChilds.CheckedChanged
+        awinSettings.autoAjustChilds = chkbx_adjustChilds.Checked
     End Sub
 End Class
