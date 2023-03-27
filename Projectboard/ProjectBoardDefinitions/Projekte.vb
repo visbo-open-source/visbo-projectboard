@@ -17955,7 +17955,7 @@ Public Module Projekte
                 Dim ErgebnisListe As New Collection
                 Dim anzahlItems As Integer
                 Dim r As Integer
-                Dim d As Integer
+                'Dim d As Integer
                 Dim itemNameID As String
                 Dim dimension As Integer
 
@@ -18005,25 +18005,33 @@ Public Module Projekte
 
                         .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = elemNameOfElemID(rootPhaseName)
                         .Range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
-                        For d = 1 To hproj.anzahlRasterElemente
+                        For d As Integer = 1 To hproj.anzahlRasterElemente
                             .Range("Zeitmatrix").Cells(rowOffset, columnOffset + d - 1).Interior.Color = hproj.farbe
                         Next d
-                        ' Startdatum in Kommentar eintragen
-                        .Range("Zeitmatrix").Cells(rowOffset, columnOffset).AddComment()
-                        With .Range("Zeitmatrix").Cells(rowOffset, columnOffset).Comment
-                            .Visible = False
-                            .Text(Text:="Start:" & Chr(10) & hproj.startDate)
-                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End With
-                        .Range("Zeitmatrix").Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
-                        With .Range("Zeitmatrix").Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
-                            .Visible = False
-                            .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
-                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End With
 
-
-                        d = CInt(appInstance.WorksheetFunction.CountA(.Range("Phasen_des_Projekts")))
+                        ' Kommentar mit Start- und Endedatum eintragen
+                        If cphase.relStart = cphase.relEnde Then
+                            ' cphase ist nur ein Kästchen breit, d.h. Start-und EndeDatum müssen in einem Kommentar stehen
+                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).AddComment()
+                            With .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).Comment
+                                .Visible = False
+                                .Text(Text:="Start:" & Chr(10) & cphase.getStartDate & Chr(10) & "Ende:" & Chr(10) & cphase.getEndDate)
+                            End With
+                        Else
+                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).AddComment()
+                            With .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart).Comment
+                                .Visible = False
+                                .Text(Text:="Start:" & Chr(10) & cphase.getStartDate)
+                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                            End With
+                            .Range("Zeitmatrix").Cells(rowOffset, cphase.relEnde).AddComment()
+                            With .Range("Zeitmatrix").Cells(rowOffset, cphase.relEnde).Comment
+                                .Visible = False
+                                .Text(Text:="Ende:" & Chr(10) & cphase.getEndDate)
+                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                            End With
+                        End If
+                        ' ende Kommentar eintragen in Ressourcen
 
                     Else
                         ' ur:06.05.2015: hier müssen die Einrückungen erfolgen
