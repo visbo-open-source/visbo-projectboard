@@ -70,6 +70,7 @@
 
             If visboClient = divClients(client.VisboSPE) Then
                 If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+                    Dim diffdays As Long = DateDiff(DateInterval.Day, CDate(maxPossibleStartDate), CDate(startdatePicker.Value))
                     If Not IsNothing(maxPossibleStartDate) And DateDiff(DateInterval.Day, CDate(maxPossibleStartDate), CDate(startdatePicker.Value)) <= 0 Then
 
                         allIsOk = True

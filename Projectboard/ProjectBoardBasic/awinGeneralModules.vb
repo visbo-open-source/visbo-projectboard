@@ -1649,7 +1649,7 @@ Public Module awinGeneralModules
 
         checkIDStability = result
     End Function
-    ''' <summary>
+    ''' <summary>Distribute values 
     ''' is called when a 
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -1680,7 +1680,9 @@ Public Module awinGeneralModules
 
                 End If
 
-
+            Else
+                ' possibly check with the kundennummer, if project already exists
+                ' Dim projNamesColl As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(hproj.kundenNummer, err)
             End If
 
         End If
