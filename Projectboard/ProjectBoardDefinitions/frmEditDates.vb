@@ -68,8 +68,11 @@
         Else
             ' es handelt sich um eine Phase
 
-            If visboClient = divClients(client.VisboSPE) Then
-                If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+            'If visboClient = divClients(client.VisboSPE) Then
+            If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+                If awinSettings.autoAjustChilds Then
+                    allIsOk = True
+                Else
                     Dim diffdays As Long = DateDiff(DateInterval.Day, CDate(maxPossibleStartDate), CDate(startdatePicker.Value))
                     If Not IsNothing(maxPossibleStartDate) And DateDiff(DateInterval.Day, CDate(maxPossibleStartDate), CDate(startdatePicker.Value)) <= 0 Then
 
@@ -81,25 +84,29 @@
                         End If
                         Call MsgBox(errMsg)
                     End If
-                Else
-                    Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
-                    If awinSettings.englishLanguage Then
-                        errMsg = "end-date should be later or equal to start-date ..."
-                    End If
-                    Call MsgBox(errMsg)
+
                 End If
+
             Else
-                ' visboClient other
-                If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
-                    allIsOk = True
-                Else
-                    Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
-                    If awinSettings.englishLanguage Then
-                        errMsg = "end-date should be later or equal to start-date ..."
-                    End If
-                    Call MsgBox(errMsg)
+                Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
+                If awinSettings.englishLanguage Then
+                    errMsg = "end-date should be later or equal to start-date ..."
                 End If
+                Call MsgBox(errMsg)
             End If
+
+            'Else
+            '    ' visboClient other
+            '    If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+            '        allIsOk = True
+            '    Else
+            '        Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
+            '        If awinSettings.englishLanguage Then
+            '            errMsg = "end-date should be later or equal to start-date ..."
+            '        End If
+            '        Call MsgBox(errMsg)
+            '    End If
+            'End If
 
 
         End If

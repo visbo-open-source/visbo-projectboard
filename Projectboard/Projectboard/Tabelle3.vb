@@ -1034,6 +1034,9 @@ Public Class Tabelle3
                         Dim wasRootPhase As Boolean = False
 
                         ' wenn die Phase Kinder hat, muss das Flag "automatisch anpassen" angezeigt werden 
+
+                        Dim msChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
+                        Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
                         Dim anzChilds As Integer = hproj.hierarchy.getChildIDsOf(cphase.nameID, True).Count + hproj.hierarchy.getChildIDsOf(cphase.nameID, False).Count
                         If anzChilds > 0 Then
                             frmDateEdit.chkbx_adjustChilds.Visible = True
@@ -1054,7 +1057,19 @@ Public Class Tabelle3
                             frmDateEdit.startdatePicker.Enabled = False
                         End If
 
+
+                        Dim maxPossibleOffset As Integer = 20 * 365
+
+                        'If Not awinSettings.autoAjustChilds Then
+                        Dim ph As clsPhase = Nothing
+                            For Each phID As String In phaseChilds
+                                ph = hproj.getPhaseByID(phID)
+                                maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
+                            Next
+                        'End If
+
                         frmDateEdit.enddatePicker.Value = cphase.getEndDate
+                        frmDateEdit.maxPossibleStartDate = cphase.getStartDate.AddDays(maxPossibleOffset)
 
                         frmDateEdit.allowedDateLeft = allowedLeftDate
                         frmDateEdit.allowedDateRight = allowedRightDate
@@ -1065,7 +1080,12 @@ Public Class Tabelle3
                             awinSettings.noNewCalculation = Not frmDateEdit.chkbxAutoDistr.Checked
 
                             Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
+                            Dim offsetChange As Long = DateDiff(DateInterval.Day, cphase.getStartDate.Date, frmDateEdit.startdatePicker.Value.Date)
+                            If newOffsetInTagen > maxPossibleOffset Then
+                                newOffsetInTagen = maxPossibleOffset
+                            End If
                             Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
+
                             Dim autoAdjustChilds As Boolean = frmDateEdit.chkbx_adjustChilds.Checked
 
                             If cphase.nameID = rootPhaseName Then
@@ -1089,13 +1109,13 @@ Public Class Tabelle3
                             ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
                             ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
                             Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
-                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds, offsetChange)
 
                             ' jetzt die Excel Zellen der aktuellen Zeile, der Phase anpassen ... 
                             meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
                             meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
 
-                            If autoAdjustChilds And nameIDCollection.Count > 0 Then
+                            If nameIDCollection.Count > 0 Then
 
                                 Try
                                     ' jetzt die Excel Zeilen der Kinder aktualisieren  
