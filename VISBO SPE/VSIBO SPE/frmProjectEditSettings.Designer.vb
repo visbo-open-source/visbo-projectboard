@@ -42,7 +42,7 @@ Partial Class frmProjectEditSettings
         Me.Panel1.Controls.Add(Me.AdjustResourceNeeds)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(427, 126)
+        Me.Panel1.Size = New System.Drawing.Size(577, 126)
         Me.Panel1.TabIndex = 0
         '
         'adjustChilds
@@ -92,7 +92,7 @@ Partial Class frmProjectEditSettings
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(429, 126)
+        Me.ClientSize = New System.Drawing.Size(579, 126)
         Me.Controls.Add(Me.Panel1)
         Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
