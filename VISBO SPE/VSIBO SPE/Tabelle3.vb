@@ -228,6 +228,7 @@ Public Class Tabelle3
         Dim currentCell As Excel.Range = Target
         Dim cphase As clsPhase = Nothing
         Dim cMilestone As clsMeilenstein = Nothing
+        Dim maxPossibleOffset As Integer = 0
 
 
         Dim hproj As clsProjekt = visboZustaende.currentProject
@@ -278,6 +279,10 @@ Public Class Tabelle3
                         cphase = hproj.getPhaseByID(elemID)
                     End If
 
+
+                    Dim msChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
+                    Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
+
                     ' dann die allowdLeft und RightDate berechnen
                     ' jedes Elem hat eine Eltern-Phase, die nur eine Phase sein kann ...
                     Dim parentPhase As clsPhase = hproj.getParentPhaseByID(elemID)
@@ -293,6 +298,19 @@ Public Class Tabelle3
 
                     End If
 
+                    If visboZustaende.currentZeileIsMilestone Then
+                    Else
+                        maxPossibleOffset = 20 * 365
+
+                        'If Not awinSettings.autoAjustChilds Then
+                        Dim ph As clsPhase = Nothing
+                        For Each phID As String In phaseChilds
+                            ph = hproj.getPhaseByID(phID)
+                            maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
+                        Next
+                        'End If
+                    End If
+
 
                     Select Case currentColumn
                         ' Prüfung ob erlaubt notwendig 
@@ -304,15 +322,27 @@ Public Class Tabelle3
 
                             Try
                                 Dim newStartDate As Date = CDate(Target.Value)
+
+                                Dim autoAdjustChilds As Boolean = True
+                                autoAdjustChilds = awinSettings.autoAjustChilds
+
+
                                 If (newStartDate.Date >= allowedLeftDate.Date And newStartDate <= allowedRightDate) And newStartDate <= cphase.getEndDate Then
                                     ' alles ok, bearbeiten ..
 
                                     ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
                                     Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+
+                                    If Not awinSettings.autoAjustChilds Then
+                                        If newOffsetInTagen > maxPossibleOffset Then
+                                            newOffsetInTagen = maxPossibleOffset
+                                            Dim hStartDate As Date = hproj.startDate.AddDays(maxPossibleOffset)
+                                            newStartDate = hStartDate
+                                        End If
+                                    End If
+
                                     Dim offsetChange As Long = DateDiff(DateInterval.Day, cphase.getStartDate.Date, newStartDate.Date)
                                     Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
-                                    Dim autoAdjustChilds As Boolean = True
-                                    autoAdjustChilds = awinSettings.autoAjustChilds
 
 
                                     If cphase.nameID = rootPhaseName Then
@@ -348,7 +378,7 @@ Public Class Tabelle3
                                             Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
                                             Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
 
-
+                                            Target.Value = newStartDate.Date
                                             Do While isChild
                                                 Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
                                                 If isMilestone Then
@@ -1256,5 +1286,9 @@ Public Class Tabelle3
         If visboClient = divClients(client.VisboSPE) Then
             'Call MsgBox("bin im meTE")
         End If
+    End Sub
+
+    Private Sub Tabelle3_BeforeDoubleClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeDoubleClick
+
     End Sub
 End Class
