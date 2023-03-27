@@ -368,7 +368,7 @@ Module VISBO_SPE_Utilities
 
         enableOnUpdate = False
 
-        If ShowProjekte.Count >= 0 Then
+        If ShowProjekte.Count > 0 Then
 
             Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & ShowProjekte.Count)
 
