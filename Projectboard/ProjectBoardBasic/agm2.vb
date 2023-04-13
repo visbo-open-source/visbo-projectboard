@@ -20428,8 +20428,8 @@ Public Module agm2
                     repCult = menuCult
                 End If
             Catch ex As Exception
-                awinSettings.englishLanguage = False
-                awinSettings.kapaEinheit = "PT"
+                awinSettings.englishLanguage = True
+                awinSettings.kapaEinheit = "PD"
                 menuCult = ReportLang(PTSprache.deutsch)
                 repCult = menuCult
             End Try

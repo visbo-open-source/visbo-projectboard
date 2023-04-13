@@ -738,9 +738,9 @@ Public Module agm4
                     repCult = menuCult
                 End If
             Catch ex As Exception
-                awinSettings.englishLanguage = False
-                awinSettings.kapaEinheit = "PT"
-                menuCult = ReportLang(PTSprache.deutsch)
+                awinSettings.englishLanguage = True
+                awinSettings.kapaEinheit = "PD"
+                menuCult = ReportLang(PTSprache.englisch)
                 repCult = menuCult
             End Try
             result = Date.Now
@@ -759,9 +759,9 @@ Public Module agm4
                     repCult = menuCult
                 End If
             Catch ex As Exception
-                awinSettings.englishLanguage = False
-                awinSettings.kapaEinheit = "PT"
-                menuCult = ReportLang(PTSprache.deutsch)
+                awinSettings.englishLanguage = True
+                awinSettings.kapaEinheit = "PD"
+                menuCult = ReportLang(PTSprache.englisch)
                 repCult = menuCult
             End Try
 

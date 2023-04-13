@@ -1074,10 +1074,10 @@ Module SIModule1
                                     repCult = menuCult
                                 End If
                             Catch ex As Exception
-                                awinSettings.englishLanguage = False
-                                awinSettings.kapaEinheit = "PT"
-                                menuCult = ReportLang(PTSprache.deutsch)
+                                awinSettings.englishLanguage = True
+                                menuCult = ReportLang(PTSprache.englisch)
                                 repCult = menuCult
+                                awinSettings.kapaEinheit = "PD"
                             End Try
                         End If
 
