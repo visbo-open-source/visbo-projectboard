@@ -5915,6 +5915,37 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' returns the Revenue/Benefit in T€ until and including the month which contains the given month 
+    ''' </summary>
+    ''' <param name="untilDate"></param>
+    ''' <returns></returns>
+    Public Function getInvoicesPenaltiesUntil(ByVal untilDate As Date) As Double
+
+        Dim result As Double = 0.0
+        Try
+            Dim revenue() As Double = getInvoicesPenalties()
+
+            If Not IsNothing(revenue) Then
+                Dim untilCol As Integer = getColumnOfDate(untilDate) - getColumnOfDate(startDate)
+
+                ' make sure 
+                untilCol = System.Math.Min(untilCol, revenue.Length - 1)
+                If untilCol >= 0 Then
+                    For ix As Integer = 0 To untilCol
+                        result = result + revenue(ix)
+                    Next
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        getInvoicesPenaltiesUntil = result
+    End Function
+
+    ''' <summary>
     ''' liefert einen Array zurück, der die prognostizierten Zahlungseingänge für den Cash-Flow enthält; d.h der Array kann länger sein als das Projekt ... 
     ''' es werden dabei auch die Vertrags-Strafen berücksichtigt  
     ''' </summary>

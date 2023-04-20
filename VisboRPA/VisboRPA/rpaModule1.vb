@@ -148,6 +148,9 @@ Module rpaModule1
         ' assign attributes such as buinsessUnits in batchmode
         visboAssignAttributes = 32
 
+        ' write Actual vs Target Report 
+        visboWriteActualTarget = 33
+
     End Enum
 
 
@@ -513,7 +516,14 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboDataQualityCheck)
                     Try
-                        allOk = processDataQualityCheck()
+                        allOk = processDataQualityCheck(PTRpa.visboDataQualityCheck)
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboWriteActualTarget)
+                    Try
+                        allOk = processWriteActualTargetReport(PTRpa.visboWriteActualTarget)
                     Catch ex As Exception
 
                     End Try
@@ -1508,6 +1518,11 @@ Module rpaModule1
                             result = checkBaselineCreation(currentWB)
                         End If
 
+                        ' Check auf Actual vs Target Report  
+                        If result = PTRpa.visboUnknown Then
+                            result = checkActualTargetReport(currentWB)
+                        End If
+
                         If result = PTRpa.visboUnknown Then
                             result = checkAssignAttributes(currentWB)
                         End If
@@ -2099,6 +2114,27 @@ Module rpaModule1
         checkActualData2 = result
     End Function
 
+    Private Function checkActualTargetReport(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+
+        Dim blattName As String = "Actual Target Report"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                result = PTRpa.visboWriteActualTarget
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkActualTargetReport = result
+
+    End Function
     Private Function checkDataQuality(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim verifiedStructure As Boolean = False

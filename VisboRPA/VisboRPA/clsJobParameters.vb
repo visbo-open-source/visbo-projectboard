@@ -240,6 +240,18 @@ Public Class clsJobParameters
             End If
         End Set
     End Property
+
+    Private _compareWithFirstBaseline As Boolean
+    Public Property compareWithFirstBaseline As Boolean
+        Get
+            compareWithFirstBaseline = _compareWithFirstBaseline
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _compareWithFirstBaseline = value
+            End If
+        End Set
+    End Property
     Sub New()
 
 
@@ -258,6 +270,7 @@ Public Class clsJobParameters
         _portfolioVariantName = "Var1"
         _defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
         _templateName = "TMS"
+        _compareWithFirstBaseline = False
 
     End Sub
 

@@ -665,6 +665,86 @@ Module rpaTkModule
                                 End If
 
 
+
+
+                            ElseIf blattName = "Parameters" Then
+
+                                Dim lastMsRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+                                Dim lastPhRow As Integer = CType(.Cells(2000, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                                Dim zeile As Integer = 2
+                                ' read all Milestone Names
+                                While zeile <= lastMsRow
+
+                                    Dim msName As String = ""
+                                    If Not IsNothing(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                        msName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                    Else
+                                        msName = ""
+                                    End If
+
+                                    Try
+                                        If msName.Trim <> "" Then
+                                            result.AddMilestone(msName)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    zeile = zeile + 1
+                                End While
+
+                                zeile = 2
+                                ' read all PhaseName
+                                While zeile <= lastPhRow
+
+                                    Dim phName As String = ""
+                                    If Not IsNothing(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                        phName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                    Else
+                                        phName = ""
+                                    End If
+
+                                    Try
+                                        If phName.Trim <> "" Then
+                                            result.AddPhase(phName)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    zeile = zeile + 1
+                                End While
+                            End If
+
+                        Case PTRpa.visboWriteActualTarget
+
+                            If blattName = "Actual Target Report" Then
+
+                                If Not IsNothing(.Cells(1, 2).value) Then
+                                    result.portfolioName = CStr(.Cells(1, 2).value).Trim
+                                Else
+                                    result.portfolioName = ""
+                                End If
+
+                                If Not IsNothing(.Cells(2, 2).value) Then
+                                    result.portfolioVariantName = CStr(.Cells(2, 2).value).Trim
+                                Else
+                                    result.portfolioVariantName = ""
+                                End If
+
+                                Try
+                                    If Not IsNothing(.Cells(3, 2).value) Then
+                                        result.compareWithFirstBaseline = CBool(.Cells(3, 2).value)
+                                    Else
+                                        result.compareWithFirstBaseline = False
+                                    End If
+                                Catch ex As Exception
+                                    result.compareWithFirstBaseline = False
+                                End Try
+
+
+
                             ElseIf blattName = "Parameters" Then
 
                                 Dim lastMsRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
@@ -1737,13 +1817,45 @@ Module rpaTkModule
     End Function
 
 
-    Public Function processDataQualityCheck() As Boolean
+    Public Function processWriteActualTargetReport(ByVal myKennung As PTRpa) As Boolean
         Dim result As Boolean = True
         Dim Err As New clsErrorCodeMsg
         Dim msgTxt As String = ""
 
         Try
-            Dim myKennung As PTRpa = PTRpa.visboDataQualityCheck
+            Dim jobParameters As clsJobParameters = getJobParameters("Actual Target Report", myKennung)
+            Dim phMsParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
+
+            msgTxt = jobParameters.portfolioName
+            If jobParameters.portfolioVariantName <> "" Then
+                msgTxt = msgTxt & " (" & jobParameters.portfolioVariantName & ") "
+            End If
+            Call logger(ptErrLevel.logInfo, "starting creating report Actual vs Target " & msgTxt, " start of Operation ... ")
+
+            If jobParameters.compareWithFirstBaseline Then
+                Call logger(ptErrLevel.logInfo, "creating report Actual vs Target:", " compare with first baseline ")
+            Else
+                Call logger(ptErrLevel.logInfo, "creating report Actual vs Target:", " compare with last baseline ")
+            End If
+
+            Call writeReportActualTarget(jobParameters.portfolioName, myPortfolioVName:=jobParameters.portfolioVariantName,
+                                         compareWithFirstBaseline:=jobParameters.compareWithFirstBaseline)
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "Calling Create Report Actual Vs Target", ex.Message)
+            result = False
+        End Try
+
+        Call emptyRPASession()
+
+        processWriteActualTargetReport = result
+    End Function
+    Public Function processDataQualityCheck(ByVal myKennung As PTRpa) As Boolean
+        Dim result As Boolean = True
+        Dim Err As New clsErrorCodeMsg
+        Dim msgTxt As String = ""
+
+        Try
             Dim jobParameters As clsJobParameters = getJobParameters("Data Quality Check", myKennung)
             Dim phMsParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
 
@@ -3295,6 +3407,254 @@ Module rpaTkModule
 
     End Function
 
+
+    ''' <summary>
+    ''' write a current vs actual report with regard to revenue, total cost and finish date
+    ''' </summary>
+    ''' <param name="myPortfolioName"></param>
+    ''' <param name="myPortfolioVName"></param>
+    ''' <param name="compareWithFirstBaseline"></param>
+    Public Sub writeReportActualTarget(ByVal myPortfolioName As String,
+                                     Optional ByVal myPortfolioVName As String = "",
+                                     Optional compareWithFirstBaseline As Boolean = False)
+
+        Dim portfolio As clsConstellation = Nothing
+        Dim err As New clsErrorCodeMsg
+        Dim allOK As Boolean = True
+        Dim tmpID As String = ""
+        Dim expFName As String = ""
+        Dim heute As Date = Date.Now
+        Dim tmpVPID As String = ""
+
+
+
+
+        Dim pfTimeStamp As Date
+        Dim myConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(myPortfolioName, tmpVPID, pfTimeStamp, err, variantName:=myPortfolioVName, storedAtOrBefore:=heute)
+
+        Dim reportWB As xlns.Workbook = Nothing
+
+        ' now get Portfolio from VISBO cloud 
+
+        Dim pvName As String = calcPortfolioKey(myPortfolioName, myPortfolioVName)
+
+
+        If Not IsNothing(myConstellation) Then
+
+            ' if successful: create / open Excel Export File 
+
+            expFName = logfileFolder & "\" & "Actual vs Target Report" & myConstellation.constellationName & ".xlsx"
+
+            ' hier muss jetzt das entsprechende File aufgemacht werden ...
+            ' das File 
+            Try
+
+                reportWB = appInstance.Workbooks.Add()
+                CType(reportWB.Worksheets.Item(1), xlns.Worksheet).Name = "VISBO"
+                reportWB.SaveAs(Filename:=expFName, ConflictResolution:=xlns.XlSaveConflictResolution.xlLocalSessionChanges)
+
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "Creating Excel File Output File", " failed ..")
+                Call logger(ptErrLevel.logError, "Creating Excel File Output File", ex.Message)
+                appInstance.EnableEvents = True
+                allOK = False
+            End Try
+
+            Dim cfFields() As String = {"Area", "Category", "Group"}
+
+            If allOK Then
+                Dim ws As xlns.Worksheet = CType(reportWB.Worksheets("VISBO"), xlns.Worksheet)
+
+                ' now write Headerline 
+                Dim zeile As Integer = 1
+                Dim spalte As Integer = 1
+                ws.Cells(zeile, 1).value = "Report Date"
+                ws.Cells(zeile, 2).value = "Project Name"
+                ws.Cells(zeile, 3).value = "VISBO ID"
+                ws.Cells(zeile, 4).value = "Manager"
+                ws.Cells(zeile, 5).value = "State"
+                ws.Cells(zeile, 6).value = "Business Unit"
+                ws.Cells(zeile, 7).value = cfFields(0) ' Area
+                ws.Cells(zeile, 8).value = cfFields(1) ' Category
+                ws.Cells(zeile, 9).value = cfFields(2) ' Group
+
+                ' Enacted Savings Until Now
+                ws.Cells(zeile, 10).value = "Enacted Savings Until Now (Current Plan)"
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, 11).value = "Enacted Savings Until Now (First Baseline)"
+                Else
+                    ws.Cells(zeile, 11).value = "Enacted Savings Until Now (Last Baseline)"
+                End If
+                ws.Cells(zeile, 12).value = "Enacted Savings Until Now (Deviation)"
+
+                ' Enacted Savings
+                ws.Cells(zeile, 13).value = "Enacted Savings (Current Plan)"
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, 14).value = "Enacted Savings (First Baseline)"
+                Else
+                    ws.Cells(zeile, 14).value = "Enacted Savings (Last Baseline)"
+                End If
+                ws.Cells(zeile, 15).value = "Enacted Savings (Deviation)"
+
+                ' Finish Date 
+                ws.Cells(zeile, 16).value = "Finish Date (Current Plan)"
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, 17).value = "Finish Date (First Baseline)"
+                Else
+                    ws.Cells(zeile, 17).value = "Finish Date (Last Baseline)"
+                End If
+                ws.Cells(zeile, 18).value = "Finish Date (Deviation)"
+
+                ' Total Cost 
+                ws.Cells(zeile, 19).value = "Total Cost (Current Plan)"
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, 20).value = "Total Cost (First Baseline)"
+                Else
+                    ws.Cells(zeile, 20).value = "Total Cost (Last Baseline)"
+                End If
+                ws.Cells(zeile, 21).value = "Total Cost (Deviation)"
+
+
+                ' Comment of Project Manager 
+                ws.Cells(zeile, 22).value = "Comment of project manager"
+
+
+
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
+
+                    zeile = zeile + 1
+                    Dim pName As String = getPnameFromKey(kvp.Key)
+                    Dim vName As String = getVariantnameFromKey(kvp.Key)
+                    ' read it , but do not put into AlleProjekte 
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+                    Dim baseline As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, ptVariantFixNames.pfv.ToString, hproj.vpID, heute, err)
+
+                    If compareWithFirstBaseline Then
+                        Dim projecthistory As clsProjektHistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(hproj.name, "", StartofCalendar, Date.Now, err)
+                        If Not IsNothing(projecthistory) Then
+                            baseline = projecthistory.beauftragung
+                        End If
+                    End If
+
+                    If Not IsNothing(hproj) Then
+
+                        Dim myState As String = hproj.vpStatus
+
+                        ' now writing 
+                        ws.Cells(zeile, 1).value = heute.ToShortDateString
+                        ws.Cells(zeile, 2).value = hproj.getShapeText
+                        ws.Cells(zeile, 3).value = hproj.vpID
+                        ws.Cells(zeile, 4).value = hproj.leadPerson
+                        ws.Cells(zeile, 5).value = hproj.vpStatus
+                        ws.Cells(zeile, 6).value = hproj.businessUnit
+                        ws.Cells(zeile, 7).value = hproj.getCustomSField(cfFields(0))
+                        ws.Cells(zeile, 8).value = hproj.getCustomSField(cfFields(1))
+                        ws.Cells(zeile, 9).value = hproj.getCustomSField(cfFields(2))
+
+                        ' Umsatz / Nutzen until now 
+                        Dim planValue As Double
+                        Dim baselineValue As Double
+                        Try
+                            planValue = 1000 * hproj.getInvoicesPenaltiesUntil(heute)
+                        Catch ex As Exception
+                            planValue = 0
+                        End Try
+                        ws.Cells(zeile, 10).value = planValue
+
+                        If Not IsNothing(baseline) Then
+                            Try
+                                baselineValue = 1000 * baseline.getInvoicesPenaltiesUntil(heute)
+                            Catch ex As Exception
+                                baselineValue = 0
+                            End Try
+                            ws.Cells(zeile, 11).value = baselineValue
+                            ws.Cells(zeile, 12).value = (planValue - baselineValue)
+                        Else
+                            ws.Cells(zeile, 11).value = "n.a"
+                            ws.Cells(zeile, 12).value = "n.a"
+                        End If
+
+
+                        ' Umsatz / Nutzen 
+                        Try
+                            planValue = 1000 * hproj.getInvoicesPenalties().Sum
+                        Catch ex As Exception
+                            ' should always be the same : calculate erloes as being the sum of invoices 
+                            planValue = 1000 * hproj.Erloes
+                        End Try
+                        ws.Cells(zeile, 13).value = planValue
+
+                        If Not IsNothing(baseline) Then
+                            Try
+                                baselineValue = 1000 * baseline.getInvoicesPenalties().Sum
+                            Catch ex As Exception
+                                baselineValue = 1000 * baseline.Erloes
+                            End Try
+                            ws.Cells(zeile, 14).value = baselineValue
+                            ws.Cells(zeile, 15).value = (planValue - baselineValue)
+                        Else
+                            ws.Cells(zeile, 14).value = "n.a"
+                            ws.Cells(zeile, 15).value = "n.a"
+                        End If
+
+                        ' Finish Date 
+                        ws.Cells(zeile, 16).value = hproj.endeDate.ToShortDateString
+                        If Not IsNothing(baseline) Then
+                            ws.Cells(zeile, 17).value = baseline.endeDate.ToShortDateString
+                            ws.Cells(zeile, 18).value = DateDiff(DateInterval.Day, baseline.endeDate, hproj.endeDate)
+                        Else
+                            ws.Cells(zeile, 17).value = "n.a"
+                            ws.Cells(zeile, 18).value = "n.a"
+                        End If
+
+                        ' Total Cost 
+                        planValue = 1000 * hproj.getGesamtKostenBedarf.Sum
+                        ws.Cells(zeile, 19).value = planValue
+                        If Not IsNothing(baseline) Then
+                            baselineValue = 1000 * baseline.getGesamtKostenBedarf.Sum
+                            ws.Cells(zeile, 20).value = baselineValue
+                            ws.Cells(zeile, 21).value = (planValue - baselineValue)
+                        Else
+                            ws.Cells(zeile, 20).value = "n.a"
+                            ws.Cells(zeile, 21).value = "n.a"
+                        End If
+
+                        ' Comment of Project Manager
+                        ws.Cells(zeile, 22).value = hproj.ampelErlaeuterung
+
+
+                    Else
+                        ' could not read the name 
+                        ws.Cells(zeile, 1).value = pName
+                        ws.Cells(zeile, 2).value = "key: " & kvp.Key & " failed"
+                    End If
+
+                Next
+
+            End If
+
+        Else
+            Dim msgTxt As String = "Load Portfolio " & myPortfolioName
+            Call logger(ptErrLevel.logError, "Load Portfolio " & myActivePortfolio, " failed ..")
+            allOK = False
+        End If
+
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(reportWB.Worksheets("VISBO"), xlns.Worksheet).AutoFilterMode = True Then
+                CType(reportWB.Worksheets("VISBO"), xlns.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            reportWB.Close(SaveChanges:=True)
+            Call logger(ptErrLevel.logInfo, "Write Report Actual Target  Successful, stored in ", expFName)
+        Catch ex As Exception
+            Call logger(ptErrLevel.logError, "Store Excel File ", " failed ..")
+        End Try
+
+        appInstance.EnableEvents = True
+
+    End Sub
     ''' <summary>
     ''' creates a quality check file for all bhtc projects
     ''' </summary>
