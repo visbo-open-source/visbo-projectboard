@@ -486,7 +486,7 @@ Public Class clsawinSettings
         _normalColor = System.Drawing.Color.Black
         _noShowColor = System.Drawing.Color.DimGray
 
-        _englishLanguage = False
+        _englishLanguage = True
         _allowSumEditing = True
 
         _enableInvoices = False

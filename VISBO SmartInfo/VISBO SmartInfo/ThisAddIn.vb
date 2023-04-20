@@ -42,10 +42,10 @@ Public Class ThisAddIn
                 'awinSettings.kapaEinheit = "PT"
             End If
         Catch ex As Exception
-            awinSettings.englishLanguage = False
-            awinSettings.kapaEinheit = "PT"
-            menuCult = ReportLang(PTSprache.deutsch)
+            awinSettings.englishLanguage = True
+            menuCult = ReportLang(PTSprache.englisch)
             repCult = menuCult
+            'awinSettings.kapaEinheit = "PD"
         End Try
 
         ' im Powerpoint soll das pwd immer gemerkt werden ..
