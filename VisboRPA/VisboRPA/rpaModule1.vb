@@ -301,15 +301,12 @@ Module rpaModule1
                     allOk = processRoundTripOrga(myName)
 
                 Case CInt(PTRpa.visboModifierCapacities)
-                    allOk = True
+
                     allOk = processModifierExternContracts(fname, importDate, errMessages)
-                    'Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
 
                 Case CInt(PTRpa.visboExternalContracts)
-                    allOk = True
-                    allOk = processExternalContracts(fname, importDate, errMessages)
-             '       Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
 
+                    allOk = processExternalContracts(fname, importDate, errMessages)
 
                 Case CInt(PTRpa.visboActualData1)
 
