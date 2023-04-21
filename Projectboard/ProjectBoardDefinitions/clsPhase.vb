@@ -953,7 +953,7 @@ Public Class clsPhase
     ''' <param name="autoAdjustChilds"></param>
     ''' <returns></returns>
     Public Function adjustPhaseAndChilds(ByVal newOffsetInTagen As Long, ByVal newDauerInTagen As Long,
-                                         ByVal autoAdjustChilds As Boolean) As clsPhase
+                                         ByVal autoAdjustChilds As Boolean, Optional ByVal offsetChange As Long = 0) As clsPhase
 
         Dim tmpResult As clsPhase = Nothing
 
@@ -973,12 +973,91 @@ Public Class clsPhase
             faktor = newDauerInTagen / Me.dauerInDays
         End If
 
-        If Me.nameID = rootphasename Then
+        If Me.nameID = rootPhaseName Then
             Call Me.adjustStartandDauer(0, newDauerInTagen)
         Else
             ' jetzt wird diese Phase entsprechend geändert ...
             Call Me.adjustStartandDauer(newOffsetInTagen, newDauerInTagen)
         End If
+
+        ' ur: 20230321 New Beginn
+
+        If Not autoAdjustChilds Then
+            ' jetzt die Kind-Phasen anpassen StartDate muss erhalten bleiben, dafür muss sich der startOffsetinDays ändern
+            For Each childPhaseNameID As String In hproj.hierarchy.getChildIDsOf(elemID, False)
+
+                Dim childPhase As clsPhase = hproj.getPhaseByID(childPhaseNameID)
+                'childPhase.startOffsetinDays = childPhase.startOffsetinDays - deltaOffset
+                ''Dim newStartOffsetinDays As Long = DateDiff(DateInterval.Day, childPhase.getStartDate.Date, Me.getStartDate.Date)
+                'Dim childPhaseDeltaOffset As Long = childPhase.startOffsetinDays - parentPhaseOldOffset - deltaOffset
+
+                'Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
+                Dim newChildOffset As Long = childPhase.startOffsetinDays - offsetChange
+                Dim newChildDuration As Long = childPhase.dauerInDays
+                childPhase.changeStartandDauer(newChildOffset, newChildDuration)
+
+                Dim newStartDate As Date = childPhase.getStartDate.Date
+                Dim newEndDate As Date = childPhase.getEndDate.Date
+
+
+                ' actualData müssen nicht geprüft werden
+
+
+                If newChildDuration = 0 Then
+                    newChildDuration = 1
+                End If
+
+                'Try
+                '    If newCalculationNecessary Then
+                '        childPhase = childPhase.adjustPhaseAndChilds(newChildOffset, newChildDuration, autoAdjustChilds)
+                '    End If
+                'Catch ex As Exception
+
+                'End Try
+
+            Next
+
+
+            ' jetzt die Meilensteine der Phase  anpassen 
+            For Each childMilestoneNameID As String In hproj.hierarchy.getChildIDsOf(elemID, True)
+
+                Dim childMilestone As clsMeilenstein = hproj.getMilestoneByID(childMilestoneNameID)
+                Dim newChildOffset As Long = CLng(childMilestone.offset - offsetChange)
+                ' jetzt prüfen, ob es actualdata gibt 
+
+                If hproj.hasActualValues Then
+                    If getColumnOfDate(childMilestone.getDate) <= getColumnOfDate(hproj.actualDataUntil) Then
+                        ' bisheriges Meilensteindatum liegt vor ActualData-Date: unverändert lassen ...
+                        newChildOffset = childMilestone.offset
+
+                    Else
+                        ' liegt das neue Datum vor ActualData Date? 
+                        If Me.getStartDate.AddDays(newChildOffset).Date <= hproj.actualDataUntil.Date Then
+                            ' wird auf den ersten des zum ActualDataUntil folgenden Monats gelegt
+                            newChildOffset = DateDiff(DateInterval.Day, Me.getStartDate, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False))
+                        Else
+                            ' kann übernommen werden , newChildOffset
+                        End If
+                    End If
+                End If
+
+                ' falls der Rundungsfehler zu einem zu späten Meilenstein führt ... 
+                If newChildOffset > Me.dauerInDays - 1 Then
+                    newChildOffset = Me.dauerInDays - 1
+                End If
+
+                ' falls der Rundungsfehler zu einem zu frühen Meilenstein führt ... 
+                If newChildOffset < 0 Then
+                    newChildOffset = 0
+                End If
+
+                childMilestone.setDate = Me.getStartDate.AddDays(newChildOffset)
+
+            Next
+        End If
+
+        ' ur: 20230321 New Ende
+
 
 
         If autoAdjustChilds Then

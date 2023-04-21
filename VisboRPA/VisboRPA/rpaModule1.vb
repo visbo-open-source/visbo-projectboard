@@ -409,15 +409,12 @@ Module rpaModule1
                     allOk = processRoundTripOrga(myName)
 
                 Case CInt(PTRpa.visboModifierCapacities)
-                    allOk = True
-                    allOk = processModifierCapacities(fname, importDate, errMessages)
-                    'Call logger(ptErrLevel.logError, "import Modifier Capacities", " not yet implemented !")
+
+                    allOk = processModifierExternContracts(fname, importDate, errMessages)
 
                 Case CInt(PTRpa.visboExternalContracts)
-                    allOk = True
-                    allOk = processExternalContracts(fname, importDate, errMessages)
-             '       Call logger(ptErrLevel.logError, "import external Contracts", " not yet implemented !")
 
+                    allOk = processExternalContracts(fname, importDate, errMessages)
 
                 Case CInt(PTRpa.visboActualData1)
 
@@ -797,9 +794,9 @@ Module rpaModule1
                     repCult = menuCult
                 End If
             Catch ex As Exception
-                awinSettings.englishLanguage = False
-                awinSettings.kapaEinheit = "PT"
-                menuCult = ReportLang(PTSprache.deutsch)
+                awinSettings.englishLanguage = True
+                awinSettings.kapaEinheit = "PD"
+                menuCult = ReportLang(PTSprache.englisch)
                 repCult = menuCult
             End Try
             result = Date.Now
@@ -1176,164 +1173,15 @@ Module rpaModule1
                 End If
             End If
 
-            ''ûr: 10032022: not needed for RPA
-            '' Read appearance Definitions
-            'appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
-            'If IsNothing(appearanceDefinitions.liste) Or appearanceDefinitions.liste.Count > 0 Then
-            '    ' user has no access to any VISBO Center 
-            '    msgTxt = "No appearance Definitions in VISBO"
-            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", "")
-            '    'Throw New ArgumentException(msgTxt)
-            'End If
-
             ''
             '' Read Customizations 
             lastReadingCustomization = readCustomizations()
-
-            'Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
-
-            'If Not IsNothing(customizations) Then
-            '    StartofCalendar = customizations.kalenderStart
-            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", " StartOfCalendar: " & StartofCalendar.ToString)
-
-            '    businessUnitDefinitions = customizations.businessUnitDefinitions
-
-            '    PhaseDefinitions = customizations.phaseDefinitions
-
-            '    MilestoneDefinitions = customizations.milestoneDefinitions
-
-            '    showtimezone_color = customizations.showtimezone_color
-            '    noshowtimezone_color = customizations.noshowtimezone_color
-            '    calendarFontColor = customizations.calendarFontColor
-            '    nrOfDaysMonth = customizations.nrOfDaysMonth
-            '    farbeInternOP = customizations.farbeInternOP
-            '    farbeExterne = customizations.farbeExterne
-            '    iProjektFarbe = customizations.iProjektFarbe
-            '    iWertFarbe = customizations.iWertFarbe
-            '    vergleichsfarbe0 = customizations.vergleichsfarbe0
-            '    vergleichsfarbe1 = customizations.vergleichsfarbe1
-
-            '    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
-            '    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
-            '    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
-            '    awinSettings.AmpelGruen = customizations.AmpelGruen
-
-            '    awinSettings.AmpelGelb = customizations.AmpelGelb
-            '    awinSettings.AmpelRot = customizations.AmpelRot
-            '    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
-            '    awinSettings.glowColor = customizations.glowColor
-
-            '    awinSettings.timeSpanColor = customizations.timeSpanColor
-            '    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
-
-            '    awinSettings.gridLineColor = customizations.gridLineColor
-
-            '    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
-
-            '    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
-            '    awinSettings.ActualdataOrgaUnits = customizations.isActualDataRelevant
-
-            '    awinSettings.onePersonOneRole = customizations.onePersonOneRole
-            '    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
-
-            '    awinSettings.actualDataMonth = customizations.actualDataMonth
-            '    ergebnisfarbe1 = customizations.ergebnisfarbe1
-            '    ergebnisfarbe2 = customizations.ergebnisfarbe2
-            '    weightStrategicFit = customizations.weightStrategicFit
-            '    awinSettings.kalenderStart = customizations.kalenderStart
-            '    awinSettings.zeitEinheit = customizations.zeitEinheit
-            '    awinSettings.kapaEinheit = customizations.kapaEinheit
-            '    awinSettings.offsetEinheit = customizations.offsetEinheit
-            '    awinSettings.EinzelRessExport = customizations.EinzelRessExport
-            '    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
-            '    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
-            '    awinSettings.spaltenbreite = customizations.spaltenbreite
-            '    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
-            '    awinSettings.propAnpassRess = customizations.propAnpassRess
-            '    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
-
-            '    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
-            '    awinSettings.fullProtocol = customizations.fullProtocol
-            '    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
-            '    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
-            '    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
-            '    awinSettings.importUnknownNames = customizations.importUnknownNames
-            '    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
-
-            '    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
-            '    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
-            '    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
-            '    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
-
-            '    awinSettings.importTyp = customizations.importTyp
-
-            '    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
-
-            '    awinSettings.englishLanguage = customizations.englishLanguage
-
-            '    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
-            '    awinSettings.considerRiskFee = customizations.considerRiskFee
-
-            '    StartofCalendar = awinSettings.kalenderStart
-
-            '    historicDate = StartofCalendar
-            '    Try
-            '        If awinSettings.englishLanguage Then
-            '            menuCult = ReportLang(PTSprache.englisch)
-            '            repCult = menuCult
-            '            awinSettings.kapaEinheit = "PD"
-            '        Else
-            '            awinSettings.kapaEinheit = "PT"
-            '            menuCult = ReportLang(PTSprache.deutsch)
-            '            repCult = menuCult
-            '        End If
-            '    Catch ex As Exception
-            '        awinSettings.englishLanguage = False
-            '        awinSettings.kapaEinheit = "PT"
-            '        menuCult = ReportLang(PTSprache.deutsch)
-            '        repCult = menuCult
-            '    End Try
-            'Else
-            '    msgTxt = "No customization in VISBO"
-            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
-            '    'Throw New ArgumentException(msgTxt)
-            'End If
 
             '
             ' now read Organisation 
             ''
             '' Read Customizations 
             lastReadingOrganisation = readOrganisations()
-
-            'Dim currentOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-            'If Not IsNothing(currentOrga) Then
-            '    If currentOrga.count > 0 Then
-
-            '        If currentOrga.count > 0 Then
-            '            validOrganisations.addOrga(currentOrga)
-            '        End If
-
-            '        CostDefinitions = currentOrga.allCosts
-            '        RoleDefinitions = currentOrga.allRoles
-
-            '        Dim tmpActDataString As String = currentOrga.allRoles.getActualdataOrgaUnits
-            '        If tmpActDataString = "" And awinSettings.ActualdataOrgaUnits <> "" Then
-            '            ' do nothing, leave it as is 
-            '        Else
-            '            awinSettings.ActualdataOrgaUnits = tmpActDataString
-            '        End If
-
-            '    Else
-            '        msgTxt = "No organisation in VISBO"
-            '        Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
-            '        'Throw New ArgumentException("msgTxt")
-            '    End If
-            'Else
-            '    msgTxt = "No organisation in VISBO"
-            '    Call logger(ptErrLevel.logInfo, "rpaSetTypen", msgTxt)
-            '    'Throw New ArgumentException("msgTxt")
-            'End If
 
             '
             ' now read customFieldDefinitions; is allowed to be empty

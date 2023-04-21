@@ -10647,6 +10647,10 @@ Public Module agm2
                     appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 End Try
 
+            Else
+                noError = False
+                errMsg = "File " & dateiName & ": name has to contain strings 'Modifier' and 'Kapazität'"
+                meldungen.Add(errMsg)
             End If
 
         End If
@@ -20429,8 +20433,8 @@ Public Module agm2
                     repCult = menuCult
                 End If
             Catch ex As Exception
-                awinSettings.englishLanguage = False
-                awinSettings.kapaEinheit = "PT"
+                awinSettings.englishLanguage = True
+                awinSettings.kapaEinheit = "PD"
                 menuCult = ReportLang(PTSprache.deutsch)
                 repCult = menuCult
             End Try

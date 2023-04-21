@@ -270,12 +270,14 @@ Public Class Tabelle3
         Dim currentCell As Excel.Range = Target
         Dim cphase As clsPhase = Nothing
         Dim cMilestone As clsMeilenstein = Nothing
+        Dim maxPossibleOffset As Integer = 0
 
 
         Dim hproj As clsProjekt = visboZustaende.currentProject
 
 
         If IsNothing(hproj) Then
+
             Call MsgBox("Projekt konnte nicht bestimmt werden ...")
             appInstance.EnableEvents = True
             Exit Sub
@@ -319,6 +321,10 @@ Public Class Tabelle3
                         cphase = hproj.getPhaseByID(elemID)
                     End If
 
+
+                    Dim msChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
+                    Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
+
                     ' dann die allowdLeft und RightDate berechnen
                     ' jedes Elem hat eine Eltern-Phase, die nur eine Phase sein kann ...
                     Dim parentPhase As clsPhase = hproj.getParentPhaseByID(elemID)
@@ -334,6 +340,19 @@ Public Class Tabelle3
 
                     End If
 
+                    If visboZustaende.currentZeileIsMilestone Then
+                    Else
+                        maxPossibleOffset = 20 * 365
+
+                        'If Not awinSettings.autoAjustChilds Then
+                        Dim ph As clsPhase = Nothing
+                        For Each phID As String In phaseChilds
+                            ph = hproj.getPhaseByID(phID)
+                            maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
+                        Next
+                        'End If
+                    End If
+
 
                     Select Case currentColumn
                         ' Prüfung ob erlaubt notwendig 
@@ -345,14 +364,27 @@ Public Class Tabelle3
 
                             Try
                                 Dim newStartDate As Date = CDate(Target.Value)
+
+                                Dim autoAdjustChilds As Boolean = True
+                                autoAdjustChilds = awinSettings.autoAjustChilds
+
+
                                 If (newStartDate.Date >= allowedLeftDate.Date And newStartDate <= allowedRightDate) And newStartDate <= cphase.getEndDate Then
                                     ' alles ok, bearbeiten ..
 
                                     ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
                                     Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+
+                                    If Not awinSettings.autoAjustChilds Then
+                                        If newOffsetInTagen > maxPossibleOffset Then
+                                            newOffsetInTagen = maxPossibleOffset
+                                            Dim hStartDate As Date = hproj.startDate.AddDays(maxPossibleOffset)
+                                            newStartDate = hStartDate
+                                        End If
+                                    End If
+
+                                    Dim offsetChange As Long = DateDiff(DateInterval.Day, cphase.getStartDate.Date, newStartDate.Date)
                                     Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
-                                    Dim autoAdjustChilds As Boolean = True
-                                    autoAdjustChilds = awinSettings.autoAjustChilds
 
 
                                     If cphase.nameID = rootPhaseName Then
@@ -371,7 +403,7 @@ Public Class Tabelle3
                                     ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
 
                                     Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
-                                    cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+                                    cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds, offsetChange)
 
                                     ' tk 4.1.20 eigentlich braucht man das hier nicht mehr ... 
                                     'Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
@@ -381,14 +413,14 @@ Public Class Tabelle3
                                     'End If
 
                                     ' jetzt werden die Excel Zeilen aktualisiert 
-                                    If autoAdjustChilds And nameIDCollection.Count > 0 Then
+                                    If nameIDCollection.Count > 0 Then
                                         ' 
                                         Try
                                             Dim currentChildRow As Integer = Target.Row + 1
                                             Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
                                             Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
 
-
+                                            Target.Value = newStartDate.Date
                                             Do While isChild
                                                 Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
                                                 If isMilestone Then
@@ -493,7 +525,8 @@ Public Class Tabelle3
                                         'Call hproj.syncXWertePhases()
 
                                         ' jetzt die Excel Zeilen der Kinder aktualisieren  
-                                        If autoAdjustChilds And nameIDCollection.Count > 0 Then
+                                        If nameIDCollection.Count > 0 Then
+                                            'If autoAdjustChilds And nameIDCollection.Count > 0 Then
                                             ' 
                                             Try
                                                 Dim currentChildRow As Integer = Target.Row + 1
@@ -1090,6 +1123,19 @@ Public Class Tabelle3
                     End If
 
                     allowedRightDate = parentPhase.getEndDate
+                Else
+                    ' Rootphase wird verändert
+
+
+                    'allowedLeftDate = parentPhase.getStartDate
+
+                    'If hproj.hasActualValues Then
+                    '    If parentPhase.getStartDate < hproj.actualDataUntil Then
+                    '        allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+                    '    End If
+                    'End If
+
+                    'allowedRightDate = parentPhase.getEndDate
                 End If
 
 
@@ -1130,7 +1176,9 @@ Public Class Tabelle3
                         Dim wasRootPhase As Boolean = False
 
                         ' wenn die Phase Kinder hat, muss das Flag "automatisch anpassen" angezeigt werden 
-                        Dim anzChilds As Integer = hproj.hierarchy.getChildIDsOf(cphase.nameID, True).Count + hproj.hierarchy.getChildIDsOf(cphase.nameID, False).Count
+                        Dim msChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
+                        Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
+                        Dim anzChilds As Integer = msChilds.Count + phaseChilds.Count
                         If anzChilds > 0 Then
                             frmDateEdit.chkbx_adjustChilds.Visible = False
                             frmDateEdit.chkbx_adjustChilds.Enabled = False
@@ -1150,7 +1198,18 @@ Public Class Tabelle3
                             frmDateEdit.startdatePicker.Enabled = False
                         End If
 
+                        Dim maxPossibleOffset As Integer = 20 * 365
+
+                        If Not awinSettings.autoAjustChilds Then
+                            Dim ph As clsPhase = Nothing
+                            For Each phID As String In phaseChilds
+                                ph = hproj.getPhaseByID(phID)
+                                maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
+                            Next
+                        End If
+
                         frmDateEdit.enddatePicker.Value = cphase.getEndDate
+                        frmDateEdit.maxPossibleStartDate = cphase.getStartDate.AddDays(maxPossibleOffset)
 
                         frmDateEdit.allowedDateLeft = allowedLeftDate
                         frmDateEdit.allowedDateRight = allowedRightDate
@@ -1161,6 +1220,10 @@ Public Class Tabelle3
                             ' ur:20220609: hier nicht benötigt:::awinSettings.noNewCalculation = Not frmDateEdit.chkbxAutoDistr.Checked
 
                             Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
+                            Dim offsetChange As Long = DateDiff(DateInterval.Day, cphase.getStartDate.Date, frmDateEdit.startdatePicker.Value.Date)
+                            If newOffsetInTagen > maxPossibleOffset Then
+                                newOffsetInTagen = maxPossibleOffset
+                            End If
                             Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
 
                             'ur;09062022: wird ersetzt durch awinSetting.autoAjustChilds:Dim autoAdjustChilds As Boolean = frmDateEdit.chkbx_adjustChilds.Checked
@@ -1179,20 +1242,21 @@ Public Class Tabelle3
                                     Call hproj.syncXWertePhases()
                                 End If
 
+                                ' ur: test newOffsetInTagen = 0
                                 newOffsetInTagen = 0
-
                             End If
 
                             ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
                             ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
                             Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
-                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, awinSettings.autoAjustChilds)
+                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, awinSettings.autoAjustChilds, offsetChange)
 
                             ' jetzt die Excel Zellen der aktuellen Zeile, der Phase anpassen ... 
                             meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
                             meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
 
-                            If awinSettings.autoAjustChilds And nameIDCollection.Count > 0 Then
+                            'If awinSettings.autoAjustChilds And nameIDCollection.Count > 0 Then
+                            If nameIDCollection.Count > 0 Then
 
                                 Try
                                     ' jetzt die Excel Zeilen der Kinder aktualisieren  
@@ -1236,6 +1300,8 @@ Public Class Tabelle3
                                 Catch ex As Exception
 
                                 End Try
+                            Else
+
 
                             End If
 
@@ -1270,5 +1336,9 @@ Public Class Tabelle3
         If visboClient = divClients(client.VisboSPE) Then
             'Call MsgBox("bin im meTE")
         End If
+    End Sub
+
+    Private Sub Tabelle3_BeforeDoubleClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeDoubleClick
+
     End Sub
 End Class
