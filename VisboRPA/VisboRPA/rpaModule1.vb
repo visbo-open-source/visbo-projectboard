@@ -410,7 +410,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboModifierCapacities)
 
-                    allOk = processModifierExternContracts(fname, importDate, errMessages)
+                    allOk = processModifierCapacities(fname, importDate, errMessages)
 
                 Case CInt(PTRpa.visboExternalContracts)
 
