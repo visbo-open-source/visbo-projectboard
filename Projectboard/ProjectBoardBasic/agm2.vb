@@ -10646,6 +10646,10 @@ Public Module agm2
                     appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 End Try
 
+            Else
+                noError = False
+                errMsg = "File " & dateiName & ": name has to contain strings 'Modifier' and 'Kapazität'"
+                meldungen.Add(errMsg)
             End If
 
         End If
