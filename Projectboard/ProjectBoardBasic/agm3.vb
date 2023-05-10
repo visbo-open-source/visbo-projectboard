@@ -5451,6 +5451,11 @@ Public Module agm3
                         standInDB = standInDBvname
                     Else
                         standInDB = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, pNr)
+                        ' if vname is given , but there is no standard project yet: 
+                        ' set vname = emtpy string 
+                        If IsNothing(standInDB) Then
+                            vName = ""
+                        End If
                     End If
 
                     Dim hproj As clsProjekt = Nothing
@@ -5542,12 +5547,15 @@ Public Module agm3
 
                                 Dim isCost As Boolean = False
 
-                                If awinSettings.englishLanguage Then
-                                    outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
-                                Else
-                                    outputline = currentWS.Name & ": Zeile Nr. " & myRowNr & " wird gelesen!"
+                                If awinSettings.visboDebug Then
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
+                                    Else
+                                        outputline = currentWS.Name & ": Zeile Nr. " & myRowNr & " wird gelesen!"
+                                    End If
+                                    Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
                                 End If
-                                Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
+
 
                                 If Not IsNothing(currentWS.Cells(myRowNr, taskColNr).value) Then
                                     myValue = CStr(currentWS.Cells(myRowNr, taskColNr).value).Trim
