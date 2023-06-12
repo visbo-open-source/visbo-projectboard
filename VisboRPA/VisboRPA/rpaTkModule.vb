@@ -3781,6 +3781,10 @@ Module rpaTkModule
                 ws.Cells(zeile, 19).value = "is Part of other Portfolios"
                 CType(ws.Cells(zeile, 19), xlns.Range).AddComment("other portfolios containing the project")
 
+                ' added 19.05.23 by tk
+                ws.Cells(zeile, 20).value = "Responsible"
+                CType(ws.Cells(zeile, 20), xlns.Range).AddComment("project manager assigned to this project")
+
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
 
@@ -4017,6 +4021,19 @@ Module rpaTkModule
                         Catch ex As Exception
 
                         End Try
+
+                        ' 19.05.23 tk 
+                        ' now write how is responsible 
+                        Try
+                            If Not IsNothing(hproj.leadPerson) Then
+                                ws.Cells(zeile, 20).value = hproj.leadPerson
+                            End If
+                        Catch ex As Exception
+                            ws.Cells(zeile, 20).value = "n.a."
+                        End Try
+
+
+
                     Else
                         ' could not read the name 
                         ws.Cells(zeile, 1).value = pName
