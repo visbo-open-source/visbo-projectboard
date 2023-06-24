@@ -30,7 +30,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="VISBOMode" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Demo</Value>
+      <Value Profile="(Default)">noDemo</Value>
     </Setting>
   </Settings>
 </SettingsFile>
