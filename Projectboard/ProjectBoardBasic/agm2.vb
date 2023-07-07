@@ -9734,7 +9734,7 @@ Public Module agm2
                                 tmpPNr = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
                             End If
 
-                            'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
+
                             Dim pName As String = handledNames(tmpPName)
 
                             ' ur:08022022: eingefügt

@@ -9773,6 +9773,22 @@ Public Class Ribbon1
         appInstance.ScreenUpdating = True
     End Sub
 
+    Public Sub exportExcelIstDaten(control As IRibbonControl)
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Try
+            Call writeIstDatenForDemo(showRangeLeft)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+    End Sub
+
     Public Sub exportExcelEarnedValues(control As IRibbonControl)
         Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 

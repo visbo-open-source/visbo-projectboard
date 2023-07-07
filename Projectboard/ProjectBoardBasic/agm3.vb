@@ -9399,6 +9399,200 @@ Public Module agm3
 
     End Function
 
+    ''' <summary>
+    ''' writes a file which may be used as import demo Actual Data ...
+    ''' </summary>
+    Public Sub writeIstDatenForDemo(ByVal von As Integer)
+
+        appInstance.EnableEvents = False
+
+
+        Dim projectsToWork As New Collection
+        Dim defDone As Boolean = False
+        If Not IsNothing(selectedProjekte) Then
+            If selectedProjekte.Count > 0 Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                    If Not projectsToWork.Contains(kvp.Key) Then
+                        projectsToWork.Add(kvp.Key, kvp.Key)
+                    End If
+                Next
+                defDone = True
+            End If
+        End If
+
+
+        If Not defDone And ShowProjekte.getMarkedProjects.Count > 0 Then
+            projectsToWork = ShowProjekte.getMarkedProjects
+            defDone = True
+        End If
+
+        If Not defDone Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                projectsToWork.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+
+        Dim newWB As Excel.Workbook
+
+        Dim considerAll As Boolean = True
+
+
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\Istdaten_Demo " & fNameExtension & ".xlsx"
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "Istdaten"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startSpalteDaten As Integer = 8
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+
+        With CType(newWB.Worksheets("Istdaten"), Excel.Worksheet)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Projektnummer"
+            CType(.Cells(1, 2), Excel.Range).Value = "Projekt"
+            CType(.Cells(1, 3), Excel.Range).Value = "Vorgang/Aktivität"
+            CType(.Cells(1, 4), Excel.Range).Value = "Intern/Extern"
+            CType(.Cells(1, 5), Excel.Range).Value = "Ressource/Personal-Nummer"
+            CType(.Cells(1, 6), Excel.Range).Value = "Jahr"
+            CType(.Cells(1, 7), Excel.Range).Value = "Monat"
+            CType(.Cells(1, 8), Excel.Range).Value = "IST (PT)"
+            CType(.Cells(1, 9), Excel.Range).Value = "IST (Euro)"
+
+        End With
+
+        Dim ws As Excel.Worksheet = CType(newWB.Worksheets("Istdaten"), Excel.Worksheet)
+
+        Dim bis As Integer = getColumnOfDate(Date.Now) - 1
+
+        Dim err As New clsErrorCodeMsg
+
+        zeile = 2
+
+        ' now write everything 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            Dim vpID As String = ""
+            Dim hproj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantName, AlleProjekte, Date.Now)
+
+            Dim hprojRoleValues() As Double = Nothing
+            If Not IsNothing(hproj) Then
+                ' jetzt die Werte für die Istdaten schreiben  
+
+                If (getColumnOfDate(hproj.endeDate) >= von) And (bis >= von) Then
+
+                    Dim allOccurringRoleNames As Collection = hproj.getRoleNames
+
+                    For Each roleName As String In allOccurringRoleNames
+
+                        Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                        If Not IsNothing(curRole) Then
+
+                            Dim isExtern As Boolean = RoleDefinitions.getRoledef(roleName).isExternRole
+                            hprojRoleValues = hproj.getResourceValuesInTimeFrame(von, bis, roleName, inclSubRoles:=False, outPutInEuro:=False)
+
+                            ' jetzt jeden Record schreiben ... 
+                            For i As Integer = von To bis
+
+                                If hprojRoleValues(i - von) > 0 Then
+                                    ' only do something if values are greater than 0
+                                    Dim mon As Integer = getDateofColumn(i, False).Month
+                                    Dim jahr As Integer = getDateofColumn(i, False).Year
+
+                                    With CType(newWB.Worksheets("Istdaten"), Excel.Worksheet)
+
+                                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.kundenNummer
+                                        CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                        CType(.Cells(zeile, 3), Excel.Range).Value = ""
+
+                                        If isExtern Then
+                                            CType(.Cells(zeile, 4), Excel.Range).Value = "Extern"
+                                        Else
+                                            CType(.Cells(zeile, 4), Excel.Range).Value = "Intern"
+                                        End If
+
+
+                                        Call Randomize()
+                                        Dim zufallsModifier As Double = Rnd()
+                                        Dim randomValue As Double
+
+                                        ' create value between 70% und 130% 
+                                        If zufallsModifier <= 0.5 Then
+                                            randomValue = 0.7 + 2 * 0.3 * zufallsModifier
+                                        Else
+                                            randomValue = 0.7 + 2 * 0.3 * zufallsModifier
+                                        End If
+
+                                        CType(.Cells(zeile, 5), Excel.Range).Value = roleName
+                                        CType(.Cells(zeile, 6), Excel.Range).Value = jahr
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = mon
+                                        CType(.Cells(zeile, 8), Excel.Range).Value = hprojRoleValues(i - von)
+                                        CType(.Cells(zeile, 9), Excel.Range).Value = ""
+
+                                    End With
+
+                                    zeile = zeile + 1
+                                End If
+
+
+
+                            Next
+
+
+                        Else
+                            ' darf eigentlich gar nicht sein 
+                        End If
+
+                    Next
+                End If
+
+
+            End If
+
+
+        Next
+
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("Istdaten"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("Istdaten"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
 
 
     Public Sub writeYearInitialPlanningSupportToExcel(ByVal von As Integer, ByVal bis As Integer,
