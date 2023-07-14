@@ -36,17 +36,7 @@ Public Class Tabelle3
     ' enthält die Spalten, wo die einzelnen Felder stehen , korreliert mit der Enum allianzSpalten
     Private col() As Integer
 
-    Private Sub Tabelle3_ActivateEvent() Handles Me.ActivateEvent
-
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
-
-        ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
-        Try
-            Application.DisplayFormulaBar = False
-        Catch ex As Exception
-
-        End Try
+    Private Sub setColVariable()
 
         Dim enumTermineColumnsCount As Integer = [Enum].GetNames(GetType(PTmeTe)).Length
         ReDim col(enumTermineColumnsCount)
@@ -68,8 +58,25 @@ Public Class Tabelle3
         col(PTmeTe.invoiceTerm) = 14
         col(PTmeTe.penaltyValue) = 15
         col(PTmeTe.penaltyDate) = 16
+    End Sub
+
+    Private Sub Tabelle3_ActivateEvent() Handles Me.ActivateEvent
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
+        Try
+            Application.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
+
 
         ' initial setzen der Spalten ... 
+        If IsNothing(col) Then
+            Call setColVariable()
+        End If
 
         'Dim filterRange As Excel.Range
 
@@ -155,7 +162,8 @@ Public Class Tabelle3
         End Try
 
 
-        appInstance.EnableEvents = formerEE
+        ' tk 14.7.23 sollte hier ja immer auf true sein 
+        ' appInstance.EnableEvents = formerEE
 
         ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
         Try
@@ -225,6 +233,11 @@ Public Class Tabelle3
         ' damit nicht eine immerwährende Event Orgie durch Änderung in den Zellen abgeht ...
         appInstance.EnableEvents = False
 
+        ' initial setzen der Spalten ... 
+        If IsNothing(col) Then
+            Call setColVariable()
+        End If
+
         Dim currentCell As Excel.Range = Target
         Dim cphase As clsPhase = Nothing
         Dim cMilestone As clsMeilenstein = Nothing
@@ -245,10 +258,13 @@ Public Class Tabelle3
             Dim oldProjektStatus As String = hproj.vpStatus
             Dim oldVariantName As String = hproj.variantName
 
+
+            ' tk 14.7.23 warum wird das gemacht ? 
             hproj.variantName = "$tmpv1"
             'ur: 211202: hproj.Status = ProjektStatus(PTProjektStati.geplant)
             hproj.vpStatus = VProjectStatus(PTVPStati.initialized)
             hproj.movable = True
+            ' Ende tk Frage
 
             Dim allowedLeftDate As Date = StartofCalendar
             If hproj.hasActualValues Then
@@ -279,9 +295,15 @@ Public Class Tabelle3
                         cphase = hproj.getPhaseByID(elemID)
                     End If
 
+                    ' tk 14.7.23 - exception, wenn cphase=Nothing
+                    Dim msChilds As New Collection
+                    Dim phaseChilds As New Collection
 
-                    Dim msChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
-                    Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
+                    If Not IsNothing(cphase) Then
+                        msChilds = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
+                        phaseChilds = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
+                    End If
+
 
                     ' dann die allowdLeft und RightDate berechnen
                     ' jedes Elem hat eine Eltern-Phase, die nur eine Phase sein kann ...
@@ -816,7 +838,8 @@ Public Class Tabelle3
 
                 End If
             Catch ex As Exception
-
+                Call logger(ptErrLevel.logsevereError, "Tabelle3 Termine Exception", ex.Message)
+                'Call logger(errLevel:=ptErrLevel.logError, "Exception " & ex.Message, )
             End Try
 
             ' jetzt wieder zurücksetzen 
@@ -840,6 +863,11 @@ Public Class Tabelle3
 
         appInstance.EnableEvents = False
 
+        ' initial setzen der Spalten ... 
+        If IsNothing(col) Then
+            Call setColVariable()
+        End If
+
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim elemNameID As String = ""
         Dim elemName As String = ""
@@ -850,6 +878,9 @@ Public Class Tabelle3
 
         Dim pname As String = ""
         Dim oldMsTaskName As String = ""
+
+        ' tk 14.7.23 check whether or not col IsNothing .. 
+        ' if so set it 
 
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
@@ -895,7 +926,7 @@ Public Class Tabelle3
         If IsNothing(CType(appInstance.ActiveSheet.Cells(Target.Row, col(PTmeTe.startdate)), Excel.Range).Value) Then
             isMilestone = True
         Else
-            isMilestone = CStr(CType(appInstance.ActiveSheet.Cells(Target.Row, col(PTmeTe.startdate)), Excel.Range).Value).Trim <> ""
+            isMilestone = CStr(CType(appInstance.ActiveSheet.Cells(Target.Row, col(PTmeTe.startdate)), Excel.Range).Value).Trim = ""
         End If
 
 
@@ -1028,6 +1059,11 @@ Public Class Tabelle3
         'ur: 211202: hproj.Status = ProjektStatus(PTProjektStati.geplant)
         hproj.vpStatus = VProjectStatus(PTVPStati.initialized)
         hproj.movable = True
+
+        ' initial setzen der Spalten ... 
+        If IsNothing(col) Then
+            Call setColVariable()
+        End If
 
         'Dim allowedLeftDate As Date = hproj.startDate
         'Dim allowedRightDate As Date = hproj.endeDate
