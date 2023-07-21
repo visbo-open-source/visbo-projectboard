@@ -2875,6 +2875,10 @@ Public Class clsPhase
                 Dim myValues As Double()
                 ReDim myValues(getColumnOfDate(rightDate) - getColumnOfDate(leftDate))
 
+                ' here the substitute Values need to be considered - because this is was needs to be subtracted from the original or placeholder role 
+                Dim substituteValues As Double()
+                ReDim substituteValues(getColumnOfDate(rightDate) - getColumnOfDate(leftDate))
+
                 If Not IsNothing(myNewRole) Then
                     For ix As Integer = foreCastDataOffset To myPhaseLength - 1
                         myValues(ix - foreCastDataOffset) = myNewRole.Xwerte(ix)
@@ -2889,15 +2893,29 @@ Public Class clsPhase
                 inputValues = calcVerteilungAufMonate(leftDate, rightDate, inputValues, 1.0)
                 Dim newValues As Double() = ShowProjekte.adjustToCapacity(newRoleID, newSkillID, allowOvertime, inputValues, leftDate, myValues)
 
+                ReDim inputValues(0)
+                inputValues(0) = newValue
+                inputValues = calcVerteilungAufMonate(leftDate, rightDate, inputValues, 1.0)
+                substituteValues = ShowProjekte.adjustToCapacity(newRoleID, newSkillID, allowOvertime, inputValues, leftDate, myValues)
 
                 ' now the substitution needs to take place 
-                ' adjust the summary Role 
+                ' adjust the summary Role old one before 21.7.23
+                'Dim stillToDistribute As Double = 0.0
+                'For ix As Integer = foreCastDataOffset To myPhaseLength - 1
+                '    If myOldRole.Xwerte(ix) >= newValues(ix - foreCastDataOffset) Then
+                '        myOldRole.Xwerte(ix) = myOldRole.Xwerte(ix) - newValues(ix - foreCastDataOffset)
+                '    Else
+                '        stillToDistribute = stillToDistribute + newValues(ix - foreCastDataOffset) - myOldRole.Xwerte(ix)
+                '        myOldRole.Xwerte(ix) = 0
+                '    End If
+                'Next
+
                 Dim stillToDistribute As Double = 0.0
                 For ix As Integer = foreCastDataOffset To myPhaseLength - 1
-                    If myOldRole.Xwerte(ix) >= newValues(ix - foreCastDataOffset) Then
-                        myOldRole.Xwerte(ix) = myOldRole.Xwerte(ix) - newValues(ix - foreCastDataOffset)
+                    If myOldRole.Xwerte(ix) >= substituteValues(ix - foreCastDataOffset) Then
+                        myOldRole.Xwerte(ix) = myOldRole.Xwerte(ix) - substituteValues(ix - foreCastDataOffset)
                     Else
-                        stillToDistribute = stillToDistribute + newValues(ix - foreCastDataOffset) - myOldRole.Xwerte(ix)
+                        stillToDistribute = stillToDistribute + substituteValues(ix - foreCastDataOffset) - myOldRole.Xwerte(ix)
                         myOldRole.Xwerte(ix) = 0
                     End If
                 Next
@@ -2922,6 +2940,7 @@ Public Class clsPhase
                 Loop
 
                 ' now make sure newValues is having the right length 
+                ' tk 21.7.23 make sure actual data values are taken into account
                 If foreCastDataOffset > 0 Then
                     Dim korrNewValues As Double()
                     ReDim korrNewValues(myPhaseLength - 1)
@@ -2934,6 +2953,10 @@ Public Class clsPhase
 
                 ' adjust the new Role 
                 If Not IsNothing(myNewRole) Then
+                    ' insert the actualData Values into myNewRole
+                    For iz As Integer = 0 To foreCastDataOffset - 1
+                        newValues(iz) = myNewRole.Xwerte(iz)
+                    Next
                     ' just replace the values for Xwerte ...
                     myNewRole.Xwerte = newValues
                 Else
@@ -4140,7 +4163,7 @@ Public Class clsPhase
         Get
             Dim tmpResult As Boolean = False
             If _parentProject.hasActualValues Then
-                tmpResult = getStartDate < _parentProject.actualDataUntil
+                tmpResult = getColumnOfDate(getStartDate) <= getColumnOfDate(_parentProject.actualDataUntil)
             End If
             hasActualData = tmpResult
         End Get
