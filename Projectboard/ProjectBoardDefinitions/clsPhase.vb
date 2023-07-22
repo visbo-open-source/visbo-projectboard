@@ -481,7 +481,9 @@ Public Class clsPhase
     ''' <param name="roleNameID"></param>
     ''' <param name="inclChilds"></param>
     ''' <returns></returns>
-    Public ReadOnly Property containsRoleSkillID(ByVal roleNameID As String, Optional ByVal inclChilds As Boolean = True) As Boolean
+    Public ReadOnly Property containsRoleSkillID(ByVal roleNameID As String,
+                                                 Optional ByVal inclChilds As Boolean = True,
+                                                 Optional ByVal strictly As Boolean = False) As Boolean
         Get
             Dim tmpResult As Boolean = False
             Dim skillID As Integer = -1
@@ -489,7 +491,9 @@ Public Class clsPhase
 
             If roleID = -1 And skillID > 0 Then
                 tmpResult = containsSkillID(skillID, inclSubSkills:=inclChilds)
-            ElseIf roleID > 0 And skillID = -1 Then
+                ' tk 21.7.23 strictly eingeführt, um zu erzwingen, dass gecheckt wird, ob exatkt diese Role-Skill ID existiert 
+                ' bei not strictly wird nur gecheckt, ob die roleid egal mit welcher Skill bereits vorkommt 
+            ElseIf roleID > 0 And skillID = -1 And Not strictly Then
                 tmpResult = containsRoleID(roleID, inclSubRoles:=inclChilds)
             ElseIf roleID = -1 And skillID = -1 Then
                 ' nichts tun 
@@ -497,28 +501,41 @@ Public Class clsPhase
                 Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
                 Dim listOfRoleIDs As New SortedList(Of Integer, Double)
 
-                If curRoledef.isCombinedRole And inclChilds Then
-                    listOfRoleIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
+                ' if branch added by tk 21.7.23 
+                ' checks whether or not the exact combination roleID;Skill does occur 
+                If strictly Then
+                    For Each curRole As clsRolle In _allRoles
+                        If curRole.uid = roleID And curRole.teamID = skillID Then
+                            tmpResult = True
+                            Exit For
+                        End If
+                    Next
                 Else
-                    listOfRoleIDs.Add(curRoledef.UID, 1.0)
-                End If
-
-                Dim curSKilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
-                Dim listOfSkillIDs As New SortedList(Of Integer, Double)
-
-                If curSKilldef.isCombinedRole And inclChilds Then
-                    listOfSkillIDs = RoleDefinitions.getSubRoleIDsOf(curSKilldef.name)
-                Else
-                    listOfSkillIDs.Add(curSKilldef.UID, 1.0)
-                End If
-
-                ' jetzt kommt das MAtching 
-                For Each curRole As clsRolle In _allRoles
-                    If listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID) Then
-                        tmpResult = True
-                        Exit For
+                    If curRoledef.isCombinedRole And inclChilds Then
+                        listOfRoleIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
+                    Else
+                        listOfRoleIDs.Add(curRoledef.UID, 1.0)
                     End If
-                Next
+
+                    Dim curSKilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
+                    Dim listOfSkillIDs As New SortedList(Of Integer, Double)
+
+                    If curSKilldef.isCombinedRole And inclChilds Then
+                        listOfSkillIDs = RoleDefinitions.getSubRoleIDsOf(curSKilldef.name)
+                    Else
+                        listOfSkillIDs.Add(curSKilldef.UID, 1.0)
+                    End If
+
+                    ' jetzt kommt das MAtching 
+                    For Each curRole As clsRolle In _allRoles
+                        If listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID) Then
+                            tmpResult = True
+                            Exit For
+                        End If
+                    Next
+                End If
+
+
             End If
 
             containsRoleSkillID = tmpResult
