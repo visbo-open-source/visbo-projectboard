@@ -264,7 +264,7 @@ Public Class Tabelle2
 
                                 For Each kvp As KeyValuePair(Of String, Double) In roleSkillValuesToAdd
 
-                                    Dim needNewZeile As Boolean = Not cphase.containsRoleSkillID(kvp.Key, inclChilds:=False)
+                                    Dim needNewZeile As Boolean = Not cphase.containsRoleSkillID(kvp.Key, inclChilds:=False, strictly:=True)
                                     If Not needNewZeile Then
                                         ' find the zeile containing project, phase, kvp.key: RoleID;SkillID
                                         existingZeile = findeZeileInMeRC(meWS, hproj.name, phaseNameID, kvp.Key)
@@ -564,7 +564,7 @@ Public Class Tabelle2
                                             loopRcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
 
                                             Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
-                                            If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                            If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False, strictly:=True) Then
                                                 Call meRCZeileEinfuegen(zeile, loopRcName, roleSkillItem, True)
                                                 zeile = visboZustaende.oldRow
                                             End If
@@ -579,7 +579,7 @@ Public Class Tabelle2
                                     Else
                                         Try
                                             Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
-                                            If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                            If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False, strictly:=True) Then
                                                 Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
                                                 zeile = visboZustaende.oldRow
                                             End If
@@ -592,7 +592,7 @@ Public Class Tabelle2
                                 Else
                                     Try
                                         Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(roleSkillItem, skillName)
-                                        If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                        If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False, strictly:=True) Then
                                             Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)
                                             zeile = visboZustaende.oldRow
                                         End If
