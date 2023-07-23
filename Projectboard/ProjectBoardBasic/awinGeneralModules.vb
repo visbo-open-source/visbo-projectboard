@@ -4495,8 +4495,10 @@ Public Module awinGeneralModules
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
 
+        Dim weitermachen As Boolean = False
 
-        If AlleProjekte.hasAnyConflictsWith(key, False) Then
+
+        If AlleProjekte.hasAnyConflictsWith(key, False) And Not calledFromPPTorSPE Then
             Dim outputLine As String = "Projekt " & pName & " kann nicht geladen werden. ist bereits in Summary Projekt enthalten"
             outputCollection.Add(outputLine)
         Else
@@ -4509,6 +4511,8 @@ Public Module awinGeneralModules
 
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
+
+
 
             ' tk 4.2.20
             ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
@@ -4553,33 +4557,58 @@ Public Module awinGeneralModules
 
                 End If
 
-                If AlleProjekte.Containskey(key) Then
-                    AlleProjekte.Remove(key, updateCurrentConstellation:=True)
+                ' tk 22.7.23 Allow to load same project, but ask what should  happen if chenges occured 
+                If calledFromPPTorSPE Then
+
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        weitermachen = True
+                    Else
+                        Dim sessionProj As clsProjekt = ShowProjekte.getProject(hproj.name)
+                        If hproj.isIdenticalTo(sessionProj) Then
+                            weitermachen = False
+                        Else
+                            Dim msgTxt As String = "Discard Changes made in project " & hproj.name
+                            If MsgBox(msgTxt, MsgBoxStyle.YesNo, "Discard Changes?") = MsgBoxResult.Yes Then
+                                weitermachen = True
+                            Else
+                                ' just leave the project in the session 
+                                weitermachen = False
+                            End If
+                        End If
+                    End If
+
                 End If
 
-                AlleProjekte.Add(hproj, updateCurrentConstellation:=True)
+                If weitermachen Then
+                    If AlleProjekte.Containskey(key) Then
+                        AlleProjekte.Remove(key, updateCurrentConstellation:=True)
+                    End If
 
-                ' nur machen, wenn nicht von PPT aufgerufen 
-                If Not calledFromPPTorSPE Then
-                    ' jetzt die writeProtections aktualisieren 
-                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                    writeProtections.upsert(wpItem)
+                    AlleProjekte.Add(hproj, updateCurrentConstellation:=True)
 
-                    If show Then
-                        ' prüfen, ob es bereits in der Showprojekt enthalten ist
-                        ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-                        ' replaceProjectVariant
+                    ' nur machen, wenn nicht von PPT aufgerufen 
+                    If Not calledFromPPTorSPE Then
+                        ' jetzt die writeProtections aktualisieren 
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                        writeProtections.upsert(wpItem)
 
-                        Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+                        If show Then
+                            ' prüfen, ob es bereits in der Showprojekt enthalten ist
+                            ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+                            ' replaceProjectVariant
+
+                            Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+
+                        End If
+                    Else
+                        ' wenn es aus PPT aus aufgerufen wird, muss das Projekt auch in ShowPRojekte eingetragen werden, 
+                        ' sofern nicht schon ein PRojekt gleichen Namens drin ist. 
+
+                        ' take it in anyway 
+                        ShowProjekte.AddAnyway(hproj)
+                        editProjekteInSPE.AddAnyway(hproj)
 
                     End If
-                Else
-                    ' wenn es aus PPT aus aufgerufen wird, muss das Projekt auch in ShowPRojekte eingetragen werden, 
-                    ' sofern nicht schon ein PRojekt gleichen Namens drin ist. 
-
-                    ' take it in anyway 
-                    ShowProjekte.AddAnyway(hproj)
-                    editProjekteInSPE.AddAnyway(hproj)
 
                 End If
 

@@ -14685,6 +14685,14 @@ Public Module agm2
 
             End Try
 
+            ' now define the visbo-zustaende.meMAxZeile 
+            ' if resource sheet is already active this value is not updated after new projects have been loaded
+            Try
+                visboZustaende.meMaxZeile = CType(currentWS, Excel.Worksheet).UsedRange.Rows.Count
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "when defining meMaxZeile ")
+            End Try
+
         Catch ex As Exception
             appInstance.EnableEvents = True
         End Try
