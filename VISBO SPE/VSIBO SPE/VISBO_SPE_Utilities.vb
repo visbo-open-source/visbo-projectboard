@@ -773,7 +773,7 @@ Module VISBO_SPE_Utilities
                     CType(.Cells(1, 11), Excel.Range).Value = "% Done"
                     CType(.Cells(1, 12), Excel.Range).Value = "folder/document Link"
                     If awinSettings.enableInvoices Then
-                        CType(.Cells(1, 13), Excel.Range).Value = "Invoice Value"
+                        CType(.Cells(1, 13), Excel.Range).Value = "Revenue/Benefit"
                         CType(.Cells(1, 14), Excel.Range).Value = "Term of payment"
                         CType(.Cells(1, 15), Excel.Range).Value = "Penalty Value"
                         CType(.Cells(1, 16), Excel.Range).Value = "Penalty Date"
@@ -798,7 +798,7 @@ Module VISBO_SPE_Utilities
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
                     CType(.Cells(1, 12), Excel.Range).Value = "Link zum Dokument/Ordner"
                     If awinSettings.enableInvoices Then
-                        CType(.Cells(1, 13), Excel.Range).Value = "Rechnungs-Betrag"
+                        CType(.Cells(1, 13), Excel.Range).Value = "Umsatz/Benefit"
                         CType(.Cells(1, 14), Excel.Range).Value = "Zahlungsziel"
                         CType(.Cells(1, 15), Excel.Range).Value = "Vertrags-Strafe"
                         CType(.Cells(1, 16), Excel.Range).Value = "Datum Vertrags-Strafe"
@@ -1360,6 +1360,14 @@ Module VISBO_SPE_Utilities
                     CType(currentWS, Excel.Worksheet).Columns(8).EntireColumn.AutoFit()
                     CType(currentWS, Excel.Worksheet).Columns(9).EntireColumn.AutoFit()
 
+                    CType(currentWS, Excel.Worksheet).Columns(7).EntireColumn.AutoFit() ' Ampel
+                    CType(currentWS, Excel.Worksheet).Columns(10).EntireColumn.AutoFit() ' verantwortlich
+                    CType(currentWS, Excel.Worksheet).Columns(11).EntireColumn.AutoFit() ' %Done
+                    CType(currentWS, Excel.Worksheet).Columns(13).EntireColumn.AutoFit() ' Umsatz/Benefit
+                    CType(currentWS, Excel.Worksheet).Columns(14).EntireColumn.AutoFit() ' Zahlungsziel
+                    CType(currentWS, Excel.Worksheet).Columns(15).EntireColumn.AutoFit() ' Vertragsstrafe
+                    CType(currentWS, Excel.Worksheet).Columns(16).EntireColumn.AutoFit() ' Datum der Vertrags-Strafe
+
                     ' wenn zu breit, dann maximum setzen
                     If CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth > 50 Then
                         CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth = 50
@@ -1467,7 +1475,7 @@ Module VISBO_SPE_Utilities
             .Font.Size = 11
             .Font.Bold = True
             .Font.Color = XlRgbColor.rgbWhite
-            .VerticalAlignment = Excel.XlVAlign.xlVAlignTop
+            .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
         End With
 
     End Sub

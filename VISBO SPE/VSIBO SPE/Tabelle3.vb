@@ -783,7 +783,7 @@ Public Class Tabelle3
 
                             If Not IsNothing(Target.Value) Then
                                 If IsNumeric(Target.Value) Then
-                                    If CInt(Target.Value) > 0 Then
+                                    If CInt(Target.Value) >= 0 Then
                                         myValue = CInt(Target.Value)
 
                                         If visboZustaende.currentZeileIsMilestone Then
