@@ -22,16 +22,18 @@ Public Class frmProjectEditSettings
     Private Sub frmProjectEditSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         If awinSettings.englishLanguage Then
-            AdjustResourceNeeds.Text = "Adjust resource needs proportionally (only used for Time)"
-            newCalculation.Text = "Distribute values automatically over time  (only used for Time)"
-            invoices.Text = "Process invoices and contractual penalties"
+            AdjustResourceNeeds.Text = "Adjust resource needs proportionally (when duration of phase has changed)"
+            newCalculation.Text = "Distribute values automatically over time  (when duration or start/end of phase has changed)"
+            invoices.Text = "Edit Revenue/Benefit and contractual penalties"
             adjustChilds.Text = "Date changes also affect the subordinate tasks (only used for Time)"
+            allowOverUtilization.Text = "overloading resources is allowed"
 
         Else
-            AdjustResourceNeeds.Text = "Ressourcen Bedarfe proportional anpassen (nur für Zeitangaben verwendet) "
-            newCalculation.Text = "Werte autom. über die Zeit verteilen  (nur für Zeitangaben verwendet) "
-            invoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"
+            AdjustResourceNeeds.Text = "Ressourcen Bedarfe proportional anpassen (bei Änderung der Dauer der Phase) "
+            newCalculation.Text = "Werte autom. über die Zeit verteilen  (bei Änderung Dauer oder Start/Ende der Phase) "
+            invoices.Text = "Umsätze/Benefits und Vertrags-Strafen bearbeiten"
             adjustChilds.Text = "Start- und Endedatum der 'Kinder' automatisch anpassen (nur für Zeitangaben verwendet)"
+            allowOverUtilization.Text = "Überlastung erlauben"
 
         End If
 
@@ -67,6 +69,10 @@ Public Class frmProjectEditSettings
 
         topPos = Me.Top
         leftPos = Me.Left
+
+    End Sub
+
+    Private Sub allowOverUtilization_CheckedChanged(sender As Object, e As EventArgs) Handles allowOverUtilization.CheckedChanged
 
     End Sub
 End Class

@@ -24,11 +24,11 @@ Partial Class frmProjectEditSettings
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjectEditSettings))
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.allowOverUtilization = New System.Windows.Forms.CheckBox()
         Me.adjustChilds = New System.Windows.Forms.CheckBox()
         Me.invoices = New System.Windows.Forms.CheckBox()
         Me.newCalculation = New System.Windows.Forms.CheckBox()
         Me.AdjustResourceNeeds = New System.Windows.Forms.CheckBox()
-        Me.allowOverUtilization = New System.Windows.Forms.CheckBox()
         Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -44,10 +44,18 @@ Partial Class frmProjectEditSettings
         Me.Panel1.Controls.Add(Me.AdjustResourceNeeds)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-
-        Me.Panel1.Size = New System.Drawing.Size(577, 126)
-
+        Me.Panel1.Size = New System.Drawing.Size(577, 144)
         Me.Panel1.TabIndex = 0
+        '
+        'allowOverUtilization
+        '
+        Me.allowOverUtilization.AutoSize = True
+        Me.allowOverUtilization.Location = New System.Drawing.Point(12, 114)
+        Me.allowOverUtilization.Name = "allowOverUtilization"
+        Me.allowOverUtilization.Size = New System.Drawing.Size(137, 19)
+        Me.allowOverUtilization.TabIndex = 4
+        Me.allowOverUtilization.Text = "Allow over-utilization"
+        Me.allowOverUtilization.UseVisualStyleBackColor = True
         '
         'adjustChilds
         '
@@ -91,23 +99,12 @@ Partial Class frmProjectEditSettings
         Me.AdjustResourceNeeds.Text = "Adjust resource needs proportionally (when phases are extended or shortened)"
         Me.AdjustResourceNeeds.UseVisualStyleBackColor = True
         '
-        'allowOverUtilization
-        '
-        Me.allowOverUtilization.AutoSize = True
-        Me.allowOverUtilization.Location = New System.Drawing.Point(12, 114)
-        Me.allowOverUtilization.Name = "allowOverUtilization"
-        Me.allowOverUtilization.Size = New System.Drawing.Size(137, 19)
-        Me.allowOverUtilization.TabIndex = 4
-        Me.allowOverUtilization.Text = "Allow over-utilization"
-        Me.allowOverUtilization.UseVisualStyleBackColor = True
-        '
         'frmProjectEditSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(579, 126)
-
+        Me.ClientSize = New System.Drawing.Size(579, 144)
         Me.Controls.Add(Me.Panel1)
         Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
