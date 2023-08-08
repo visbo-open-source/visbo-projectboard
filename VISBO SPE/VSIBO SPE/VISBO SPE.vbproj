@@ -19,7 +19,7 @@
     <PublishUrl>C:\publish\VISBO SPE\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.0.2.0</ApplicationVersion>
+    <ApplicationVersion>2.0.3.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>8</UpdateInterval>
@@ -31,6 +31,11 @@
     <OfficeApplicationDescription />
   </PropertyGroup>
   <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 und x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.7 %28x86 und x64%29</ProductName>
