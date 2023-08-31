@@ -9771,7 +9771,6 @@ Public Module agm3
         Dim err As New clsErrorCodeMsg
         '
         ' ein neues Projekt wird als Objekt angelegt ....
-        '
 
         hproj = New clsProjekt
 
@@ -9836,6 +9835,16 @@ Public Module agm3
                         projVorlage.Erloes = myproject.Erloes
                         projVorlage.AllPhases = myproject.AllPhases
                         projVorlage.hierarchy = myproject.hierarchy
+                        For Each kvpbool As KeyValuePair(Of Integer, Boolean) In myproject.customBoolFields
+                            projVorlage.addSetCustomBField(kvpbool.Key, kvpbool.Value)
+                        Next
+                        For Each kvpdbl As KeyValuePair(Of Integer, Double) In myproject.customDblFields
+                            projVorlage.addSetCustomDField(kvpdbl.Key, kvpdbl.Value)
+                        Next
+                        For Each kvpstr As KeyValuePair(Of Integer, String) In myproject.customStringFields
+                            projVorlage.addSetCustomSField(kvpstr.Key, kvpstr.Value)
+                        Next
+
 
                         projVorlage.korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
                     Else
