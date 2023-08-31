@@ -1416,70 +1416,93 @@ Public Class Request
                 '    VP.customFieldDate.Add(pmCommit)
                 'End If
 
-                vpErg = POSTOneVP(VP, err)
-
-
-                If vpErg.Count > 0 Then
-
-                    ' vpErg.ElementAt(0) ist nun das aktuelle VP
-                    vpid = vpErg.ElementAt(0)._id
-                    aktvp = vpErg.ElementAt(0)
-                    storedVP = (vpid <> "")
-
-                    ' action to invite the project.leadPerson into the new created project
-
-                    If Not IsNothing(projekt.leadPerson) And projekt.leadPerson <> "" Then
-                        Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
-                        If userlist.Count = 1 Then
-                            projekt.leadPerson = userlist.ElementAt(0).email
-                        End If
-
-                        Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
-                        ' find visbo Project Admin GroupID
-                        For Each grp In groups
-                            If LCase(grp.name) = LCase("Visbo Project Admin") Then
-                                'invite the projekt.leadPerson to this group
-                                Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
-                                For Each u In newManager
-                                    If LCase(u.email) = LCase(projekt.leadPerson) Then
-                                        aktvp.managerId = u.userId
-                                    End If
-                                Next
-                                If newManager.Count > 0 Then
-                                    ' Project lead in VP eintragen
-                                    Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
-                                    If vpList.Count <= 0 Then
-                                        Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
-                                    Else
-                                        Call logger(ptErrLevel.logInfo, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID successful! ")
-                                    End If
-                                End If
-                            End If
-                        Next
-                    End If
-
-
-                    ' VP im Cache ergänzen
-                    If VRScache.VPsN.ContainsKey(aktvp.name) Then
-                        VRScache.VPsN.Remove(aktvp.name)
-                        VRScache.VPsN.Add(aktvp.name, aktvp)
-                    Else
-                        VRScache.VPsN.Add(aktvp.name, aktvp)
-                    End If
-                    If VRScache.VPsId.ContainsKey(vpid) Then
-                        VRScache.VPsId.Remove(vpid)
-                        VRScache.VPsId.Add(vpid, aktvp)
-                    Else
-                        VRScache.VPsId.Add(vpid, aktvp)
-                    End If
-
-                Else
-                    Throw New ArgumentException(err.errorCode & vbLf & "Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
+                ' ur: 20230808: neues vp-Propery customStringFields, 
+                If Not IsNothing(projekt.customStringFields) Then
+                    For Each cSF As KeyValuePair(Of Integer, String) In projekt.customStringFields
+                        Dim newcSF As New clsCustomFieldStr
+                        newcSF.type = "VP"
+                        newcSF.name = customFieldDefinitions.getName(cSF.Key)
+                        newcSF.value = cSF.Value
+                        VP.customFieldString.Add(newcSF)
+                    Next
+                End If
+                ' ur: 20230808: neues vp-Propery customDblFields, 
+                If Not IsNothing(projekt.customDblFields) Then
+                    For Each cDblF As KeyValuePair(Of Integer, Double) In projekt.customDblFields
+                        Dim newcDblF As New clsCustomFieldDbl
+                        newcDblF.type = "VP"
+                        newcDblF.name = customFieldDefinitions.getName(cDblF.Key)
+                        newcDblF.value = cDblF.Value
+                        VP.customFieldDouble.Add(newcDblF)
+                    Next
                 End If
 
 
-            Else
-                Try
+
+                vpErg = POSTOneVP(VP, err)
+
+
+                    If vpErg.Count > 0 Then
+
+                        ' vpErg.ElementAt(0) ist nun das aktuelle VP
+                        vpid = vpErg.ElementAt(0)._id
+                        aktvp = vpErg.ElementAt(0)
+                        storedVP = (vpid <> "")
+
+                        ' action to invite the project.leadPerson into the new created project
+
+                        If Not IsNothing(projekt.leadPerson) And projekt.leadPerson <> "" Then
+                            Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+                            If userlist.Count = 1 Then
+                                projekt.leadPerson = userlist.ElementAt(0).email
+                            End If
+
+                            Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
+                            ' find visbo Project Admin GroupID
+                            For Each grp In groups
+                                If LCase(grp.name) = LCase("Visbo Project Admin") Then
+                                    'invite the projekt.leadPerson to this group
+                                    Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
+                                    For Each u In newManager
+                                        If LCase(u.email) = LCase(projekt.leadPerson) Then
+                                            aktvp.managerId = u.userId
+                                        End If
+                                    Next
+                                    If newManager.Count > 0 Then
+                                        ' Project lead in VP eintragen
+                                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                                        If vpList.Count <= 0 Then
+                                            Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                        Else
+                                            Call logger(ptErrLevel.logInfo, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID successful! ")
+                                        End If
+                                    End If
+                                End If
+                            Next
+                        End If
+
+
+                        ' VP im Cache ergänzen
+                        If VRScache.VPsN.ContainsKey(aktvp.name) Then
+                            VRScache.VPsN.Remove(aktvp.name)
+                            VRScache.VPsN.Add(aktvp.name, aktvp)
+                        Else
+                            VRScache.VPsN.Add(aktvp.name, aktvp)
+                        End If
+                        If VRScache.VPsId.ContainsKey(vpid) Then
+                            VRScache.VPsId.Remove(vpid)
+                            VRScache.VPsId.Add(vpid, aktvp)
+                        Else
+                            VRScache.VPsId.Add(vpid, aktvp)
+                        End If
+
+                    Else
+                        Throw New ArgumentException(err.errorCode & vbLf & "Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
+                    End If
+
+
+                Else
+                    Try
                     ' KundenNummer in vorhandenem VP ergänzen
                     If (aktvp.kundennummer = "") And (projekt.kundenNummer <> "") Then
 
