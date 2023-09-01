@@ -21092,6 +21092,21 @@ Public Module agm2
                 projVorlage.Erloes = hproj.Erloes
                 projVorlage.AllPhases = hproj.AllPhases
                 projVorlage.hierarchy = hproj.hierarchy
+                If Not IsNothing(hproj.customStringFields) Then
+                    For Each cSF As KeyValuePair(Of Integer, String) In hproj.customStringFields
+                        projVorlage.customStringFields.Add(cSF.Key, cSF.Value)
+                    Next
+                End If
+                If Not IsNothing(hproj.customDblFields) Then
+                    For Each cDblF As KeyValuePair(Of Integer, Double) In hproj.customDblFields
+                        projVorlage.customDblFields.Add(cDblF.Key, cDblF.Value)
+                    Next
+                End If
+                If Not IsNothing(hproj.customBoolFields) Then
+                    For Each cBF As KeyValuePair(Of Integer, Boolean) In hproj.customBoolFields
+                        projVorlage.customBoolFields.Add(cBF.Key, cBF.Value)
+                    Next
+                End If
             Else
                 Call logger(ptErrLevel.logError, "createTemplateOfProject", "given project isn't defined properly")
             End If
