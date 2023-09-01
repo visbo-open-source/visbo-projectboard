@@ -505,6 +505,20 @@ Public Class Ribbon1
             sw.StartTimer()
 
             Dim loadConstellationFrm As New frmLoadConstellation
+            ' do not show Date Selector
+            loadConstellationFrm.lblStandvom.Visible = False
+            loadConstellationFrm.requiredDate.Visible = False
+
+            loadConstellationFrm.addToSession.Checked = False
+            loadConstellationFrm.addToSession.Visible = False
+
+            loadConstellationFrm.loadAsSummary.Visible = False
+            loadConstellationFrm.loadAsSummary.Checked = False
+
+            loadConstellationFrm.retrieveFromDB = True
+
+
+
             Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
 
             Dim timeStampsCollection As New Collection
@@ -539,14 +553,9 @@ Public Class Ribbon1
                     Try
                         enableOnUpdate = False
 
-                        loadConstellationFrm.addToSession.Checked = False
-                        loadConstellationFrm.addToSession.Visible = False
-
-                        loadConstellationFrm.loadAsSummary.Visible = False
-                        loadConstellationFrm.loadAsSummary.Checked = False
-
                         loadConstellationFrm.constellationsToShow = dbPortfolioNames
-                        loadConstellationFrm.retrieveFromDB = True
+
+                        ' Titel anpassen 
 
                         returnValue = loadConstellationFrm.ShowDialog
 

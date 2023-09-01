@@ -4577,6 +4577,8 @@ Public Module awinGeneralModules
                         End If
                     End If
 
+                Else
+                    weitermachen = True
                 End If
 
                 If weitermachen Then

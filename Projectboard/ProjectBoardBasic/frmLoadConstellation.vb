@@ -14,9 +14,27 @@ Public Class frmLoadConstellation
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
-        Call getFrmPosition(PTfrm.loadC, Top, Left)
+        'Call getFrmPosition(PTfrm.loadC, Top, Left)
 
         Call languageSettings()
+
+        ' now check whether or not it is called from SPE - then requiredDate  and lblStandVom is not visible 
+        If lblStandvom.Visible = False Then
+
+            TreeViewPortfolios.Top = 19
+
+            Dim btnPosition As New Point With {
+                .X = 12,
+                .Y = TreeViewPortfolios.Top + TreeViewPortfolios.Height + 10
+            }
+            OKButton.Location = btnPosition
+
+            btnPosition.X = 161
+            Abbrechen.Location = btnPosition
+
+            Me.Height = btnPosition.Y + 5 - 19
+
+        End If
 
 
         If constellationsToShow.Count > 0 Then
@@ -64,30 +82,42 @@ Public Class frmLoadConstellation
     Private Sub languageSettings()
 
         If awinSettings.englishLanguage Then
-
-            lblStandvom.Text = "Version"
-            addToSession.Text = "add to session"
             OKButton.Text = "OK"
             Abbrechen.Text = "Cancel"
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                If awinSettings.loadPFV Then
-                    loadAsSummary.Text = "load and show baseline summary project"
+            If lblStandvom.Visible = False Then
+                Me.Text = "Load Context"
+                OKButton.Text = "Load"
+            Else
+                lblStandvom.Text = "Version"
+                addToSession.Text = "add to session"
+
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    If awinSettings.loadPFV Then
+                        loadAsSummary.Text = "load and show baseline summary project"
+                    Else
+                        loadAsSummary.Text = "calculate and show summary project"
+                    End If
                 Else
                     loadAsSummary.Text = "calculate and show summary project"
                 End If
-            Else
-                loadAsSummary.Text = "calculate and show summary project"
             End If
+
         Else
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                If awinSettings.loadPFV Then
-                    loadAsSummary.Text = "Baseline Summary Projekt laden und anzeigen"
+            If lblStandvom.Visible = False Then
+                Me.Text = "Kontext laden"
+                OKButton.Text = "Laden"
+            Else
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    If awinSettings.loadPFV Then
+                        loadAsSummary.Text = "Baseline Summary Projekt laden und anzeigen"
+                    Else
+                        loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
+                    End If
                 Else
                     loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
                 End If
-            Else
-                loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
             End If
+
         End If
 
     End Sub
@@ -111,10 +141,7 @@ Public Class frmLoadConstellation
 
     End Sub
 
-    Private Sub addToSession_CheckedChanged(sender As Object, e As EventArgs) Handles addToSession.CheckedChanged
 
-
-    End Sub
 
     Public Sub New()
 
@@ -613,5 +640,9 @@ Public Class frmLoadConstellation
         Catch ex As Exception
 
         End Try
+    End Sub
+
+    Private Sub lblStandvom_Click(sender As Object, e As EventArgs) Handles lblStandvom.Click
+
     End Sub
 End Class

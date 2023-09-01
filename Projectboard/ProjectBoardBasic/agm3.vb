@@ -9096,12 +9096,12 @@ Public Module agm3
                                 '                        What:="Forecast", After:=ActiveCell, LookIn:=xlValues,
                                 'LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext,
                                 'MatchCase:=False, SearchFormat:=False
-                                Dim searchErg As Excel.Range = searcharea.Find(What:="Forecast", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
+                                Dim searchErg As Excel.Range = searcharea.Find(What:=anchorDef2.identifier, LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
                                                                                SearchOrder:=XlSearchOrder.xlByColumns, SearchDirection:=XlSearchDirection.xlNext, MatchCase:=False, SearchFormat:=False)
                                 If Not IsNothing(searchErg) Then
                                     colOfStartForeCast = searchErg.Column
                                 Else
-                                    searchErg = searcharea.Find(What:="Forecast", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
+                                    searchErg = searcharea.Find(What:=anchorDef2.identifier, LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlPart,
                                                                                SearchOrder:=XlSearchOrder.xlByColumns, SearchDirection:=XlSearchDirection.xlPrevious, MatchCase:=False, SearchFormat:=False)
                                     If Not IsNothing(searchErg) Then
                                         colOfStartForeCast = searchErg.Column

@@ -2274,7 +2274,8 @@ Module rpaModule1
             Else
                 Dim tmpRange As xlns.Range = CType(currentWS.Range(currentWS.Cells(1, 1), currentWS.Cells(30, 40)), xlns.Range)
                 Dim xxx As Object = tmpRange.Find("Forecast")
-                If Not IsNothing(xxx) Then
+                Dim xx1 As Object = tmpRange.Find("Budget")
+                If Not IsNothing(xxx) Or Not IsNothing(xx1) Then
                     result = PTRpa.visboUpdateTagetik
                 Else
                     result = PTRpa.visboUnknown
