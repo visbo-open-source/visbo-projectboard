@@ -5724,7 +5724,7 @@ Public Module agm3
                     Dim newProj As clsProjekt = Nothing
 
                     If IsNothing(standInDBvname) Then
-                        newProj = erstelleProjektAusVorlage(Nothing, pName, pTemplate, startDate, endDate, 0, 2, 5, 5, Nothing, pDescription, "", pNr, True)
+                        newProj = erstelleProjektAusVorlage(Nothing, pName, pTemplate, startDate, endDate, 0, 2, 5, 5, Nothing, pDescription, "", kdNr:=pNr)
                     Else
                         ' the project resp project variant does already exist, now check whether it needs to get new start and end date 
                         ' but only when there are no 
