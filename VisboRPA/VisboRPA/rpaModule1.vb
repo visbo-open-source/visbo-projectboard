@@ -1424,13 +1424,14 @@ Module rpaModule1
                         CStr(ersteZeile.Cells(1, 5).value).Trim = "Start" And
                         CStr(ersteZeile.Cells(1, 6).value).Trim = "End" And
                         CStr(ersteZeile.Cells(1, 7).value).Trim.StartsWith("Duration") And
-                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Budget") And
-                        CStr(ersteZeile.Cells(1, 9).value).Trim.Contains("Resources") And
-                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Other Cost") And
-                        CStr(ersteZeile.Cells(1, 11).value).Trim = "Risk" And
-                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Strategy" And
-                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Business Unit" And
-                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Description"
+                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Revenue") And
+                        CStr(ersteZeile.Cells(1, 9).value).Trim.StartsWith("Budget") And
+                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Resources") And
+                        CStr(ersteZeile.Cells(1, 11).value).Trim.Contains("Other Cost") And
+                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Risk" And
+                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Strategy" And
+                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Business Unit" And
+                        CStr(ersteZeile.Cells(1, 15).value).Trim = "Description"
 
                 Catch ex As Exception
                     verifiedStructure = False

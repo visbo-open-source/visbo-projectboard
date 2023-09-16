@@ -13545,7 +13545,8 @@ Public Module Projekte
                                            ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String,
                                            ByVal listOfCustomFields As Collection,
                                            ByVal responsiblePerson As String,
-                                           ByVal profitUSerAskedFor As Double) As clsProjekt
+                                           ByVal profitUSerAskedFor As Double,
+                                            ByVal revenue As Double) As clsProjekt
 
         Dim newprojekt As New clsProjekt
         Dim zeile As Integer = tafelZeile
@@ -13914,6 +13915,20 @@ Public Module Projekte
         Dim tmpValue As Integer = newprojekt.dauerInDays
         ' tk, Änderung 19.1.17 nicht mehr notwendig ..
         ' Call awinCreateBudgetWerte(newprojekt)
+
+        ' jetzt noch der Projekt-Phase den Revenue anhängen
+        Try
+            If revenue > 0.0 Then
+                Dim projPhase As clsPhase = newprojekt.getPhase(1)
+                If Not IsNothing(projPhase) Then
+                    projPhase.invoice = New KeyValuePair(Of Double, Integer)(revenue, 0)
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
 
         erstelleInventurProjekt = newprojekt
         '
