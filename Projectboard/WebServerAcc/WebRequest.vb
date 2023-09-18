@@ -1508,6 +1508,7 @@ Public Class Request
                     ' ur: 20230808: neues vp-Propery customStringFields, 
                     '$$$
                     Dim cfToStore As Boolean = False
+                    Dim containsIndex As Integer = -1
                     If Not IsNothing(projekt.customStringFields) Then
                         cfToStore = True
                         For Each cSF As KeyValuePair(Of Integer, String) In projekt.customStringFields
@@ -1515,7 +1516,16 @@ Public Class Request
                             newcSF.type = "VP"
                             newcSF.name = customFieldDefinitions.getName(cSF.Key)
                             newcSF.value = cSF.Value
-                            If Not aktvp.customFieldString.Contains(newcSF) Then
+                            For i As Integer = 0 To aktvp.customFieldString.Count - 1
+                                If String.Compare(aktvp.customFieldString(i).name, newcSF.name) <> 0 Then
+                                    containsIndex = -1
+                                Else
+                                    containsIndex = i
+                                    aktvp.customFieldString(i) = newcSF
+                                    Exit For
+                                End If
+                            Next
+                            If containsIndex = -1 Then
                                 aktvp.customFieldString.Add(newcSF)
                             End If
 
@@ -1529,12 +1539,21 @@ Public Class Request
                             newcDblF.type = "VP"
                             newcDblF.name = customFieldDefinitions.getName(cDblF.Key)
                             newcDblF.value = cDblF.Value
-                            If Not aktvp.customFieldDouble.Contains(newcDblF) Then
+                            For i As Integer = 0 To aktvp.customFieldDouble.Count - 1
+                                If String.Compare(aktvp.customFieldDouble(i).name, newcDblF.name) <> 0 Then
+                                    containsIndex = -1
+                                Else
+                                    containsIndex = i
+                                    aktvp.customFieldDouble(i) = newcDblF
+                                    Exit For
+                                End If
+                            Next
+                            If containsIndex = -1 Then
                                 aktvp.customFieldDouble.Add(newcDblF)
                             End If
-
                         Next
                     End If
+
                     If cfToStore Then
                         Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                     End If
