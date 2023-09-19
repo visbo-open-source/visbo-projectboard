@@ -2201,6 +2201,8 @@ Module rpaModule1
     End Function
 
 
+
+
     ''' <summary>
     ''' checks whether or not a file is a Create Project List (Tagetik) Telair
     ''' </summary>
@@ -3248,6 +3250,156 @@ Module rpaModule1
         processEGeckoCapacity = result
 
     End Function
+
+
+    Private Function processZeussStdCapacity(ByVal myFileName As String, ByVal importDate As Date, ByRef errMessages As Collection, ByRef listOfArchivFiles As List(Of String)) As Boolean
+
+
+
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivUrlaub As New List(Of String)
+        Dim listofArchivConfig As New List(Of String)
+
+        Dim result As Boolean = False
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        ' öffnen des LogFiles
+        'Call logfileOpen()
+
+        Dim outputCollection As New Collection
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
+                ' wenn es gibt - lesen der Modifier Kapas, wo interne wie externe angegeben sein können ..
+                ' Call readMonthlyModifierKapas(outputCollection, listOfArchivExtern)
+
+                ' wenn es gibt - lesen der Externen Verträge 
+                ' Call readMonthlyExternKapasEV(outputCollection, listOfArchivExtern)
+
+                '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
+                ' listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
+
+                ''  check Config-File - zum Einlesen der Istdaten gemäß Konfiguration -
+                ''  - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
+                configfilesOrdner = My.Computer.FileSystem.CombinePath(awinPath, configfilesOrdner)
+
+                ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+                Dim configCapaImport As String = configfilesOrdner & "\" & "configZeussImport.xlsx"
+                If My.Computer.FileSystem.FileExists(configCapaImport) Then
+
+                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, Nothing, outputCollection, myFileName)
+                Else
+                    outPutline = "There is no Config-File for the capacities!"
+                    Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)
+                End If
+
+                If listofArchivUrlaub.Count > 0 Or listofArchivConfig.Count > 0 Or listOfArchivExtern.Count > 0 Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' Dim orga As clsOrganisation = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+
+                            ' tk wozu brauche ich das hier ? 
+                            ' orga = CType(databaseAcc, DBAccLayer.Request).retrieveTSOrgaFromDB("organisation", Date.Now, err, False, True, False)
+
+                            ' now stores everything from RoleDefinitions what needs to be stored ... 
+                            resultSum = storeCapasOfRoles()
+
+                            If resultSum = True Then
+                                Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                                listOfArchivFiles = listofArchivConfig
+
+                            Else
+                                Call logger(ptErrLevel.logError, "Error when writing Capacities to Database..." & vbCrLf & err.errorMsg, "", -1)
+                                listOfArchivFiles = listofArchivConfig
+                            End If
+
+                            result = resultSum
+
+                        Else
+                            Call logger(ptErrLevel.logError, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+
+                        End If
+
+                    Else
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no Files to import ...")
+                        Else
+                            Call MsgBox("es gab keine Dateien zum Einlesen ... ")
+
+                        End If
+                    End If
+
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+        appInstance.ScreenUpdating = True
+        processZeussStdCapacity = result
+    End Function
+
 
     Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection, ByRef listOfArchivFiles As List(Of String)) As Boolean
 
