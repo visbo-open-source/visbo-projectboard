@@ -2985,11 +2985,13 @@ Public Class clsProjekt
         Dim myInnerStartDate As Date = endeDate
         Dim myInnerEndDate As Date = startDate
         Dim result() As Date
+        Dim atleastOneInnerElement As Boolean = False
         ReDim result(1)
 
         For Each cPhase As clsPhase In AllPhases
 
             If cPhase.nameID <> rootPhaseName Then
+                atleastOneInnerElement = True
                 If (hierarchy.getChildIDsOf(cPhase.nameID, False).Count + hierarchy.getChildIDsOf(cPhase.nameID, True).Count = 0) Or
                     Not considerLeafsOnly Then
 
@@ -3006,6 +3008,7 @@ Public Class clsProjekt
 
 
             For Each ms As clsMeilenstein In cPhase.meilensteinListe
+                atleastOneInnerElement = True
                 If DateDiff(DateInterval.Day, ms.getDate, myInnerStartDate) > 0 Then
                     myInnerStartDate = ms.getDate
                 End If
@@ -3016,8 +3019,16 @@ Public Class clsProjekt
             Next
         Next
 
-        result(0) = myInnerStartDate
-        result(1) = myInnerEndDate
+        If Not atleastOneInnerElement Then
+            ' becaues of initialization
+            result(1) = myInnerStartDate
+            result(0) = myInnerEndDate
+        Else
+            result(0) = myInnerStartDate
+            result(1) = myInnerEndDate
+        End If
+
+
 
         getInnerStartEndDate = result
 

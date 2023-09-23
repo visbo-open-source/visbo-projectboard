@@ -1687,8 +1687,9 @@ Public Module agm2
                         ' die erste Phase, die sogenannte Root Phase hat immer diesen Namen: 
 
                         ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
-                        cphase = New clsPhase(parent:=hproj)
-                        cphase.nameID = rootPhaseName
+                        cphase = New clsPhase(parent:=hproj) With {
+                            .nameID = rootPhaseName
+                        }
                         startoffset = 0
                         duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                         cphase.changeStartandDauer(startoffset, duration)

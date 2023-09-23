@@ -3663,7 +3663,7 @@ Module rpaTkModule
     ''' <param name="myTemplate"></param>
     Public Sub writeDataQualityCheck(ByVal myPortfolioName As String,
                                      Optional ByVal myPortfolioVName As String = "",
-                                     Optional ByVal myTemplate As String = "TMS",
+                                     Optional ByVal myTemplate As String = "",
                                      Optional ByVal msNames As Collection = Nothing,
                                      Optional ByVal phNames As Collection = Nothing)
 
@@ -3695,12 +3695,15 @@ Module rpaTkModule
 
         Dim pvName As String = calcPortfolioKey(myPortfolioName, myPortfolioVName)
 
-        Dim compareTemplate As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(myTemplate, tmpID, heute, err)
+        Dim compareTemplate As clsProjekt = Nothing
+        If myTemplate <> "" Then
+            compareTemplate = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(myTemplate, tmpID, heute, err)
+        End If
 
         Dim myConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(heute, err)
 
 
-        If Not IsNothing(myConstellation) And Not IsNothing(compareTemplate) Then
+        If Not IsNothing(myConstellation) Then
 
             ' if successful: create / open Excel Export File 
 
@@ -3795,8 +3798,8 @@ Module rpaTkModule
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
 
                     If Not IsNothing(hproj) Then
-                        ' now find out whether or no there is a given template Name
-                        If hproj.VorlagenName <> "" Then
+
+                        If IsNothing(compareTemplate) And hproj.VorlagenName <> "" Then
                             Try
                                 Dim tmpProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(hproj.VorlagenName, tmpID, heute, err)
                                 If Not IsNothing(tmpProj) Then
@@ -3843,7 +3846,7 @@ Module rpaTkModule
                             End If
 
                         Catch ex As Exception
-                            ws.Cells(zeile, 9).value = "?"
+                            ws.Cells(zeile, 9).value = "n.a"
                         End Try
 
                         Try
