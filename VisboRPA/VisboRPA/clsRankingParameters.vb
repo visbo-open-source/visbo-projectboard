@@ -147,6 +147,26 @@
                 _hedgeFactor = 1.0
             End If
         End Set
+
+    End Property
+
+    ' propFactor says how much the resource needs shall be adjusted 
+    Private _propFactor As Double
+    Public Property propFactor As Double
+        Get
+            propFactor = _propFactor
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value > 0.0 Then
+                    _propFactor = value
+                Else
+                    _propFactor = 1.0
+                End If
+            Else
+                _propFactor = 1.0
+            End If
+        End Set
     End Property
 
 
@@ -163,6 +183,7 @@
         _shortestDuration = 1.0
         _longestDuration = 1.0
         _hedgeFactor = 1.0
+        _propFactor = 1.0
 
     End Sub
 

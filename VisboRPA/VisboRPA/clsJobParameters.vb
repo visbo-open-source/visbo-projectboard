@@ -94,6 +94,18 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _roleNames As Collection
+    Public Property roleNames As Collection
+        Get
+            roleNames = _roleNames
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _roleNames = value
+            End If
+        End Set
+    End Property
+
     Public ReadOnly Property getMilestoneNames() As List(Of String)
         Get
             Dim result As New List(Of String)
@@ -217,6 +229,35 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _changeFactorResourceNeeds As Double
+    Public Property changeFactorResourceNeeds As Double
+        Get
+            changeFactorResourceNeeds = _changeFactorResourceNeeds
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value >= 0 Then
+                    _changeFactorResourceNeeds = value
+                End If
+            End If
+        End Set
+    End Property
+
+    Private _changeFactorDuration As Double
+    Public Property changeFactorDuration As Double
+        Get
+            changeFactorDuration = _changeFactorDuration
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value >= 0 Then
+                    _changeFactorDuration = value
+                End If
+            End If
+        End Set
+    End Property
+
+
     Private _sortItem As String
     Public Property sortItem As String
         Get
@@ -254,7 +295,6 @@ Public Class clsJobParameters
     End Property
     Sub New()
 
-
         _sortItem = ""
         _allowedOverloadMonth = 1.0
         _allowedOverloadTotal = 1.0
@@ -263,6 +303,7 @@ Public Class clsJobParameters
         _defaultDeltaInDays = 7
         _milestones = New Collection
         _phases = New Collection
+        _roleNames = New Collection
         kennung = PTRpa.visboUnknown
 
         _projectVariantName = "Var1"
@@ -271,6 +312,8 @@ Public Class clsJobParameters
         _defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
         _templateName = "TMS"
         _compareWithFirstBaseline = False
+        _changeFactorResourceNeeds = 1.0
+        _changeFactorDuration = 1.0
 
     End Sub
 

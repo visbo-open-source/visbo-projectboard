@@ -4804,6 +4804,52 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' scales all roleValues by scaleFactor if the they are in month of fromDate or later
+    ''' </summary>
+    ''' <param name="fromDate"></param>
+    ''' <param name="scaleFactor">needs to be a vlaue >= 0.0 </param>
+    ''' <returns></returns>
+    Public Function scaleRoleValues(ByVal fromDate As Date, ByVal scaleFactor As Double) As Boolean
+        Dim result As Boolean = True
+
+        Try
+            Dim columnofFromDate As Integer = getColumnOfDate(fromDate)
+
+            If scaleFactor >= 0.0 Then
+
+                For p As Integer = 1 To CountPhases
+
+                    Dim curPhase As clsPhase = getPhase(p)
+                    Dim columnOfPhaseStart As Integer = getColumnOfDate(curPhase.getStartDate)
+                    Dim columnOfPhaseEnd As Integer = getColumnOfDate(curPhase.getEndDate)
+
+                    If columnofFromDate <= columnOfPhaseEnd Then
+
+                        For r = 1 To curPhase.countRoles
+                            Dim curRole As clsRolle = curPhase.getRole(r)
+
+                            Dim startIndex As Integer = System.Math.Max(0, columnofFromDate - columnOfPhaseStart)
+                            Dim endIndex As Integer = curRole.getDimension
+
+                            For ix As Integer = startIndex To endIndex
+                                curRole.Xwerte(ix) = curRole.Xwerte(ix) * scaleFactor
+                            Next
+
+                        Next
+
+                    End If
+                Next
+            End If
+
+        Catch ex As Exception
+            result = False
+        End Try
+
+        scaleRoleValues = result
+
+    End Function
+
+    ''' <summary>
     ''' wird für alle Projekte aufgerufen, die im aktuellen Portfolio vorkommen, für die es aber keine Ist-Daten gab. 
     ''' setzt alle Werte zwischen actualDatauntil des Projektes und newActualDataUntil  auf Null
     ''' aber nur die Rollen, die in awinsettings.ActualdataOrgaUnits aufgeführt sind. 
@@ -5924,6 +5970,38 @@ Public Class clsProjekt
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' returns the amount of total cost in T€ until and including the month untilDate
+    ''' </summary>
+    ''' <param name="untilDate"></param>
+    ''' <returns></returns>
+    Public Function getCostUntil(ByVal untilDate As Date) As Double
+        Dim result As Double = 0.0
+
+        Try
+            Dim sumOfCost() As Double = getGesamtKostenBedarf
+
+
+            If Not IsNothing(sumOfCost) Then
+                Dim untilCol As Integer = getColumnOfDate(untilDate) - getColumnOfDate(startDate)
+
+                ' make sure that index is within boundaries 
+                untilCol = System.Math.Min(untilCol, sumOfCost.Length - 1)
+                If untilCol >= 0 Then
+                    For ix As Integer = 0 To untilCol
+                        result = result + sumOfCost(ix)
+                    Next
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        getCostUntil = result
+    End Function
 
     ''' <summary>
     ''' returns the Revenue/Benefit in T€ until and including the month which contains the given month 

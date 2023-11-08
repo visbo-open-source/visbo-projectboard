@@ -71,7 +71,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>75220B92C6B747DCE63AD7FFAEA368C221639C8F</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>50A4E36216AFE7819B7F3C088642409CBDFB0F9E</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -143,6 +143,7 @@
     <Compile Include="clsRankingList.vb" />
     <Compile Include="clsRankingParameters.vb" />
     <Compile Include="clsRPASetting.vb" />
+    <Compile Include="rpaCollectModul.vb" />
     <Compile Include="rpaTkModule.vb" />
     <Compile Include="VisboRPAStart.Designer.vb">
       <DependentUpon>VisboRPAStart.vb</DependentUpon>

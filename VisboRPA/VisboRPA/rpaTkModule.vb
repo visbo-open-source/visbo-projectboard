@@ -522,6 +522,14 @@ Module rpaTkModule
                                 result.defaultDeltaInDays = CInt(.Cells(9, 2).value)
                             End If
 
+                            If Not IsNothing(.Cells(10, 2).value) Then
+                                result.changeFactorResourceNeeds = CDbl(.Cells(10, 2).value)
+                            End If
+
+                            If Not IsNothing(.Cells(11, 2).value) Then
+                                result.changeFactorDuration = CDbl(.Cells(11, 2).value)
+                            End If
+
                         Case PTRpa.visboFindProjectStartPM
 
                             result.limitPhases = CDbl(.Cells(1, 2).value)
@@ -558,6 +566,14 @@ Module rpaTkModule
 
                             If Not IsNothing(.Cells(9, 2).value) Then
                                 result.defaultDeltaInDays = CInt(.Cells(9, 2).value)
+                            End If
+
+                            If Not IsNothing(.Cells(10, 2).value) Then
+                                result.changeFactorResourceNeeds = CDbl(.Cells(10, 2).value)
+                            End If
+
+                            If Not IsNothing(.Cells(11, 2).value) Then
+                                result.changeFactorDuration = CDbl(.Cells(11, 2).value)
                             End If
 
                         Case PTRpa.visboSuggestResourceAllocation
@@ -741,6 +757,30 @@ Module rpaTkModule
                                     End If
                                 Catch ex As Exception
                                     result.compareWithFirstBaseline = False
+                                End Try
+
+                                Try
+                                    If Not IsNothing(.Cells(4, 2).value) Then
+                                        Dim lastColumn As Integer = CType(.Cells(4, 300), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
+                                        Dim tmpCol As Integer = 2
+                                        Dim tmpCollection As New Collection
+                                        While tmpCol <= lastColumn
+                                            If Not IsNothing(CType(.Cells(4, tmpCol), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                Dim roleName As String = CStr(CType(.Cells(4, tmpCol), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                                If RoleDefinitions.containsName(roleName) Then
+                                                    ' in Collection aufnehmen
+                                                    If Not tmpCollection.Contains(roleName) Then
+                                                        tmpCollection.Add(roleName, roleName)
+                                                    End If
+                                                End If
+                                            End If
+                                            tmpCol = tmpCol + 1
+                                        End While
+                                        result.roleNames = tmpCollection
+                                    End If
+
+                                Catch ex As Exception
+
                                 End Try
 
 
@@ -1091,18 +1131,64 @@ Module rpaTkModule
 
                             Case PTRpa.visboFindProjectStart
 
-                                myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.shortestDuration = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.longestDuration = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Try
+                                    myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.shortestDuration = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.longestDuration = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.propFactor = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
 
 
                             Case PTRpa.visboFindProjectStartPM
 
-                                myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.shortestDuration = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                myCurrentParams.longestDuration = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Try
+                                    myCurrentParams.earliestStart = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.latestEnd = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.shortestDuration = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    myCurrentParams.longestDuration = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+
+                                End Try
+
 
                             Case PTRpa.visboSuggestResourceAllocation
 
@@ -1838,7 +1924,7 @@ Module rpaTkModule
                 Call logger(ptErrLevel.logInfo, "creating report Actual vs Target:", " compare with last baseline ")
             End If
 
-            Call writeReportActualTarget(jobParameters.portfolioName, myPortfolioVName:=jobParameters.portfolioVariantName,
+            Call writeReportActualTarget(jobParameters.portfolioName, jobParameters.roleNames, myPortfolioVName:=jobParameters.portfolioVariantName,
                                          compareWithFirstBaseline:=jobParameters.compareWithFirstBaseline)
 
         Catch ex As Exception
@@ -2228,6 +2314,7 @@ Module rpaTkModule
                     Dim pName As String = getPnameFromKey(kvp.Key)
                     Dim vName As String = getVariantnameFromKey(kvp.Key)
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+                    Dim storeRequired As Boolean = False
 
                     Try
                         hproj.tfZeile = myConstellation.getBoardZeile(pName)
@@ -2240,6 +2327,52 @@ Module rpaTkModule
 
                     If Not IsNothing(hproj) Then
 
+                        ' so if there is a overall changedurationFactor and/or a changeResourceFactor for the existing and already running projects
+                        ' then create a variant and apply the factors to the hproj project
+                        If (jobParameters.changeFactorDuration <> 1.0 Or jobParameters.changeFactorResourceNeeds <> 1.0) And hproj.variantName <> projectVariantName Then
+                            ' create Variant 
+
+                            storeRequired = True
+
+                            Dim useVariantName As String = ""
+                            Dim referenceDate As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1).AddMonths(1)
+                            Dim tmpMsg As String = ""
+                            If hproj.variantName <> "" Then
+                                useVariantName = hproj.variantName & " " & projectVariantName
+                            Else
+                                useVariantName = projectVariantName
+                            End If
+                            hproj = hproj.createVariant(useVariantName, "variant to avoid bottlenecks")
+
+                            ' now reduceDuration, if required
+                            If jobParameters.changeFactorDuration <> 1.0 Then
+
+                                Dim restDuration As Integer = DateDiff(DateInterval.Day, referenceDate, hproj.endeDate)
+                                If restDuration > 0 Then
+                                    restDuration = restDuration * jobParameters.changeFactorDuration
+                                    Dim newEndDate As Date = referenceDate.AddDays(restDuration)
+
+                                    hproj.movable = True
+                                    Dim tmpProj As clsProjekt = moveProject(hproj, hproj.startDate, newEndDate)
+
+                                    If Not IsNothing(tmpProj) Then
+                                        hproj = tmpProj
+                                        tmpMsg = "duration scaling applied, beginning with " & referenceDate.ToShortDateString & " : " & hproj.getShapeText & " : " & jobParameters.changeFactorDuration * 100 & " %"
+                                        Call logger(ptErrLevel.logInfo, "find best start ", tmpMsg)
+                                    End If
+                                End If
+                            End If
+
+                            ' now check whether or not a ressource adjustment is necessary
+                            If jobParameters.changeFactorResourceNeeds <> 1.0 Then
+                                If hproj.scaleRoleValues(referenceDate, jobParameters.changeFactorResourceNeeds) Then
+                                    tmpMsg = "resource scaling applied, beginning with " & referenceDate.ToShortDateString & " : " & hproj.getShapeText & " : " & jobParameters.changeFactorResourceNeeds * 100 & " %"
+                                    Call logger(ptErrLevel.logInfo, "find best start ", tmpMsg)
+                                End If
+                            End If
+
+                        End If
+
                         AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                         ' removes hproj from ShowProjekte, if already in there
                         ShowProjekte.AddAnyway(hproj)
@@ -2248,6 +2381,21 @@ Module rpaTkModule
                         Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
                     End If
 
+
+                    If storeRequired Then
+                        Dim myMessages As New Collection
+                        If storeSingleProjectToDB(hproj, myMessages) Then
+
+                            Dim infomsg As String = "success: variant stored  " & hproj.getShapeText
+                            Call logger(ptErrLevel.logInfo, "find best start ", infomsg)
+                        Else
+                            ' take it out again , because there was no solution
+                            ShowProjekte.Remove(hproj.name)
+                            Dim infomsg As String = "... failed to store variant to avoid bottlenecks " & hproj.getShapeText
+                            Call logger(ptErrLevel.logError, "find best start ", infomsg)
+                        End If
+
+                    End If
                 Next
 
                 Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & myActivePortfolio, " End of Operation ... ")
@@ -2421,6 +2569,7 @@ Module rpaTkModule
                             If Not IsNothing(hproj) Then
 
                                 Dim storeRequired As Boolean = False
+                                Dim scalingApplied As Boolean = False
 
                                 Try
                                     hproj.tfZeile = myRowNr
@@ -2474,6 +2623,7 @@ Module rpaTkModule
                                             useVariantName = projectVariantName
                                         End If
                                         hproj = hproj.createVariant(useVariantName, "variant to avoid bottlenecks")
+
                                         AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                     End If
 
@@ -2484,10 +2634,22 @@ Module rpaTkModule
                                     Dim tmpProj As clsProjekt = moveProject(hproj, newStartDate, newEndDate)
 
 
+
                                     If Not IsNothing(tmpProj) Then
+
+                                        Dim tmpMsg As String
+
+                                        If Not scalingApplied And rankingPair.Value.propFactor <> 1.0 Then
+                                            scalingApplied = True
+                                            If tmpProj.scaleRoleValues(Date.Now.AddMonths(1), rankingPair.Value.propFactor) Then
+                                                tmpMsg = "scaling applied: " & tmpProj.getShapeText & " : " & rankingPair.Value.propFactor * 100 & " %"
+                                                Call logger(ptErrLevel.logInfo, "status:  ", tmpMsg)
+                                            End If
+                                        End If
+
                                         hproj = tmpProj
 
-                                        Dim tmpMsg As String = "try out: " & hproj.getShapeText & newStartDate & " - " & newEndDate
+                                        tmpMsg = "try out: " & hproj.getShapeText & newStartDate & " - " & newEndDate
                                         Call logger(ptErrLevel.logInfo, "status:  ", tmpMsg)
 
                                     End If
@@ -2605,10 +2767,20 @@ Module rpaTkModule
                                                             newEndDate = hproj.endeDate.AddDays(deltaInDays)
                                                             tmpProj = moveProject(hproj, hproj.startDate, newEndDate)
 
+
+
                                                             durationIterations = durationIterations + 1
                                                             sumIterations = sumIterations + 1
 
                                                             If Not IsNothing(tmpProj) Then
+
+                                                                If Not scalingApplied And rankingPair.Value.propFactor <> 1.0 Then
+                                                                    scalingApplied = True
+                                                                    If tmpProj.scaleRoleValues(Date.Now.AddMonths(1), rankingPair.Value.propFactor) Then
+                                                                        tmpMsg = "scaling applied: " & tmpProj.getShapeText & " : " & rankingPair.Value.propFactor * 100 & " %"
+                                                                        Call logger(ptErrLevel.logInfo, "status:  ", tmpMsg)
+                                                                    End If
+                                                                End If
 
                                                                 hproj = tmpProj
 
@@ -2633,6 +2805,8 @@ Module rpaTkModule
                                                                 AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                                                 ShowProjekte.AddAnyway(hproj)
 
+                                                                ' now here do a autodistribute
+                                                                Call ShowProjekte.autoDistribute(hproj.name, hproj.variantName, msgTxt)
 
                                                                 If myKennung = PTRpa.visboFindProjectStart Then
                                                                     overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
@@ -2668,6 +2842,14 @@ Module rpaTkModule
 
                                                         If Not IsNothing(tmpProj) Then
 
+                                                            If Not scalingApplied And rankingPair.Value.propFactor <> 1.0 Then
+                                                                scalingApplied = True
+                                                                If tmpProj.scaleRoleValues(Date.Now.AddMonths(1), rankingPair.Value.propFactor) Then
+                                                                    tmpMsg = "scaling applied: " & tmpProj.getShapeText & " : " & rankingPair.Value.propFactor * 100 & " %"
+                                                                    Call logger(ptErrLevel.logInfo, "status:  ", tmpMsg)
+                                                                End If
+                                                            End If
+
                                                             hproj = tmpProj
 
                                                             tmpMsg = "try out: " & hproj.getShapeText & newStartDate & " - " & newEndDate
@@ -2691,6 +2873,8 @@ Module rpaTkModule
                                                             AlleProjekte.Add(hproj, sortkey:=hproj.tfZeile)
                                                             ShowProjekte.AddAnyway(hproj)
 
+                                                            ' now here do a autodistribute
+                                                            Call ShowProjekte.autoDistribute(hproj.name, hproj.variantName, msgTxt)
 
                                                             If myKennung = PTRpa.visboFindProjectStart Then
                                                                 overutilizationFound = ShowProjekte.overLoadFound(aggregationList, skillList, False, jobParameters.allowedOverloadMonth, jobParameters.allowedOverloadTotal)
@@ -3415,6 +3599,7 @@ Module rpaTkModule
     ''' <param name="myPortfolioVName"></param>
     ''' <param name="compareWithFirstBaseline"></param>
     Public Sub writeReportActualTarget(ByVal myPortfolioName As String,
+                                       ByVal listOfRoleNames As Collection,
                                      Optional ByVal myPortfolioVName As String = "",
                                      Optional compareWithFirstBaseline As Boolean = False)
 
@@ -3424,8 +3609,21 @@ Module rpaTkModule
         Dim tmpID As String = ""
         Dim expFName As String = ""
         Dim heute As Date = Date.Now
+        Dim lastDayLastMonth As Date = heute.AddDays(-1 * heute.Day)
         Dim tmpVPID As String = ""
+        Dim formatAreas(3, 1) As Integer
 
+        ' zeile der Area 1 
+        formatAreas(0, 0) = 2
+
+        ' zeile der Area 2
+        formatAreas(1, 0) = 2
+
+        ' zeile der Area 3
+        formatAreas(2, 0) = 2
+
+        ' zeile der Area 3
+        formatAreas(3, 0) = 2
 
 
 
@@ -3443,7 +3641,7 @@ Module rpaTkModule
 
             ' if successful: create / open Excel Export File 
 
-            expFName = logfileFolder & "\" & "Actual vs Target Report" & myConstellation.constellationName & ".xlsx"
+            expFName = logfileFolder & "\" & "Actual vs Target Report " & myConstellation.constellationName & ".xlsx"
 
             ' hier muss jetzt das entsprechende File aufgemacht werden ...
             ' das File 
@@ -3460,65 +3658,167 @@ Module rpaTkModule
                 allOK = False
             End Try
 
-            Dim cfFields() As String = {"Area", "Category", "Group"}
+            'Dim cfFields() As String = {"Area", "Category", "Group"}
+
+            Dim cfFields(0) As String
+            cfFields(0) = ""
+
+            Dim excludingName As String = "Enacted Savings"
+
+            If customFieldDefinitions.containsName(excludingName) Then
+                If customFieldDefinitions.liste.Count - 2 >= 0 Then
+                    ReDim cfFields(customFieldDefinitions.liste.Count - 2)
+                End If
+            Else
+                If customFieldDefinitions.liste.Count - 1 >= 0 Then
+                    ReDim cfFields(customFieldDefinitions.liste.Count - 1)
+                End If
+            End If
+
+
+            Dim index As Integer = 0
+            Try
+                For Each kvp As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
+                    If kvp.Value.name.ToLower <> excludingName.ToLower Then
+                        cfFields(index) = kvp.Value.name
+                        index = index + 1
+                    End If
+                Next
+            Catch ex As Exception
+
+            End Try
+
 
             If allOK Then
                 Dim ws As xlns.Worksheet = CType(reportWB.Worksheets("VISBO"), xlns.Worksheet)
 
                 ' now write Headerline 
                 Dim zeile As Integer = 1
-                Dim spalte As Integer = 1
+
                 ws.Cells(zeile, 1).value = "Report Date"
                 ws.Cells(zeile, 2).value = "Project Name"
-                ws.Cells(zeile, 3).value = "VISBO ID"
-                ws.Cells(zeile, 4).value = "Manager"
-                ws.Cells(zeile, 5).value = "State"
-                ws.Cells(zeile, 6).value = "Business Unit"
-                ws.Cells(zeile, 7).value = cfFields(0) ' Area
-                ws.Cells(zeile, 8).value = cfFields(1) ' Category
-                ws.Cells(zeile, 9).value = cfFields(2) ' Group
+                ws.Cells(zeile, 3).value = "Traffic Light"
+                ws.Cells(zeile, 4).value = "Traffic Light Comment"
+                ws.Cells(zeile, 5).value = "KPI Strategic Fit"
+                ws.Cells(zeile, 6).value = "KPI Realization Risk"
+                ws.Cells(zeile, 7).value = "Manager"
+                ws.Cells(zeile, 8).value = "State"
+                ws.Cells(zeile, 9).value = "Current Plan Version"
+                ws.Cells(zeile, 10).value = "Baseline Version"
+                ws.Cells(zeile, 11).value = "Business Unit"
+
+
+                Dim spalte As Integer = 12
+                For ix As Integer = 1 To cfFields.Length
+                    ws.Cells(zeile, spalte).value = cfFields(ix - 1)
+                    spalte = spalte + 1
+                Next
+
+                formatAreas(0, 1) = spalte
+
+                ' Total amount of PD 
+                ws.Cells(zeile, spalte).value = "Total Resource Needs [PD]"
+                spalte = spalte + 1
+
+                ' now all the roleNames
+                For Each tmpRoleName As String In listOfRoleNames
+                    ws.Cells(zeile, spalte).value = tmpRoleName & " [PD]"
+                    spalte = spalte + 1
+                Next
+
+                formatAreas(1, 1) = spalte
 
                 ' Enacted Savings Until Now
-                ws.Cells(zeile, 10).value = "Enacted Savings Until Now (Current Plan)"
+                ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (Current Plan)"
+                spalte = spalte + 1
+
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, 11).value = "Enacted Savings Until Now (First Baseline)"
+                    ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (First Baseline)"
                 Else
-                    ws.Cells(zeile, 11).value = "Enacted Savings Until Now (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (Last Baseline)"
                 End If
-                ws.Cells(zeile, 12).value = "Enacted Savings Until Now (Deviation)"
+                spalte = spalte + 1
+
+                ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (Deviation)"
+                spalte = spalte + 1
 
                 ' Enacted Savings
-                ws.Cells(zeile, 13).value = "Enacted Savings (Current Plan)"
+                ws.Cells(zeile, spalte).value = "Enacted Savings Total (Current Plan)"
+                spalte = spalte + 1
+
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, 14).value = "Enacted Savings (First Baseline)"
+                    ws.Cells(zeile, spalte).value = "Enacted Savings Total (First Baseline)"
                 Else
-                    ws.Cells(zeile, 14).value = "Enacted Savings (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = "Enacted Savings Total (Last Baseline)"
                 End If
-                ws.Cells(zeile, 15).value = "Enacted Savings (Deviation)"
+                spalte = spalte + 1
+
+                ws.Cells(zeile, spalte).value = "Enacted Savings Total (Deviation)"
+                spalte = spalte + 1
+
+                formatAreas(2, 1) = spalte
+
+                ' Start Date 
+                ws.Cells(zeile, spalte).value = "Start Date (Current Plan)"
+                spalte = spalte + 1
+
 
                 ' Finish Date 
-                ws.Cells(zeile, 16).value = "Finish Date (Current Plan)"
+                ws.Cells(zeile, spalte).value = "Finish Date (Current Plan)"
+                spalte = spalte + 1
+
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, 17).value = "Finish Date (First Baseline)"
+                    ws.Cells(zeile, spalte).value = "Finish Date (First Baseline)"
                 Else
-                    ws.Cells(zeile, 17).value = "Finish Date (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = "Finish Date (Last Baseline)"
                 End If
-                ws.Cells(zeile, 18).value = "Finish Date (Deviation)"
+                spalte = spalte + 1
+
+                ws.Cells(zeile, spalte).value = "Finish Date (Deviation in Days)"
+                spalte = spalte + 1
+
+                formatAreas(3, 1) = spalte
+
+                ' Cost until now 
+                ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (Current Plan)"
+                spalte = spalte + 1
+
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (First Baseline)"
+                Else
+                    ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (Last Baseline)"
+                End If
+                spalte = spalte + 1
+
+                ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (Deviation)"
+                spalte = spalte + 1
 
                 ' Total Cost 
-                ws.Cells(zeile, 19).value = "Total Cost (Current Plan)"
+                ws.Cells(zeile, spalte).value = "Total Cost (Current Plan)"
+                spalte = spalte + 1
+
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, 20).value = "Total Cost (First Baseline)"
+                    ws.Cells(zeile, spalte).value = "Total Cost (First Baseline)"
                 Else
-                    ws.Cells(zeile, 20).value = "Total Cost (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = "Total Cost (Last Baseline)"
                 End If
-                ws.Cells(zeile, 21).value = "Total Cost (Deviation)"
+                spalte = spalte + 1
+
+                ws.Cells(zeile, spalte).value = "Total Cost (Deviation)"
+                spalte = spalte + 1
 
 
-                ' Comment of Project Manager 
-                ws.Cells(zeile, 22).value = "Comment of project manager"
+                ' comment Name of Portfolio and portfolio - Variant
+                ws.Cells(zeile, spalte).value = "Portfolio"
+                spalte = spalte + 1
+                ws.Cells(zeile, spalte).value = "Portfolio-Variant"
+                spalte = spalte + 1
+
+                ' VISBO ID of project
+                ws.Cells(zeile, spalte).value = "VISBO ID"
 
 
+                Dim lastRow As Integer = 1 + myConstellation.Liste.Count
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
 
@@ -3543,35 +3843,76 @@ Module rpaTkModule
                         ' now writing 
                         ws.Cells(zeile, 1).value = heute.ToShortDateString
                         ws.Cells(zeile, 2).value = hproj.getShapeText
-                        ws.Cells(zeile, 3).value = hproj.vpID
-                        ws.Cells(zeile, 4).value = hproj.leadPerson
-                        ws.Cells(zeile, 5).value = hproj.vpStatus
-                        ws.Cells(zeile, 6).value = hproj.businessUnit
-                        ws.Cells(zeile, 7).value = hproj.getCustomSField(cfFields(0))
-                        ws.Cells(zeile, 8).value = hproj.getCustomSField(cfFields(1))
-                        ws.Cells(zeile, 9).value = hproj.getCustomSField(cfFields(2))
+                        ws.Cells(zeile, 3).value = hproj.ampelStatus
+                        ws.Cells(zeile, 4).value = hproj.ampelErlaeuterung
+
+                        ws.Cells(zeile, 5).value = hproj.StrategicFit
+                        ws.Cells(zeile, 6).value = hproj.Risiko
+                        ws.Cells(zeile, 7).value = hproj.leadPerson
+                        ws.Cells(zeile, 8).value = hproj.vpStatus
+                        ws.Cells(zeile, 9).value = hproj.timeStamp
+                        ws.Cells(zeile, 10).value = baseline.timeStamp
+                        ws.Cells(zeile, 11).value = hproj.businessUnit
+
+                        spalte = 12
+                        For ix As Integer = 1 To cfFields.Length
+                            ws.Cells(zeile, spalte).value = hproj.getCustomSField(cfFields(ix - 1))
+                            spalte = spalte + 1
+                        Next
+
+                        ' Total amount of PD 
+
+                        Dim topRole As String = RoleDefinitions.getDefaultTopNodeName()
+                        Dim roleAmount As Double
+                        Try
+                            roleAmount = hproj.getRessourcenBedarf(topRole, inclSubRoles:=True).Sum
+                            ws.Cells(zeile, spalte).value = roleAmount
+                        Catch ex As Exception
+                            ws.Cells(zeile, spalte).value = "n.a"
+                        End Try
+                        spalte = spalte + 1
+
+                        ' now all the roleNames
+                        For Each tmpRoleName As String In listOfRoleNames
+                            Try
+                                roleAmount = hproj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
+                                ws.Cells(zeile, spalte).value = roleAmount
+                            Catch ex As Exception
+                                ws.Cells(zeile, spalte).value = "n.a"
+                            End Try
+                            spalte = spalte + 1
+                        Next
+
 
                         ' Umsatz / Nutzen until now 
                         Dim planValue As Double
                         Dim baselineValue As Double
                         Try
-                            planValue = 1000 * hproj.getInvoicesPenaltiesUntil(heute)
+                            planValue = 1000 * hproj.getInvoicesPenaltiesUntil(lastDayLastMonth)
                         Catch ex As Exception
                             planValue = 0
                         End Try
-                        ws.Cells(zeile, 10).value = planValue
+
+                        ws.Cells(zeile, spalte).value = planValue
+                        spalte = spalte + 1
 
                         If Not IsNothing(baseline) Then
                             Try
-                                baselineValue = 1000 * baseline.getInvoicesPenaltiesUntil(heute)
+                                baselineValue = 1000 * baseline.getInvoicesPenaltiesUntil(lastDayLastMonth)
                             Catch ex As Exception
                                 baselineValue = 0
                             End Try
-                            ws.Cells(zeile, 11).value = baselineValue
-                            ws.Cells(zeile, 12).value = (planValue - baselineValue)
+                            ws.Cells(zeile, spalte).value = baselineValue
+                            spalte = spalte + 1
+
+                            ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                            spalte = spalte + 1
                         Else
-                            ws.Cells(zeile, 11).value = "n.a"
-                            ws.Cells(zeile, 12).value = "n.a"
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
+
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
                         End If
 
 
@@ -3582,7 +3923,8 @@ Module rpaTkModule
                             ' should always be the same : calculate erloes as being the sum of invoices 
                             planValue = 1000 * hproj.Erloes
                         End Try
-                        ws.Cells(zeile, 13).value = planValue
+                        ws.Cells(zeile, spalte).value = planValue
+                        spalte = spalte + 1
 
                         If Not IsNothing(baseline) Then
                             Try
@@ -3590,38 +3932,107 @@ Module rpaTkModule
                             Catch ex As Exception
                                 baselineValue = 1000 * baseline.Erloes
                             End Try
-                            ws.Cells(zeile, 14).value = baselineValue
-                            ws.Cells(zeile, 15).value = (planValue - baselineValue)
+                            ws.Cells(zeile, spalte).value = baselineValue
+                            spalte = spalte + 1
+
+                            ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                            spalte = spalte + 1
                         Else
-                            ws.Cells(zeile, 14).value = "n.a"
-                            ws.Cells(zeile, 15).value = "n.a"
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
                         End If
 
+                        ' Start Date 
+                        ws.Cells(zeile, spalte).value = hproj.startDate
+                        spalte = spalte + 1
+
                         ' Finish Date 
-                        ws.Cells(zeile, 16).value = hproj.endeDate.ToShortDateString
+                        ws.Cells(zeile, spalte).value = hproj.endeDate
+                        spalte = spalte + 1
+
                         If Not IsNothing(baseline) Then
-                            ws.Cells(zeile, 17).value = baseline.endeDate.ToShortDateString
-                            ws.Cells(zeile, 18).value = DateDiff(DateInterval.Day, baseline.endeDate, hproj.endeDate)
+                            ws.Cells(zeile, spalte).value = baseline.endeDate
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = DateDiff(DateInterval.Day, baseline.endeDate, hproj.endeDate)
+                            spalte = spalte + 1
                         Else
-                            ws.Cells(zeile, 17).value = "n.a"
-                            ws.Cells(zeile, 18).value = "n.a"
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
+                        End If
+
+                        ' Cost until now 
+                        Try
+                            planValue = 1000 * hproj.getCostUntil(lastDayLastMonth)
+
+                        Catch ex As Exception
+                            planValue = -1
+                        End Try
+
+                        If planValue >= 0.0 Then
+                            ws.Cells(zeile, spalte).value = planValue
+                        Else
+                            ws.Cells(zeile, spalte).value = "n.a"
+                        End If
+                        spalte = spalte + 1
+
+                        If Not IsNothing(baseline) Then
+                            Try
+                                baselineValue = 1000 * baseline.getCostUntil(lastDayLastMonth)
+                                ws.Cells(zeile, spalte).value = baselineValue
+                                spalte = spalte + 1
+
+                                If planValue >= 0 Then
+                                    ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                                Else
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                End If
+                                spalte = spalte + 1
+
+                            Catch ex As Exception
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                            End Try
+                        Else
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
                         End If
 
                         ' Total Cost 
                         planValue = 1000 * hproj.getGesamtKostenBedarf.Sum
-                        ws.Cells(zeile, 19).value = planValue
+                        ws.Cells(zeile, spalte).value = planValue
+                        spalte = spalte + 1
+
                         If Not IsNothing(baseline) Then
                             baselineValue = 1000 * baseline.getGesamtKostenBedarf.Sum
-                            ws.Cells(zeile, 20).value = baselineValue
-                            ws.Cells(zeile, 21).value = (planValue - baselineValue)
+                            ws.Cells(zeile, spalte).value = baselineValue
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                            spalte = spalte + 1
                         Else
-                            ws.Cells(zeile, 20).value = "n.a"
-                            ws.Cells(zeile, 21).value = "n.a"
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = "n.a"
+                            spalte = spalte + 1
                         End If
 
-                        ' Comment of Project Manager
-                        ws.Cells(zeile, 22).value = hproj.ampelErlaeuterung
 
+                        ' Name of Portfolio and Portfolio Variant Name 
+                        ws.Cells(zeile, spalte).value = myPortfolioName
+                        spalte = spalte + 1
+                        ws.Cells(zeile, spalte).value = myPortfolioVName
+                        spalte = spalte + 1
+
+                        ' VISBO ID 
+                        ws.Cells(zeile, spalte).value = hproj.vpID
+                        spalte = spalte + 1
 
                     Else
                         ' could not read the name 
@@ -3631,6 +4042,27 @@ Module rpaTkModule
 
                 Next
 
+                Try
+                    ' jetzt die Formatierungen anwenden 
+                    ' formatAreas 1 und 2 werden als € Zahlen formatiert
+                    With ws
+                        Dim rng As xlns.Range = .Range(.Cells(2, 5), .Cells(lastRow, 6))
+                        Dim rng0 As xlns.Range = .Range(.Cells(2, 9), .Cells(lastRow, 10))
+                        Dim rng1 As xlns.Range = .Range(.Cells(formatAreas(0, 0), formatAreas(0, 1)), .Cells(lastRow, formatAreas(0, 1) + listOfRoleNames.Count))
+                        Dim rng2 As xlns.Range = .Range(.Cells(formatAreas(1, 0), formatAreas(1, 1)), .Cells(lastRow, formatAreas(1, 1) + 5))
+                        Dim rng3 As xlns.Range = .Range(.Cells(formatAreas(2, 0), formatAreas(2, 1)), .Cells(lastRow, formatAreas(2, 1) + 2))
+                        Dim rng4 As xlns.Range = .Range(.Cells(formatAreas(3, 0), formatAreas(3, 1)), .Cells(lastRow, formatAreas(3, 1) + 5))
+                        rng.NumberFormat = "0.00"
+                        rng0.NumberFormat = "dd/mm/yy;@"
+                        rng1.NumberFormat = "0.00"
+                        rng2.NumberFormat = "#,##0.00 $"
+                        rng3.NumberFormat = "dd/mm/yy;@"
+                        rng4.NumberFormat = "#,##0.00 $"
+                    End With
+
+                Catch ex As Exception
+
+                End Try
             End If
 
         Else
@@ -3640,11 +4072,13 @@ Module rpaTkModule
         End If
 
 
+
         Try
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(reportWB.Worksheets("VISBO"), xlns.Worksheet).AutoFilterMode = True Then
                 CType(reportWB.Worksheets("VISBO"), xlns.Worksheet).Cells(1, 1).AutoFilter()
             End If
+
 
             reportWB.Close(SaveChanges:=True)
             Call logger(ptErrLevel.logInfo, "Write Report Actual Target  Successful, stored in ", expFName)

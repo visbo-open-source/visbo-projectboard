@@ -2906,7 +2906,7 @@ Public Module agm3
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim msgtxt As String = ""
         Dim anzFehler As Integer = 0
-        Dim fehler As Boolean = False
+        'Dim fehler As Boolean = False
 
         Dim ImportTyp As Integer = 2            ' Import like Telair - Zeuss - Dateien
         Try
@@ -3287,6 +3287,9 @@ Public Module agm3
             Dim index As Integer
             Dim dateConsidered As Date
 
+            Dim ok2 As Boolean
+            Dim isdate As Boolean
+
             'Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
             Dim monthName As String = ""
 
@@ -3299,7 +3302,7 @@ Public Module agm3
             Dim anzDays As Integer = 0
 
             Dim lastZeile As Integer
-            Dim lastSpalte As Integer
+            'Dim lastSpalte As Integer
             Dim monthDays As New SortedList(Of Integer, Integer)
 
             Dim hrole As New clsRollenDefinition
@@ -3335,37 +3338,60 @@ Public Module agm3
                                 'Dim Inhalt As String = kapaConfig("month").content
 
                                 ' Auslesen der Jahreszahl, falls vorhanden
-                                Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value).Trim
-                                If IsNothing(hjahr) Then
-                                    Jahr = 0
+
+                                ' tk 7.10.23 wenn ConsideredDate gleich bestimmt werden kann 
+                                If Not IsNothing(.Cells(kapaConfig("month").row, kapaConfig("month").column).value) Then
+                                    Try
+                                        dateConsidered = CDate(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
+                                        ok2 = True
+                                        isdate = True
+                                    Catch ex As Exception
+                                        dateConsidered = Date.MinValue
+                                        ok2 = False
+                                        isdate = False
+                                    End Try
                                 Else
-                                    If kapaConfig("year").regex = "RegEx" Then
-                                        'regexpression = New Regex("[0-9]{4}")
-                                        regexpression = New Regex(kapaConfig("year").content)
-                                        Dim match As Match = regexpression.Match(hjahr)
-                                        If match.Success Then
-                                            Jahr = CInt(match.Value)
-                                        Else
-                                            Jahr = 0
-                                        End If
-                                    End If
+                                    ok2 = False
                                 End If
 
+                                If Not ok2 Then
 
-                                ' Auslesen des relevanten Monats
-                                Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value).Trim
-                                If IsNothing(hmonth) Then
-                                    monthName = ""
-                                Else
-                                    If kapaConfig("month").regex = "RegEx" Then
-                                        regexpression = New Regex(kapaConfig("month").content)
-                                        Dim Match As Match = regexpression.Match(hmonth)
-                                        If Match.Success Then
-                                            monthName = Match.Value
-                                        Else
-                                            monthName = ""
+                                    Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value).Trim
+                                    If IsNothing(hjahr) Then
+                                        Jahr = 0
+                                    Else
+                                        If kapaConfig("year").regex = "RegEx" Then
+                                            'regexpression = New Regex("[0-9]{4}")
+                                            regexpression = New Regex(kapaConfig("year").content)
+                                            Dim match As Match = regexpression.Match(hjahr)
+                                            If match.Success Then
+                                                Jahr = CInt(match.Value)
+                                            Else
+                                                Jahr = 0
+                                            End If
                                         End If
                                     End If
+
+
+                                    ' Auslesen des relevanten Monats
+                                    Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value).Trim
+                                    If IsNothing(hmonth) Then
+                                        monthName = ""
+                                    Else
+                                        If kapaConfig("month").regex = "RegEx" Then
+                                            regexpression = New Regex(kapaConfig("month").content)
+                                            Dim Match As Match = regexpression.Match(hmonth)
+                                            If Match.Success Then
+                                                monthName = Match.Value
+                                            Else
+                                                monthName = ""
+                                            End If
+                                        End If
+                                    End If
+
+                                    ' tk 3.2.20 
+                                    isdate = DateTime.TryParse(monthName & " " & Jahr.ToString, dateConsidered)
+
                                 End If
 
 
@@ -3374,8 +3400,7 @@ Public Module agm3
                                 firstUrlzeile = kapaConfig("valueStart").row
                             End With
 
-                            ' tk 3.2.20 
-                            Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, dateConsidered)
+
 
                             Dim beginningDay As Integer = -1
                             Dim endingDay As Integer = -1
@@ -3407,131 +3432,138 @@ Public Module agm3
                                 oPCollection.Add(msgtxt)
                                 Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                             Else
-                                If Jahr <> 0 And monthName <> "" Then
 
-                                    colDate = getColumnOfDate(dateConsidered)
 
-                                    monthDays.Clear()
+                                colDate = getColumnOfDate(dateConsidered)
 
-                                    anzMonthDays = DateTime.DaysInMonth(Jahr, Month(dateConsidered))
-                                    If Not monthDays.ContainsKey(colDate) Then
-                                        monthDays.Add(colDate, anzMonthDays)
+                                monthDays.Clear()
+
+                                anzMonthDays = DateTime.DaysInMonth(Year(dateConsidered), Month(dateConsidered))
+                                'anzMonthDays = DateTime.DaysInMonth(Jahr, Month(dateConsidered))
+                                If Not monthDays.ContainsKey(colDate) Then
+                                    monthDays.Add(colDate, anzMonthDays)
+                                End If
+
+                                ' tk prüfen, ob der letzte Tag auch der richtige ist ... 
+                                Try
+                                    ' das kann schiefgehen, wenn keine Zahl im Feld steht ... 
+                                    endingDay = CInt(currentWS.Cells(firstUrlzeile - 1, firstUrlspalte + anzMonthDays - 1).value)
+                                Catch ex As Exception
+                                    endingDay = -1
+                                End Try
+
+                                If endingDay <> anzMonthDays Then
+                                    ok = False
+
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Error in date definition row in Capa file: File, Row, Column: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte + anzMonthDays - 1 & " does not show last day in month"
+                                    Else
+                                        msgtxt = "Fehler in Datums-Zeile in Kapazitäts-Datei: Datei, Zeile, Spalte: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte + anzMonthDays - 1 & "zeigt nicht den letzten Tag des Monats "
+
                                     End If
 
-                                    ' tk prüfen, ob der letzte Tag auch der richtige ist ... 
-                                    Try
-                                        ' das kann schiefgehen, wenn keine Zahl im Feld steht ... 
-                                        endingDay = CInt(currentWS.Cells(firstUrlzeile - 1, firstUrlspalte + anzMonthDays - 1).value)
-                                    Catch ex As Exception
-                                        endingDay = -1
-                                    End Try
+                                    oPCollection.Add(msgtxt)
+                                    Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
 
-                                    If endingDay <> anzMonthDays Then
-                                        ok = False
+                                Else
+                                    ' hier ist sichergestellt, dass die erste Spalte mit 1 beginnt, die letzte Spalte dem Tag entspricht, mit dem der Monat endet
 
-                                        If awinSettings.englishLanguage Then
-                                            msgtxt = "Error in date definition row in Capa file: File, Row, Column: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte + anzMonthDays - 1 & " does not show last day in month"
-                                        Else
-                                            msgtxt = "Fehler in Datums-Zeile in Kapazitäts-Datei: Datei, Zeile, Spalte: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte + anzMonthDays - 1 & "zeigt nicht den letzten Tag des Monats "
+                                    ok = True
 
-                                        End If
+                                    anzDays = 0
 
-                                        oPCollection.Add(msgtxt)
-                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+                                    'lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                                    lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
 
-                                    Else
-                                        ' hier ist sichergestellt, dass die erste Spalte mit 1 beginnt, die letzte Spalte dem Tag entspricht, mit dem der Monat endet
-
-                                        ok = True
-
-                                        anzDays = 0
-
-                                        lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
-                                        lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
-
-                                        ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
-                                        Dim found As Boolean = False
-                                        Dim i As Integer = lastZeile + 1
-                                        While Not found
-                                            i = i - 1
-                                            If kapaConfig("LastLine").regex = "RegEx" Then
-                                                regexpression = New Regex(kapaConfig("LastLine").content)
-                                                Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value).Trim
-                                                If Not IsNothing(lastLineContent) Then
-                                                    Dim match As Match = regexpression.Match(lastLineContent)
-                                                    If match.Success Then
-                                                        lastLineContent = match.Value
-                                                        found = True
-                                                    End If
+                                    ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
+                                    Dim found As Boolean = False
+                                    Dim i As Integer = lastZeile + 1
+                                    While Not found
+                                        i = i - 1
+                                        If kapaConfig("LastLine").regex = "RegEx" Then
+                                            regexpression = New Regex(kapaConfig("LastLine").content)
+                                            Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value).Trim
+                                            If Not IsNothing(lastLineContent) Then
+                                                Dim match As Match = regexpression.Match(lastLineContent)
+                                                If match.Success Then
+                                                    lastLineContent = match.Value
+                                                    found = True
                                                 End If
                                             End If
-
-                                        End While
-                                        lastZeile = i - 1
-
-
-                                        ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
-                                        ' -------------------------------------
-                                        Dim rng As Range
-                                        Dim rngEnd As Range
-
-                                        rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
-
-                                        If rng.MergeCells Then
-
-                                            rng = rng.MergeArea
-                                            rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
-
-                                            ' dann ist die lastZeile neu zu besetzen
-                                            lastZeile = rngEnd.Row
                                         End If
+
+                                    End While
+                                    lastZeile = i - 1
+
+
+                                    ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
+                                    ' -------------------------------------
+                                    Dim rng As Range
+                                    Dim rngEnd As Range
+
+                                    rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
+
+                                    If rng.MergeCells Then
+
+                                        rng = rng.MergeArea
+                                        rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
+
+                                        ' dann ist die lastZeile neu zu besetzen
+                                        lastZeile = rngEnd.Row
+                                    End If
+                                End If
+
+                                If Not ok Then
+
+                                    'fehler = True
+
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Error reading availabilities: Please check the calendar in this file ..."
+                                    Else
+                                        msgtxt = "Fehler beim Lesen der Verfügbarkeiten: Bitte prüfen Sie die Korrektheit des Kalenders ..."
+                                    End If
+                                    If Not oPCollection.Contains(msgtxt) Then
+                                        oPCollection.Add(msgtxt, msgtxt)
+                                    End If
+                                    'Call MsgBox(msgtxt)
+                                    Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+
+                                    If formerEE Then
+                                        appInstance.EnableEvents = True
                                     End If
 
+                                    If formerSU Then
+                                        appInstance.ScreenUpdating = True
+                                    End If
 
-                                    If Not ok Then
-
-                                        fehler = True
-
-                                        If awinSettings.englishLanguage Then
-                                            msgtxt = "Error reading availabilities: Please check the calendar in this file ..."
-                                        Else
-                                            msgtxt = "Fehler beim Lesen der Verfügbarkeiten: Bitte prüfen Sie die Korrektheit des Kalenders ..."
-                                        End If
-                                        If Not oPCollection.Contains(msgtxt) Then
-                                            oPCollection.Add(msgtxt, msgtxt)
-                                        End If
-                                        'Call MsgBox(msgtxt)
-
-                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
-
-                                        If formerEE Then
-                                            appInstance.EnableEvents = True
-                                        End If
-
-                                        If formerSU Then
-                                            appInstance.ScreenUpdating = True
-                                        End If
-
-                                        enableOnUpdate = True
-                                        If awinSettings.englishLanguage Then
-                                            msgtxt = "Your availabilities couldn't be read, because of problems"
-                                        Else
-                                            msgtxt = "Ihre Verfügbarkeiten konnten nicht berücksichtigt werden"
-                                        End If
-                                        If Not oPCollection.Contains(msgtxt) Then
-                                            oPCollection.Add(msgtxt, msgtxt)
-                                        End If
-
-                                        Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
-                                        'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
-                                        ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
-                                        'Throw New ArgumentException(msgtxt)
+                                    enableOnUpdate = True
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Your availabilities couldn't be read, because of problems"
                                     Else
+                                        msgtxt = "Ihre Verfügbarkeiten konnten nicht berücksichtigt werden"
+                                    End If
+                                    If Not oPCollection.Contains(msgtxt) Then
+                                        oPCollection.Add(msgtxt, msgtxt)
+                                    End If
 
-                                        For iZ = firstUrlzeile To lastZeile
+                                    Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
+                                    'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
+                                    ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
+                                    'Throw New ArgumentException(msgtxt)
+                                Else
+                                    ' processedNames contains all already considered names; doublettes are recognized and not handeled again ... 
+                                    Dim processedNames As New Collection
 
+                                    For iZ = firstUrlzeile To lastZeile
+
+                                        If Not IsNothing(CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
 
                                             rolename = CType(CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Value, String).Trim
+
+                                            ' check whether or not there is a vblf in the name 
+                                            If rolename.Contains(vbLf) Then
+                                                rolename = rolename.Replace(vbLf, " ").Trim
+                                            End If
 
                                             ' tk 31.1.2020 Test - der CheckWert steht auf Spalte "AS"
                                             ' dazu muss manuell der Check-Wert bestimmt und in der Excel Datei eingetragen werden ..  
@@ -3551,25 +3583,30 @@ Public Module agm3
                                                 hrole = RoleDefinitions.getRoledef(rolename)
                                                 If Not IsNothing(hrole) Then
 
-                                                    Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
+                                                    ' now check whether or not it has already been processed 
+                                                    If Not processedNames.Contains(rolename) Then
 
-                                                    Dim iSp As Integer = firstUrlspalte
-                                                    Dim anzArbTage As Double = 0
-                                                    Dim anzArbStd As Double = 0
+                                                        processedNames.Add(rolename, rolename)
 
-                                                    For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
+                                                        Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
-                                                        Dim colOfDate As Integer = kvp.Key
-                                                        anzDays = kvp.Value
-                                                        For sp = iSp + 0 To iSp + anzDays - 1
+                                                        Dim iSp As Integer = firstUrlspalte
+                                                        Dim anzArbTage As Double = 0
+                                                        Dim anzArbStd As Double = 0
 
+                                                        For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
 
-                                                            If iSp <= lastSpalte Then
+                                                            Dim colOfDate As Integer = kvp.Key
+                                                            anzDays = kvp.Value
+                                                            For sp = iSp + 0 To iSp + anzDays - 1
+
+                                                                ' tk may lead to neglecting last days, because if there is no entry in the last columns, the lastSpalte is too early
+                                                                'If iSp <= lastSpalte Then
 
                                                                 Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
 
                                                                 If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
-                                                                    Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
+                                                                        Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
 
                                                                     Dim aktCell As Object = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
 
@@ -3591,7 +3628,7 @@ Public Module agm3
                                                                                     oPCollection.Add(msgtxt, msgtxt)
                                                                                 End If
                                                                                 'Call MsgBox(msgtxt)
-                                                                                fehler = True
+                                                                                'fehler = True
                                                                                 Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                                             End If
                                                                         Else
@@ -3638,68 +3675,81 @@ Public Module agm3
 
                                                                     End If
                                                                 End If
-                                                            Else
-                                                                If awinSettings.englishLanguage Then
-                                                                    msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
-                                                                Else
-                                                                    msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                                'Else
+                                                                '    If awinSettings.englishLanguage Then
+                                                                '        msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
+                                                                '    Else
+                                                                '        msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                                '    End If
+                                                                '    fehler = True
+                                                                '    If Not oPCollection.Contains(msgtxt) Then
+                                                                '        oPCollection.Add(msgtxt, msgtxt)
+                                                                '    End If
+                                                                '    Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+                                                                'End If
+
+                                                            Next
+
+                                                            anzArbTage = anzArbStd / 8
+
+                                                            ' tk 31.1.20 Check den Wert
+                                                            Dim formerVD As Boolean = awinSettings.visboDebug
+                                                            awinSettings.visboDebug = True
+                                                            If awinSettings.visboDebug Then
+                                                                If checkWert <> -1 Then
+                                                                    If Math.Abs(anzArbTage - checkWert) > 0.0001 Then
+                                                                        Call MsgBox("Abweichung in Kapa-Bestimmung")
+                                                                    End If
                                                                 End If
-                                                                fehler = True
-                                                                If Not oPCollection.Contains(msgtxt) Then
-                                                                    oPCollection.Add(msgtxt, msgtxt)
-                                                                End If
-                                                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                             End If
+                                                            awinSettings.visboDebug = formerVD
+                                                            'Ende tk Check den Wert 
+
+                                                            'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                                            If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                                hrole.kapazitaet(colOfDate) = anzArbTage
+                                                            Else
+                                                                hrole.kapazitaet(colOfDate) = 0
+                                                            End If
+                                                            iSp = iSp + anzDays
+                                                            anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
+                                                            anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
 
                                                         Next
 
-                                                        anzArbTage = anzArbStd / 8
 
-                                                        ' tk 31.1.20 Check den Wert
-                                                        Dim formerVD As Boolean = awinSettings.visboDebug
-                                                        awinSettings.visboDebug = True
-                                                        If awinSettings.visboDebug Then
-                                                            If checkWert <> -1 Then
-                                                                If Math.Abs(anzArbTage - checkWert) > 0.0001 Then
-                                                                    Call MsgBox("Abweichung in Kapa-Bestimmung")
-                                                                End If
-                                                            End If
-                                                        End If
-                                                        awinSettings.visboDebug = formerVD
-                                                        'Ende tk Check den Wert 
-
-                                                        'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
-                                                        If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
-                                                            hrole.kapazitaet(colOfDate) = anzArbTage
+                                                    Else
+                                                        ' Error Logging 
+                                                        If awinSettings.englishLanguage Then
+                                                            msgtxt = "doublette found and exit: " & rolename
                                                         Else
-                                                            hrole.kapazitaet(colOfDate) = 0
+                                                            msgtxt = "Duplikat gefunden, führte zu Abbruch: " & rolename
                                                         End If
-                                                        iSp = iSp + anzDays
-                                                        anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
-                                                        anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
-
-                                                    Next
+                                                        If Not oPCollection.Contains(msgtxt) Then
+                                                            oPCollection.Add(msgtxt, msgtxt)
+                                                        End If
+                                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+                                                    End If
 
                                                 Else
-
                                                     If awinSettings.englishLanguage Then
-                                                        msgtxt = "Role " & rolename & " not defined ..."
+                                                        msgtxt = rolename & " not defined ... in VISBO Resource Pool / Organisation"
                                                     Else
-                                                        msgtxt = "Rolle " & rolename & " nicht definiert ..."
+                                                        msgtxt = rolename & " nicht definiert im Ressourcen Pool / Organisation"
                                                     End If
-                                                    If Not oPCollection.Contains(msgtxt) Then
-                                                        oPCollection.Add(msgtxt, msgtxt)
-                                                    End If
+                                                    'If Not oPCollection.Contains(msgtxt) Then
+                                                    '    oPCollection.Add(msgtxt, msgtxt)
+                                                    'End If
                                                     'Call MsgBox(msgtxt)
-                                                    fehler = True
-                                                    Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
+                                                    'fehler = True
+                                                    Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                                                 End If
                                             Else
 
                                                 If awinSettings.englishLanguage Then
-                                                    msgtxt = "No Name of role given ..."
+                                                    msgtxt = "No Name given ..."
                                                 Else
-                                                    msgtxt = "kein Rollenname angegeben ..."
+                                                    msgtxt = "kein Name angegeben ..."
                                                 End If
                                                 If Not oPCollection.Contains(msgtxt) Then
                                                     oPCollection.Add(msgtxt, msgtxt)
@@ -3707,25 +3757,12 @@ Public Module agm3
                                                 Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                             End If
 
-                                        Next iZ
-
-                                    End If   ' ende von if not OK
-                                Else
-
-                                    If awinSettings.visboDebug Then
-
-                                        If awinSettings.englishLanguage Then
-                                            msgtxt = "Worksheet " & kapaFileName & "doesn't contain month/year ..."
-                                        Else
-                                            msgtxt = "Worksheet" & kapaFileName & " enthält keine Angaben zu Monat/Jahr ..."
                                         End If
-                                        If Not oPCollection.Contains(msgtxt) Then
-                                            oPCollection.Add(msgtxt, msgtxt)
-                                        End If
-                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
-                                    End If
 
-                                End If
+                                    Next iZ
+
+                                End If   ' ende von if not OK
+
 
                             End If      'beginningDay = 1
 
