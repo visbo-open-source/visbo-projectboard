@@ -115,13 +115,14 @@ Public Class Tabelle3
         '' jetzt die Splaten für ProjNr, ProjName, VariantenName ausblenden
 
         appInstance.EnableEvents = True
+
         Dim aa As Boolean = appInstance.EnableEvents
 
         ' jetzt die Spalte 6 einblenden bzw. ausblenden 
         Try
             'If visboZustaende.projectBoardMode = ptModus.massEditTermine Then
             'CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-            If ShowProjekte.Count = 1 Then
+            If editProjekteInSPE.Count = 1 Then
                 CType(meWS.Columns("A"), Excel.Range).Hidden = True
                 CType(meWS.Columns("B"), Excel.Range).Hidden = True
                 CType(meWS.Columns("C"), Excel.Range).Hidden = True
@@ -139,6 +140,7 @@ Public Class Tabelle3
         End Try
 
         Try
+
 
             ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
             ' die dürfen auch nicht gelöscht werden 
@@ -186,7 +188,7 @@ Public Class Tabelle3
                 With visboZustaende
 
                     pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
-                    If ShowProjekte.contains(pName) Then
+                    If editProjekteInSPE.contains(pName) Then
                         .currentProject = ShowProjekte.getProject(pName)
                         .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
                     End If
@@ -218,6 +220,46 @@ Public Class Tabelle3
         If Not IsNothing(appInstance.ActiveCell) Then
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
         End If
+
+        ' tk 23.11.22. now set width of columns so that it looks good ... 
+        Try
+            Dim w1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
+            Dim w2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
+            Dim w3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+
+            CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).AutoFit()
+
+            Dim c1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
+            Dim c2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
+            Dim c3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
+            ' die dürfen auch nicht gelöscht werden 
+            With meWS
+                .Protect(Password:="x", UserInterfaceOnly:=True,
+                         AllowFormattingCells:=True,
+                         AllowFormattingColumns:=True,
+                         AllowInsertingColumns:=False,
+                         AllowInsertingRows:=False,
+                         AllowDeletingColumns:=False,
+                         AllowDeletingRows:=False,
+                         AllowSorting:=False,
+                         AllowFiltering:=True)
+                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
+                .EnableAutoFilter = True
+            End With
+
+
+        Catch ex As Exception
+
+        End Try
 
 
         If Application.ScreenUpdating = False Then
@@ -741,7 +783,7 @@ Public Class Tabelle3
 
                             If Not IsNothing(Target.Value) Then
                                 If IsNumeric(Target.Value) Then
-                                    If CInt(Target.Value) > 0 Then
+                                    If CInt(Target.Value) >= 0 Then
                                         myValue = CInt(Target.Value)
 
                                         If visboZustaende.currentZeileIsMilestone Then
@@ -997,7 +1039,7 @@ Public Class Tabelle3
 
         appInstance.EnableEvents = True
 
-        If ShowProjekte.Count = 1 Then
+        If editProjekteInSPE.Count = 1 Then
             CType(meWS.Columns(1), Excel.Range).EntireColumn.Hidden = True
             CType(meWS.Columns(2), Excel.Range).EntireColumn.Hidden = True
             CType(meWS.Columns(3), Excel.Range).EntireColumn.Hidden = True
@@ -1036,6 +1078,14 @@ Public Class Tabelle3
 
         Try
             appInstance.DisplayFormulaBar = False
+        Catch ex As Exception
+
+        End Try
+
+        ' tk 23.11.22 do not update screen ...
+        ' is again activated in Activate event of each table 
+        Try
+            appInstance.ScreenUpdating = False
         Catch ex As Exception
 
         End Try

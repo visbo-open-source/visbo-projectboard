@@ -1,7 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Public Class clsJobParameters
 
-    Public kennung As PTRpa
+    Friend kennung As PTRpa
 
 
     Private _allowedOverloadMonth As Double
@@ -90,6 +90,18 @@ Public Class clsJobParameters
         Set(value As Collection)
             If Not IsNothing(value) Then
                 _milestones = value
+            End If
+        End Set
+    End Property
+
+    Private _roleNames As Collection
+    Public Property roleNames As Collection
+        Get
+            roleNames = _roleNames
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _roleNames = value
             End If
         End Set
     End Property
@@ -217,6 +229,35 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _changeFactorResourceNeeds As Double
+    Public Property changeFactorResourceNeeds As Double
+        Get
+            changeFactorResourceNeeds = _changeFactorResourceNeeds
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value >= 0 Then
+                    _changeFactorResourceNeeds = value
+                End If
+            End If
+        End Set
+    End Property
+
+    Private _changeFactorDuration As Double
+    Public Property changeFactorDuration As Double
+        Get
+            changeFactorDuration = _changeFactorDuration
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value >= 0 Then
+                    _changeFactorDuration = value
+                End If
+            End If
+        End Set
+    End Property
+
+
     Private _sortItem As String
     Public Property sortItem As String
         Get
@@ -229,7 +270,29 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _templateName As String
+    Public Property templateName As String
+        Get
+            templateName = _templateName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _templateName = value
+            End If
+        End Set
+    End Property
 
+    Private _compareWithFirstBaseline As Boolean
+    Public Property compareWithFirstBaseline As Boolean
+        Get
+            compareWithFirstBaseline = _compareWithFirstBaseline
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _compareWithFirstBaseline = value
+            End If
+        End Set
+    End Property
     Sub New()
 
         _sortItem = ""
@@ -240,12 +303,17 @@ Public Class clsJobParameters
         _defaultDeltaInDays = 7
         _milestones = New Collection
         _phases = New Collection
+        _roleNames = New Collection
         kennung = PTRpa.visboUnknown
 
         _projectVariantName = "Var1"
         _portfolioName = ""
         _portfolioVariantName = "Var1"
         _defaultLatestEnd = DateSerial(Date.Now.Year + 1, 12, 31)
+        _templateName = "TMS"
+        _compareWithFirstBaseline = False
+        _changeFactorResourceNeeds = 1.0
+        _changeFactorDuration = 1.0
 
     End Sub
 

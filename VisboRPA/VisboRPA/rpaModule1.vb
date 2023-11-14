@@ -46,6 +46,120 @@ Module rpaModule1
 
     Public watchDialog As VisboRPAStart
 
+
+    Public Enum PTRpa
+        ' represents the standard VISBO Projectbrief with Stammdaten, Ressources, Termine, Attribute 
+        visboProject = 0
+
+        ' represents the standard VISBO Excel project with just only name and Schedules, Appearances, and the like 
+        visboExcelSchedules = 1
+
+        ' represents the standard MS Project *.mpp File 
+        visboMPP = 2
+
+        ' represents the Jira File, as customized in JiraConfig customized  
+        visboJira = 3
+
+        ' represents the Instart AngebotsKalkulation Template 
+        visboInstartProposal = 4
+
+        ' represents the VISBO AngebotsKalkulation Template 
+        visboProposal = 5
+
+        ' represents the Telair Tagetik New Projects List
+        visboNewTagetik = 6
+
+        ' represents the Telair Update Project File
+        visboUpdateTagetik = 7
+
+        ' represents the standard VISBO Project Creation by BatchList 
+        visboProjectList = 8
+
+        ' represents the AllianzType Istdaten Import 
+        visboActualData1 = 9
+
+        ' represents the InstartType Istdaten Import 
+        visboActualData2 = 10
+
+        ' represents the Telair Istdaten Import 
+        visboActualData3 = 11
+
+        ' represents the initial VISBO Excel Organisation
+        visboInitialOrga = 12
+
+        ' represents the roundtrip VISBO Excel Organisation
+        visboRoundtripOrga = 13
+
+        ' represents the default Urlaubskalender from VISBO 
+        visboDefaultCapacity = 14
+
+        ' represents the Zeuss Completed File to process all the Zeuss files in Collect Folder  
+        visboZeussStdCapacity = 15
+
+        ' represents the Instart Type of Urlaubs-Information 
+        visboEGeckoCapacity = 16
+
+        ' represents the Allianz-Type Daten of Externe Rahmenverträge 
+        visboExternalContracts = 17
+
+        ' represents the classic modifier strcture 
+        visboModifierCapacities = 18
+
+        ' represents the unknown 
+        visboUnknown = 19
+
+        ' visbo Find Project Starts
+        visboFindProjectStart = 20
+
+        ' represents the CostAssertion of Telair
+        visboCostAssertion = 21
+
+
+        ' represents the Automatic Team Allocation
+        visboSuggestResourceAllocation = 22
+
+        ' represent the setitngs 
+        visboJsonSetting = 23
+
+        ' represents the Auto-Distribution
+        visboAutoAdjust = 24
+
+        ' create hedged variants 
+        visboCreateHedgedVariant = 25
+
+        ' visbo Find Project Starts with regard of frequency Phases, milestones
+        visboFindProjectStartPM = 26
+
+        ' find feasible Portfolio
+        visboFindfeasiblePortfolio = 27
+
+        ' represents the weser ressourcenplan
+        visboWWWRessourcen = 28
+
+        ' dataQuality Check 
+        visboDataQualityCheck = 29
+
+        ' rename projects in Batch
+        visboRenameProjects = 30
+
+        ' create baselines in Batch
+        visboCreateBaselineProjects = 31
+
+        ' assign attributes such as buinsessUnits in batchmode
+        visboAssignAttributes = 32
+
+        ' write Actual vs Target Report 
+        visboWriteActualTarget = 33
+
+        ' move the according file to collect folder
+        visboMoveToCollect = 34
+
+        ' the percet modifier 
+        visboPercentModifierCapacities = 35
+
+    End Enum
+
+
     Public Sub Main()
         ' reads the VISBO RPA folder und treats each file it finds there appropriately
         ' in most cases new project and portfolio versions will be written 
@@ -302,7 +416,8 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboModifierCapacities)
 
-                    allOk = processModifierExternContracts(fname, importDate, errMessages)
+                    allOk = processModifierCapacities(fname, errMessages)
+
 
                 Case CInt(PTRpa.visboExternalContracts)
 
@@ -332,36 +447,46 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboNewTagetik)
                     allOk = True
-                    allOk = processNewTagetik(fname, myActivePortfolio, collectFolder, importDate)
-                    'Call logger(ptErrLevel.logError, "Import new Projects of Tagetik", " not yet integrated !")
+                    allOk = processNewTagetik(fname, myActivePortfolio, importDate)
+
 
                 Case CInt(PTRpa.visboUpdateTagetik)
                     allOk = True
-                    allOk = processUpdateTagetik(fname, myActivePortfolio, collectFolder, importDate)
-                    'Call logger(ptErrLevel.logError, "Import Project-update of Tagetik", " not yet integrated !")
+                    allOk = processUpdateTagetik(fname, myActivePortfolio, importDate)
+
 
                 Case CInt(PTRpa.visboEGeckoCapacity)
                     allOk = True
                     allOk = processEGeckoCapacity(fname, importDate, errMessages)
-                    'Call logger(ptErrLevel.logError, "Import Capacities coming from eGecko", " not yet integrated !")
+
 
                 Case CInt(PTRpa.visboInstartProposal)
                     allOk = processInstartProposal(fname, myActivePortfolio, collectFolder, importDate)
                     'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboWWWRessourcen)
-                    allOk = processWWWRessourcen(fname, myActivePortfolio, collectFolder, importDate)
+                    allOk = processWWWRessourcen(fname, myActivePortfolio, importDate)
                     'Call logger(ptErrLevel.logError, "Import Calc-Sheet ", " not yet integrated !")
 
                 Case CInt(PTRpa.visboProposal)
                     allOk = True
                     Call logger(ptErrLevel.logError, "Import visbo proposal ", " not yet integrated !")
 
-                Case CInt(PTRpa.visboZeussCapacity)
+                Case CInt(PTRpa.visboMoveToCollect)
                     allOk = True
-                    currentWB.Close(SaveChanges:=False)
-                    allOk = processZeussCapacity(fname, importDate, errMessages, listOfArchivFiles)
-                    'Call logger(ptErrLevel.logError, "Import Zeuss-Capacities ", " not yet integrated !")
+
+                    If Not IsNothing(currentWB) Then
+                        currentWB.Close(SaveChanges:=False)
+                    End If
+
+                    Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectFolder, myName)
+                    My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                    Call logger(ptErrLevel.logInfo, "Moved to Collect-Folder: ", myName)
+
+                Case CInt(PTRpa.visboZeussStdCapacity)
+
+                    allOk = processZeussStdCapacity(importDate, errMessages)
+
 
                 Case CInt(PTRpa.visboFindProjectStart)
 
@@ -399,9 +524,44 @@ Module rpaModule1
 
 
                 Case CInt(PTRpa.visboCostAssertion)
-                    allOk = True
-                    allOk = processCostAssertion(fname, myActivePortfolio, collectFolder, importDate)
-                    'Call logger(ptErrLevel.logError, "Import Cost-Assertion  ", " not yet integrated !")
+
+                    allOk = processCostAssertion(fname, myActivePortfolio, importDate)
+
+
+                Case CInt(PTRpa.visboDataQualityCheck)
+                    Try
+                        allOk = processDataQualityCheck(PTRpa.visboDataQualityCheck)
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboWriteActualTarget)
+                    Try
+                        allOk = processWriteActualTargetReport(PTRpa.visboWriteActualTarget)
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboRenameProjects)
+                    Try
+                        allOk = processRenameProjects()
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboCreateBaselineProjects)
+                    Try
+                        allOk = processCreateBaselines()
+                    Catch ex As Exception
+
+                    End Try
+
+                Case CInt(PTRpa.visboAssignAttributes)
+                    Try
+                        allOk = processAssignAttributes()
+                    Catch ex As Exception
+
+                    End Try
 
                 Case Else
                     Call logger(ptErrLevel.logError, "ImportType is not known so far !", " unknown !")
@@ -414,18 +574,10 @@ Module rpaModule1
             Try
                 If Not (rpaCat = PTRpa.visboMPP Or
                                         rpaCat = PTRpa.visboActualData1 Or
-                                        rpaCat = PTRpa.visboActualData2) Then
+                                        rpaCat = PTRpa.visboActualData2 Or
+                                        rpaCat = PTRpa.visboMoveToCollect
+                                        ) Then
 
-                    'If allOk Then
-                    '    If IsNothing(currentWB) Then
-                    '        ' workbook bereits wieder geschlossen
-                    '        appInstance.DisplayAlerts = False
-                    '        currentWB = appInstance.Workbooks.Open(fname)
-                    '    End If
-                    '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeGreen
-                    'Else
-                    '    CType(currentWB.Worksheets(1), xlns.Worksheet).Cells(1, 1).interior.color = visboFarbeRed
-                    'End If
                     If Not IsNothing(currentWB) Then
                         currentWB.Close(SaveChanges:=False)
                     End If
@@ -435,24 +587,37 @@ Module rpaModule1
             End Try
 
             ' here the logfiles and the importfiles will be moved to a folder depending on the result of the import
-            If Not rpaCat = PTRpa.visboActualData2 Then
+            ' tk 9.10.23 always the same there fore no IF cluase any more ... 
+            If Not rpaCat = PTRpa.visboMoveToCollect Then
                 If listOfArchivFiles.Count > 0 Then
+
                     For Each archivFile As String In listOfArchivFiles
                         Call processResult(archivFile, allOk, errMessages)
                     Next
                 Else
                     Call processResult(fname, allOk, errMessages)
                 End If
-            Else
-                If listOfArchivFiles.Count > 0 Then
-                    For Each archivFile As String In listOfArchivFiles
-                        Call processResult(archivFile, allOk, errMessages)
-                    Next
-                Else
-                    Call processResult(fname, allOk, errMessages)
-                End If
-                'Call processResult(fname, allOk, errMessages)
             End If
+
+
+            ' tk 9.10.23
+            'If Not rpaCat = PTRpa.visboActualData2 Then
+            '    If listOfArchivFiles.Count > 0 Then
+            '        For Each archivFile As String In listOfArchivFiles
+            '            Call processResult(archivFile, allOk, errMessages)
+            '        Next
+            '    Else
+            '        Call processResult(fname, allOk, errMessages)
+            '    End If
+            'Else
+            '    If listOfArchivFiles.Count > 0 Then
+            '        For Each archivFile As String In listOfArchivFiles
+            '            Call processResult(archivFile, allOk, errMessages)
+            '        Next
+            '    Else
+            '        Call processResult(fname, allOk, errMessages)
+            '    End If
+            'End If
 
         Catch ex As Exception
 
@@ -730,6 +895,7 @@ Module rpaModule1
 
         Try
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
                 Dim outputCollection As New Collection
                 Dim hproj As clsProjekt = Nothing
                 Dim Err As New clsErrorCodeMsg
@@ -1154,7 +1320,7 @@ Module rpaModule1
 
                         ' Check auf Modifier Kapazitäten
                         If result = PTRpa.visboUnknown Then
-                            result = checkModifierExternKapa(currentWB)
+                            result = checkModifierKapa(currentWB)
                         End If
 
                         ' Check auf externe Rahmenverträge 
@@ -1169,7 +1335,7 @@ Module rpaModule1
 
                         ' Check auf Zeuss Kapazitäten... (Telair)
                         If result = PTRpa.visboUnknown Then
-                            result = checkZeussCapacity(currentWB)
+                            result = checkZeussStdCapacity(currentWB)
                         End If
 
                         ' Check auf Ist-Daten 
@@ -1201,11 +1367,40 @@ Module rpaModule1
                         If result = PTRpa.visboUnknown Then
                             result = checkInstartProposal(currentWB)
                         End If
+
                         ' Check auf Weser Ressourcenplanung 
                         If result = PTRpa.visboUnknown Then
                             result = checkWWWRessourcen(currentWB)
                         End If
 
+                        ' Check auf Data Quality Check (Currently BHTC) 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkDataQuality(currentWB)
+                        End If
+
+                        ' Check auf Rename Projects 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkRename(currentWB)
+                        End If
+
+                        ' Check auf Create Baseline Projects 
+                        If result = PTRpa.visboUnknown Then
+                            result = checkBaselineCreation(currentWB)
+                        End If
+
+                        ' Check auf Actual vs Target Report  
+                        If result = PTRpa.visboUnknown Then
+                            result = checkActualTargetReport(currentWB)
+                        End If
+
+                        If result = PTRpa.visboUnknown Then
+                            result = checkAssignAttributes(currentWB)
+                        End If
+
+
+                        If result = PTRpa.visboUnknown Then
+                            result = checkZeussAndPercentCompleted(currentWB)
+                        End If
 
                         currentWB.Close(SaveChanges:=False)
 
@@ -1257,13 +1452,14 @@ Module rpaModule1
                         CStr(ersteZeile.Cells(1, 5).value).Trim = "Start" And
                         CStr(ersteZeile.Cells(1, 6).value).Trim = "End" And
                         CStr(ersteZeile.Cells(1, 7).value).Trim.StartsWith("Duration") And
-                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Budget") And
-                        CStr(ersteZeile.Cells(1, 9).value).Trim.Contains("Resources") And
-                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Other Cost") And
-                        CStr(ersteZeile.Cells(1, 11).value).Trim = "Risk" And
-                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Strategy" And
-                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Business Unit" And
-                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Description"
+                        CStr(ersteZeile.Cells(1, 8).value).Trim.StartsWith("Revenue") And
+                        CStr(ersteZeile.Cells(1, 9).value).Trim.StartsWith("Budget") And
+                        CStr(ersteZeile.Cells(1, 10).value).Trim.Contains("Resources") And
+                        CStr(ersteZeile.Cells(1, 11).value).Trim.Contains("Other Cost") And
+                        CStr(ersteZeile.Cells(1, 12).value).Trim = "Risk" And
+                        CStr(ersteZeile.Cells(1, 13).value).Trim = "Strategy" And
+                        CStr(ersteZeile.Cells(1, 14).value).Trim = "Business Unit" And
+                        CStr(ersteZeile.Cells(1, 15).value).Trim = "Description"
 
                 Catch ex As Exception
                     verifiedStructure = False
@@ -1421,10 +1617,10 @@ Module rpaModule1
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
-    Private Function checkModifierExternKapa(ByVal currentWB As xlns.Workbook) As PTRpa
+    Private Function checkModifierKapa(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim possibleTableNames() As String = {"Kapazität"}
-        Dim verifiedStructure As Boolean = False
+        Dim verifiedStructure As Boolean = True
         Try
 
             Dim currentWS As xlns.Worksheet = Nothing
@@ -1448,8 +1644,79 @@ Module rpaModule1
             End If
 
 
-            If found Then
-                result = PTRpa.visboModifierCapacities
+            If found And Not IsNothing(currentWS) Then
+
+                ' now check whether or not it is a percentage modifier file
+                Dim lastRow As Integer = System.Math.Max(CType(currentWS.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row,
+                                                         CType(currentWS.Cells(20000, 2), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row)
+                Dim lastColumn As Integer = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
+                Dim validPercentType As Boolean = True
+                Dim atLeastOnePercentLine As Boolean = False
+
+                verifiedStructure = (lastRow > 1)
+
+                ' now row for row
+                For r As Integer = 2 To lastRow
+
+                    If IsNumeric(CType(currentWS.Cells(r, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                        verifiedStructure = False
+                        Exit For
+                    End If
+
+                    ' check out: is it a complete row with % 
+                    ' or a complete row without %, both are allowed in a file
+                    ' or is it mixed in row -> not allowed 
+
+                    Dim started As Boolean = False
+                    Dim isCompletePercent As Boolean = True
+                    Dim isCompleteAbsolut As Boolean = True
+
+
+                    For c As Integer = 3 To lastColumn
+
+                        If Not IsNothing(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                            Dim myString As String = CType(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).DisplayFormat, xlns.DisplayFormat).NumberFormat
+                            If myString.Contains("%") Then
+                                isCompleteAbsolut = isCompleteAbsolut And False
+                                If CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 1 And
+                                    CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 Then
+                                    isCompletePercent = isCompletePercent And True
+                                Else
+                                    isCompletePercent = isCompletePercent And False
+                                End If
+                            Else
+                                isCompletePercent = isCompletePercent And False
+                                If CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 Then
+                                    isCompleteAbsolut = isCompleteAbsolut And True
+                                End If
+                            End If
+                        Else
+                            isCompleteAbsolut = isCompleteAbsolut And True
+                            isCompletePercent = isCompletePercent And False
+                        End If
+
+                    Next
+
+                    If isCompletePercent Then
+                        atLeastOnePercentLine = True
+                    ElseIf Not isCompleteAbsolut Then
+                        ' then there is something foul ..
+                        verifiedStructure = False
+                        Exit For
+                    End If
+
+                Next
+
+                If verifiedStructure Then
+                    If atLeastOnePercentLine Then
+                        result = PTRpa.visboMoveToCollect
+                    Else
+                        result = PTRpa.visboModifierCapacities
+                    End If
+                Else
+                    result = PTRpa.visboUnknown
+                End If
+
             End If
 
 
@@ -1458,7 +1725,7 @@ Module rpaModule1
         End Try
 
 
-        checkModifierExternKapa = result
+        checkModifierKapa = result
     End Function
     ''' <summary>
     ''' checks whether or not it is a File with external Contracts (like Allianz)
@@ -1795,6 +2062,48 @@ Module rpaModule1
         checkActualData2 = result
     End Function
 
+    Private Function checkActualTargetReport(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+
+        Dim blattName As String = "Actual Target Report"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                result = PTRpa.visboWriteActualTarget
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkActualTargetReport = result
+
+    End Function
+    Private Function checkDataQuality(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim verifiedStructure As Boolean = False
+        Dim blattName As String = "Data Quality Check"
+
+        Try
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+
+            If IsNothing(currentWS) Then
+                result = PTRpa.visboUnknown
+            Else
+                result = PTRpa.visboDataQualityCheck
+
+            End If
+        Catch ex As Exception
+            result = PTRpa.visboUnknown
+        End Try
+
+        checkDataQuality = result
+
+    End Function
     ''' <summary>
     '''  checks whether or not a file is a Weser Ressourcenplanung
     ''' </summary>
@@ -1935,18 +2244,34 @@ Module rpaModule1
         checkInstartUrlaub = result
     End Function
 
+    ''' <summary>
+    ''' checks whether or not it is the control file zeuss and capapercent completed.xlsx  
+    ''' </summary>
+    ''' <param name="currentWB"></param>
+    ''' <returns></returns>
+    Private Function checkZeussAndPercentCompleted(ByVal currentWB As xlns.Workbook) As PTRpa
+        Dim result As PTRpa = PTRpa.visboUnknown
 
+        If currentWB.Name.ToLower.Contains("zeuss and capapercent completed") Then
+            result = PTRpa.visboZeussStdCapacity
+        End If
+
+        checkZeussAndPercentCompleted = result
+    End Function
 
 
     ''' <summary>
     ''' checks whether or not a file is a Zeuss (Telair)-Urlaubskalender
+    ''' this is the Zeuss File which is used without specific Telair month definitions
     ''' </summary>
     ''' <param name="currentWB"></param>
     ''' <returns></returns>
-    Private Function checkZeussCapacity(ByVal currentWB As xlns.Workbook) As PTRpa
+    Private Function checkZeussStdCapacity(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim verifiedStructure As Boolean = False
-        Dim fName As String = "Zeuss"   '????
+
+        Dim fName As String = "Zeuss"
+
 
         Dim currentWS As xlns.Worksheet = Nothing
         Dim found As Boolean = False
@@ -1972,8 +2297,6 @@ Module rpaModule1
                         verifiedStructure = False
                     End Try
 
-                    verifiedStructure = True
-
                 End If
             End If
 
@@ -1982,13 +2305,16 @@ Module rpaModule1
         End Try
 
         If verifiedStructure Then
-            result = PTRpa.visboZeussCapacity
+            'result = PTRpa.visboZeussStdCapacity
+            result = PTRpa.visboMoveToCollect
         Else
             result = PTRpa.visboUnknown
         End If
 
-        checkZeussCapacity = result
+        checkZeussStdCapacity = result
     End Function
+
+
 
 
     ''' <summary>
@@ -2065,7 +2391,8 @@ Module rpaModule1
             Else
                 Dim tmpRange As xlns.Range = CType(currentWS.Range(currentWS.Cells(1, 1), currentWS.Cells(30, 40)), xlns.Range)
                 Dim xxx As Object = tmpRange.Find("Forecast")
-                If Not IsNothing(xxx) Then
+                Dim xx1 As Object = tmpRange.Find("Budget")
+                If Not IsNothing(xxx) Or Not IsNothing(xx1) Then
                     result = PTRpa.visboUpdateTagetik
                 Else
                     result = PTRpa.visboUnknown
@@ -2089,11 +2416,12 @@ Module rpaModule1
     ''' <returns></returns>
     Private Function checkCostAssertion(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
-        Dim possibleTableNames() As String = {"Stammdaten", "Electric Cost Assertion", "Mechanic Cost Assertion", "Non-Design Cost Assertion"}
+        Dim requiredTableName As String = "Stammdaten"
+        Dim possibleTableNames() As String = {"Assertion", "to-do", "Kalkulation", "Calculation"}
         Dim verifiedStructure As Boolean = False
         Try
 
-            Dim currentWS As xlns.Worksheet = Nothing
+            Dim currentWS As xlns.Worksheet = CType(currentWB.Worksheets, xlns.Sheets).Item(requiredTableName)
             Dim found As Boolean = False
 
 
@@ -2102,7 +2430,7 @@ Module rpaModule1
             Else
                 For Each tmpSheet As xlns.Worksheet In CType(currentWB.Worksheets, xlns.Sheets)
                     For Each tblname As String In possibleTableNames
-                        If tmpSheet.Name.StartsWith(tblname) Then
+                        If tmpSheet.Name.ToLower.Contains(tblname.ToLower) Then
                             found = True
                             currentWS = tmpSheet
                             Exit For
@@ -2646,9 +2974,14 @@ Module rpaModule1
 
     End Function
 
-    Private Function processModifierExternContracts(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    ''' <summary>
+    ''' modifies capacities of all person resources , be it interns or externs 
+    ''' </summary>
+    ''' <param name="myName"></param>
+    ''' <param name="errMessages"></param>
+    ''' <returns></returns>
+    Private Function processModifierCapacities(ByVal myName As String, ByRef errMessages As Collection) As Boolean
 
-        Dim listOfArchivFiles As New List(Of String)
         Dim result As Boolean = False
 
         appInstance.EnableEvents = False
@@ -2669,17 +3002,16 @@ Module rpaModule1
                 CostDefinitions = changedOrga.allCosts
 
 
-                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
-                Dim listOfArchivExtern As New List(Of String)
-
                 ' wenn es gibt - lesen der Externen Verträge 
-                result = readKapaModifier(myName, listOfArchivExtern, errMessages)
 
-                If result Then
-                    Call logger(ptErrLevel.logInfo, "Import external contracts from file " & myName & " successful", "processModifierExternContracts", anzFehler)
-                End If
+                Dim namesProcessed As New SortedList(Of String, String)
+                result = readRpaKapaModifier(myName, outputCollection, Nothing, False, namesProcessed)
 
-                If listOfArchivExtern.Count > 0 Then
+                'old , changed Oct 2023 by tk 
+                'result = readKapaModifier(myName, listOfArchivExtern, errMessages)
+
+                If result = True Then
+                    Call logger(ptErrLevel.logInfo, "Import capacities from file " & myName & " successful", "processModifierCapacities", anzFehler)
 
                     changedOrga.allRoles = RoleDefinitions
 
@@ -2687,54 +3019,37 @@ Module rpaModule1
                         ' keine Fehler aufgetreten ... 
                         ' jetzt wird die Orga als Setting weggespeichert ... 
                         Dim err As New clsErrorCodeMsg
-                        Dim resultSum As Boolean = True
+                        Dim storeResult As Boolean = True
                         Dim capas As clsCapas = Nothing
 
                         ' ute -> überprüfen bzw. fertigstellen ... 
                         Dim orgaName As String = ptSettingTypes.organisation.ToString
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or (visboClient = divClients(client.VisboRPA)) Then
+                        ' now stores everything from RoleDefinitions what needs to be stored ... 
+                        storeResult = storeCapasOfRoles()
 
-                            ' now stores everything from RoleDefinitions what needs to be stored ... 
-                            resultSum = storeCapasOfRoles()
-
-                            If resultSum = True Then
-                                Call logger(ptErrLevel.logInfo, "ok, external Contracts " & myName & " successfully updated ...", "", -1)
-                                listOfArchivFiles = listOfArchivExtern
-
-                            Else
-                                Call logger(ptErrLevel.logError, "Error when writing Capacities of external contract " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
-                                listOfArchivFiles = listOfArchivExtern
-                            End If
-
-                            result = resultSum
+                        If storeResult = True Then
+                            Call logger(ptErrLevel.logInfo, "ok, capacities " & myName & " successfully updated ...", "", -1)
 
                         Else
-                            Call logger(ptErrLevel.logError, "ok, external Contracts " & myName & " temporarily updated ...", "", -1)
+                            Call logger(ptErrLevel.logError, "Error when writing capacities " & myName & "to Database..." & vbCrLf & err.errorMsg, "", -1)
 
                         End If
 
+                        result = storeResult
+
                     Else
 
-                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+                        Call logger(ptErrLevel.logError, "processModifierCapacities: ", outputCollection)
 
                     End If
                 Else
-                    If outputCollection.Count > 0 Then
-
-                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                        Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
-                    Else
-
-                        If awinSettings.englishLanguage Then
-                            Call logger(ptErrLevel.logError, "no Files to import ...", "processModifierExternContracts: ", anzFehler)
-                        Else
-                            Call logger(ptErrLevel.logError, "es gab keine Dateien zum Einlesen ... ", "processModifierExternContracts: ", anzFehler)
-                        End If
-                    End If
-
+                    Call logger(ptErrLevel.logError, "Import capacities from file " & myName & " NOT successful", "processModifierCapacities", anzFehler)
+                    For Each singleMsg As String In outputCollection
+                        Call logger(ptErrLevel.logError, singleMsg, "processModifierCapacities", anzFehler)
+                    Next
                 End If
+
             Else
                 If awinSettings.englishLanguage Then
                     Call logger(ptErrLevel.logError, "No valid roles! Please import one first!", "processModifierExternContracts: ", anzFehler)
@@ -2746,20 +3061,20 @@ Module rpaModule1
 
         Else
             If awinSettings.englishLanguage Then
-                Call logger(ptErrLevel.logError, "No valid organization! Please import one first!", "processModifierExternContracts: ", anzFehler)
+                Call logger(ptErrLevel.logError, "No valid organization! Please import one first!", "processModifierCapacities: ", anzFehler)
             Else
-                Call logger(ptErrLevel.logError, "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren", "processModifierExternContracts: ", anzFehler)
+                Call logger(ptErrLevel.logError, "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren", "processModifierCapacities: ", anzFehler)
             End If
 
 
             Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
             outputCollection.Add(errMsg)
-            Call showOutPut(outputCollection, "Importing Capacities", "")
-            Call logger(ptErrLevel.logError, "processModifierExternContracts: ", outputCollection)
+
+            Call logger(ptErrLevel.logError, "processModifierCapacities: ", outputCollection)
 
         End If
 
-        processModifierExternContracts = result
+        processModifierCapacities = result
     End Function
 
 
@@ -3024,6 +3339,236 @@ Module rpaModule1
         processEGeckoCapacity = result
 
     End Function
+
+
+    ''' <summary>
+    ''' process all files within collect folder being Zeuss files , then being %Capa Files 
+    ''' </summary>
+    ''' <param name="importDate"></param>
+    ''' <param name="errMessages"></param>
+    ''' <returns></returns>
+    Private Function processZeussStdCapacity(ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+
+
+        Dim errMsg As String = ""
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listOfZeussFiles As New List(Of String)
+        Dim listOfCapaModifier As New List(Of String)
+
+        ' where are files from Collect Folder transferred to ? 
+        Dim collectOKfolder As String = My.Computer.FileSystem.CombinePath(collectFolder, "OK")
+        Dim collectNotOKfolder As String = My.Computer.FileSystem.CombinePath(collectFolder, "Not_OK")
+
+
+        Dim result As Boolean = False
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim outputCollection As New Collection
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+
+                ' now delete all files in CollectOK resp CollectNotOk Folders  
+                Try
+
+                    If My.Computer.FileSystem.DirectoryExists(collectOKfolder) Then
+                        My.Computer.FileSystem.DeleteDirectory(collectOKfolder, FileIO.DeleteDirectoryOption.DeleteAllContents)
+                    End If
+
+                    If My.Computer.FileSystem.DirectoryExists(collectNotOKfolder) Then
+                        My.Computer.FileSystem.DeleteDirectory(collectNotOKfolder, FileIO.DeleteDirectoryOption.DeleteAllContents)
+                    End If
+
+                    If Not My.Computer.FileSystem.DirectoryExists(collectOKfolder) Then
+                        ' now create again 
+                        My.Computer.FileSystem.CreateDirectory(collectOKfolder)
+                    End If
+
+                    If Not My.Computer.FileSystem.DirectoryExists(collectNotOKfolder) Then
+                        ' now create again 
+                        My.Computer.FileSystem.CreateDirectory(collectNotOKfolder)
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+                Dim zeussFileIdentifier As String = "*Zeuss*.xlsx"
+                Dim capaFileIDentifier As String = "*Modifier*Kapazitäten*.xlsx"
+                Dim configFile As String = My.Computer.FileSystem.CombinePath(configfilesOrdner, "configZeussStd.xlsx")
+
+                Dim actualDataFile As String = ""
+                Dim actualCapaConfig As New SortedList(Of String, clsConfigKapaImport)
+                ' Konfigurationsdatei lesen und Validierung durchführen
+                Dim allesOK As Boolean = checkCapaImportConfig(configFile, zeussFileIdentifier, actualCapaConfig, lastrow, outputCollection)
+
+
+                Dim listOfZeussStdImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(collectFolder, FileIO.SearchOption.SearchTopLevelOnly, zeussFileIdentifier)
+                Dim listOfCapaPercentModifierfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(collectFolder, FileIO.SearchOption.SearchTopLevelOnly, capaFileIDentifier)
+
+                ' now do the Zeuss Reading 
+
+                Dim roleMonthList As New SortedList(Of String, List(Of Integer))
+                Dim unknownNames As New Collection
+                If allesOK And listOfZeussStdImportfiles.Count > 0 Then
+
+                    Dim vonDate As Date = Date.Now
+                    Dim bisDate As Date = Date.Now.AddMonths(1)
+
+                    For Each fname As String In listOfZeussStdImportfiles
+                        outPutline = "Processing " & fname & " ..."
+                        Call logger(ptErrLevel.logInfo, "Reading Zeuss Capacities: ", outPutline)
+                        Dim fileOk As Boolean = readRpaAvailabilityOfRoleWithConfig(actualCapaConfig, fname, outputCollection, unknownNames, roleMonthList, vonDate, bisDate)
+
+                        If fileOk Then
+                            Call logger(ptErrLevel.logInfo, "Reading Zeuss Capacities: ", fname & " : ok")
+
+                            ' now move to ok 
+                            Dim mvFile As String = My.Computer.FileSystem.GetName(fname)
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectOKfolder, mvFile)
+                            My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                        Else
+                            Call logger(ptErrLevel.logWarning, "Reading Zeuss Capacities: ", fname & " : NOT ok")
+
+                            ' now move to Not ok 
+                            Dim mvFile As String = My.Computer.FileSystem.GetName(fname)
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectNotOKfolder, mvFile)
+                            My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                        End If
+
+                        allesOK = allesOK And fileOk
+
+                    Next
+
+                    ' protocol unknownNames from Zeuss Files
+                    If unknownNames.Count > 0 Then
+                        Call logger(ptErrLevel.logInfo, "unknown Names when reading Zeuss Capacities: ", unknownNames)
+                    End If
+
+                    ' protocol names in Organisation which are not covered ...
+
+                    Dim checkingList As Integer() = RoleDefinitions.getActiveInterns(vonDate, bisDate)
+
+                    For Each id As Integer In checkingList
+
+                        Dim checkRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(id)
+                        If Not IsNothing(checkRole) Then
+                            If Not roleMonthList.ContainsKey(checkRole.name) Then
+                                Call logger(ptErrLevel.logWarning, "no Data in Zeuss for this internal person in VISBO organisation ", checkRole.name)
+                            End If
+                        End If
+
+                    Next
+
+
+                    ' now read the percentKapa Modifiers
+                    Dim namesProcessed As New SortedList(Of String, String)
+                    If allesOK Then
+                        For Each fname As String In listOfCapaPercentModifierfiles
+                            outPutline = "Processing " & fname & " ..."
+                            Call logger(ptErrLevel.logInfo, "Reading %-Capa Modifier: ", outPutline)
+                            Dim fileOK As Boolean = readRpaKapaModifier(fname, outputCollection, roleMonthList, True, namesProcessed)
+                            If fileOK Then
+                                Call logger(ptErrLevel.logInfo, "Reading %-Capa Modifier: ", fname & " : ok")
+
+                                ' now move to ok 
+                                Dim mvFile As String = My.Computer.FileSystem.GetName(fname)
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectOKfolder, mvFile)
+                                My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                            Else
+                                Call logger(ptErrLevel.logWarning, "Reading %-Capa Modifier: : ", fname & " : NOT ok")
+
+                                ' now move to Not ok 
+                                Dim mvFile As String = My.Computer.FileSystem.GetName(fname)
+                                Dim newDestination As String = My.Computer.FileSystem.CombinePath(collectNotOKfolder, mvFile)
+                                My.Computer.FileSystem.MoveFile(fname, newDestination, True)
+                            End If
+
+                            allesOK = allesOK And fileOK
+
+                        Next
+                    End If
+                Else
+                    If Not allesOK Then
+                        Call logger(ptErrLevel.logError, "Confilg File seems to have issues : ", configFile)
+                    End If
+
+                    If listOfZeussStdImportfiles.Count = 0 Then
+                        allesOK = False
+                        Call logger(ptErrLevel.logError, "There are no Zeuss files at all ", "please check")
+                    End If
+                End If
+
+                If allesOK Then
+
+                    changedOrga.allRoles = RoleDefinitions
+
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim resultSum As Boolean = True
+                        Dim capas As clsCapas = Nothing
+
+                        ' Dim orga As clsOrganisation = Nothing
+
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        ' now stores everything from RoleDefinitions what needs to be stored ... 
+                        result = storeCapasOfRoles()
+
+                    Else
+
+                        outputCollection.Add("Import Kapazitäten: mit Fehlern abgebrochen ...")
+                        Call logger(ptErrLevel.logError, "Import Kapazitäten: ", outputCollection)
+
+                    End If
+                Else
+                    outputCollection.Add("Import Kapazitäten: mit Fehlern abgebrochen ...")
+                    Call logger(ptErrLevel.logError, "Import Kapazitäten: ", outputCollection)
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call logger(ptErrLevel.logError, "Import Kapazitäten: ", "No valid roles! Please import one first!")
+                Else
+                    Call logger(ptErrLevel.logError, "Import Kapazitäten: ", "Die gültige Organisation beinhaltet keine Rollen! ")
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                errMsg = "No valid organization! Please import one first!"
+            Else
+                errMsg = "Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren"
+            End If
+
+            outputCollection.Add(errMsg)
+
+            Call logger(ptErrLevel.logError, "Import Kapazitäten: ", outputCollection)
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+        appInstance.ScreenUpdating = True
+        processZeussStdCapacity = result
+    End Function
+
 
     Private Function processZeussCapacity(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection, ByRef listOfArchivFiles As List(Of String)) As Boolean
 
@@ -4084,6 +4629,7 @@ Module rpaModule1
     End Function
 
 
+
     Public Function processInstartProposal(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
@@ -4211,7 +4757,7 @@ Module rpaModule1
 
 
 
-    Public Function processWWWRessourcen(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+    Public Function processWWWRessourcen(ByVal myName As String, ByVal portfolioName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
         Dim instartImportConfigOK As Boolean = False
@@ -4335,7 +4881,7 @@ Module rpaModule1
 
 
 
-    Public Function processNewTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+    Public Function processNewTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
         Dim telairImportConfigOK As Boolean = False
@@ -4467,7 +5013,7 @@ Module rpaModule1
 
 
 
-    Public Function processUpdateTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+    Public Function processUpdateTagetik(ByVal myName As String, ByVal portfolioName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
         Dim telairUpdateConfigOK As Boolean = False
@@ -4597,9 +5143,506 @@ Module rpaModule1
         processUpdateTagetik = allOk
     End Function
 
+    ''' <summary>
+    ''' does create retrospectively baselines for given project. 
+    ''' All versions later than the desired date for baseline are deleted, 
+    ''' then a baseline is created, the the versions are restored
+    ''' and so are their key metric values to the just created baseline
+    ''' </summary>
+    ''' <param name="blattName"></param>
+    ''' <returns></returns>
+    Public Function processCreateBaselines(Optional blattName As String = "Baseline Creation")
+        Dim atleastOneError As Boolean = False
+
+        Dim zeile As Integer = 2
+
+        Dim currentProjectName As String = ""
+        Dim currentVariantName As String = ""
+        Dim baselineDate As Date = Nothing
 
 
-    Public Function processCostAssertion(ByVal myName As String, ByVal portfolioName As String, ByVal dirName As String, ByVal importDate As Date) As Boolean
+        Dim err As New clsErrorCodeMsg
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattName = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattName),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+
+                        Try
+
+                            currentProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                            Try
+                                If Not IsNothing(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                    currentVariantName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                Else
+                                    currentVariantName = ""
+                                End If
+                            Catch ex As Exception
+                                currentVariantName = ""
+                            End Try
+
+
+                            Try
+                                If Not IsNothing(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                    baselineDate = CDate(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Date.AddHours(23).AddMinutes(59)
+                                Else
+                                    baselineDate = Date.MinValue
+                                End If
+                            Catch ex As Exception
+                                baselineDate = Date.MinValue
+                            End Try
+
+
+
+
+
+                            ' check1: does project exist at all 
+                            ' check2: does the timestamp exist at all
+
+                            ' versionsToRestore as Date()
+                            Dim versionsToRestore As New Collection
+                            Dim heute As Date = Date.Now
+                            Dim vpID As String = ""
+
+                            Dim check1 As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, currentVariantName, Date.Now, err)
+                            ' only valid if there does not yet exist any baseline
+                            Dim check2 As Boolean = Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, "pfv", Date.Now, err)
+
+                            If check1 And check2 Then
+                                ' add check: if a baseline already exists: the baselineDate has to be later than the last baseline
+                                Dim history As clsProjektHistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(currentProjectName, currentVariantName, StartofCalendar, Date.Now, err)
+
+
+
+                                If history.Count > 0 Then
+
+                                    ' in case Date.MinValue: look for timestamp later than 3 months after project start 
+                                    If IsNothing(baselineDate) Then
+                                        baselineDate = history.Last.startDate.AddMonths(3)
+                                    End If
+
+                                    If baselineDate = Date.MinValue Then
+                                        baselineDate = history.Last.startDate.AddMonths(3)
+                                    End If
+
+                                    Dim useAsBaselineProject As clsProjekt = history.getProjectbefore(baselineDate)
+                                    If IsNothing(useAsBaselineProject) Then
+                                        useAsBaselineProject = history.getProjectAfter(baselineDate)
+                                    End If
+
+                                    If IsNothing(useAsBaselineProject) Then
+                                        useAsBaselineProject = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(currentProjectName, currentVariantName, vpID, baselineDate.AddSeconds(10), err)
+                                    End If
+
+                                    Dim ok As Boolean
+                                    If Not IsNothing(useAsBaselineProject) Then
+                                        ' get all timestamps after the baselineDate, because they need to be deleted and the restored again ..
+                                        Dim myfollowingprojects As SortedList(Of Date, clsProjekt) = history.getProjectsAfter(baselineDate)
+                                        Dim myCopiedProjects As New SortedList(Of Date, clsProjekt)
+
+                                        Dim noErrors As Boolean = True
+                                        For Each ckvp As KeyValuePair(Of Date, clsProjekt) In myfollowingprojects
+                                            Dim tmpProj As clsProjekt = ckvp.Value.createVariant("tmp", "")
+                                            tmpProj.variantName = ""
+
+                                            If ckvp.Value.isIdenticalTo(tmpProj) Then
+                                                tmpProj.timeStamp = ckvp.Key
+                                                myCopiedProjects.Add(ckvp.Key, tmpProj)
+                                            Else
+                                                noErrors = False
+                                            End If
+                                        Next
+
+                                        If noErrors Then
+                                            '
+                                            ' now delete all vpv timestamps after baselineDate
+                                            '
+                                            For Each kvp As KeyValuePair(Of Date, clsProjekt) In myfollowingprojects
+                                                If kvp.Key = kvp.Value.timeStamp Then
+                                                    Try
+                                                        If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(kvp.Value.name, kvp.Value.variantName, kvp.Key, dbUsername, err) Then
+                                                            Call logger(ptErrLevel.logInfo, "Project Version deleted ", kvp.Value.name & " " & kvp.Value.variantName)
+                                                        Else
+                                                            Call logger(ptErrLevel.logError, "Project Version could not be deleted ", kvp.Value.name & " " & kvp.Value.variantName & " " & err.errorMsg)
+                                                        End If
+                                                    Catch ex As Exception
+                                                        Call logger(ptErrLevel.logError, "Project Version could not be deleted ", kvp.Value.name & " " & kvp.Value.variantName & " " & ex.Message)
+                                                    End Try
+
+                                                Else
+                                                    ' timestamps are not identical 
+                                                End If
+
+                                            Next
+
+                                            '
+                                            ' now write the baseline
+                                            '
+                                            Dim myBaselineProject As clsProjekt = useAsBaselineProject.createVariant("pfv", "Plan Version used: " & baselineDate.ToString)
+                                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                                            myBaselineProject.timeStamp = baselineDate
+
+
+                                            Dim mergedProj As clsProjekt = Nothing
+                                            Try
+                                                ok = CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(myBaselineProject, dbUsername, mergedProj, err)
+
+                                                If ok Then
+                                                    Call logger(ptErrLevel.logInfo, "Baseline stored ", myBaselineProject.name & " " & myBaselineProject.timeStamp.ToString)
+                                                Else
+                                                    Call logger(ptErrLevel.logError, "Baseline not stored ", myBaselineProject.name & " " & err.errorMsg)
+                                                End If
+
+                                                ' now delete the latest , auto-created plan-version with current time-stamp
+                                                ' was created because a baseline was written
+                                                vpID = ""
+                                                Dim mylatestProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(currentProjectName, "", vpID, Date.Now, err)
+                                                ok = CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(currentProjectName, "", mylatestProj.timeStamp, dbUsername, err)
+                                                If ok Then
+                                                    Call logger(ptErrLevel.logInfo, "Version deleted ", currentProjectName & " " & mylatestProj.timeStamp.ToString)
+                                                Else
+                                                    Call logger(ptErrLevel.logError, "Version delete failed ", currentProjectName & " " & mylatestProj.timeStamp.ToString & " " & err.errorMsg)
+                                                End If
+
+                                                ' now create tmp Variant 
+                                                Dim savemyLatestPRoj As clsProjekt = mylatestProj.createVariant("tmp", "")
+                                                savemyLatestPRoj.variantName = ""
+                                                savemyLatestPRoj.timeStamp = baselineDate.AddSeconds(5)
+
+                                                myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                                                ok = CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(savemyLatestPRoj, dbUsername, mergedProj, err)
+                                                If ok Then
+                                                    Call logger(ptErrLevel.logInfo, "Version stored ", savemyLatestPRoj.name & " " & savemyLatestPRoj.timeStamp.ToString)
+                                                Else
+                                                    Call logger(ptErrLevel.logError, "Version not stored ", savemyLatestPRoj.name & " " & err.errorMsg)
+                                                End If
+                                            Catch ex As Exception
+                                                Call logger(ptErrLevel.logError, "Baseline Version could not be stored ", myBaselineProject.name & " " & myBaselineProject.timeStamp.ToString & " " & ex.Message)
+                                            End Try
+
+
+                                            ' now write all the deleted vpv versions 
+                                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                                            For Each kvp As KeyValuePair(Of Date, clsProjekt) In myCopiedProjects
+
+                                                Try
+                                                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername, mergedProj, err) Then
+                                                        Call logger(ptErrLevel.logInfo, "Project Version stored", kvp.Value.name & " " & kvp.Value.timeStamp.ToString)
+                                                    Else
+                                                        Call logger(ptErrLevel.logError, "Project Version NOT stored", kvp.Value.name & " " & kvp.Value.timeStamp.ToString & " " & err.errorMsg)
+                                                    End If
+
+                                                Catch ex As Exception
+                                                    Call logger(ptErrLevel.logError, "Project Version could not be stored ", kvp.Value.name & " " & kvp.Value.timeStamp.ToString & " " & ex.Message)
+                                                End Try
+
+
+                                            Next
+
+                                        Else
+                                            Call logger(ptErrLevel.logError, "Project Copy did not produce identical versions, no actions taken", currentProjectName)
+                                        End If
+
+                                    Else
+                                        Call logger(ptErrLevel.logError, "There is no version at or before  ", baselineDate.ToString)
+                                    End If
+
+                                Else
+                                    ' now it seems to exist exactly one version, use that and create a baseline from It 
+                                End If
+
+                            Else
+                                If Not check1 Then
+                                    Call logger(ptErrLevel.logError, "Project does not exist:  ", currentProjectName)
+                                End If
+
+                                If Not check2 Then
+                                    Call logger(ptErrLevel.logError, "Project Baseline already exists ", currentProjectName)
+                                End If
+                            End If
+
+
+
+                        Catch ex As Exception
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                        End Try
+
+                        zeile = zeile + 1
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+            atleastOneError = True
+            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+        End Try
+
+
+        processCreateBaselines = Not atleastOneError
+    End Function
+
+    ''' <summary>
+    ''' assigns attributes in batch
+    ''' </summary>
+    ''' <param name="blattName"></param>
+    ''' <returns></returns>
+    Public Function processAssignAttributes(Optional ByVal blattName As String = "Assign Attributes") As Boolean
+
+        Dim atleastOneError As Boolean = False
+
+        Dim zeile As Integer = 2
+
+        Dim myProjectName As String = ""
+
+        Dim mybusinessUnit As String = ""
+        Dim myResponsible As String = ""
+        Dim responsible As String = ""
+        Dim strategyFit As Double = 0.0
+        Dim riskKPI As Double = 0.0
+
+        Dim err As New clsErrorCodeMsg
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattName = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattName),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+
+                        Try
+
+                            myProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            mybusinessUnit = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            myResponsible = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            ' set myCustom User Role 
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                            If myProjectName <> "" Then
+                                ' check1: does current Project exist? 
+
+                                ' check1: does oldName exist at all?
+
+                                Dim vpID As String = ""
+                                Dim myProject As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(myProjectName, " ", vpID, Date.Now, err)
+                                Dim check1 As Boolean = Not IsNothing(myProject)
+
+                                Dim check2 As Boolean = False
+                                Dim i As Integer = 1
+                                While i <= businessUnitDefinitions.Count And Not check2
+
+                                    If businessUnitDefinitions.ElementAt(i - 1).Value.name = mybusinessUnit Then
+                                        check2 = True
+                                    Else
+                                        i = i + 1
+                                    End If
+
+                                End While
+
+
+                                If check1 And check2 Then
+
+                                    Dim storeRequired As Boolean = (myProject.businessUnit <> mybusinessUnit) Or ((myProject.leadPerson <> myResponsible) And (myResponsible <> ""))
+                                    Dim outputCollection As New Collection
+                                    msgTxt = ""
+                                    If storeRequired Then
+                                        If myProject.businessUnit <> mybusinessUnit And mybusinessUnit <> "" Then
+                                            myProject.businessUnit = mybusinessUnit
+                                            msgTxt = mybusinessUnit & " "
+                                        End If
+
+                                        If myProject.leadPerson <> myResponsible And myResponsible <> "" Then
+                                            myProject.leadPerson = myResponsible
+                                            msgTxt = msgTxt & myResponsible
+                                        End If
+
+                                        Try
+                                            Dim mergedProj As clsProjekt = Nothing
+                                            'If storeSingleProjectToDB(myProject, outputCollection) Then
+                                            myProject.timeStamp = Date.Now
+                                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(myProject, dbUsername, mergedProj, err, True) Then
+                                                msgTxt = msgTxt & " was assigned to " & myProject.name
+                                                Call logger(ptErrLevel.logInfo, "project stored ", msgTxt)
+                                            Else
+                                                Call logger(ptErrLevel.logError, "project store with new business Unit failed: " & msgTxt, outputCollection)
+
+                                            End If
+                                        Catch ex As Exception
+                                            Call logger(ptErrLevel.logError, "project store with new business Unit failed: " & msgTxt, outputCollection)
+                                        End Try
+
+                                    Else
+                                        Call logger(ptErrLevel.logInfo, "project has already  ", mybusinessUnit)
+                                    End If
+
+                                Else
+                                    If Not check1 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Project does not exist: ", myProjectName)
+                                    End If
+                                    If Not check2 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Business Unit not known: ", myProjectName & " " & mybusinessUnit)
+                                    End If
+                                End If
+                            Else
+                                ' logging: no valid rename Parameters
+                                atleastOneError = True
+                                Call logger(ptErrLevel.logError, "No project name Given in Zeile : ", zeile.ToString)
+                            End If
+
+                        Catch ex As Exception
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                        End Try
+
+                        zeile = zeile + 1
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+            atleastOneError = True
+            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+        End Try
+
+        processAssignAttributes = Not atleastOneError
+    End Function
+
+
+    ''' <summary>
+    ''' does rename projects in batch. 
+    ''' in the table there need to be oldname , newName
+    ''' oldname need to exist, newname must not exist
+    ''' </summary>
+    ''' <param name="blattName"></param>
+    ''' <returns></returns>
+    Public Function processRenameProjects(Optional ByVal blattName As String = "Rename Projects") As Boolean
+
+        Dim atleastOneError As Boolean = False
+
+        Dim zeile As Integer = 2
+
+        Dim currentProjectName As String = ""
+        Dim newProjectName As String = ""
+        Dim err As New clsErrorCodeMsg
+
+
+        Try
+            Dim activeWSListe As xlns.Worksheet = Nothing
+            If blattName = "" Then
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Else
+                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets.Item(blattName),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            End If
+
+            If Not IsNothing(activeWSListe) Then
+
+                With activeWSListe
+
+                    Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+
+                    While zeile <= lastRow
+
+                        Try
+
+                            currentProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            newProjectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                            If currentProjectName <> "" And newProjectName <> "" And currentProjectName <> newProjectName Then
+                                ' check1: does current Project exist? 
+
+                                ' check1: does oldName exist at all?
+                                Dim check1 As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(currentProjectName, "", Date.Now, err)
+                                ' check2: is newName not yet existent? 
+                                Dim check2 As Boolean = Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(newProjectName, "", Date.Now, err)
+
+                                If check1 And check2 Then
+
+                                    If CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(currentProjectName, newProjectName, dbUsername, err) Then
+                                        Call logger(ptErrLevel.logInfo, "Rename success: ", currentProjectName & " -> " & newProjectName)
+                                    Else
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Rename Failed: " & currentProjectName & " -> " & newProjectName, err.errorMsg)
+                                    End If
+
+                                Else
+                                    If Not check1 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Project to rename does not exist: ", currentProjectName)
+                                    End If
+                                    If Not check2 Then
+                                        ' Logging
+                                        atleastOneError = True
+                                        Call logger(ptErrLevel.logError, "Project with new name does already exist: ", newProjectName)
+                                    End If
+                                End If
+                            Else
+                                ' logging: no valid rename Parameters
+                                atleastOneError = True
+                                Call logger(ptErrLevel.logError, "no valid renaming parameters : ", currentProjectName & " -> " & newProjectName)
+                            End If
+
+                        Catch ex As Exception
+                            atleastOneError = True
+                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                        End Try
+
+                        zeile = zeile + 1
+
+                    End While
+
+
+                End With
+            End If
+
+        Catch ex As Exception
+            atleastOneError = True
+            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+        End Try
+
+        processRenameProjects = Not atleastOneError
+
+    End Function
+
+    Public Function processCostAssertion(ByVal myName As String, ByVal portfolioName As String, ByVal importDate As Date) As Boolean
         Dim allOk As Boolean = True
         Dim aktDateTime As Date = Date.Now
         Dim telairCostAssertionImportConfigOK As Boolean = False
@@ -4803,7 +5846,7 @@ Module rpaModule1
             If awinSettings.englishLanguage Then
                 msgTxt = "Sending an Email to report the result failed !"
             Else
-                msgTxt = "Beim Senden einer Email, um das Ergebnis zu melden, ging schief !"
+                msgTxt = "Fehler beim Senden einer Email, um das Ergebnis zu melden !"
             End If
             Call logger(ptErrLevel.logError, "processResult", msgTxt)
         End If

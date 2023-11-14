@@ -1687,8 +1687,9 @@ Public Module agm2
                         ' die erste Phase, die sogenannte Root Phase hat immer diesen Namen: 
 
                         ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
-                        cphase = New clsPhase(parent:=hproj)
-                        cphase.nameID = rootPhaseName
+                        cphase = New clsPhase(parent:=hproj) With {
+                            .nameID = rootPhaseName
+                        }
                         startoffset = 0
                         duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                         cphase.changeStartandDauer(startoffset, duration)
@@ -5947,6 +5948,9 @@ Public Module agm2
         Dim ende As Date, inputEnde As Date
         Dim budget As Double
         Dim budgetInput As String = ""
+        Dim revenue As Double
+        Dim revenueInput As String = ""
+
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
@@ -5960,7 +5964,7 @@ Public Module agm2
         Dim responsiblePerson As String = ""
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
-        Dim nrOfStdColumns As Integer = 14
+        Dim nrOfStdColumns As Integer = 15
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
@@ -6176,11 +6180,16 @@ Public Module agm2
                                         Throw New ArgumentException("Überbestimmt: es kann nicht Start, Ende und Dauer angegeben werden .. ")
                                     End If
 
+                                    ' Read Revenue / Benefit
                                     lastSpaltenValue = spalte + 7
-                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    revenue = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+
+                                    lastSpaltenValue = spalte + 8
+                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     If budgetInput <> "calcNeeded" And IsNumeric(budgetInput) Then
-                                        budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                         If budget < 0 Then
                                             Throw New ArgumentException("negative Werte nicht zugelassen!")
                                         End If
@@ -6194,8 +6203,8 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 8
-                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 9
+                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(capacityNeeded, True) Then
                                         Throw New ArgumentException("ungültige Kapa-Angabe")
                                         If awinSettings.englishLanguage Then
@@ -6206,8 +6215,8 @@ Public Module agm2
                                         Call logger(ptErrLevel.logError, "awinImportProjektInventur", "Line " & zeile & ": " & msgtxt)
                                     End If
 
-                                    lastSpaltenValue = spalte + 9
-                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 10
+                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(externCostInput, False) Then
                                         Throw New ArgumentException("ungültige Kosten-Angabe")
                                         If awinSettings.englishLanguage Then
@@ -6230,8 +6239,8 @@ Public Module agm2
                                         Throw New ArgumentException("unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden")
                                     End If
 
-                                    lastSpaltenValue = spalte + 10
-                                    risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 11
+                                    risk = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If risk < 0 Or risk > 10.0 Then
                                         If awinSettings.englishLanguage Then
                                             msgtxt = "Metric Risk should be between [0 and 10] !"
@@ -6242,8 +6251,8 @@ Public Module agm2
                                         Throw New ArgumentException("Kennzahl Risiko muss zwischen [0 und 10] liegen")
                                     End If
 
-                                    lastSpaltenValue = spalte + 11
-                                    sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 12
+                                    sfit = CDbl(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If sfit < 0 Or sfit > 10.0 Then
                                         If awinSettings.englishLanguage Then
                                             msgtxt = "Metric Strategic Fit should be between [0 and 10] !"
@@ -6255,8 +6264,8 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 12
-                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 13
+                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not IsNothing(businessUnit) Then
                                         Dim bi As Integer = 0
                                         Dim found As Boolean = False
@@ -6280,8 +6289,8 @@ Public Module agm2
                                     End If
 
 
-                                    lastSpaltenValue = spalte + 13
-                                    description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    lastSpaltenValue = spalte + 14
+                                    description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
 
                                     If lastColumn > nrOfStdColumns Then
@@ -6456,7 +6465,7 @@ Public Module agm2
                                 hproj = erstelleInventurProjekt(pName, vorlageName, variantName,
                                                              start, ende, budget, zeile, sfit, risk,
                                                              capacityNeeded, externCostInput, businessUnit, description, custFields,
-                                                             responsiblePerson, 0.0)
+                                                             responsiblePerson, 0.0, revenue)
 
 
                                 If Not IsNothing(hproj) Then
@@ -9734,7 +9743,7 @@ Public Module agm2
                                 tmpPNr = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
                             End If
 
-                            'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
+
                             Dim pName As String = handledNames(tmpPName)
 
                             ' ur:08022022: eingefügt
@@ -10524,7 +10533,7 @@ Public Module agm2
                         End Try
 
 
-                        If endeZeile > 0 Then
+                        If endeZeile > 2 Then
 
                             lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
@@ -10606,14 +10615,15 @@ Public Module agm2
                                             End Try
                                         Else
                                             noError = False
-                                            errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                            errMsg = "Name " & subRoleName & " is combinedRole; combinedRoles are calculated automatically" & " (File " & dateiName & " )"
                                             meldungen.Add(errMsg)
                                         End If
                                     Else
                                         If subRoleName.Length > 0 Then
                                             noError = False
-                                            errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                            errMsg = "Name " & subRoleName & " does not exist ..." & " (File " & dateiName & " )"
                                             meldungen.Add(errMsg)
+                                        Else
                                         End If
                                     End If
 
@@ -14682,6 +14692,14 @@ Public Module agm2
                 End If
             Catch ex As Exception
 
+            End Try
+
+            ' now define the visbo-zustaende.meMAxZeile 
+            ' if resource sheet is already active this value is not updated after new projects have been loaded
+            Try
+                visboZustaende.meMaxZeile = CType(currentWS, Excel.Worksheet).UsedRange.Rows.Count
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "when defining meMaxZeile ")
             End Try
 
         Catch ex As Exception

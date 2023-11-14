@@ -627,14 +627,14 @@ Public Class clsPPTTimeMachine
         Select Case kennung
             Case ptNavigationButtons.nachher
 
-
+                jetzt = Date.Now
                 If currentTimestamp.AddMonths(1) <= jetzt Then
                     tmpDate = currentTimestamp.AddMonths(1)
                 Else
                     tmpDate = jetzt
                 End If
 
-                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
 
             Case ptNavigationButtons.vorher
@@ -645,7 +645,7 @@ Public Class clsPPTTimeMachine
                     tmpDate = _minmaxTimeStamps(0)
                 End If
 
-                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
 
             Case ptNavigationButtons.erster
@@ -657,26 +657,27 @@ Public Class clsPPTTimeMachine
 
                 'ur: 20190513: letzter Stand ist gleich Stand jetzt
                 'tmpDate = _minmaxTimeStamps(1)
-                tmpDate = jetzt
-                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                tmpDate = Date.Now
+                'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
             Case ptNavigationButtons.update
 
-                tmpDate = jetzt
-                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                tmpDate = Date.Now
+                'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
             Case ptNavigationButtons.individual
 
                 If specDate > _minmaxTimeStamps(0) And specDate < jetzt Then
                     tmpDate = specDate
                 Else
+                    jetzt = Date.Now
                     If specDate > jetzt Then
                         tmpDate = jetzt
                     ElseIf specDate < _minmaxTimeStamps(0) Then
                         tmpDate = _minmaxTimeStamps(0)
                     End If
 
-                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                    'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                 End If
 
 
@@ -687,7 +688,7 @@ Public Class clsPPTTimeMachine
                     tmpDate = smartSlideLists.prevDate
                 Else
                     tmpDate = _minmaxTimeStamps(0)
-                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                    'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                 End If
 
 

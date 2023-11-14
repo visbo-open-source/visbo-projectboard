@@ -3184,23 +3184,27 @@ Module creationModule
 
                     cphase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isSwimlanes2)
 
-                    Dim segmentID As String = ""
-                    If isSwimlanes2 Then
-                        If hproj.isSegment(cphase.nameID) Then
-                            segmentID = cphase.nameID
+                    ' tk 14.8.23 check whether or not it is nothing
+                    If Not IsNothing(cphase) Then
+                        Dim segmentID As String = ""
+                        If isSwimlanes2 Then
+                            If hproj.isSegment(cphase.nameID) Then
+                                segmentID = cphase.nameID
+                            End If
                         End If
+
+                        Dim swimLaneZeilen As Integer = 1
+                        If cphase.nameID <> rootPhaseName Then
+                            swimLaneZeilen = hproj.calcNeededLinesSwlNew(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs,
+                                                                                     awinSettings.mppExtendedMode,
+                                                                                     considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
+                                                                                     considerAll, segmentID)
+                        End If
+
+
+                        anzZeilen = anzZeilen + swimLaneZeilen
                     End If
 
-                    Dim swimLaneZeilen As Integer = 1
-                    If cphase.nameID <> rootPhaseName Then
-                        swimLaneZeilen = hproj.calcNeededLinesSwlNew(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs,
-                                                                                 awinSettings.mppExtendedMode,
-                                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                 considerAll, segmentID)
-                    End If
-
-
-                    anzZeilen = anzZeilen + swimLaneZeilen
                 Next
 
             Else

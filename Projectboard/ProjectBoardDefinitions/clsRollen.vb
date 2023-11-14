@@ -981,6 +981,12 @@ Public Class clsRollen
             Dim tmpResult() As Integer = Nothing
             Dim tmpList As New SortedList(Of Integer, Boolean)
 
+            Dim srleft As Integer = showRangeLeft
+            Dim srRight As Integer = showRangeRight
+
+            showRangeLeft = getColumnOfDate(vonDate)
+            showRangeRight = getColumnOfDate(bisDate)
+
             For r As Integer = 1 To _allRollen.Count
                 Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
                 If Not tmpRole.isCombinedRole Then
@@ -1000,6 +1006,10 @@ Public Class clsRollen
 
                 End If
             Next
+
+            ' reset to what it was 
+            showRangeLeft = srleft
+            showRangeRight = srRight
 
             If tmpList.Count > 0 Then
                 tmpResult = tmpList.Keys.ToArray

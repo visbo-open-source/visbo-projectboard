@@ -170,7 +170,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
 
                 chkbxPermanent.Visible = False
 
@@ -216,7 +216,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
 
                 chkbxPermanent.Visible = False
 
@@ -261,13 +261,13 @@ Public Class frmProjPortfolioAdmin
                 '.OKButton.Text = "Szenario speichern"
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    If storeToDBasWell.Checked Then
+                    If storeToDBOrClearSession.Checked Then
                         .OKButton.Text = "Portfolio in VISBO speichern"
                     Else
                         .OKButton.Text = "Portfolio in Session speichern"
                     End If
                 Else
-                    If storeToDBasWell.Checked Then
+                    If storeToDBOrClearSession.Checked Then
                         .OKButton.Text = "Save Portfolio to VISBO"
                     Else
                         .OKButton.Text = "Save Portfolio in Session"
@@ -286,9 +286,9 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    storeToDBasWell.Visible = True
+                    storeToDBOrClearSession.Visible = True
                 Else
-                    storeToDBasWell.Visible = True
+                    storeToDBOrClearSession.Visible = True
                 End If
 
 
@@ -336,7 +336,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromDB Then
@@ -381,7 +381,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
@@ -423,7 +423,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromSession Then
@@ -463,7 +463,67 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
+                chkbxPermanent.Visible = False
+
+            ElseIf aKtionskennung = PTTvActions.loadInSPE Then
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte bzw. Projekt-Varianten zum Bearbeiten laden"
+                Else
+                    .Text = "Load projects and project variants to be edited"
+                End If
+
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = False
+                .SelectionReset.Visible = False
+
+                .collapseCompletely.Visible = False
+                .expandCompletely.Visible = False
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
+
+
+                .OKButton.Visible = True
+                .OKButton.Size = New System.Drawing.Size(Me.TreeViewProjekte.Size.Width, Me.OKButton.Size.Height)
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Laden"
+                Else
+                    .OKButton.Text = "Load"
+                End If
+
+
+                onlyActive.Visible = False
+                onlyInactive.Visible = False
+                backToInit.Visible = False
+
+                ' 20.3.23 this button is in SPE used to define whether not the session should be emtied or stay as it is 
+                If editProjekteInSPE.Count > 0 Then
+
+                    storeToDBOrClearSession.Visible = True
+                    storeToDBOrClearSession.Location = New System.Drawing.Point(lbl_Variant.Location.X + 10, lbl_Variant.Location.Y - 10)
+
+
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        storeToDBOrClearSession.Text = "Session löschen"
+                    Else
+                        storeToDBOrClearSession.Text = "Clear Session"
+                    End If
+                Else
+                    storeToDBOrClearSession.Visible = False
+                End If
+
+                ' for Spe it is used for "Clear Session - this is pre-set
+
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.loadPV Then
@@ -504,10 +564,10 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
-            ElseIf aKtionskennung = PTTvActions.loadPVinPPT Then
+            ElseIf aKtionskennung = PTTvActions.loadPVInPPT Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     .Text = "1 Projekt bzw. Projekt-Variante wählen"
@@ -545,10 +605,10 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
-            ElseIf aKtionskennung = PTTvActions.loadMultiPVinPPT Then
+            ElseIf aKtionskennung = PTTvActions.loadMultiPVInPPT Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     .Text = "Projekte bzw. Projekt-Varianten wählen"
@@ -585,7 +645,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.loadPVS Then
@@ -625,7 +685,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
@@ -665,7 +725,7 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = False
+                storeToDBOrClearSession.Visible = False
                 chkbxPermanent.Visible = False
 
 
@@ -704,6 +764,7 @@ Public Class frmProjPortfolioAdmin
 
         ' bestimmen, ob es sich um quicklist handelt ...
         If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.loadMultiPVInPPT Or
             aKtionskennung = PTTvActions.delFromDB Or
@@ -748,6 +809,7 @@ Public Class frmProjPortfolioAdmin
 
         If aKtionskennung = PTTvActions.chgInSession Or
             aKtionskennung = PTTvActions.delFromSession Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.deleteV Or
             aKtionskennung = PTTvActions.activateV Then
 
@@ -810,6 +872,7 @@ Public Class frmProjPortfolioAdmin
 
         ' hier wird jetzt die Browser Gesamt-Liste bestimmt  
         If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.loadMultiPVInPPT Or
             aKtionskennung = PTTvActions.delFromDB Or
@@ -868,10 +931,6 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
         Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
-        'Call buildTreeview(projektHistorien, TreeViewProjekte, pvNamesList, currentBrowserConstellation, _
-        '                   aKtionskennung, quickList, _
-        '                   storedAtOrBefore)
-
 
 
         stopRecursion = False
@@ -1105,7 +1164,9 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
 
-        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or
+                aKtionskennung = PTTvActions.loadMultiPVInPPT Or
+                aKtionskennung = PTTvActions.loadInSPE Then
 
             stopRecursion = True
             Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
@@ -1850,7 +1911,7 @@ Public Class frmProjPortfolioAdmin
 
             End Select
 
-        ElseIf actionCode = PTTvActions.loadMultiPVInPPT Then
+        ElseIf (actionCode = PTTvActions.loadMultiPVInPPT) Or (actionCode = PTTvActions.loadInSPE) Then
             ' Mehrfach Selektion erlaubt  
 
 
@@ -2305,7 +2366,9 @@ Public Class frmProjPortfolioAdmin
         Dim toolTippText As String = "-"
         Dim hproj As clsProjekt
 
-        If aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+        If aKtionskennung = PTTvActions.loadPVInPPT Or
+            aKtionskennung = PTTvActions.loadMultiPVInPPT Or
+            aKtionskennung = PTTvActions.loadInSPE Then
             Exit Sub
         End If
 
@@ -2891,6 +2954,21 @@ Public Class frmProjPortfolioAdmin
                 outPutExplanation = "Messages"
             End If
 
+        ElseIf aKtionskennung = PTTvActions.loadInSPE Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Selektieren ein oder mehrere Projekte oder Projekt-Varianten "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Select one or several projects or project-variants "
+                outPutExplanation = "Messages"
+            End If
+
+            If editProjekteInSPE.Count > 0 And storeToDBOrClearSession.Checked = True Then
+                showRangeLeft = 0
+                showRangeRight = 0
+                Call emptyAllVISBOStructures()
+            End If
         End If
 
 
@@ -2903,6 +2981,7 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delFromSession Or
             aKtionskennung = PTTvActions.deleteV Or
             aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadInSPE Or
             aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.loadMultiPVInPPT Then
 
@@ -2973,7 +3052,8 @@ Public Class frmProjPortfolioAdmin
                             'Next
 
 
-                        ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+                        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadInSPE Then
 
                             Dim hproj As clsProjekt = Nothing
                             If ShowProjekte.Count > 0 Then
@@ -3072,8 +3152,11 @@ Public Class frmProjPortfolioAdmin
 
                                     ' laden der Projekt-Variante 
                                     ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
-
-                                    Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
+                                    If aKtionskennung = PTTvActions.loadInSPE Then
+                                        Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, True)
+                                    Else
+                                        Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
+                                    End If
 
                                     ' das für Powerpoint ausgewählte Projekt 
                                     If aKtionskennung = PTTvActions.loadPVInPPT Then
@@ -3112,7 +3195,9 @@ Public Class frmProjPortfolioAdmin
                             Next
 
 
-                        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+                        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or
+                            aKtionskennung = PTTvActions.loadMultiPVInPPT Or
+                            aKtionskennung = PTTvActions.loadInSPE Then
 
                             Dim hproj As clsProjekt = Nothing
                             If ShowProjekte.Count > 0 Then
@@ -3208,7 +3293,7 @@ Public Class frmProjPortfolioAdmin
                                     End If
 
                                     ' laden der Projekt-Variante 
-                                    ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
+                                    ' wenn gefiltert wird, dann wird pfv geladen als  Planungs-Version in AllePRojekte gesteckt 
 
                                     Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
 
@@ -3480,7 +3565,7 @@ Public Class frmProjPortfolioAdmin
 
                     Dim txtMsg1 As String = ""
                     Dim txtMsg2 As String = ""
-                    If storeToDBasWell.Checked Then
+                    If storeToDBOrClearSession.Checked Then
                         Dim errMsg As New clsErrorCodeMsg
                         'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
                         Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
@@ -4973,21 +5058,42 @@ Public Class frmProjPortfolioAdmin
     End Sub
 
 
-    Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBasWell.CheckedChanged
+    Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBOrClearSession.CheckedChanged
 
-        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-            If storeToDBasWell.Checked Then
-                Me.OKButton.Text = "in Session und DB speichern"
+
+        If aKtionskennung = PTTvActions.loadInSPE Then
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                If storeToDBOrClearSession.Checked Then
+                    Me.OKButton.Text = "Laden"
+                Else
+                    Me.OKButton.Text = "Load"
+                End If
             Else
-                Me.OKButton.Text = "in Session speichern"
+                If storeToDBOrClearSession.Checked Then
+                    Me.OKButton.Text = "Clear Session & load project(s"
+                Else
+                    Me.OKButton.Text = "Add project(s to Session"
+                End If
             End If
         Else
-            If storeToDBasWell.Checked Then
-                Me.OKButton.Text = "Save to Session and DB"
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                If storeToDBOrClearSession.Checked Then
+                    Me.OKButton.Text = "in Session und DB speichern"
+                Else
+                    Me.OKButton.Text = "in Session speichern"
+                End If
             Else
-                Me.OKButton.Text = "Save to Session"
+                If storeToDBOrClearSession.Checked Then
+                    Me.OKButton.Text = "Save to Session and DB"
+                Else
+                    Me.OKButton.Text = "Save to Session"
+                End If
             End If
         End If
+
+        'End If
+
+
 
     End Sub
 
@@ -5697,6 +5803,10 @@ Public Class frmProjPortfolioAdmin
     End Sub
 
     Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub chkbxPermanent_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxPermanent.CheckedChanged
 
     End Sub
 End Class

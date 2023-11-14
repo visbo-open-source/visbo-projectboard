@@ -294,7 +294,7 @@ Public Module agm5
                                 Dim capacityNeeded As String = ""
                                 hproj = erstelleInventurProjekt(pName, vorlagenName, scenarioName,
                                                              start, ende, budget, zeile, sfit, risk,
-                                                             capacityNeeded, Nothing, businessUnit, description, Nothing, "", 0.0)
+                                                             capacityNeeded, Nothing, businessUnit, description, Nothing, "", 0.0, 0.0)
 
                                 If Not IsNothing(hproj) Then
                                     projectStartDate = start

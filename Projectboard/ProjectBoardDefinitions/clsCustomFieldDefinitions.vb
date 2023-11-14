@@ -63,6 +63,26 @@
     End Property
 
     ''' <summary>
+    ''' returns true if there is a customField defined with cfName
+    ''' comparison is all on lowercase
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsName(ByVal cfName As String) As Boolean
+        Get
+            Dim found As Boolean = False
+            For Each kvp As KeyValuePair(Of Integer, clsCustomFieldDefinition) In listOfDefinitions
+                If kvp.Value.name.ToLower = cfName.ToLower Then
+                    found = True
+                    Exit For
+                End If
+            Next
+
+            containsName = found
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Anzahl an Custom Fields zurück 
     ''' </summary>
     ''' <value></value>

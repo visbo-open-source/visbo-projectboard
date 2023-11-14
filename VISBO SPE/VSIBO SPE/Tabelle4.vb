@@ -131,6 +131,14 @@ Public Class Tabelle4
 
         End Try
 
+        ' tk 23.11.22 do not update screen ...
+        ' is again activated in Activate event of each table 
+        Try
+            appInstance.ScreenUpdating = False
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 

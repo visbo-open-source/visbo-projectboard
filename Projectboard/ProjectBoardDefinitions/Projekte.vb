@@ -11886,11 +11886,17 @@ Public Module Projekte
         'Xdatenreihe(2) = "Personalkosten"
         'Xdatenreihe(3) = "Sonstige Kosten"
         'Xdatenreihe(4) = "Ergebnis-Prognose"
-        Xdatenreihe(0) = repMessages.getmsg(49)
+        'Xdatenreihe(0) = repMessages.getmsg(49)
         'Xdatenreihe(1) = repMessages.getmsg(50)
-        Xdatenreihe(1) = repMessages.getmsg(51)
-        Xdatenreihe(2) = repMessages.getmsg(52)
-        Xdatenreihe(3) = repMessages.getmsg(53)
+        'Xdatenreihe(1) = repMessages.getmsg(51)
+        'Xdatenreihe(2) = repMessages.getmsg(52)
+        'Xdatenreihe(3) = repMessages.getmsg(53)
+
+        ' tk 14.11.22
+        Xdatenreihe(0) = "Budget"
+        Xdatenreihe(1) = "Personell Cost"
+        Xdatenreihe(2) = "Other Cost"
+        Xdatenreihe(3) = "Profit/Loss"
 
 
         With hproj
@@ -11939,7 +11945,8 @@ Public Module Projekte
                 projektTextTeil = hproj.getShapeText & dauerTextTeil
             End If
         Else
-            projektTextTeil = repMessages.getmsg(53)
+            'projektTextTeil = repMessages.getmsg(53)
+            projektTextTeil = "Profit/Loss"
             'If auswahl = PThis.beauftragung Then
             '    'titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
             '    projektTextTeil = repMessages.getmsg(47) & dauerTextTeil
@@ -12566,14 +12573,18 @@ Public Module Projekte
         'Xdatenreihe(2) = "Personalkosten"
         'Xdatenreihe(3) = "Sonstige Kosten"
         'Xdatenreihe(4) = "Ergebnis-Prognose"
-        Xdatenreihe(0) = repMessages.getmsg(49)
+        'Xdatenreihe(0) = repMessages.getmsg(49)
         'Xdatenreihe(1) = repMessages.getmsg(50)
-        Xdatenreihe(1) = repMessages.getmsg(51)
-        Xdatenreihe(2) = repMessages.getmsg(52)
-        Xdatenreihe(3) = repMessages.getmsg(53)
+        'Xdatenreihe(1) = repMessages.getmsg(51)
+        'Xdatenreihe(2) = repMessages.getmsg(52)
+        'Xdatenreihe(3) = repMessages.getmsg(53)
         'Xdatenreihe(4) = repMessages.getmsg(53)
 
-
+        ' tk 14.11.22
+        Xdatenreihe(0) = "Budget"
+        Xdatenreihe(1) = "Personell Cost"
+        Xdatenreihe(2) = "Other Cost"
+        Xdatenreihe(3) = "Profit/Loss"
 
         With hproj
             Dim gk As Double = .getSummeKosten
@@ -12607,7 +12618,8 @@ Public Module Projekte
             dauerTextTeil = " " & textZeitraum(pstart, pstart + plen - 1)
         End If
 
-        projektTextTeil = repMessages.getmsg(53)
+        'projektTextTeil = repMessages.getmsg(53)
+        projektTextTeil = Xdatenreihe(3)
 
 
         If hproj.endeDate < Date.Now Then
@@ -12892,16 +12904,16 @@ Public Module Projekte
         End With
 
 
-        'Xdatenreihe(0) = "Budget"
-        'Xdatenreihe(1) = "Risiko-Abschlag"
-        'Xdatenreihe(2) = "Personalkosten"
-        'Xdatenreihe(3) = "Sonstige Kosten"
-        'Xdatenreihe(4) = "Ergebnis-Prognose"
-        Xdatenreihe(0) = repMessages.getmsg(49)
-        Xdatenreihe(1) = repMessages.getmsg(50)
-        Xdatenreihe(2) = repMessages.getmsg(51)
-        Xdatenreihe(3) = repMessages.getmsg(52)
-        Xdatenreihe(4) = repMessages.getmsg(53)
+        Xdatenreihe(0) = "Budget"
+        Xdatenreihe(1) = "Risiko-Abschlag"
+        Xdatenreihe(2) = "Personell Cost"
+        Xdatenreihe(3) = "Other Cost"
+        Xdatenreihe(4) = "Profit / Loss"
+        'Xdatenreihe(0) = repMessages.getmsg(49)
+        'Xdatenreihe(1) = repMessages.getmsg(50)
+        'Xdatenreihe(2) = repMessages.getmsg(51)
+        'Xdatenreihe(3) = repMessages.getmsg(52)
+        'Xdatenreihe(4) = repMessages.getmsg(53)
 
 
 
@@ -13533,7 +13545,8 @@ Public Module Projekte
                                            ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String,
                                            ByVal listOfCustomFields As Collection,
                                            ByVal responsiblePerson As String,
-                                           ByVal profitUSerAskedFor As Double) As clsProjekt
+                                           ByVal profitUSerAskedFor As Double,
+                                            ByVal revenue As Double) As clsProjekt
 
         Dim newprojekt As New clsProjekt
         Dim zeile As Integer = tafelZeile
@@ -13902,6 +13915,20 @@ Public Module Projekte
         Dim tmpValue As Integer = newprojekt.dauerInDays
         ' tk, Änderung 19.1.17 nicht mehr notwendig ..
         ' Call awinCreateBudgetWerte(newprojekt)
+
+        ' jetzt noch der Projekt-Phase den Revenue anhängen
+        Try
+            If revenue > 0.0 Then
+                Dim projPhase As clsPhase = newprojekt.getPhase(1)
+                If Not IsNothing(projPhase) Then
+                    projPhase.invoice = New KeyValuePair(Of Double, Integer)(revenue, 0)
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
 
         erstelleInventurProjekt = newprojekt
         '
