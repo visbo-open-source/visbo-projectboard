@@ -190,10 +190,29 @@ Module rpaTkModule
     Public Function checkAssignAttributes(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim blattName As String = "Assign Attributes"
+        Dim colNames() = {"Project Name", "KPI Strategic Fit", "KPI Realization Risk", "Business Unit"}
+
+        Dim currentWS As xlns.Worksheet = Nothing
+
         Try
 
             If CType(currentWB.ActiveSheet, xlns.Worksheet).Name = blattName Then
-                result = PTRpa.visboAssignAttributes
+                currentWS = CType(currentWB.Worksheets.Item(blattName), xlns.Worksheet)
+                Dim verifiedStructure As Boolean = False
+
+                If Not IsNothing(currentWS) Then
+                    Dim ersteZeile As xlns.Range = CType(currentWS.Rows.Item(1), xlns.Range)
+                    verifiedStructure = CStr(ersteZeile.Cells(1, 1).value).Trim = colNames(0) And
+                                        CStr(ersteZeile.Cells(1, 2).value).Trim = colNames(1) And
+                                        CStr(ersteZeile.Cells(1, 3).value).Trim = colNames(2) And
+                                        CStr(ersteZeile.Cells(1, 4).value).Trim = colNames(3)
+                End If
+                If verifiedStructure Then
+                    result = PTRpa.visboAssignAttributes
+                Else
+                    result = PTRpa.visboUnknown
+                End If
+
             Else
                 result = PTRpa.visboUnknown
             End If
@@ -201,6 +220,8 @@ Module rpaTkModule
         Catch ex As Exception
             result = PTRpa.visboUnknown
         End Try
+
+
         checkAssignAttributes = result
     End Function
     Public Function checkAutoAllocate(ByVal currentWB As xlns.Workbook) As PTRpa
@@ -3819,228 +3840,243 @@ Module rpaTkModule
 
 
                 Dim lastRow As Integer = 1 + myConstellation.Liste.Count
+                Dim tmpItem As String = ""
+                Try
 
-                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
 
-                    zeile = zeile + 1
-                    Dim pName As String = getPnameFromKey(kvp.Key)
-                    Dim vName As String = getVariantnameFromKey(kvp.Key)
-                    ' read it , but do not put into AlleProjekte 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
-                    Dim baseline As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, ptVariantFixNames.pfv.ToString, hproj.vpID, heute, err)
+                        tmpItem = kvp.Key ' for use in Try Catch .. for error messaging 
+                        zeile = zeile + 1
+                        Dim pName As String = getPnameFromKey(kvp.Key)
+                        Dim vName As String = getVariantnameFromKey(kvp.Key)
+                        ' read it , but do not put into AlleProjekte 
+                        Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, heute)
+                        Dim baseline As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, ptVariantFixNames.pfv.ToString, hproj.vpID, heute, err)
 
-                    If compareWithFirstBaseline Then
-                        Dim projecthistory As clsProjektHistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(hproj.name, "", StartofCalendar, Date.Now, err)
-                        If Not IsNothing(projecthistory) Then
-                            baseline = projecthistory.beauftragung
+                        If compareWithFirstBaseline Then
+                            Dim projecthistory As clsProjektHistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(hproj.name, "", StartofCalendar, Date.Now, err)
+                            If Not IsNothing(projecthistory) Then
+                                baseline = projecthistory.beauftragung
+                            End If
                         End If
-                    End If
 
-                    If Not IsNothing(hproj) Then
+                        If Not IsNothing(hproj) Then
 
-                        Dim myState As String = hproj.vpStatus
+                            Dim myState As String = hproj.vpStatus
 
-                        ' now writing 
-                        ws.Cells(zeile, 1).value = heute.ToShortDateString
-                        ws.Cells(zeile, 2).value = hproj.getShapeText
-                        ws.Cells(zeile, 3).value = hproj.ampelStatus
-                        ws.Cells(zeile, 4).value = hproj.ampelErlaeuterung
+                            ' now writing 
+                            ws.Cells(zeile, 1).value = heute.ToShortDateString
+                            ws.Cells(zeile, 2).value = hproj.getShapeText
+                            ws.Cells(zeile, 3).value = hproj.ampelStatus
+                            ws.Cells(zeile, 4).value = hproj.ampelErlaeuterung
 
-                        ws.Cells(zeile, 5).value = hproj.StrategicFit
-                        ws.Cells(zeile, 6).value = hproj.Risiko
-                        ws.Cells(zeile, 7).value = hproj.leadPerson
-                        ws.Cells(zeile, 8).value = hproj.vpStatus
-                        ws.Cells(zeile, 9).value = hproj.timeStamp
-                        ws.Cells(zeile, 10).value = baseline.timeStamp
-                        ws.Cells(zeile, 11).value = hproj.businessUnit
+                            ws.Cells(zeile, 5).value = hproj.StrategicFit
+                            ws.Cells(zeile, 6).value = hproj.Risiko
+                            ws.Cells(zeile, 7).value = hproj.leadPerson
+                            ws.Cells(zeile, 8).value = hproj.vpStatus
+                            ws.Cells(zeile, 9).value = hproj.timeStamp
 
-                        spalte = 12
-                        For ix As Integer = 1 To cfFields.Length
-                            ws.Cells(zeile, spalte).value = hproj.getCustomSField(cfFields(ix - 1))
-                            spalte = spalte + 1
-                        Next
+                            If Not IsNothing(baseline) Then
+                                ws.Cells(zeile, 10).value = baseline.timeStamp
+                            Else
+                                ws.Cells(zeile, 10).value = "n.a"
+                            End If
 
-                        ' Total amount of PD 
+                            ws.Cells(zeile, 11).value = hproj.businessUnit
 
-                        Dim topRole As String = RoleDefinitions.getDefaultTopNodeName()
-                        Dim roleAmount As Double
-                        Try
-                            roleAmount = hproj.getRessourcenBedarf(topRole, inclSubRoles:=True).Sum
-                            ws.Cells(zeile, spalte).value = roleAmount
-                        Catch ex As Exception
-                            ws.Cells(zeile, spalte).value = "n.a"
-                        End Try
-                        spalte = spalte + 1
+                            spalte = 12
+                            For ix As Integer = 1 To cfFields.Length
+                                ws.Cells(zeile, spalte).value = hproj.getCustomSField(cfFields(ix - 1))
+                                spalte = spalte + 1
+                            Next
 
-                        ' now all the roleNames
-                        For Each tmpRoleName As String In listOfRoleNames
+                            ' Total amount of PD 
+
+                            Dim topRole As String = RoleDefinitions.getDefaultTopNodeName()
+                            Dim roleAmount As Double
                             Try
-                                roleAmount = hproj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
+                                roleAmount = hproj.getRessourcenBedarf(topRole, inclSubRoles:=True).Sum
                                 ws.Cells(zeile, spalte).value = roleAmount
                             Catch ex As Exception
                                 ws.Cells(zeile, spalte).value = "n.a"
                             End Try
                             spalte = spalte + 1
-                        Next
+
+                            ' now all the roleNames
+                            For Each tmpRoleName As String In listOfRoleNames
+                                Try
+                                    roleAmount = hproj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
+                                    ws.Cells(zeile, spalte).value = roleAmount
+                                Catch ex As Exception
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                End Try
+                                spalte = spalte + 1
+                            Next
 
 
-                        ' Umsatz / Nutzen until now 
-                        Dim planValue As Double
-                        Dim baselineValue As Double
-                        Try
-                            planValue = 1000 * hproj.getInvoicesPenaltiesUntil(lastDayLastMonth)
-                        Catch ex As Exception
-                            planValue = 0
-                        End Try
-
-                        ws.Cells(zeile, spalte).value = planValue
-                        spalte = spalte + 1
-
-                        If Not IsNothing(baseline) Then
+                            ' Umsatz / Nutzen until now 
+                            Dim planValue As Double
+                            Dim baselineValue As Double
                             Try
-                                baselineValue = 1000 * baseline.getInvoicesPenaltiesUntil(lastDayLastMonth)
+                                planValue = 1000 * hproj.getInvoicesPenaltiesUntil(lastDayLastMonth)
                             Catch ex As Exception
-                                baselineValue = 0
+                                planValue = 0
                             End Try
-                            ws.Cells(zeile, spalte).value = baselineValue
-                            spalte = spalte + 1
 
-                            ws.Cells(zeile, spalte).value = (planValue - baselineValue)
-                            spalte = spalte + 1
-                        Else
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                        End If
-
-
-                        ' Umsatz / Nutzen 
-                        Try
-                            planValue = 1000 * hproj.getInvoicesPenalties().Sum
-                        Catch ex As Exception
-                            ' should always be the same : calculate erloes as being the sum of invoices 
-                            planValue = 1000 * hproj.Erloes
-                        End Try
-                        ws.Cells(zeile, spalte).value = planValue
-                        spalte = spalte + 1
-
-                        If Not IsNothing(baseline) Then
-                            Try
-                                baselineValue = 1000 * baseline.getInvoicesPenalties().Sum
-                            Catch ex As Exception
-                                baselineValue = 1000 * baseline.Erloes
-                            End Try
-                            ws.Cells(zeile, spalte).value = baselineValue
-                            spalte = spalte + 1
-
-                            ws.Cells(zeile, spalte).value = (planValue - baselineValue)
-                            spalte = spalte + 1
-                        Else
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                        End If
-
-                        ' Start Date 
-                        ws.Cells(zeile, spalte).value = hproj.startDate
-                        spalte = spalte + 1
-
-                        ' Finish Date 
-                        ws.Cells(zeile, spalte).value = hproj.endeDate
-                        spalte = spalte + 1
-
-                        If Not IsNothing(baseline) Then
-                            ws.Cells(zeile, spalte).value = baseline.endeDate
-                            spalte = spalte + 1
-                            ws.Cells(zeile, spalte).value = DateDiff(DateInterval.Day, baseline.endeDate, hproj.endeDate)
-                            spalte = spalte + 1
-                        Else
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                        End If
-
-                        ' Cost until now 
-                        Try
-                            planValue = 1000 * hproj.getCostUntil(lastDayLastMonth)
-
-                        Catch ex As Exception
-                            planValue = -1
-                        End Try
-
-                        If planValue >= 0.0 Then
                             ws.Cells(zeile, spalte).value = planValue
-                        Else
-                            ws.Cells(zeile, spalte).value = "n.a"
-                        End If
-                        spalte = spalte + 1
+                            spalte = spalte + 1
 
-                        If Not IsNothing(baseline) Then
-                            Try
-                                baselineValue = 1000 * baseline.getCostUntil(lastDayLastMonth)
+                            If Not IsNothing(baseline) Then
+                                Try
+                                    baselineValue = 1000 * baseline.getInvoicesPenaltiesUntil(lastDayLastMonth)
+                                Catch ex As Exception
+                                    baselineValue = 0
+                                End Try
                                 ws.Cells(zeile, spalte).value = baselineValue
                                 spalte = spalte + 1
 
-                                If planValue >= 0 Then
-                                    ws.Cells(zeile, spalte).value = (planValue - baselineValue)
-                                Else
-                                    ws.Cells(zeile, spalte).value = "n.a"
-                                End If
+                                ws.Cells(zeile, spalte).value = (planValue - baselineValue)
                                 spalte = spalte + 1
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                            End If
+
+
+                            ' Umsatz / Nutzen 
+                            Try
+                                planValue = 1000 * hproj.getInvoicesPenalties().Sum
+                            Catch ex As Exception
+                                ' should always be the same : calculate erloes as being the sum of invoices 
+                                planValue = 1000 * hproj.Erloes
+                            End Try
+                            ws.Cells(zeile, spalte).value = planValue
+                            spalte = spalte + 1
+
+                            If Not IsNothing(baseline) Then
+                                Try
+                                    baselineValue = 1000 * baseline.getInvoicesPenalties().Sum
+                                Catch ex As Exception
+                                    baselineValue = 1000 * baseline.Erloes
+                                End Try
+                                ws.Cells(zeile, spalte).value = baselineValue
+                                spalte = spalte + 1
+
+                                ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                                spalte = spalte + 1
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                            End If
+
+                            ' Start Date 
+                            ws.Cells(zeile, spalte).value = hproj.startDate
+                            spalte = spalte + 1
+
+                            ' Finish Date 
+                            ws.Cells(zeile, spalte).value = hproj.endeDate
+                            spalte = spalte + 1
+
+                            If Not IsNothing(baseline) Then
+                                ws.Cells(zeile, spalte).value = baseline.endeDate
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = DateDiff(DateInterval.Day, baseline.endeDate, hproj.endeDate)
+                                spalte = spalte + 1
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                            End If
+
+                            ' Cost until now 
+                            Try
+                                planValue = 1000 * hproj.getCostUntil(lastDayLastMonth)
 
                             Catch ex As Exception
-                                ws.Cells(zeile, spalte).value = "n.a"
-                                spalte = spalte + 1
-                                ws.Cells(zeile, spalte).value = "n.a"
-                                spalte = spalte + 1
+                                planValue = -1
                             End Try
+
+                            If planValue >= 0.0 Then
+                                ws.Cells(zeile, spalte).value = planValue
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                            End If
+                            spalte = spalte + 1
+
+                            If Not IsNothing(baseline) Then
+                                Try
+                                    baselineValue = 1000 * baseline.getCostUntil(lastDayLastMonth)
+                                    ws.Cells(zeile, spalte).value = baselineValue
+                                    spalte = spalte + 1
+
+                                    If planValue >= 0 Then
+                                        ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                                    Else
+                                        ws.Cells(zeile, spalte).value = "n.a"
+                                    End If
+                                    spalte = spalte + 1
+
+                                Catch ex As Exception
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                    spalte = spalte + 1
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                    spalte = spalte + 1
+                                End Try
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                            End If
+
+                            ' Total Cost 
+                            planValue = 1000 * hproj.getGesamtKostenBedarf.Sum
+                            ws.Cells(zeile, spalte).value = planValue
+                            spalte = spalte + 1
+
+                            If Not IsNothing(baseline) Then
+                                baselineValue = 1000 * baseline.getGesamtKostenBedarf.Sum
+                                ws.Cells(zeile, spalte).value = baselineValue
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = (planValue - baselineValue)
+                                spalte = spalte + 1
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                                ws.Cells(zeile, spalte).value = "n.a"
+                                spalte = spalte + 1
+                            End If
+
+
+                            ' Name of Portfolio and Portfolio Variant Name 
+                            ws.Cells(zeile, spalte).value = myPortfolioName
+                            spalte = spalte + 1
+                            ws.Cells(zeile, spalte).value = myPortfolioVName
+                            spalte = spalte + 1
+
+                            ' VISBO ID 
+                            ws.Cells(zeile, spalte).value = hproj.vpID
+                            spalte = spalte + 1
+
                         Else
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
+                            ' could not read the name 
+                            ws.Cells(zeile, 1).value = pName
+                            ws.Cells(zeile, 2).value = "key: " & kvp.Key & " failed"
                         End If
 
-                        ' Total Cost 
-                        planValue = 1000 * hproj.getGesamtKostenBedarf.Sum
-                        ws.Cells(zeile, spalte).value = planValue
-                        spalte = spalte + 1
+                    Next
 
-                        If Not IsNothing(baseline) Then
-                            baselineValue = 1000 * baseline.getGesamtKostenBedarf.Sum
-                            ws.Cells(zeile, spalte).value = baselineValue
-                            spalte = spalte + 1
-                            ws.Cells(zeile, spalte).value = (planValue - baselineValue)
-                            spalte = spalte + 1
-                        Else
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                            ws.Cells(zeile, spalte).value = "n.a"
-                            spalte = spalte + 1
-                        End If
-
-
-                        ' Name of Portfolio and Portfolio Variant Name 
-                        ws.Cells(zeile, spalte).value = myPortfolioName
-                        spalte = spalte + 1
-                        ws.Cells(zeile, spalte).value = myPortfolioVName
-                        spalte = spalte + 1
-
-                        ' VISBO ID 
-                        ws.Cells(zeile, spalte).value = hproj.vpID
-                        spalte = spalte + 1
-
-                    Else
-                        ' could not read the name 
-                        ws.Cells(zeile, 1).value = pName
-                        ws.Cells(zeile, 2).value = "key: " & kvp.Key & " failed"
-                    End If
-
-                Next
+                Catch ex As Exception
+                    Dim msgTxt As String = "Error creating Actual Target Report at " & tmpItem & vbLf & ex.Message
+                    Call logger(ptErrLevel.logError, "write Report Actual Target " & myActivePortfolio, " failed ..")
+                    allOK = False
+                End Try
 
                 Try
                     ' jetzt die Formatierungen anwenden 

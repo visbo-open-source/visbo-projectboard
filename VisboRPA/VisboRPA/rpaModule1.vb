@@ -5409,15 +5409,14 @@ Module rpaModule1
 
         Dim atleastOneError As Boolean = False
 
-        Dim zeile As Integer = 2
-
         Dim myProjectName As String = ""
+
+        Dim myStrategicFit As Double = 0
+        Dim myRisk As Double = 0
+
 
         Dim mybusinessUnit As String = ""
         Dim myResponsible As String = ""
-        Dim responsible As String = ""
-        Dim strategyFit As Double = 0.0
-        Dim riskKPI As Double = 0.0
 
         Dim err As New clsErrorCodeMsg
 
@@ -5437,14 +5436,80 @@ Module rpaModule1
                 With activeWSListe
 
                     Dim lastRow As Integer = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlUp).Row
+                    Dim lastColumn As Integer = CType(.Cells(1, 4000), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
+                    Dim cfList As New SortedList(Of Integer, String)
+
+                    ' are there any values provided for CustomFields
+                    If lastColumn > 4 Then
+                        Dim tmpCf As String
+                        For icol As Integer = 5 To lastColumn
+                            If Not IsNothing(CType(.Cells(1, icol), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                tmpCf = CStr(CType(.Cells(1, icol), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                If customFieldDefinitions.containsName(tmpCf) Then
+                                    cfList.Add(icol, tmpCf)
+                                End If
+                            End If
+                        Next
+
+                    End If
+
+                    Dim zeile As Integer = 2
 
                     While zeile <= lastRow
 
                         Try
 
-                            myProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                            mybusinessUnit = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                            myResponsible = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            If Not IsNothing(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                myProjectName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            Else
+                                myProjectName = ""
+                            End If
+
+                            If Not IsNothing(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                myStrategicFit = CDbl(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                If myStrategicFit <= 0 Or myStrategicFit > 10 Then
+                                    myStrategicFit = 0
+                                End If
+                            Else
+                                myStrategicFit = 0
+                            End If
+
+                            If Not IsNothing(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                myRisk = CDbl(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                If myRisk <= 0 Or myRisk > 10 Then
+                                    myRisk = 0
+                                End If
+                            Else
+                                myRisk = 0
+                            End If
+
+
+                            If Not IsNothing(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                mybusinessUnit = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                                ' now check whether or not it is a valid business Unit
+                                Dim found As Boolean = False
+                                Dim i As Integer = 1
+                                While i <= businessUnitDefinitions.Count And Not found
+
+                                    If businessUnitDefinitions.ElementAt(i - 1).Value.name = mybusinessUnit Then
+                                        found = True
+                                    Else
+                                        i = i + 1
+                                    End If
+
+                                End While
+
+                                If Not found Then
+                                    ' then it is not a valid definition
+                                    mybusinessUnit = ""
+                                End If
+
+                            Else
+                                mybusinessUnit = ""
+                            End If
+
+
                             ' set myCustom User Role 
                             myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
                             If myProjectName <> "" Then
@@ -5454,77 +5519,112 @@ Module rpaModule1
 
                                 Dim vpID As String = ""
                                 Dim myProject As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(myProjectName, " ", vpID, Date.Now, err)
-                                Dim check1 As Boolean = Not IsNothing(myProject)
 
-                                Dim check2 As Boolean = False
-                                Dim i As Integer = 1
-                                While i <= businessUnitDefinitions.Count And Not check2
+                                If Not IsNothing(myProject) Then
 
-                                    If businessUnitDefinitions.ElementAt(i - 1).Value.name = mybusinessUnit Then
-                                        check2 = True
-                                    Else
-                                        i = i + 1
+                                    ' now read customFields
+                                    Dim cfValues As New SortedList(Of String, String)
+                                    If cfList.Count > 0 Then
+                                        For Each kvp As KeyValuePair(Of Integer, String) In cfList
+                                            Dim tmpValue As String = ""
+                                            If Not IsNothing(CType(.Cells(zeile, kvp.Key), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                tmpValue = CStr(CType(.Cells(zeile, kvp.Key), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                            Else
+                                                tmpValue = ""
+                                            End If
+
+                                            If Not cfValues.ContainsKey(kvp.Value) Then
+                                                cfValues.Add(kvp.Value, tmpValue)
+                                            End If
+                                        Next
                                     End If
 
-                                End While
+                                    Dim storeRequired As Boolean = False
+                                    ' now set customFields in myProject
+                                    If cfValues.Count > 0 Then
+
+                                        For Each cfKvp As KeyValuePair(Of String, String) In cfValues
+                                            Dim cfUid As Integer = customFieldDefinitions.getUid(cfKvp.Key)
+                                            If Not IsNothing(myProject.getCustomSField(cfUid)) Then
+                                                If myProject.getCustomSField(cfUid) <> cfKvp.Value Then
+                                                    myProject.addSetCustomSField(cfUid, cfKvp.Value)
+                                                    storeRequired = True
+                                                End If
+                                            Else
+                                                myProject.addSetCustomSField(cfUid, cfKvp.Value)
+                                                storeRequired = True
+                                            End If
+                                        Next
+                                    End If
+
+                                    If myStrategicFit > 0 Then
+                                        If System.Math.Abs(myProject.StrategicFit - myStrategicFit) > 0.001 Then
+                                            myProject.StrategicFit = myStrategicFit
+                                            storeRequired = True
+                                        End If
+                                    End If
+
+                                    If myRisk > 0 Then
+                                        If System.Math.Abs(myProject.Risiko - myRisk) > 0.001 Then
+                                            myProject.Risiko = myRisk
+                                            storeRequired = True
+                                        End If
+                                    End If
+
+                                    If mybusinessUnit <> "" Then
+                                        If myProject.businessUnit <> mybusinessUnit Then
+                                            myProject.businessUnit = mybusinessUnit
+                                            storeRequired = True
+                                        End If
+                                    End If
 
 
-                                If check1 And check2 Then
+                                    If myResponsible <> "" Then
+                                        If myProject.leadPerson <> myResponsible Then
+                                            myProject.leadPerson = myResponsible
+                                            storeRequired = True
+                                        End If
+                                    End If
 
-                                    Dim storeRequired As Boolean = (myProject.businessUnit <> mybusinessUnit) Or ((myProject.leadPerson <> myResponsible) And (myResponsible <> ""))
                                     Dim outputCollection As New Collection
                                     msgTxt = ""
                                     If storeRequired Then
-                                        If myProject.businessUnit <> mybusinessUnit And mybusinessUnit <> "" Then
-                                            myProject.businessUnit = mybusinessUnit
-                                            msgTxt = mybusinessUnit & " "
-                                        End If
-
-                                        If myProject.leadPerson <> myResponsible And myResponsible <> "" Then
-                                            myProject.leadPerson = myResponsible
-                                            msgTxt = msgTxt & myResponsible
-                                        End If
 
                                         Try
                                             Dim mergedProj As clsProjekt = Nothing
                                             'If storeSingleProjectToDB(myProject, outputCollection) Then
                                             myProject.timeStamp = Date.Now
+
                                             If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(myProject, dbUsername, mergedProj, err, True) Then
-                                                msgTxt = msgTxt & " was assigned to " & myProject.name
+                                                msgTxt = "Attributes were succesfully assigned to " & myProject.name
                                                 Call logger(ptErrLevel.logInfo, "project stored ", msgTxt)
                                             Else
+                                                msgTxt = " please check on status or user rights " & myProject.name
                                                 Call logger(ptErrLevel.logError, "project store with new business Unit failed: " & msgTxt, outputCollection)
 
                                             End If
                                         Catch ex As Exception
+                                            msgTxt = " please check on status or user rights " & myProject.name
                                             Call logger(ptErrLevel.logError, "project store with new business Unit failed: " & msgTxt, outputCollection)
                                         End Try
 
                                     Else
-                                        Call logger(ptErrLevel.logInfo, "project has already  ", mybusinessUnit)
+                                        Call logger(ptErrLevel.logInfo, "project has already all the attributes ...", myProject.name)
                                     End If
-
                                 Else
-                                    If Not check1 Then
-                                        ' Logging
-                                        atleastOneError = True
-                                        Call logger(ptErrLevel.logError, "Project does not exist: ", myProjectName)
-                                    End If
-                                    If Not check2 Then
-                                        ' Logging
-                                        atleastOneError = True
-                                        Call logger(ptErrLevel.logError, "Business Unit not known: ", myProjectName & " " & mybusinessUnit)
-                                    End If
+                                        ' logging: no valid Project Name 
+                                        Call logger(ptErrLevel.logInfo, "Project does not exist : ", myProjectName)
                                 End If
+
                             Else
                                 ' logging: no valid rename Parameters
                                 atleastOneError = True
-                                Call logger(ptErrLevel.logError, "No project name Given in Zeile : ", zeile.ToString)
+                                Call logger(ptErrLevel.logInfo, "No project name given in Zeile : ", zeile.ToString)
                             End If
 
                         Catch ex As Exception
                             atleastOneError = True
-                            Call logger(ptErrLevel.logError, "Exception in renaming, line ", zeile.ToString & ex.Message)
+                            Call logger(ptErrLevel.logError, "Exception in assigning Attributes, line ", zeile.ToString & ex.Message)
                         End Try
 
                         zeile = zeile + 1
@@ -5537,7 +5637,7 @@ Module rpaModule1
 
         Catch ex As Exception
             atleastOneError = True
-            Throw New Exception("Fehler In Process Rename Projects" & ex.Message)
+            Throw New Exception("Exception in assigning Attributes " & ex.Message)
         End Try
 
         processAssignAttributes = Not atleastOneError

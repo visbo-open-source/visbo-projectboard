@@ -1509,6 +1509,7 @@ Public Class Request
                     '$$$
                     Dim cfToStore As Boolean = False
                     Dim containsIndex As Integer = -1
+
                     If Not IsNothing(projekt.customStringFields) Then
                         cfToStore = True
                         For Each cSF As KeyValuePair(Of Integer, String) In projekt.customStringFields
