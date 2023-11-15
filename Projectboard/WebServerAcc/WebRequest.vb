@@ -1407,14 +1407,7 @@ Public Class Request
                     risiko.value = projekt.Risiko
                     VP.customFieldDouble.Add(risiko)
                 End If
-                ' ur: 20210616: neues vp-Property PMCommit nun aus VP in VPV kopieren
-                'If Not IsNothing(projekt.pmCommit) Then
-                '    Dim pmCommit As New clsCustomFieldDate
-                '    pmCommit.type = "System"
-                '    pmCommit.name = vp_pmCommit
-                '    pmCommit.value = projekt.pmCommit
-                '    VP.customFieldDate.Add(pmCommit)
-                'End If
+
 
                 ' ur: 20230808: neues vp-Propery customStringFields, 
                 If Not IsNothing(projekt.customStringFields) Then
@@ -1503,38 +1496,158 @@ Public Class Request
 
             Else
                 Try
-                    'speziell für Telair
+
+                    ' tk 15.11.23
+                    ' start update business Unit, strategic Fit, Risk 
+
+                    Dim containsIndex As Integer = -1
+                    Dim vpNeedsToBeStored As Boolean = False
+
+                    ' business Unit
+                    Try
+                        If Not IsNothing(projekt.businessUnit) Then
+
+                            If projekt.businessUnit <> "" Then
+                                Dim bu As New clsCustomFieldStr
+                                bu.type = "System"
+                                bu.name = vp_businessUnit
+                                bu.value = projekt.businessUnit
+
+                                For i As Integer = 0 To aktvp.customFieldString.Count - 1
+                                    If String.Compare(aktvp.customFieldString(i).name, bu.name) <> 0 Then
+                                        containsIndex = -1
+                                    Else
+                                        containsIndex = i
+                                        If aktvp.customFieldString(i).value <> bu.value Then
+                                            aktvp.customFieldString(i).value = bu.value
+                                            vpNeedsToBeStored = True
+                                        End If
+                                        Exit For
+                                    End If
+                                Next
+
+                                If containsIndex = -1 Then
+                                    aktvp.customFieldString.Add(bu)
+                                    vpNeedsToBeStored = True
+                                End If
+                            End If
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    ' Strategic Fit 
+                    Try
+                        If Not IsNothing(projekt.StrategicFit) Then
+
+                            If projekt.StrategicFit >= 0 And projekt.StrategicFit <= 10 Then
+                                Dim sfit As New clsCustomFieldDbl
+                                sfit.type = "System"
+                                sfit.name = vp_strategicFit
+                                sfit.value = projekt.StrategicFit
+
+                                For i As Integer = 0 To aktvp.customFieldDouble.Count - 1
+                                    If String.Compare(aktvp.customFieldDouble(i).name, sfit.name) <> 0 Then
+                                        containsIndex = -1
+                                    Else
+                                        containsIndex = i
+                                        If aktvp.customFieldDouble(i).value <> sfit.value Then
+                                            aktvp.customFieldDouble(i).value = sfit.value
+                                            vpNeedsToBeStored = True
+                                        End If
+                                        Exit For
+                                    End If
+                                Next
+
+                                If containsIndex = -1 Then
+                                    aktvp.customFieldDouble.Add(sfit)
+                                    vpNeedsToBeStored = True
+                                End If
+
+                            End If
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    ' Risiko 
+                    Try
+                        If Not IsNothing(projekt.Risiko) Then
+
+                            If projekt.Risiko >= 0 And projekt.Risiko <= 10 Then
+                                Dim risiko As New clsCustomFieldDbl
+                                risiko.type = "System"
+                                risiko.name = vp_risk
+                                risiko.value = projekt.Risiko
+
+                                For i As Integer = 0 To aktvp.customFieldDouble.Count - 1
+                                    If String.Compare(aktvp.customFieldDouble(i).name, risiko.name) <> 0 Then
+                                        containsIndex = -1
+                                    Else
+                                        containsIndex = i
+                                        If aktvp.customFieldDouble(i).value <> risiko.value Then
+                                            aktvp.customFieldDouble(i).value = risiko.value
+                                            vpNeedsToBeStored = True
+                                        End If
+                                        Exit For
+                                    End If
+                                Next
+
+                                If containsIndex = -1 Then
+                                    aktvp.customFieldDouble.Add(risiko)
+                                    vpNeedsToBeStored = True
+                                End If
+
+                            End If
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+
+                    ' end update business Unit, strategic Fit, Risk
 
                     ' ur: 20230808: neues vp-Propery customStringFields, 
                     '$$$
-                    Dim cfToStore As Boolean = False
-                    Dim containsIndex As Integer = -1
+
 
                     If Not IsNothing(projekt.customStringFields) Then
-                        cfToStore = True
+
                         For Each cSF As KeyValuePair(Of Integer, String) In projekt.customStringFields
                             Dim newcSF As New clsCustomFieldStr
                             newcSF.type = "VP"
                             newcSF.name = customFieldDefinitions.getName(cSF.Key)
                             newcSF.value = cSF.Value
+
                             For i As Integer = 0 To aktvp.customFieldString.Count - 1
                                 If String.Compare(aktvp.customFieldString(i).name, newcSF.name) <> 0 Then
                                     containsIndex = -1
                                 Else
                                     containsIndex = i
-                                    aktvp.customFieldString(i) = newcSF
+                                    If aktvp.customFieldString(i).value <> newcSF.value Then
+                                        aktvp.customFieldString(i).value = newcSF.value
+                                        vpNeedsToBeStored = True
+                                    End If
                                     Exit For
                                 End If
                             Next
+
                             If containsIndex = -1 Then
                                 aktvp.customFieldString.Add(newcSF)
+                                vpNeedsToBeStored = True
                             End If
 
                         Next
                     End If
                     ' ur: 20230808: neues vp-Propery customDblFields, 
                     If Not IsNothing(projekt.customDblFields) Then
-                        cfToStore = True
+
                         For Each cDblF As KeyValuePair(Of Integer, Double) In projekt.customDblFields
                             Dim newcDblF As New clsCustomFieldDbl
                             newcDblF.type = "VP"
@@ -1545,39 +1658,48 @@ Public Class Request
                                     containsIndex = -1
                                 Else
                                     containsIndex = i
-                                    aktvp.customFieldDouble(i) = newcDblF
+                                    If aktvp.customFieldDouble(i).value = newcDblF.value Then
+                                        aktvp.customFieldDouble(i).value = newcDblF.value
+                                        vpNeedsToBeStored = True
+                                    End If
+
                                     Exit For
                                 End If
                             Next
+
                             If containsIndex = -1 Then
                                 aktvp.customFieldDouble.Add(newcDblF)
+                                vpNeedsToBeStored = True
                             End If
                         Next
                     End If
 
-                    If cfToStore Then
-                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
-                    End If
+
 
                     '$$$
-                    ' speziell Telair
+                    ' customFields einlesen 
 
 
                     ' KundenNummer in vorhandenem VP ergänzen
                     If (aktvp.kundennummer = "") And (projekt.kundenNummer <> "") Then
 
                         aktvp.kundennummer = projekt.kundenNummer
-                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                        vpNeedsToBeStored = True
+                        'Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                     Else
                         If attrToStore Then
                             If String.Compare(aktvp.kundennummer, projekt.kundenNummer) <> 0 Then
                                 aktvp.kundennummer = projekt.kundenNummer
-                                Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                                vpNeedsToBeStored = True
+                                'Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                             End If
                         End If
                         ' nothing to do
                     End If
 
+                    If vpNeedsToBeStored Then
+                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                    End If
                     '
 
 

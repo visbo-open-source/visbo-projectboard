@@ -1792,28 +1792,28 @@ Public Module awinGeneralModules
 
 
                     ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 
-                    If hproj.leadPerson = "" And formerProj.leadPerson <> "" Then
-                        hproj.leadPerson = formerProj.leadPerson
-                    End If
+                    'If hproj.leadPerson = "" And formerProj.leadPerson <> "" Then
+                    '    hproj.leadPerson = formerProj.leadPerson
+                    'End If
 
-                    If hproj.Erloes = 0 And formerProj.Erloes > 0 Then
-                        hproj.Erloes = formerProj.Erloes
-                    End If
-
-
-                    If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And formerProj.ampelStatus > 0 Then
-                        hproj.ampelStatus = formerProj.ampelStatus
-                        hproj.ampelErlaeuterung = formerProj.ampelErlaeuterung
-                    End If
-
-                    If hproj.description = "" And formerProj.description <> "" Then
-                        hproj.description = formerProj.description
-                    End If
+                    'If hproj.Erloes = 0 And formerProj.Erloes > 0 Then
+                    '    hproj.Erloes = formerProj.Erloes
+                    'End If
 
 
-                    hproj.Risiko = formerProj.Risiko
-                    hproj.StrategicFit = formerProj.StrategicFit
-                    hproj.projectType = formerProj.projectType
+                    'If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And formerProj.ampelStatus > 0 Then
+                    '    hproj.ampelStatus = formerProj.ampelStatus
+                    '    hproj.ampelErlaeuterung = formerProj.ampelErlaeuterung
+                    'End If
+
+                    'If hproj.description = "" And formerProj.description <> "" Then
+                    '    hproj.description = formerProj.description
+                    'End If
+
+
+                    'hproj.Risiko = formerProj.Risiko
+                    'hproj.StrategicFit = formerProj.StrategicFit
+                    'hproj.projectType = formerProj.projectType
 
                 End If
 
