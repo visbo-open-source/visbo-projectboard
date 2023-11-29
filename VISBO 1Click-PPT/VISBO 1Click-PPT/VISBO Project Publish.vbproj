@@ -36,7 +36,7 @@
     <PublishUrl>C:\publish\VISBO Project Publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>6.0.3.0</ApplicationVersion>
+    <ApplicationVersion>6.1.0.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -49,11 +49,6 @@
     <LoadBehavior>3</LoadBehavior>
   </PropertyGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.6">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.6 %28x86 und x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.7 %28x86 und x64%29</ProductName>
@@ -308,7 +303,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>50A4E36216AFE7819B7F3C088642409CBDFB0F9E</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>75220B92C6B747DCE63AD7FFAEA368C221639C8F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <MyType>Windows</MyType>
