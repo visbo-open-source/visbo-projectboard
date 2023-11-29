@@ -4962,11 +4962,18 @@
 
 
                         For r = 1 To anzRollen
+
                             role = .getRole(r)
+                            Dim roleIsExtern As Boolean = False
+
+                            If RoleDefinitions.containsUid(role.uid) Then
+                                roleIsExtern = RoleDefinitions.isExtern(role.uid)
+                            End If
+
 
                             If mode = PTrt.all Or
-                                (mode = PTrt.intern And Not role.isExtern) Or
-                                (mode = PTrt.extern And role.isExtern) Then
+                                (mode = PTrt.intern And Not roleIsExtern) Or
+                                (mode = PTrt.extern And roleIsExtern) Then
 
                                 With role
                                     tagessatz = .tagessatzIntern

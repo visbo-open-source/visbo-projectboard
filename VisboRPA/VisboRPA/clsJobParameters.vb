@@ -106,6 +106,30 @@ Public Class clsJobParameters
         End Set
     End Property
 
+    Private _costNames As Collection
+    Public Property costNames As Collection
+        Get
+            costNames = _costNames
+        End Get
+        Set(value As Collection)
+            If Not IsNothing(value) Then
+                _costNames = value
+            End If
+        End Set
+    End Property
+
+    Private _revenueTitle As String
+    Public Property revenueTitle As String
+        Get
+            revenueTitle = _revenueTitle
+        End Get
+        Set(value As String)
+            If value <> "" Then
+                _revenueTitle = value
+            End If
+        End Set
+    End Property
+
     Public ReadOnly Property getMilestoneNames() As List(Of String)
         Get
             Dim result As New List(Of String)
@@ -304,6 +328,8 @@ Public Class clsJobParameters
         _milestones = New Collection
         _phases = New Collection
         _roleNames = New Collection
+        _costNames = New Collection
+        _revenueTitle = "Revenue/Benefit"
         kennung = PTRpa.visboUnknown
 
         _projectVariantName = "Var1"

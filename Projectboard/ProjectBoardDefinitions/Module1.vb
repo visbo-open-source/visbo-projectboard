@@ -9399,6 +9399,8 @@ Public Module Module1
                                        ByVal msName As String,
                                        ByVal msNameID As String)
 
+        currentCell.NumberFormat = "@"
+
         ' Phasen-Name 
         currentCell.Value = msName
         '    Den Indent schreiben 
@@ -9424,6 +9426,8 @@ Public Module Module1
                                           ByVal indentlevel As Integer,
                                           ByVal phaseName As String,
                                           ByVal phaseNameID As String)
+
+        currentCell.NumberFormat = "@"
         ' Phasen-Name 
         currentCell.Value = phaseName
         '    Den Indent schreiben 
@@ -9454,6 +9458,7 @@ Public Module Module1
                                           ByVal isProtectedbyOthers As Boolean,
                                           ByVal protectiontext As String)
 
+        currentCell.NumberFormat = "@"
         currentCell.Value = pName
         ' Kommentare löschen
         currentCell.ClearComments()
@@ -9519,6 +9524,7 @@ Public Module Module1
         ' Jetzt wird die Zelle geschrieben 
 
         With currentRange.Cells(1, 1)
+            .NumberFormat = "@"
             .Value = rcName
             .Locked = isLocked
             .IndentLevel = indentlevel

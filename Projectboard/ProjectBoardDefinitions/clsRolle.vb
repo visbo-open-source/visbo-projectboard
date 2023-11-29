@@ -239,7 +239,9 @@ Public Class clsRolle
     ''' <returns></returns>
     Public ReadOnly Property isExtern() As Boolean
         Get
-            isExtern = RoleDefinitions.getRoleDefByID(_uid).isExternRole
+            'isExtern = RoleDefinitions.getRoleDefByID(_uid).isExternRole
+            ' if _uid is combinedrole it is only extern if all childs are being externs
+            isExtern = RoleDefinitions.isExtern(_uid)
         End Get
     End Property
 

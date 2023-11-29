@@ -1680,6 +1680,7 @@ Module rpaModule1
                                 isCompleteAbsolut = isCompleteAbsolut And False
                                 If CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 1 And
                                     CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 Then
+                                    atLeastOnePercentLine = True
                                     isCompletePercent = isCompletePercent And True
                                 Else
                                     isCompletePercent = isCompletePercent And False
@@ -1697,13 +1698,15 @@ Module rpaModule1
 
                     Next
 
-                    If isCompletePercent Then
-                        atLeastOnePercentLine = True
-                    ElseIf Not isCompleteAbsolut Then
-                        ' then there is something foul ..
-                        verifiedStructure = False
-                        Exit For
-                    End If
+                    'If isCompletePercent Then
+                    '    verifiedStructure = True
+                    'ElseIf isCompleteAbsolut Then
+                    '    verifiedStructure = True
+                    'ElseIf Not isCompleteAbsolut Then
+                    '    ' then there is something foul ..
+                    '    verifiedStructure = False
+                    '    Exit For
+                    'End If
 
                 Next
 

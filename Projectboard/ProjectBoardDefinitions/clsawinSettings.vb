@@ -348,7 +348,8 @@ Public Class clsawinSettings
         _ExternRessourcesWithActualData = False
 
         ' tk added 25.12.21
-        _noNewCalculation = False
+        '_noNewCalculation = False
+        _noNewCalculation = True
 
         ' tk added 3.1.22 , to distinguish between total Project and Phase values comparison
         ' applies only to massEdit: Soll-Ist Vergleich 
@@ -410,7 +411,9 @@ Public Class clsawinSettings
         _showElementNames = False
 
         'ur: 20220608
-        _autoAjustChilds = True
+        '_autoAjustChilds = True
+        ' tk 29.11.23
+        _autoAjustChilds = False
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0

@@ -5666,9 +5666,11 @@ Public Module agm3
 
         Dim pName As String = ""
         Dim vName As String = ""
-        Dim startDate As Date = Nothing
+        Dim vNameToCreate As String = ""
+
+        Dim startDate As Date = Date.MinValue
         Dim startAndEndDate As String = ""
-        Dim endDate As Date = Nothing
+        Dim endDate As Date = Date.MinValue
         Dim creationDate As Date = Nothing
         Dim pNr As String = ""
         Dim pTemplate As String = ""
@@ -5681,10 +5683,15 @@ Public Module agm3
         Dim businessUnit As String = ""
         Dim responsiblePerson As String = ""
 
+        Dim atLeastOneRole As Boolean = False
+        Dim atleastOneCost As Boolean = False
+
         Dim projectDimension As Integer = 0
 
         Dim phaseRoleValues As New SortedList(Of String, SortedList(Of String, Double))
         Dim phaseCostValues As New SortedList(Of String, SortedList(Of String, Double))
+
+
         'Dim invoiceMilestones As New SortedList(Of Date, KeyValuePair(Of String, Double))
         'Dim phaseDates As New SortedList(Of String, Date())
 
@@ -5693,13 +5700,15 @@ Public Module agm3
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
                 Try
 
+                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
+
                     appInstance.DisplayAlerts = False
                     projectWB = appInstance.Workbooks.Open(tmpDatei, UpdateLinks:=0)
                     projectWB.Final = False
                     appInstance.DisplayAlerts = True
 
-                    projectWB = appInstance.Workbooks.Open(tmpDatei)
-                    Dim dateiName As String = My.Computer.FileSystem.GetName(tmpDatei)
+                    'projectWB = appInstance.Workbooks.Open(tmpDatei)
+
                     '
                     ' Start protokollieren 
                     outputline = "Start Import Calculation Template : " & tmpDatei
@@ -5742,7 +5751,7 @@ Public Module agm3
                     Dim skDefinition As clsConfigProjectsImport = projectConfig("SonstKosten")
 
                     Dim anzZeilen As Integer = 0
-                    Dim myValue As String = ""
+                    Dim myTaskName As String = ""
 
                     ' read PName 
                     currentWS = projectWB.Worksheets(pNameDefinition.sheetDescript)
@@ -5770,6 +5779,7 @@ Public Module agm3
                     startAndEndDate = currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value
                     ' check whether it contains something at all 
                     If Not IsNothing(startAndEndDate) Then
+
                         If startAndEndDate.Trim.Length > 0 Then
                             Dim hstr() As String = Split(startAndEndDate, "-")
                             If hstr.Length = 2 Then
@@ -5785,25 +5795,13 @@ Public Module agm3
                                 Throw New Exception(outputline)
                             End If
                         End If
+
                     End If
 
 
 
                     ' read Datum: 
                     creationDate = Date.Now
-                    'Try
-                    '    currentWS = projectWB.Worksheets(datumsDefinition.sheetDescript)
-                    '    searchColNr = datumsDefinition.column.von
-                    '    searchColumn = currentWS.Columns(searchColNr)
-                    '    myRowNr = searchColumn.Find(What:=datumsDefinition.Identifier).Row
-                    '    offsets = datumsDefinition.getRowColumnOffset
-                    '    creationDate = CDate(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
-                    'Catch ex As Exception
-
-                    '    creationDate = Date.Now
-
-                    'End Try
-
 
 
                     ' read VariantName 
@@ -5845,6 +5843,11 @@ Public Module agm3
                         pNr = ""
                     End Try
 
+                    ' now determine whether or not this project(-variant) already exists 
+                    ' projectInDB = Nothing, if it does not exist
+
+                    Dim projectInDB As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now)
+
 
                     ' read Projekt-Beschreibung
                     currentWS = projectWB.Worksheets(pDescriptDefinition.sheetDescript)
@@ -5852,385 +5855,439 @@ Public Module agm3
                     searchColumn = currentWS.Columns(searchColNr)
                     myRowNr = searchColumn.Find(What:=pDescriptDefinition.Identifier).Row
                     offsets = pDescriptDefinition.getRowColumnOffset
+
                     If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
                         pDescription = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
                     Else
                         pDescription = ""
                     End If
 
-                    ' read Budget of Project 
-                    Try
-                        currentWS = projectWB.Worksheets(pTotalBudget.sheetDescript)
-                        searchColNr = pTotalBudget.column.von
-                        searchColumn = currentWS.Columns(searchColNr)
-                        myRowNr = searchColumn.Find(What:=pTotalBudget.Identifier).Row
-                        offsets = pTotalBudget.getRowColumnOffset
-                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                            budget = CDbl(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                    ' all the follwoing is only necessary if projectInDB does not yet exist
+
+                    If IsNothing(projectInDB) And vName <> "" Then
+                        projectInDB = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now)
+                        If Not IsNothing(projectInDB) Then
+                            projectInDB = projectInDB.createVariant(vName, "created by RPA")
                         Else
-                            budget = 0.0
-                        End If
-                    Catch ex As Exception
-                        budget = 0.0
-                    End Try
-
-
-                    ' read profit of Project - no budget may be provided 
-                    Try
-                        currentWS = projectWB.Worksheets(pProfit.sheetDescript)
-                        searchColNr = pProfit.column.von
-                        searchColumn = currentWS.Columns(searchColNr)
-                        myRowNr = searchColumn.Find(What:=pProfit.Identifier).Row
-                        offsets = pProfit.getRowColumnOffset
-                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                            profit = CDbl(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
-                        Else
-                            profit = -1.0
-                        End If
-                    Catch ex As Exception
-                        profit = -1.0
-                    End Try
-
-
-                    ' read Projekt-Template
-                    currentWS = projectWB.Worksheets(pTemplateDefinition.sheetDescript)
-                    searchColNr = pTemplateDefinition.column.von
-                    searchColumn = currentWS.Columns(searchColNr)
-                    myRowNr = searchColumn.Find(What:=pTemplateDefinition.Identifier).Row
-                    offsets = pTemplateDefinition.getRowColumnOffset
-                    If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
-                        pTemplate = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
-                    Else
-                        If awinSettings.englishLanguage Then
-                            outputline = "There is no project template given! "
-                        Else
-                            outputline = "Die Projektvorlage wurde nicht angegeben! "
-                        End If
-                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
-                        pTemplate = ""
-                    End If
-
-
-
-                    ' now check whether pName, vName already exists ... 
-                    Dim standInDBvname As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, Date.Now, pNr)
-                    Dim standInDB As clsProjekt = Nothing
-
-                    If vName = "" Then
-                        standInDB = standInDBvname
-                    Else
-                        standInDB = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, pNr)
-                        ' if vname is given , but there is no standard project yet: 
-                        ' set vname = emtpy string 
-                        If IsNothing(standInDB) Then
+                            ' if there is no project at all in DB with the given name, then a new project with vname = "" is created
+                            If awinSettings.englishLanguage Then
+                                outputline = "Variants can only be created for existing projects - variant name ignored " & vName
+                            Else
+                                outputline = "Varianten können nur zu existierenden Projekten angelegt werden - Varianten-Name wurde ignoriert " & vName
+                            End If
+                            Call logger(ptErrLevel.logWarning, outputline, "readCostAssertionWithConfig", 0)
                             vName = ""
                         End If
                     End If
 
-                    Dim hproj As clsProjekt = Nothing
+                    If IsNothing(projectInDB) Then
 
-                    If Not IsNothing(standInDBvname) Then
-                        ' then the project resp. project-variant is updated ... 
-                        If awinSettings.englishLanguage Then
-                            outputline = "project updated : " & standInDBvname.getShapeText
-                        Else
-                            outputline = "Projekt aktualisiert : " & standInDBvname.getShapeText
-                        End If
-                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
-                    ElseIf Not IsNothing(standInDB) And vName <> "" Then
-                        ' then a new variant is created based on the base variant
-                        standInDBvname = standInDB.createVariant(vName, "")
-                    End If
-
-                    If IsNothing(standInDBvname) Then
-                        ' now there has to exist a template, if not then exit with throw exception 
-                        ' because then there is no project already as base and there is no template a project may be created from
-                        If Not Projektvorlagen.Contains(pTemplate) Then
-                            If awinSettings.englishLanguage Then
-                                outputline = "The project template '" & pTemplate & "' does not exist "
+                        ' read Budget of Project 
+                        Try
+                            If Not ISNothing(pTotalBudget) Then
+                                currentWS = projectWB.Worksheets(pTotalBudget.sheetDescript)
+                                searchColNr = pTotalBudget.column.von
+                                searchColumn = currentWS.Columns(searchColNr)
+                                myRowNr = searchColumn.Find(What:=pTotalBudget.Identifier).Row
+                                offsets = pTotalBudget.getRowColumnOffset
+                                If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                                    budget = CDbl(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                                Else
+                                    budget = 0.0
+                                End If
                             Else
-                                outputline = "Die Projektvorlage '" & pTemplate & "' existiert nicht"
+                                budget = 0.0
+                            End If
+
+                        Catch ex As Exception
+                            budget = 0.0
+                        End Try
+
+
+                        ' read profit of Project - no budget may be provided 
+                        Try
+                            If Not IsNothing(pProfit) Then
+                                currentWS = projectWB.Worksheets(pProfit.sheetDescript)
+                                searchColNr = pProfit.column.von
+                                searchColumn = currentWS.Columns(searchColNr)
+                                myRowNr = searchColumn.Find(What:=pProfit.Identifier).Row
+                                offsets = pProfit.getRowColumnOffset
+                                If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+                                    profit = CDbl(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value)
+                                Else
+                                    profit = -1.0
+                                End If
+                            Else
+                                profit = -1.0
+                            End If
+
+                        Catch ex As Exception
+                            profit = -1.0
+                        End Try
+
+
+                        ' read Projekt-Template
+                        currentWS = projectWB.Worksheets(pTemplateDefinition.sheetDescript)
+                        searchColNr = pTemplateDefinition.column.von
+                        searchColumn = currentWS.Columns(searchColNr)
+                        myRowNr = searchColumn.Find(What:=pTemplateDefinition.Identifier).Row
+                        offsets = pTemplateDefinition.getRowColumnOffset
+                        If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value) Then
+
+                            Try
+                                pTemplate = CStr(currentWS.Cells(myRowNr + offsets(0), searchColNr + offsets(1)).value).Trim
+                                If Projektvorlagen.Contains(pTemplate) Then
+                                    ' all ok
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Project Template does not exist: " & pTemplate
+                                    Else
+                                        outputline = "Projektvorlage existiert nicht: " & pTemplate
+                                    End If
+                                    Call logger(ptErrLevel.logWarning, outputline, "readCostAssertionWithConfig", 0)
+                                    pTemplate = ""
+                                End If
+                            Catch ex As Exception
+                                pTemplate = ""
+                            End Try
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "There is no project template given! "
+                            Else
+                                outputline = "Die Projektvorlage wurde nicht angegeben! "
                             End If
                             Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
-                            Throw New Exception(outputline)
+                            pTemplate = ""
                         End If
+
+
                     End If
 
+                    ' do only continue , if there is an existing projectInDB
+                    ' or there is an existing template, and both a Start- and End-Date  
 
-                    ' hier müssen nun die anderen Tabellenblätter geöffnet werden
+                    If Not IsNothing(projectInDB) Or
+                        (pTemplate <> "" And
+                        DateDiff(DateInterval.Day, StartofCalendar, startDate) >= 0 And
+                        DateDiff(DateInterval.Day, startDate, endDate) > 0) Then
 
-                    Dim phasenameCol As Integer = phaseNameDefinition.column.von
-                    Dim rolenameCol As Integer = ressourceDefinition.column.von
-                    Dim costNameCol As Integer = costTypeDefinition.column.von
-                    Dim hoursCol As Integer = pkDefinition.column.von
-                    Dim costCol As Integer = skDefinition.column.von
+                        ' hier müssen nun die anderen Tabellenblätter geöffnet werden
 
-                    Dim myPhaseName As String = ""
-                    Dim myOrgaUnit As String = ""
-                    Dim myRoleName As String = ""
-                    Dim myCostName As String = ""
-                    Dim myCostPercent As Double = 0.0
-                    Dim lfdNr As Integer = 0
+                        Dim phasenameCol As Integer = phaseNameDefinition.column.von
+                        Dim rolenameCol As Integer = ressourceDefinition.column.von
+                        Dim costNameCol As Integer = costTypeDefinition.column.von
+                        Dim hoursCol As Integer = pkDefinition.column.von
+                        Dim costCol As Integer = skDefinition.column.von
 
-                    Dim myHours As Double = 0.0
-                    Dim myEuros As Double = 0.0
+                        Dim myPhaseName As String = ""
+                        Dim myOrgaUnit As String = ""
+                        Dim myRoleName As String = ""
+                        Dim myCostName As String = ""
 
-                    Dim roleHoursList As New SortedList(Of String, Double)  ' hours je rolle
-                    Dim costEurosList As New SortedList(Of String, Double)  ' Euros je Kostenart
-                    Const topLevelRole = "."
+                        Dim lfdNr As Integer = 0
 
+                        Dim myHours As Double = 0.0
+                        Dim myEuros As Double = 0.0
 
-                    For Each currentWS In projectWB.Worksheets
-
-                        Dim sheetDescript As String = pkDefinition.sheetDescript.Trim("*")
-                        If currentWS.Name.Contains(sheetDescript) Then
-
-                            ' read Tasks: only where a task is mentioned, there will be personal- oder other Cost
-                            Dim taskColNr As Integer = taskDefinition.column.von
-
-                            ' verbundene Zellen trennen
-                            Dim lastrow As Integer = CInt(CType(currentWS.Cells(40000, taskColNr), Excel.Range).End(XlDirection.xlUp).Row)
-                            Dim verbRange As Excel.Range
-                            verbRange = currentWS.Range(currentWS.Cells(1, taskColNr), currentWS.Cells(lastrow, taskColNr + 2))
-                            verbRange.UnMerge()
-
-                            searchColumn = currentWS.Columns(taskColNr)
-                            myRowNr = searchColumn.Find(What:=taskDefinition.Identifier).Row
-                            offsets = taskDefinition.getRowColumnOffset
-
-                            If Not IsNothing(currentWS.Cells(myRowNr + offsets(0), taskColNr).value) Then
-                                myValue = CStr(currentWS.Cells(myRowNr + offsets(0), taskColNr).value).Trim
-                            End If
-
-                            Do While myValue <> trennZeichen And myRowNr < lastrow
-                                myRowNr = myRowNr + 1
-                                ' löschen der alten Werte
-                                myPhaseName = ""
-                                myOrgaUnit = ""
-                                myRoleName = ""
-                                myCostPercent = 0.0
-                                myHours = 0.0
-                                myEuros = 0.0
-                                Dim myRoleNameID As String = ""
-                                Dim mySkillID As Integer = -1
-
-                                Dim isCost As Boolean = False
-
-                                If awinSettings.visboDebug Then
-                                    If awinSettings.englishLanguage Then
-                                        outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
-                                    Else
-                                        outputline = currentWS.Name & ": Zeile Nr. " & myRowNr & " wird gelesen!"
-                                    End If
-                                    Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
-                                End If
+                        Dim roleHoursList As New SortedList(Of String, Double)  ' hours je rolle
+                        Dim costEurosList As New SortedList(Of String, Double)  ' Euros je Kostenart
+                        Const pointName = "."
 
 
-                                If Not IsNothing(currentWS.Cells(myRowNr, taskColNr).value) Then
-                                    myValue = CStr(currentWS.Cells(myRowNr, taskColNr).value).Trim
+                        ' now iterate through all the relevant sheets containing sheetDescript ... 
+                        For Each currentWS In projectWB.Worksheets
 
-                                    If myValue <> trennZeichen And myValue <> "" Then   ' es ist eine task angegeben
+                            ' re-set Print Area - otherwise cells can not be colored in case of error 
+                            Try
+                                currentWS.PageSetup.PrintArea = ""
+                            Catch ex As Exception
 
-                                        ' read the phase-Name 
-                                        If Not IsNothing(currentWS.Cells(myRowNr, phasenameCol).value) Then
-                                            myPhaseName = CStr(currentWS.Cells(myRowNr, phasenameCol).value).Trim
+                            End Try
 
+
+                            Dim sheetDescript As String = pkDefinition.sheetDescript.Trim("*")
+                            If currentWS.Name.Contains(sheetDescript) Then
+
+
+
+                                ' read Tasks: only where a task is mentioned, there will be personal- oder other Cost
+                                Dim taskColNr As Integer = taskDefinition.column.von
+
+                                ' verbundene Zellen trennen
+                                Dim lastrow As Integer = CInt(CType(currentWS.Cells(40000, taskColNr), Excel.Range).End(XlDirection.xlUp).Row)
+
+                                ' now if it is merged , then unmerge
+                                Try
+                                    Dim verbRange As Excel.Range
+                                    verbRange = currentWS.Range(currentWS.Cells(1, taskColNr), currentWS.Cells(lastrow, taskColNr + 2))
+                                    verbRange.UnMerge()
+                                Catch ex As Exception
+
+                                End Try
+
+
+                                searchColumn = currentWS.Columns(taskColNr)
+                                offsets = taskDefinition.getRowColumnOffset
+                                Try
+                                    myRowNr = searchColumn.Find(What:=taskDefinition.Identifier).Row + offsets(0)
+                                Catch ex As Exception
+                                    myRowNr = -1
+
+                                    If awinSettings.visboDebug Then
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "No Task Infos in Column " & taskColNr
                                         Else
+                                            outputline = "No Task Infos in Column " & taskColNr
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logger(ptErrLevel.logError, outputline, currentWS.Name, anzFehler)
+                                    End If
+                                End Try
 
+                                If myRowNr > 0 Then
+                                    If Not IsNothing(currentWS.Cells(myRowNr, taskColNr).value) Then
+                                        myTaskName = CStr(currentWS.Cells(myRowNr, taskColNr).value).Trim
+                                    End If
+
+
+                                    ' Loop through all lines of sheet
+                                    Do While myTaskName <> trennZeichen And myRowNr < lastrow
+
+                                        ' löschen der alten Werte
+                                        myPhaseName = ""
+                                        myOrgaUnit = ""
+                                        myRoleName = ""
+                                        myCostName = ""
+
+                                        myHours = 0.0
+                                        myEuros = 0.0
+
+                                        Dim myRoleNameID As String = ""
+                                        Dim mySkillID As Integer = -1
+
+                                        Dim isCost As Boolean = False
+
+                                        If awinSettings.visboDebug Then
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "Reading " & currentWS.Name & ": Line No. " & myRowNr
+                                            Else
+                                                outputline = currentWS.Name & ": Zeile Nr. " & myRowNr & " wird gelesen!"
+                                            End If
+                                            Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
                                         End If
 
-                                        ' Initialisierung der Listen für RollenStunden und KostenEuros
-                                        If myPhaseName <> "" Then
-                                            ' hier werden die RollenStunden aufgesammelt, je Phase
-                                            If Not phaseRoleValues.ContainsKey(myPhaseName) Then
-                                                roleHoursList = New SortedList(Of String, Double) ' liste mit den aufsummierten Hours je Rolle
-                                                phaseRoleValues.Add(myPhaseName, roleHoursList)   ' hier werden je Phase die RollenHours und KostenEuros aufgesammelt
-                                            Else
-                                                roleHoursList = phaseRoleValues.Item(myPhaseName)
-                                            End If
 
-                                            If Not phaseCostValues.ContainsKey(myPhaseName) Then
-                                                costEurosList = New SortedList(Of String, Double) ' liste mit den aufsummierten T€ je Kostenart 
-                                                phaseCostValues.Add(myPhaseName, costEurosList)   ' 
-                                            Else
-                                                costEurosList = phaseCostValues.Item(myPhaseName)
-                                            End If
+                                        If Not IsNothing(currentWS.Cells(myRowNr, taskColNr).value) Then
 
-                                        End If
+                                            myTaskName = CStr(currentWS.Cells(myRowNr, taskColNr).value).Trim
 
-                                        ' read Role 
-                                        If Not IsNothing(currentWS.Cells(myRowNr, rolenameCol).value) Then
-                                            myRoleName = CStr(currentWS.Cells(myRowNr, rolenameCol).value).Trim
-                                            If myRoleName = topLevelRole Then
-                                                myRoleName = RoleDefinitions.getDefaultTopNodeName
-                                            End If
+                                            If myTaskName <> trennZeichen And myTaskName <> "" Then   ' es ist eine task angegeben
 
-                                            If myRoleName <> "" Then
+                                                Dim validValueCombination As Boolean = False
 
-                                                ' find out whether it is a role, skill or cost-definition
-                                                If RoleDefinitions.containsName(myRoleName) Then
-                                                    ' skill or role 
-                                                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
-                                                    If tmpRole.isSkill Then
-                                                        Dim containingRoleUid As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(tmpRole.UID).UID
-                                                        myRoleNameID = RoleDefinitions.bestimmeRoleNameID(containingRoleUid, tmpRole.UID)
-                                                    Else
-                                                        myRoleNameID = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, -1)
-                                                    End If
+                                                ' read the phase-Name 
+                                                If Not IsNothing(currentWS.Cells(myRowNr, phasenameCol).value) Then
+                                                    myPhaseName = CStr(currentWS.Cells(myRowNr, phasenameCol).value).Trim
                                                 Else
-                                                    If CostDefinitions.containsName(myRoleName) Then
-                                                        isCost = True
-                                                        myCostName = myRoleName
-                                                    Else
-                                                        ' Protocol warning and iterate loop  
+                                                    myPhaseName = ""
+                                                End If
+
+                                                ' read myRoleName, define roleNameID
+                                                If Not IsNothing(currentWS.Cells(myRowNr, rolenameCol).value) Then
+
+                                                    myRoleName = CStr(currentWS.Cells(myRowNr, rolenameCol).value).Trim
+
+                                                    If myRoleName = pointName Then
+                                                        myRoleName = RoleDefinitions.getDefaultTopNodeName
                                                     End If
+
+                                                    If Not RoleDefinitions.containsName(myRoleName) Then
+                                                        CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                                        myRoleName = ""
+                                                    Else
+                                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(myRoleName)
+                                                        If tmpRole.isSkill Then
+                                                            Dim containingRoleUid As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(tmpRole.UID).UID
+                                                            myRoleNameID = RoleDefinitions.bestimmeRoleNameID(containingRoleUid, tmpRole.UID)
+                                                        Else
+                                                            myRoleNameID = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, -1)
+                                                        End If
+                                                    End If
+
+                                                Else
                                                     myRoleName = ""
                                                 End If
 
-                                            End If
-                                        End If
+                                                ' read myCostName
+                                                If Not IsNothing(currentWS.Cells(myRowNr, costNameCol).value) Then
 
-                                        ' read Hours
-                                        'myHours = currentWS.Cells(myRowNr, hoursCol).value
-                                        If Not IsNothing(currentWS.Cells(myRowNr, hoursCol).value) And IsNumeric(currentWS.Cells(myRowNr, hoursCol).value) Then
-                                            If Not isCost Then
-                                                myHours = CDbl(currentWS.Cells(myRowNr, hoursCol).value)
-                                            End If
-                                        Else
-                                            myHours = 0.0
-                                        End If
+                                                    myCostName = CStr(currentWS.Cells(myRowNr, costNameCol).value).Trim
 
+                                                    If myCostName = pointName Then
 
-                                        If Not IsNothing(currentWS.Cells(myRowNr, costCol).value) And IsNumeric(currentWS.Cells(myRowNr, costCol).value) Then
-                                            myEuros = CDbl(currentWS.Cells(myRowNr, costCol).value)
-                                        Else
-                                            myEuros = 0.0
-                                        End If
+                                                        If CostDefinitions.Count > 1 Then
+                                                            If CostDefinitions.containsUid(1) Then
+                                                                myCostName = CostDefinitions.getCostDefByID(1).name
+                                                            Else
+                                                                myCostName = ""
+                                                            End If
 
-                                        If myPhaseName = "" Then
-                                            If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
-                                                outputline = currentWS.Name & ": Phasename in Line " & myRowNr & " is not defined: " & myPhaseName.Trim
-                                                meldungen.Add(outputline)
-                                                Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
-
-                                                ' zurücksetzen des Druckbereichs - es können die fehlerhaften Felder ansonsten nicht eingefärbt werden
-                                                currentWS.PageSetup.PrintArea = ""
-                                                CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                            End If
-                                        End If
-
-                                        If myRoleNameID = "" And myCostName = "" Then
-                                            If myHours > 0.0 Or (myEuros > 0.0 And myCostPercent > 0.0) Then
-
-                                                outputline = currentWS.Name & ": Role / Cost in Line " & myRowNr & " is not defined / known: "
-                                                meldungen.Add(outputline)
-                                                Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", anzFehler)
-
-                                                ' zurücksetzen des Druckbereichs - es können die fehlerhaften Felder ansonsten nicht eingefärbt werden
-                                                currentWS.PageSetup.PrintArea = ""
-                                                CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-
-                                            End If
-                                        End If
-
-                                        If myPhaseName <> "" Then
-                                            If myRoleNameID <> "" Then
-                                                If RoleDefinitions.containsNameOrID(myRoleNameID) Then
-                                                    Dim myAddHours As Double = 0.0
-                                                    If myEuros > 0.0 Then
-                                                        Dim roledef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myRoleNameID, mySkillID)
-                                                        Dim anzPT As Double
-                                                        If mySkillID > 0 Then
-                                                            Dim skillDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(mySkillID)
-                                                            anzPT = myEuros / skillDef.tagessatzIntern
                                                         Else
-                                                            anzPT = myEuros / roledef.tagessatzIntern
+                                                            myCostName = ""
                                                         End If
-                                                        myAddHours = anzPT * hoursPerDay
+
                                                     End If
 
-                                                    If roleHoursList.ContainsKey(myRoleNameID) Then
-                                                        roleHoursList.Item(myRoleNameID) = roleHoursList.Item(myRoleNameID) + myAddHours + myHours
-                                                    Else
-                                                        roleHoursList.Add(myRoleNameID, myAddHours + myHours)
+                                                    If Not CostDefinitions.containsName(myCostName) Then
+                                                        CType(currentWS.Cells(myRowNr, rolenameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                                        myCostName = ""
                                                     End If
+
+                                                Else
+                                                    myCostName = ""
+                                                End If
+
+                                                ' read hours = value for my RoleName
+                                                If Not IsNothing(currentWS.Cells(myRowNr, hoursCol).value) Then
+                                                    If IsNumeric(currentWS.Cells(myRowNr, hoursCol).value) Then
+                                                        If CDbl(currentWS.Cells(myRowNr, hoursCol).value) > 0 Then
+                                                            myHours = CDbl(currentWS.Cells(myRowNr, hoursCol).value)
+                                                        End If
+                                                    End If
+                                                End If
+
+                                                ' read € = value for my CostName
+                                                If Not IsNothing(currentWS.Cells(myRowNr, costCol).value) Then
+                                                    If IsNumeric(currentWS.Cells(myRowNr, costCol).value) Then
+                                                        If CDbl(currentWS.Cells(myRowNr, costCol).value) > 0 Then
+                                                            myEuros = CDbl(currentWS.Cells(myRowNr, costCol).value) / 1000
+                                                        End If
+                                                    End If
+                                                End If
+
+                                                validValueCombination = myTaskName <> "" And
+                                                                    ((myRoleName <> "" And myHours > 0) Or (myCostName <> "" And myEuros > 0))
+
+                                                ' phase does exist, role and/or cost is defined with having values > 0 
+                                                If validValueCombination Then
+
+                                                    If myRoleNameID <> "" And myHours > 0 Then
+                                                        If Not phaseRoleValues.ContainsKey(myPhaseName) Then
+                                                            roleHoursList = New SortedList(Of String, Double) ' liste mit den aufsummierten Hours je Rolle
+                                                            phaseRoleValues.Add(myPhaseName, roleHoursList)   ' hier werden je Phase die RollenHours und KostenEuros aufgesammelt
+                                                        Else
+                                                            roleHoursList = phaseRoleValues.Item(myPhaseName)
+                                                        End If
+
+                                                        If roleHoursList.ContainsKey(myRoleNameID) Then
+                                                            roleHoursList.Item(myRoleNameID) = roleHoursList.Item(myRoleNameID) + myHours
+                                                        Else
+                                                            roleHoursList.Add(myRoleNameID, myHours)
+                                                        End If
+
+                                                        atLeastOneRole = True
+
+                                                    End If
+
+                                                    If myCostName <> "" And myEuros > 0 Then
+                                                        If Not phaseCostValues.ContainsKey(myPhaseName) Then
+                                                            costEurosList = New SortedList(Of String, Double) ' liste mit den aufsummierten T€ je Kostenart 
+                                                            phaseCostValues.Add(myPhaseName, costEurosList)   ' 
+                                                        Else
+                                                            costEurosList = phaseCostValues.Item(myPhaseName)
+                                                        End If
+
+                                                        If costEurosList.ContainsKey(myCostName) Then
+                                                            costEurosList.Item(myCostName) = costEurosList.Item(myCostName) + myEuros
+                                                        Else
+                                                            costEurosList.Add(myCostName, myEuros)
+                                                        End If
+
+                                                        atleastOneCost = True
+                                                    End If
+
 
                                                 End If
-                                            ElseIf myCostName <> "" And myEuros > 0.0 Then
-                                                If CostDefinitions.containsName(myCostName) Then
 
-                                                    If costEurosList.ContainsKey(myCostName) Then
-                                                        costEurosList.Item(myCostName) = costEurosList.Item(myCostName) + myEuros
-                                                    Else
-                                                        costEurosList.Add(myCostName, myEuros)
-                                                    End If
-
-                                                End If
                                             End If
+
                                         End If
 
-                                    Else
-                                        Dim a As Integer = 0
-                                    End If
+                                        myRowNr = myRowNr + 1
+
+                                    Loop
 
                                 End If
 
-                            Loop
 
+                            Else
+                                ' Tabellenblatt überspringen - do nothing
+                            End If
+
+                        Next
+
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputline = "Project does not exist and/or there is no existing template and date provided for " & pName
                         Else
-                            ' Tabellenblatt überspringen - do nothing
+                            outputline = "Projekt existiert nicht und/oder es wurde kein Template mit Start und Ende-Datum angegeben "
                         End If
-                    Next
+                        Call logger(ptErrLevel.logError, outputline, "readCostAssertionWithConfig", 0)
+                    End If
+
 
 
                     ' Excel workbook schließen
                     If Not IsNothing(projectWB) Then
                         appInstance.Workbooks(projectWB.Name).Close(SaveChanges:=True)
+                        projectWB = Nothing
                     End If
 
                     ' now check whether or not the project , project variant did already exist 
                     ' and, if so, if the project needs to be adjusted to new start and end dates 
                     Dim newProj As clsProjekt = Nothing
 
-                    If IsNothing(standInDBvname) Then
+                    If IsNothing(projectInDB) Then
                         newProj = erstelleProjektAusVorlage(Nothing, pName, pTemplate, startDate, endDate, 0, 2, 5, 5, Nothing, pDescription, "", kdNr:=pNr)
                     Else
                         ' the project resp project variant does already exist, now check whether it needs to get new start and end date 
                         ' but only when there are no 
                         ' if project is already ordered or is having actualData then only end Date maybe changed, if project 
                         Try
-                            If standInDBvname.hasActualValues Then
+                            If projectInDB.hasActualValues Then
                                 ' if at all: only endDate may be prolonged 
-                                If DateDiff(DateInterval.Month, standInDBvname.actualDataUntil, endDate) > 0 Then
-                                    newProj = moveProject(standInDBvname, standInDBvname.startDate, endDate)
+                                If DateDiff(DateInterval.Month, projectInDB.actualDataUntil, endDate) > 0 Then
+                                    newProj = moveProject(projectInDB, projectInDB.startDate, endDate)
                                 Else
-                                    newProj = standInDBvname
+                                    newProj = projectInDB
                                 End If
                             Else
                                 Dim moveIT As Boolean = getColumnOfDate(startDate) >= 1 Or getColumnOfDate(endDate) > 1
                                 If moveIT Then
                                     ' did start or end date change at all ? 
                                     If getColumnOfDate(startDate) <= 0 Then
-                                        startDate = standInDBvname.startDate
+                                        startDate = projectInDB.startDate
                                     End If
                                     If getColumnOfDate(endDate) > 1 Then
-                                        endDate = standInDBvname.endeDate
+                                        endDate = projectInDB.endeDate
                                     End If
 
                                     ' now check whether it is necessary at all to move the project 
-                                    If DateDiff(DateInterval.Day, standInDBvname.startDate, startDate) <> 0 Or
-                                        DateDiff(DateInterval.Day, standInDBvname.endeDate, endDate) <> 0 Then
-                                        newProj = moveProject(standInDBvname, startDate, endDate)
+                                    If DateDiff(DateInterval.Day, projectInDB.startDate, startDate) <> 0 Or
+                                        DateDiff(DateInterval.Day, projectInDB.endeDate, endDate) <> 0 Then
+                                        newProj = moveProject(projectInDB, startDate, endDate)
                                     Else
-                                        newProj = standInDBvname
+                                        newProj = projectInDB
                                     End If
                                 Else
-                                    newProj = standInDBvname
+                                    newProj = projectInDB
                                 End If
 
                             End If
                         Catch ex As Exception
-                            newProj = standInDBvname
+                            newProj = projectInDB
                         End Try
 
                     End If
@@ -6242,8 +6299,14 @@ Public Module agm3
 
                     ' delete all roles and alle Rollen aus dem newProj herauslöschen
                     For Each ph In newProj.AllPhases
-                        ph.clearCosts()
-                        ph.clearRoles()
+                        If atleastOneCost Then
+                            ph.clearCosts()
+                        End If
+
+                        If atLeastOneRole Then
+                            ph.clearRoles()
+                        End If
+
                     Next
 
                     ' VariantenNamen richtig setzen
@@ -6342,9 +6405,32 @@ Public Module agm3
 
 
                         ' now protocol after project is created 
-                        outputline = "Project " & newProj.name & "PT Sum: " & prCheckSumPT.ToString("#.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & ";"
+                        outputline = "Project " & newProj.getShapeText & " --> PT Sum: " & prCheckSumPT.ToString("#0.##") & "; T€ Sum: " & prCheckSumTE.ToString("#.##") & ";"
                         Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
 
+                        ' now protocol roles and cost 
+                        For Each phaseRole As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseRoleValues
+                            For Each roleValue As KeyValuePair(Of String, Double) In phaseRole.Value
+
+                                Try
+                                    Dim teamID As Integer
+                                    Dim tmpRoleName As String = RoleDefinitions.getRoleDefByIDKennung(roleValue.Key, teamID).name
+                                    Dim myPDs As Double = roleValue.Value / 8
+                                    outputline = "Phase " & phaseRole.Key & " Rolle " & tmpRoleName & " --> PT Sum: " & myPDs.ToString("#0.##")
+                                    Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
+                                Catch ex As Exception
+
+                                End Try
+
+                            Next
+                        Next
+
+                        For Each phaseCost As KeyValuePair(Of String, SortedList(Of String, Double)) In phaseCostValues
+                            For Each costValue As KeyValuePair(Of String, Double) In phaseCost.Value
+                                outputline = "Phase " & phaseCost.Key & " Kostenart " & costValue.Key & " --> T€: " & costValue.Value.ToString("#0.##")
+                                Call logger(ptErrLevel.logInfo, outputline, "readCostAssertionWithConfig", anzFehler)
+                            Next
+                        Next
 
                         ' now for the purpose of projectboard 
                         newProj.movable = False
@@ -6362,6 +6448,7 @@ Public Module agm3
 
                     Dim stopp As Integer = 0
 
+
                 Catch ex As Exception
 
                     ' now close the Excel file 
@@ -6374,6 +6461,7 @@ Public Module agm3
                     result = False
                 End Try
             End If
+
         Catch ex As Exception
             Call logger(ptErrLevel.logError, ex.Message, "readCostAssertionWithConfig 2", anzFehler)
             meldungen.Add(ex.Message)

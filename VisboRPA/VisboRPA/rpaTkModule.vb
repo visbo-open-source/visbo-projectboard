@@ -780,6 +780,7 @@ Module rpaTkModule
                                     result.compareWithFirstBaseline = False
                                 End Try
 
+                                ' now read whether there are any roles to show in Report
                                 Try
                                     If Not IsNothing(.Cells(4, 2).value) Then
                                         Dim lastColumn As Integer = CType(.Cells(4, 300), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
@@ -804,6 +805,43 @@ Module rpaTkModule
 
                                 End Try
 
+                                ' now read whether there are any cost to show in Report
+                                Try
+                                    If Not IsNothing(.Cells(5, 2).value) Then
+                                        Dim lastColumn As Integer = CType(.Cells(5, 300), Global.Microsoft.Office.Interop.Excel.Range).End(xlns.XlDirection.xlToLeft).Column
+                                        Dim tmpCol As Integer = 2
+                                        Dim tmpCollection As New Collection
+                                        While tmpCol <= lastColumn
+                                            If Not IsNothing(CType(.Cells(5, tmpCol), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                Dim costName As String = CStr(CType(.Cells(5, tmpCol), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                                If CostDefinitions.containsName(costName) Then
+                                                    ' in Collection aufnehmen
+                                                    If Not tmpCollection.Contains(costName) Then
+                                                        tmpCollection.Add(costName, costName)
+                                                    End If
+                                                End If
+                                            End If
+                                            tmpCol = tmpCol + 1
+                                        End While
+                                        result.costNames = tmpCollection
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+
+                                ' now read whether there is a title given for the Revenue / Benefits column 
+                                Try
+                                    If Not IsNothing(CType(.Cells(6, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                        Dim revTitle As String = CStr(CType(.Cells(6, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                        If revTitle <> "" Then
+                                            result.revenueTitle = revTitle
+                                        End If
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
 
 
                             ElseIf blattName = "Parameters" Then
@@ -1945,8 +1983,7 @@ Module rpaTkModule
                 Call logger(ptErrLevel.logInfo, "creating report Actual vs Target:", " compare with last baseline ")
             End If
 
-            Call writeReportActualTarget(jobParameters.portfolioName, jobParameters.roleNames, myPortfolioVName:=jobParameters.portfolioVariantName,
-                                         compareWithFirstBaseline:=jobParameters.compareWithFirstBaseline)
+            Call writeReportActualTarget(jobParameters)
 
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "Calling Create Report Actual Vs Target", ex.Message)
@@ -3616,13 +3653,8 @@ Module rpaTkModule
     ''' <summary>
     ''' write a current vs actual report with regard to revenue, total cost and finish date
     ''' </summary>
-    ''' <param name="myPortfolioName"></param>
-    ''' <param name="myPortfolioVName"></param>
-    ''' <param name="compareWithFirstBaseline"></param>
-    Public Sub writeReportActualTarget(ByVal myPortfolioName As String,
-                                       ByVal listOfRoleNames As Collection,
-                                     Optional ByVal myPortfolioVName As String = "",
-                                     Optional compareWithFirstBaseline As Boolean = False)
+    ''' <param name="jobParameters">contains info about portfolioname, varian-Name, listOf Rolenames, costnames, revenueTitle and compareagainst first Baseline</param>
+    Public Sub writeReportActualTarget(ByVal jobParameters As clsJobParameters)
 
         Dim portfolio As clsConstellation = Nothing
         Dim err As New clsErrorCodeMsg
@@ -3633,6 +3665,15 @@ Module rpaTkModule
         Dim lastDayLastMonth As Date = heute.AddDays(-1 * heute.Day)
         Dim tmpVPID As String = ""
         Dim formatAreas(3, 1) As Integer
+
+        Dim myPortfolioName As String = jobParameters.portfolioName
+        Dim myPortfolioVName As String = jobParameters.portfolioVariantName
+        Dim compareWithFirstBaseline As Boolean = jobParameters.compareWithFirstBaseline
+
+        Dim listOfRoleNames As Collection = jobParameters.roleNames
+        Dim listOfCostNames As Collection = jobParameters.costNames
+
+        Dim revenueTitle As String = jobParameters.revenueTitle
 
         ' zeile der Area 1 
         formatAreas(0, 0) = 2
@@ -3738,43 +3779,57 @@ Module rpaTkModule
                 formatAreas(0, 1) = spalte
 
                 ' Total amount of PD 
-                ws.Cells(zeile, spalte).value = "Total Resource Needs [PD]"
+                ws.Cells(zeile, spalte).value = "Total Resource Needs [PD] (Current Plan)"
+                spalte = spalte + 1
+
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, spalte).value = "Total Resource Needs [PD] (First Baseline)"
+                Else
+                    ws.Cells(zeile, spalte).value = "Total Resource Needs (Last Baseline)"
+                End If
                 spalte = spalte + 1
 
                 ' now all the roleNames
                 For Each tmpRoleName As String In listOfRoleNames
-                    ws.Cells(zeile, spalte).value = tmpRoleName & " [PD]"
+                    ws.Cells(zeile, spalte).value = tmpRoleName & " [PD]  (Current Plan)"
+                    spalte = spalte + 1
+
+                    If compareWithFirstBaseline Then
+                        ws.Cells(zeile, spalte).value = tmpRoleName & " [PD] (First Baseline)"
+                    Else
+                        ws.Cells(zeile, spalte).value = tmpRoleName & " [PD] (Last Baseline)"
+                    End If
                     spalte = spalte + 1
                 Next
 
                 formatAreas(1, 1) = spalte
 
-                ' Enacted Savings Until Now
-                ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (Current Plan)"
+                ' ' Enacted Savings resp Revenue/Benefit Until Now
+                ws.Cells(zeile, spalte).value = revenueTitle & " Until " & lastDayLastMonth.ToShortDateString & " (Current Plan)"
                 spalte = spalte + 1
 
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (First Baseline)"
+                    ws.Cells(zeile, spalte).value = revenueTitle & " Until " & lastDayLastMonth.ToShortDateString & " (First Baseline)"
                 Else
-                    ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = revenueTitle & " Until " & lastDayLastMonth.ToShortDateString & " (Last Baseline)"
                 End If
                 spalte = spalte + 1
 
-                ws.Cells(zeile, spalte).value = "Enacted Savings Until " & lastDayLastMonth.ToShortDateString & " (Deviation)"
+                ws.Cells(zeile, spalte).value = revenueTitle & " Until " & lastDayLastMonth.ToShortDateString & " (Deviation)"
                 spalte = spalte + 1
 
-                ' Enacted Savings
-                ws.Cells(zeile, spalte).value = "Enacted Savings Total (Current Plan)"
+                ' Enacted Savings resp Revenue/Benefit
+                ws.Cells(zeile, spalte).value = revenueTitle & " Total (Current Plan)"
                 spalte = spalte + 1
 
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, spalte).value = "Enacted Savings Total (First Baseline)"
+                    ws.Cells(zeile, spalte).value = revenueTitle & " Total (First Baseline)"
                 Else
-                    ws.Cells(zeile, spalte).value = "Enacted Savings Total (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = revenueTitle & " Total (Last Baseline)"
                 End If
                 spalte = spalte + 1
 
-                ws.Cells(zeile, spalte).value = "Enacted Savings Total (Deviation)"
+                ws.Cells(zeile, spalte).value = revenueTitle & " Total (Deviation)"
                 spalte = spalte + 1
 
                 formatAreas(2, 1) = spalte
@@ -3800,19 +3855,55 @@ Module rpaTkModule
 
                 formatAreas(3, 1) = spalte
 
-                ' Cost until now 
-                ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (Current Plan)"
+                ' Sum Other cost 
+                ws.Cells(zeile, spalte).value = "Sum Non Personell Cost (Current Plan)"
                 spalte = spalte + 1
 
                 If compareWithFirstBaseline Then
-                    ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (First Baseline)"
+                    ws.Cells(zeile, spalte).value = "Sum Non Personell Cost (First Baseline)"
                 Else
-                    ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (Last Baseline)"
+                    ws.Cells(zeile, spalte).value = "Sum Non Personell Cost (Last Baseline)"
                 End If
                 spalte = spalte + 1
 
-                ws.Cells(zeile, spalte).value = "Cost until " & lastDayLastMonth.ToShortDateString & " (Deviation)"
+                ' now all the costNames
+                For Each tmpCostName As String In listOfCostNames
+                    ws.Cells(zeile, spalte).value = tmpCostName & " (Current Plan)"
+                    spalte = spalte + 1
+
+                    If compareWithFirstBaseline Then
+                        ws.Cells(zeile, spalte).value = tmpCostName & " (First Baseline)"
+                    Else
+                        ws.Cells(zeile, spalte).value = tmpCostName & " (Last Baseline)"
+                    End If
+                    spalte = spalte + 1
+                Next
+
+                ' Sum all personell extern cost, i.e allPersonalKosten, but without interns
+                ws.Cells(zeile, spalte).value = "Sum Extern Personell Cost (Current Plan)"
                 spalte = spalte + 1
+
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, spalte).value = "Sum Extern Personell Cost (First Baseline)"
+                Else
+                    ws.Cells(zeile, spalte).value = "Sum Extern Personell Cost (Last Baseline)"
+                End If
+                spalte = spalte + 1
+
+                ' Cost until now 
+                ws.Cells(zeile, spalte).value = "Total Cost until " & lastDayLastMonth.ToShortDateString & " (Current Plan)"
+                spalte = spalte + 1
+
+                If compareWithFirstBaseline Then
+                    ws.Cells(zeile, spalte).value = "Total Cost until " & lastDayLastMonth.ToShortDateString & " (First Baseline)"
+                Else
+                    ws.Cells(zeile, spalte).value = "Total Cost until " & lastDayLastMonth.ToShortDateString & " (Last Baseline)"
+                End If
+                spalte = spalte + 1
+
+                ws.Cells(zeile, spalte).value = "Total Cost until " & lastDayLastMonth.ToShortDateString & " (Deviation)"
+                spalte = spalte + 1
+
 
                 ' Total Cost 
                 ws.Cells(zeile, spalte).value = "Total Cost (Current Plan)"
@@ -3891,7 +3982,6 @@ Module rpaTkModule
                             Next
 
                             ' Total amount of PD 
-
                             Dim topRole As String = RoleDefinitions.getDefaultTopNodeName()
                             Dim roleAmount As Double
                             Try
@@ -3902,6 +3992,21 @@ Module rpaTkModule
                             End Try
                             spalte = spalte + 1
 
+                            Try
+
+                                If Not IsNothing(baseline) Then
+                                    roleAmount = baseline.getRessourcenBedarf(topRole, inclSubRoles:=True).Sum
+                                    ws.Cells(zeile, spalte).value = roleAmount
+                                Else
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                End If
+
+                            Catch ex As Exception
+                                ws.Cells(zeile, spalte).value = "n.a"
+                            End Try
+
+                            spalte = spalte + 1
+
                             ' now all the roleNames
                             For Each tmpRoleName As String In listOfRoleNames
                                 Try
@@ -3910,6 +4015,21 @@ Module rpaTkModule
                                 Catch ex As Exception
                                     ws.Cells(zeile, spalte).value = "n.a"
                                 End Try
+
+                                spalte = spalte + 1
+
+                                Try
+                                    If Not IsNothing(baseline) Then
+                                        roleAmount = baseline.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
+                                        ws.Cells(zeile, spalte).value = roleAmount
+                                    Else
+                                        ws.Cells(zeile, spalte).value = "n.a"
+                                    End If
+
+                                Catch ex As Exception
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                End Try
+
                                 spalte = spalte + 1
                             Next
 
@@ -3993,6 +4113,93 @@ Module rpaTkModule
                                 ws.Cells(zeile, spalte).value = "n.a"
                                 spalte = spalte + 1
                             End If
+
+                            ' start
+
+                            ' Sum Other cost 
+                            Try
+                                planValue = 1000 * hproj.getGesamtAndereKosten.Sum
+                            Catch ex As Exception
+
+                            End Try
+
+                            ws.Cells(zeile, spalte).value = planValue
+                            spalte = spalte + 1
+
+                            If Not IsNothing(baseline) Then
+                                baselineValue = 1000 * baseline.getGesamtAndereKosten.Sum
+                                ws.Cells(zeile, spalte).value = baselineValue
+                            Else
+                                ws.Cells(zeile, spalte).value = "n.a"
+                            End If
+                            spalte = spalte + 1
+
+
+                            ' now all the costNames
+                            For Each tmpCostName As String In listOfCostNames
+
+                                planValue = 1000 * hproj.getKostenBedarf(tmpCostName).Sum
+                                ws.Cells(zeile, spalte).value = planValue
+                                spalte = spalte + 1
+
+                                If Not IsNothing(baseline) Then
+                                    baselineValue = 1000 * baseline.getKostenBedarf(tmpCostName).Sum
+                                    ws.Cells(zeile, spalte).value = baselineValue
+                                Else
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                End If
+                                spalte = spalte + 1
+                            Next
+                            ' end
+
+                            ' Sum Ext Personell cost 
+                            Try
+                                planValue = 1000 * hproj.getAllPersonalKosten(mode:=PTrt.extern).Sum
+                                ws.Cells(zeile, spalte).value = planValue
+
+                                Dim checkValue1 As Double = 1000 * hproj.getAllPersonalKosten(mode:=PTrt.intern).Sum
+                                Dim checkValue2 As Double = 1000 * hproj.getAllPersonalKosten.Sum
+
+                                If System.Math.Abs(checkValue2 - (planValue + checkValue1)) >= 0.01 Then
+                                    Dim msgTxt As String = "MisMatch Sum of intern and extern personell cost of plan does not equal total personell cost " & hproj.name
+                                    Call logger(ptErrLevel.logError, "write Report Actual Target ", msgTxt)
+                                End If
+
+                            Catch ex As Exception
+                                Dim msgTxt As String = "Error when calculating plan ext cost ... " & hproj.name & ex.Message
+                                Call logger(ptErrLevel.logError, "write Report Actual Target ", msgTxt)
+                            End Try
+
+
+                            spalte = spalte + 1
+
+
+                            Try
+                                If Not IsNothing(baseline) Then
+                                    baselineValue = 1000 * baseline.getAllPersonalKosten(mode:=PTrt.extern).Sum
+                                    ws.Cells(zeile, spalte).value = baselineValue
+
+
+                                    Dim checkValue1 As Double = 1000 * baseline.getAllPersonalKosten(mode:=PTrt.intern).Sum
+                                    Dim checkValue2 As Double = 1000 * baseline.getAllPersonalKosten.Sum
+
+                                    If System.Math.Abs(checkValue2 - (planValue + checkValue1)) >= 0.01 Then
+                                        Dim msgTxt As String = "MisMatch Sum of intern and extern personell cost of baseline does not equal total personell cost " & hproj.name
+                                        Call logger(ptErrLevel.logError, "write Report Actual Target ", msgTxt)
+                                    End If
+
+                                Else
+                                    ws.Cells(zeile, spalte).value = "n.a"
+                                End If
+
+                            Catch ex As Exception
+                                Dim msgTxt As String = "Error when calculating baseline ext cost ... " & baseline.name & ex.Message
+                                Call logger(ptErrLevel.logError, "write Report Actual Target ", msgTxt)
+                            End Try
+
+
+                            spalte = spalte + 1
+
 
                             ' Cost until now 
                             Try
@@ -4084,10 +4291,10 @@ Module rpaTkModule
                     With ws
                         Dim rng As xlns.Range = .Range(.Cells(2, 5), .Cells(lastRow, 6))
                         Dim rng0 As xlns.Range = .Range(.Cells(2, 9), .Cells(lastRow, 10))
-                        Dim rng1 As xlns.Range = .Range(.Cells(formatAreas(0, 0), formatAreas(0, 1)), .Cells(lastRow, formatAreas(0, 1) + listOfRoleNames.Count))
+                        Dim rng1 As xlns.Range = .Range(.Cells(formatAreas(0, 0), formatAreas(0, 1)), .Cells(lastRow, formatAreas(0, 1) + 1 + 2 * listOfRoleNames.Count))
                         Dim rng2 As xlns.Range = .Range(.Cells(formatAreas(1, 0), formatAreas(1, 1)), .Cells(lastRow, formatAreas(1, 1) + 5))
                         Dim rng3 As xlns.Range = .Range(.Cells(formatAreas(2, 0), formatAreas(2, 1)), .Cells(lastRow, formatAreas(2, 1) + 2))
-                        Dim rng4 As xlns.Range = .Range(.Cells(formatAreas(3, 0), formatAreas(3, 1)), .Cells(lastRow, formatAreas(3, 1) + 5))
+                        Dim rng4 As xlns.Range = .Range(.Cells(formatAreas(3, 0), formatAreas(3, 1)), .Cells(lastRow, formatAreas(3, 1) + 9 + 2 * listOfCostNames.Count))
                         rng.NumberFormat = "0.00"
                         rng0.NumberFormat = "dd/mm/yy;@"
                         rng1.NumberFormat = "0.00"

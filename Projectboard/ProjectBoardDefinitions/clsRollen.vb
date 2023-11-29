@@ -2004,6 +2004,54 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' returns whether or not a certain role is extern; if it is a person, it returns true if the person is extern
+    ''' if it is a combined role, it returns true if all childs of that role are externs, otherwise false
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property isExtern(ByVal uid As Integer) As Boolean
+        Get
+            Dim result As Boolean = False
+
+            If _allRollen.ContainsKey(uid) Then
+                Dim myRole As clsRollenDefinition = _allRollen.Item(uid)
+
+                Try
+                    If myRole.isCombinedRole Then
+
+                        Dim listOfchilds As SortedList(Of Integer, Double) = getSubRoleIDsOf(myRole.name, type:=PTcbr.realRoles)
+                        If listOfchilds.Count > 0 Then
+
+                            If _allRollen.Item(listOfchilds.ElementAt(0).Key).isExternRole Then
+                                ' now check all the other childs whether they are all extern, if one of them not , stop and return false 
+                                For i As Integer = 1 To listOfchilds.Count - 1
+                                    result = result And _allRollen.Item(listOfchilds.ElementAt(i).Key).isExternRole
+                                    If result = False Then
+                                        Exit For
+                                    End If
+                                Next
+
+                            End If
+
+                        End If
+                    Else
+
+                        result = myRole.isExternRole
+
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+            isExtern = result
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liefert true zurück, wenn alle Rollendefinitionen der einen Liste identisch mit der anderen sind
     ''' </summary>
     ''' <param name="vglDefinitionen"></param>

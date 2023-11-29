@@ -21650,7 +21650,9 @@ Public Module agm2
 
                     Dim copyIndex As Integer = getColumnOfDate(copyStartDate)
 
-                    Do Until copyIndex >= endingIndex
+                    ' tk: 23.11.23 formerly do until copyIndex >= endingIndex 
+                    ' did not take the very last into account
+                    Do While copyIndex <= endingIndex
 
                         newCapaYear = New clsCapa
                         newCapaYear.startOfYear = DateSerial(startYear, 1, 1)

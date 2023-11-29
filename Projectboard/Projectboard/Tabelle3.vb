@@ -1041,7 +1041,8 @@ Public Class Tabelle3
                         If anzChilds > 0 Then
                             frmDateEdit.chkbx_adjustChilds.Visible = True
                             frmDateEdit.chkbx_adjustChilds.Enabled = True
-                            frmDateEdit.chkbx_adjustChilds.Checked = True
+                            'frmDateEdit.chkbx_adjustChilds.Checked = True
+                            frmDateEdit.chkbx_adjustChilds.Checked = awinSettings.autoAjustChilds
                         End If
 
                         ' Checkbox Auto Distribution is visible ..
