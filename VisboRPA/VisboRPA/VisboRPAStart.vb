@@ -25,6 +25,9 @@ Public Class VisboRPAStart
         Dim rpaCategory As New PTRpa
         Dim result As Boolean = False
 
+        ' tk 30.11 der Parameter noNewCalculation sollte im RPA immer auf false gesetzts ein 
+        awinSettings.noNewCalculation = False
+
         'FileExtension ansehen
         Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
         Select Case fileExt

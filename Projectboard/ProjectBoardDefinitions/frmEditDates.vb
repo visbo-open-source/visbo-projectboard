@@ -8,12 +8,16 @@
 
         Call languageSettings()
 
-        If visboClient = divClients(client.VisboSPE) Then
-            chkbx_adjustChilds.Visible = False
-            chkbxAutoDistr.Visible = False
-        Else
-            awinSettings.autoAjustChilds = chkbx_adjustChilds.Checked
-        End If
+        ' tk 29.11.23 - auskommentiert
+        chkbx_adjustChilds.Checked = awinSettings.autoAjustChilds
+        chkbxAutoDistr.Checked = Not awinSettings.noNewCalculation
+
+        'If visboClient = divClients(client.VisboSPE) Then
+        '    chkbx_adjustChilds.Visible = False
+        '    chkbxAutoDistr.Visible = False
+        'Else
+        '    awinSettings.autoAjustChilds = chkbx_adjustChilds.Checked
+        'End If
 
         If allowedDateLeft > Date.MinValue Then
             If startdatePicker.Enabled Then
@@ -133,7 +137,8 @@
     End Sub
 
     Private Sub chkbxAutoDistr_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxAutoDistr.CheckedChanged
-
+        ' tk 29.11.23
+        awinSettings.noNewCalculation = Not chkbxAutoDistr.Checked
     End Sub
 
     Private Sub chkbx_adjustChilds_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_adjustChilds.CheckedChanged

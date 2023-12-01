@@ -955,8 +955,9 @@ Public Class clsProjektShapes
                             hproj.startDate = newStartdate
 
                             If diffDays <> 0 Then
-                                ' tk 30.12.19 hier muss sichergestellt sein, dass die 
-                                Call hproj.syncXWertePhases()
+                                ' tk 30.11.23 parameter false; considerValueOnly=true heisst, dass bei einem 1-dimensionaler
+                                ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                                Call hproj.syncXWertePhases(False)
                             End If
 
                             newOffsetInTagen = 0
@@ -1071,7 +1072,9 @@ Public Class clsProjektShapes
                                 offsetinTagen = 0
                                 If diffDays <> 0 Then
                                     hproj.startDate = hproj.startDate.AddDays(diffDays)
-                                    Call hproj.syncXWertePhases()
+                                    ' tk 30.11.23 parameter false; considerValueOnly=true heisst, dass bei einem 1-dimensionaler
+                                    ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                                    Call hproj.syncXWertePhases(False)
                                 End If
 
 

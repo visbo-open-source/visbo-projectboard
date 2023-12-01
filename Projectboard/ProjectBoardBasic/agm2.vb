@@ -3689,7 +3689,7 @@ Public Module agm2
                                                         Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
                                                         oldWerte(0) = work
                                                         ReDim Xwerte(anzmonth - 1)
-                                                        Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+                                                        Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, True, Xwerte)
 
                                                         ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
                                                         For m As Integer = 1 To anzmonth
@@ -5600,7 +5600,7 @@ Public Module agm2
                                                             ende = .relEnde
                                                             ReDim Xwerte(ende - anfang)
 
-                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, True, Xwerte)
                                                         End With
 
                                                         ''ur:12.10.2015:  eingefügt
@@ -5685,7 +5685,7 @@ Public Module agm2
                                                             ende = .relEnde
                                                             ReDim Xwerte(ende - anfang)
 
-                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, True, Xwerte)
                                                         End With
 
                                                     Else
@@ -10741,7 +10741,7 @@ Public Module agm2
                                                     Dim dimension As Integer = getColumnOfDate(endeDate) - getColumnOfDate(startDate)
                                                     Dim vorgabeArray(0) As Double
                                                     vorgabeArray(0) = vertragsVolumen / subRole.tagessatzIntern
-                                                    Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0)
+                                                    Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0, True)
 
                                                     Dim startCol As Integer = getColumnOfDate(startDate)
                                                     For ix As Integer = 0 To volumenArray.Length - 1

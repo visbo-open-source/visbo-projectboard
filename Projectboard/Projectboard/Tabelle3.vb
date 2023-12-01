@@ -885,25 +885,16 @@ Public Class Tabelle3
         ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
         Dim alreadyDone As Boolean = False
 
-        ' das Projekt- und Portfolio Chart Zeichnen kommt erst noch ... 
-        ' tk 13.12.19
-        ''If pNameChanged Or elemNameChanged Then
-        ''    ' aktualisieren der Projekt-Charts 
-        ''    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:="")
+        ' tk 30.11.23 now show EditDates Form, if in one of the date-cells
+        Try
+            If Target.Cells.Count = 1 Then
+                If Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate) Then
+                    Call showEditDatesForm(Target)
+                End If
+            End If
+        Catch ex As Exception
 
-        ''End If
-
-
-        '' hier wird jetzt ggf das Role/Cost Portfolio Chart aktualisiert ..
-        ''If Not IsNothing(elemNameID) Then
-        ''    If "" <> rcName Then
-        ''        If rcName <> "" And Not alreadyDone Then
-        ''            selectedProjekte.Clear(False)
-        ''            selectedProjekte.Add(visboZustaende.lastProject, False)
-        ''            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
-        ''        End If
-        ''    End If
-        ''End If
+        End Try
 
 
         appInstance.EnableEvents = True
@@ -933,10 +924,7 @@ Public Class Tabelle3
 
     End Sub
 
-
-
-    Private Sub Tabelle3_BeforeRightClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
-
+    Private Sub showEditDatesForm(ByVal Target As Excel.Range)
         Dim hproj As clsProjekt = visboZustaende.currentProject
         Dim cphase As clsPhase = Nothing
         Dim cMilestone As clsMeilenstein = Nothing
@@ -1063,10 +1051,10 @@ Public Class Tabelle3
 
                         'If Not awinSettings.autoAjustChilds Then
                         Dim ph As clsPhase = Nothing
-                            For Each phID As String In phaseChilds
-                                ph = hproj.getPhaseByID(phID)
-                                maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
-                            Next
+                        For Each phID As String In phaseChilds
+                            ph = hproj.getPhaseByID(phID)
+                            maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
+                        Next
                         'End If
 
                         frmDateEdit.enddatePicker.Value = cphase.getEndDate
@@ -1100,7 +1088,9 @@ Public Class Tabelle3
                                     ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
                                     ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
                                     ' 
-                                    Call hproj.syncXWertePhases()
+                                    ' tk 30.11.23 parameter false; considerValueOnly=true heisst, dass bei einem 1-dimensionaler
+                                    ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                                    Call hproj.syncXWertePhases(False)
                                 End If
 
                                 newOffsetInTagen = 0
@@ -1172,7 +1162,6 @@ Public Class Tabelle3
 
                 Else
                     appInstance.EnableEvents = True
-                    Cancel = True
                 End If
             End If
 
@@ -1187,6 +1176,26 @@ Public Class Tabelle3
         hproj.variantName = oldVariantName
 
         appInstance.EnableEvents = True
+    End Sub
+
+
+    ''' <summary>
+    ''' when entering a Start oder End-Date: show immedietedly the EditDates Form
+    ''' </summary>
+    ''' <param name="Target"></param>
+    ''' <param name="Cancel"></param>
+    Private Sub Tabelle3_BeforeRightClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
+
+        Try
+            If Target.Cells.Count = 1 Then
+                If Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate) Then
+                    Call showEditDatesForm(Target)
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
         Cancel = True
     End Sub
 End Class

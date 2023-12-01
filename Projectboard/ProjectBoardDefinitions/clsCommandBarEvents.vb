@@ -271,7 +271,9 @@ Public Class clsCommandBarEvents
 
                                 ' ggf müssen die Xwerte hier noch korrigiert werden 
                                 If Not .isConsistent Then
-                                    Call .syncXWertePhases()
+                                    ' tk 30.11.23 parameter false; considerValueOnly=true heisst, dass bei einem 1-dimensionaler
+                                    ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                                    Call .syncXWertePhases(False)
                                 End If
 
                             End With

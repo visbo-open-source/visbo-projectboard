@@ -253,7 +253,9 @@ Public Class clsEventsPrcCharts
                                         .StartOffset = 0
 
                                         If Not .isConsistent Then
-                                            Call .syncXWertePhases()
+                                            ' tk 30.11.23 parameter false; considerValueOnly=true heisst, dass bei einem 1-dimensionaler
+                                            ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                                            Call .syncXWertePhases(False)
                                         End If
 
 

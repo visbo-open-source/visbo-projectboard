@@ -1260,8 +1260,10 @@ Public Class Tabelle2
                                             Dim oldValues As Double()
 
                                             ' calculate a distribution of values over months, dependent of months and number days / per Months
+                                            'considerValueOnly = True heisst, dass bei einem 1-dimensionaler
+                                            ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
                                             Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
-                                                                                                    xEndDate, vSum, 1)
+                                                                                                    xEndDate, vSum, 1, True)
 
                                             If IsNothing(tmpRole) Then
                                                 ReDim oldValues(xValues.Length - 1)
@@ -1313,8 +1315,10 @@ Public Class Tabelle2
                                         Else
 
                                             ' calculate a distribution of values over months, dependent of months and number days / per Months
+                                            'considerValueOnly = True heisst, dass bei einem 1-dimensionaler
+                                            ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
                                             Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
-                                                                                                    xEndDate, vSum, 1)
+                                                                                                    xEndDate, vSum, 1, True)
 
                                             ' es handelt sich um eine Kostenart 
                                             Dim tmpCost As clsKostenart = cphase.getCost(rcName)

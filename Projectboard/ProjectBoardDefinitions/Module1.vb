@@ -4049,9 +4049,11 @@ Public Module Module1
     ''' <param name="endedate"></param>
     ''' <param name="oldXwerte"></param>
     ''' <param name="corrFakt"></param>
+    ''' <param name="considerValueOnly">if oldXwerte has length = 1 and considervalue = true then the value will be distributed no matter what noNewCalculation says</param>
     ''' <returns></returns>
     Public Function calcVerteilungAufMonate(ByVal startdate As Date, ByVal endedate As Date,
-                                            ByVal oldXwerte() As Double, ByVal corrFakt As Double) As Double()
+                                            ByVal oldXwerte() As Double, ByVal corrFakt As Double,
+                                            ByVal considerValueOnly As Boolean) As Double()
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
@@ -4063,6 +4065,12 @@ Public Module Module1
         Dim dauerinDays As Long = DateDiff(DateInterval.Day, startdate, endedate) + 1
 
         ReDim newXwerte(newLength - 1)
+
+        ' tk 30.11.23 wenn der OldXerte Array nur Länge 1 hat und considerValueOnly ist, dann wird das Ergebnis auf 
+        ' den ganzen Bereich verteilt , dann gilt das Setting awinSettings.noNewCalculation nicht 
+
+        Dim noDistribution As Boolean = awinSettings.noNewCalculation And
+                                (oldXwerte.Length > 1 Or (oldXwerte.Length = 1 And Not considerValueOnly))
 
         ' Vorbereitung für Summen Berechnung nur bei Forecast
         'Dim hasActualData As Boolean = Me.parentProject.actualDataUntil <> Date.MinValue
@@ -4076,7 +4084,8 @@ Public Module Module1
         ' andernfalls ist eh schon alles richtig 
         If oldXwerte.Sum > 0 Then
 
-            If awinSettings.noNewCalculation Then
+            ' tk 30.11.23 If awinSettings.noNewCalculation Then
+            If noDistribution Then
 
                 Try
                     '    ' wenn die neue Dimension >= alte Dimension ist, einfach kopieren und am Ende ggf mit Null auffüllen 

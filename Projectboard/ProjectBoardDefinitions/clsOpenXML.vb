@@ -450,7 +450,7 @@ Public Class clsOpenXML
                         'ReDim oldWerte(0)
                         'oldWerte(0) = roleXML.sum
                         ReDim Xwerte(anzahlMonate - 1)
-                        Call .berechneBedarfe(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime, roleXML.monthlyNeeds, 1.0, Xwerte)
+                        Call .berechneBedarfe(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime, roleXML.monthlyNeeds, 1.0, True, Xwerte)
                         roleXML.monthlyNeeds = Xwerte
                     End If
 
@@ -505,7 +505,7 @@ Public Class clsOpenXML
                         'ReDim oldWerte(0)
                         'oldWerte(0) = costXML.sum
                         ReDim Xwerte(anzahlMonate - 1)
-                        Call .berechneBedarfe(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime, costXML.monthlyNeeds, 1.0, Xwerte)
+                        Call .berechneBedarfe(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime, costXML.monthlyNeeds, 1.0, True, Xwerte)
                         costXML.monthlyNeeds = Xwerte
                     End If
 

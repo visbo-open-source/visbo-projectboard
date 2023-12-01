@@ -1210,7 +1210,7 @@ Public Class Tabelle2
 
                                             ' calculate a distribution of values over months, dependent of months and number days / per Months
                                             Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
-                                                                                                    xEndDate, vSum, 1)
+                                                                                                    xEndDate, vSum, 1, True)
 
                                             If IsNothing(tmpRole) Then
                                                 ReDim oldValues(xValues.Length - 1)
@@ -1263,7 +1263,7 @@ Public Class Tabelle2
 
                                             ' calculate a distribution of values over months, dependent of months and number days / per Months
                                             Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
-                                                                                                    xEndDate, vSum, 1)
+                                                                                                    xEndDate, vSum, 1, True)
 
                                             ' es handelt sich um eine Kostenart 
                                             Dim tmpCost As clsKostenart = cphase.getCost(rcName)

@@ -6345,7 +6345,7 @@ Public Module agm3
                                     Dim totalPDneed As Double = role.Value / hoursPerDay
                                     vSum(0) = totalPDneed
 
-                                    newRole.Xwerte = calcVerteilungAufMonate(phase.getStartDate, phase.getEndDate, vSum, 1)
+                                    newRole.Xwerte = calcVerteilungAufMonate(phase.getStartDate, phase.getEndDate, vSum, 1, True)
                                     newRole.uid = roleDef.UID
                                     newRole.teamID = skillID
 
@@ -6366,7 +6366,7 @@ Public Module agm3
                                     Dim newCost As New clsKostenart(phaseLength - 1)
                                     vSum(0) = cost.Value
 
-                                    newCost.Xwerte = calcVerteilungAufMonate(phase.getStartDate, phase.getEndDate, vSum, 1)
+                                    newCost.Xwerte = calcVerteilungAufMonate(phase.getStartDate, phase.getEndDate, vSum, 1, True)
 
                                     newCost.KostenTyp = CostDefinitions.getCostdef(cost.Key).UID
 
@@ -7907,7 +7907,7 @@ Public Module agm3
 
                                             With vgphase
                                                 ReDim vgXwerte(vgende - vganfang + 1)
-                                                .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, vgXwerte)
+                                                .berechneBedarfe(.getStartDate, .getEndDate, vgoldXwerte, 1, True, vgXwerte)
                                             End With
                                             hrole.Xwerte = vgXwerte
 
@@ -7998,7 +7998,7 @@ Public Module agm3
 
                                     With ephase
                                         ReDim Xwerte(ende - anfang)
-                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, True, Xwerte)
                                     End With
                                     hrole.Xwerte = Xwerte
 
@@ -8124,7 +8124,7 @@ Public Module agm3
 
                                         With backphase
                                             ReDim Xwerte(ende - anfang)
-                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, True, Xwerte)
                                         End With
                                         hrole.Xwerte = Xwerte
 

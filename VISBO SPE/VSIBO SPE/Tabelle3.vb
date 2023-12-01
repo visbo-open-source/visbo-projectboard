@@ -934,10 +934,6 @@ Public Class Tabelle3
             ' kann ggf später ergänzt werden ... 
             If Target.Row <> visboZustaende.oldRow Then
                 zeileHasChanged = True
-
-                ' kann ggf später ergänzt werden ... 
-                'Call SelectionMode(oldRow, False)
-                'Call SelectionMode(Target.Row, True)
             End If
 
             ' alte Row merken 
@@ -1016,25 +1012,15 @@ Public Class Tabelle3
         ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
         Dim alreadyDone As Boolean = False
 
-        ' das Projekt- und Portfolio Chart Zeichnen kommt erst noch ... 
-        ' tk 13.12.19
-        ''If pNameChanged Or elemNameChanged Then
-        ''    ' aktualisieren der Projekt-Charts 
-        ''    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:="")
+        Try
+            If Target.Cells.Count = 1 Then
+                If (Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate)) And (Target.Row > 1) Then
+                    Call showEditDatesForm(Target)
+                End If
+            End If
+        Catch ex As Exception
 
-        ''End If
-
-
-        '' hier wird jetzt ggf das Role/Cost Portfolio Chart aktualisiert ..
-        ''If Not IsNothing(elemNameID) Then
-        ''    If "" <> rcName Then
-        ''        If rcName <> "" And Not alreadyDone Then
-        ''            selectedProjekte.Clear(False)
-        ''            selectedProjekte.Add(visboZustaende.lastProject, False)
-        ''            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
-        ''        End If
-        ''    End If
-        ''End If
+        End Try
 
 
         appInstance.EnableEvents = True
@@ -1093,9 +1079,7 @@ Public Class Tabelle3
 
     End Sub
 
-
-
-    Private Sub Tabelle3_BeforeRightClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
+    Private Sub showEditDatesForm(ByVal target As Excel.Range)
 
         Dim hproj As clsProjekt = visboZustaende.currentProject
         Dim cphase As clsPhase = Nothing
@@ -1115,8 +1099,6 @@ Public Class Tabelle3
             Call setColVariable()
         End If
 
-        'Dim allowedLeftDate As Date = hproj.startDate
-        'Dim allowedRightDate As Date = hproj.endeDate
 
         Dim allowedLeftDate As Date = StartofCalendar
         If hproj.hasActualValues Then
@@ -1128,10 +1110,10 @@ Public Class Tabelle3
 
         appInstance.EnableEvents = False
         Try
-            If Target.Cells.Count = 1 Then
+            If target.Cells.Count = 1 Then
 
-                Dim currentZeile As Integer = Target.Row
-                Dim currentColumn As Integer = Target.Column
+                Dim currentZeile As Integer = target.Row
+                Dim currentColumn As Integer = target.Column
 
                 Dim elemID As String = visboZustaende.currentElemID
 
@@ -1175,7 +1157,7 @@ Public Class Tabelle3
                 End If
 
 
-                If (Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate)) And (Target.Row > 1) Then
+                If (target.Column = col(PTmeTe.startdate) Or target.Column = col(PTmeTe.endDate)) And (target.Row > 1) Then
 
                     If visboZustaende.currentZeileIsMilestone Then
 
@@ -1190,6 +1172,7 @@ Public Class Tabelle3
 
                         ' Checkbox Auto Distribution is invisible ..
                         frmDateEdit.chkbxAutoDistr.Visible = False
+                        frmDateEdit.chkbx_adjustChilds.Visible = False
 
                         frmDateEdit.enddatePicker.Value = cMilestone.getDate
                         frmDateEdit.IsMilestone = True
@@ -1198,10 +1181,10 @@ Public Class Tabelle3
                         frmDateEdit.allowedDateRight = allowedRightDate
 
                         If frmDateEdit.ShowDialog() = DialogResult.OK Then
-                            Target.Value = frmDateEdit.enddatePicker.Value
-                            cMilestone.setDate = CDate(Target.Value)
+                            target.Value = frmDateEdit.enddatePicker.Value
+                            cMilestone.setDate = CDate(target.Value)
                         Else
-                            Target.Value = visboZustaende.oldValue
+                            target.Value = visboZustaende.oldValue
                         End If
 
 
@@ -1216,13 +1199,20 @@ Public Class Tabelle3
                         Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
                         Dim anzChilds As Integer = msChilds.Count + phaseChilds.Count
                         If anzChilds > 0 Then
-                            frmDateEdit.chkbx_adjustChilds.Visible = False
-                            frmDateEdit.chkbx_adjustChilds.Enabled = False
+                            ' 29.11.23 enabled again
+                            'frmDateEdit.chkbx_adjustChilds.Visible = False
+                            'frmDateEdit.chkbx_adjustChilds.Enabled = False
+                            frmDateEdit.chkbx_adjustChilds.Visible = True
+                            frmDateEdit.chkbx_adjustChilds.Enabled = True
                             frmDateEdit.chkbx_adjustChilds.Checked = awinSettings.autoAjustChilds
+                        Else
+                            frmDateEdit.chkbx_adjustChilds.Visible = False
                         End If
 
                         ' Checkbox Auto Distribution is visible ..
-                        frmDateEdit.chkbxAutoDistr.Visible = False
+                        ' tk 29.11.23 enabled again
+                        'frmDateEdit.chkbxAutoDistr.Visible = False
+                        frmDateEdit.chkbxAutoDistr.Visible = True
                         frmDateEdit.chkbxAutoDistr.Checked = Not awinSettings.noNewCalculation
 
                         frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
@@ -1275,7 +1265,9 @@ Public Class Tabelle3
                                     ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
                                     ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
                                     ' 
-                                    Call hproj.syncXWertePhases()
+                                    'considerValueOnly = True heisst, dass bei einem 1-dimensionaler
+                                    ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                                    Call hproj.syncXWertePhases(False)
                                 End If
 
                                 ' ur: test newOffsetInTagen = 0
@@ -1288,15 +1280,15 @@ Public Class Tabelle3
                             cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, awinSettings.autoAjustChilds, offsetChange)
 
                             ' jetzt die Excel Zellen der aktuellen Zeile, der Phase anpassen ... 
-                            meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
-                            meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
+                            meWS.Cells(target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
+                            meWS.Cells(target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
 
                             'If awinSettings.autoAjustChilds And nameIDCollection.Count > 0 Then
                             If nameIDCollection.Count > 0 Then
 
                                 Try
                                     ' jetzt die Excel Zeilen der Kinder aktualisieren  
-                                    Dim currentChildRow As Integer = Target.Row + 1
+                                    Dim currentChildRow As Integer = target.Row + 1
                                     Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
                                     Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
 
@@ -1343,14 +1335,13 @@ Public Class Tabelle3
 
 
                         Else
-                            Target.Value = visboZustaende.oldValue
+                            target.Value = visboZustaende.oldValue
                         End If
 
                     End If
 
                 Else
                     appInstance.EnableEvents = True
-                    Cancel = True
                 End If
             End If
 
@@ -1365,6 +1356,20 @@ Public Class Tabelle3
         hproj.variantName = oldVariantName
 
         appInstance.EnableEvents = True
+    End Sub
+
+    Private Sub Tabelle3_BeforeRightClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
+
+        Try
+            If Target.Cells.Count = 1 Then
+                If (Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate)) And (Target.Row > 1) Then
+                    Call showEditDatesForm(Target)
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
         Cancel = True
     End Sub
 

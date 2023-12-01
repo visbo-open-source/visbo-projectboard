@@ -4070,7 +4070,7 @@ Public Class clsProjekte
                                 vpSum(0) = addOn
 
                                 Dim xpValues() As Double = cPhase.berechneBedarfeNew(xStartDate,
-                                                                                        xEndDate, vpSum, 1)
+                                                                                        xEndDate, vpSum, 1, True)
 
                                 xpValues = ShowProjekte.adjustToCapacity(aggregationRole.UID, tmpRole.teamID, True, xpValues, xStartDate, pRole.Xwerte)
 
@@ -5449,7 +5449,7 @@ Public Class clsProjekte
                         ' jetzt muss einfach die Gesamt-Summe darauf verteilt werden 
                         Dim checkSum(0) As Double
                         checkSum(0) = costValues.Sum
-                        costValues = calcVerteilungAufMonate(StartofCalendar.AddMonths(showRangeLeft), StartofCalendar.AddMonths(showRangeRight), checkSum, 1.0)
+                        costValues = calcVerteilungAufMonate(StartofCalendar.AddMonths(showRangeLeft), StartofCalendar.AddMonths(showRangeRight), checkSum, 1.0, True)
                     End If
                 End If
             End If

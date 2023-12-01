@@ -13695,7 +13695,7 @@ Public Module Projekte
                                         ende = .relEnde
                                         ReDim Xwerte(ende - anfang)
 
-                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, True, Xwerte)
 
                                     End With
 
@@ -13791,7 +13791,7 @@ Public Module Projekte
                                         ende = .relEnde
                                         ReDim Xwerte(ende - anfang)
 
-                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, True, Xwerte)
 
                                     End With
 
@@ -22536,7 +22536,9 @@ Public Module Projekte
                     ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
                     ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
                     ' 
-                    Call hproj.syncXWertePhases()
+                    ' tk 30.11.23 parameter false; considerValueOnly=true heisst, dass bei einem 1-dimensionaler
+                    ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
+                    Call hproj.syncXWertePhases(False)
                 End If
 
                 newOffsetInTagen = 0

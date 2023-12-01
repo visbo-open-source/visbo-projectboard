@@ -965,7 +965,7 @@ Public Class clsProjekt
     ''' Dimension der Arrays für die Rollen und kostenarten verändert 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub syncXWertePhases()
+    Public Sub syncXWertePhases(ByVal considerIsValue As Boolean)
         Dim tmpValue As Boolean = True
         Dim cphase As clsPhase
         Dim dimension As Integer
@@ -983,7 +983,7 @@ Public Class clsProjekt
             If cphase.countRoles > 0 Or cphase.countCosts > 0 Then
 
                 ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                Call cphase.calcNewXwerte(dimension, 1)
+                Call cphase.calcNewXwerte(dimension, 1, considerIsValue)
 
             End If
 
@@ -3670,7 +3670,7 @@ Public Class clsProjekt
                                 If hasForeCastValues Then
                                     Dim csum(0) As Double
                                     csum(0) = sumForecastValues
-                                    Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0)
+                                    Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0, True)
                                     For i As Integer = 0 To forecastWerte.Length - 1
                                         newXwerte(i + phaseActualIX + 1) = forecastWerte(i)
                                     Next
@@ -3680,7 +3680,7 @@ Public Class clsProjekt
                             Else
                                 Dim csum(0) As Double
                                 csum(0) = sumForecastValues
-                                newXwerte = calcVerteilungAufMonate(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
+                                newXwerte = calcVerteilungAufMonate(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0, True)
                                 'Dim chcknewXwerte() As Double = cphase.berechneBedarfeNew(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
                             End If
 
