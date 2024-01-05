@@ -363,6 +363,37 @@ Public Class Ribbon1
         End If
     End Sub
 
+    ''' <summary>
+    ''' downloads - reduced - excel steckbriefe to Downloads Folder
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTDownload(control As Office.IRibbonControl)
+
+        If editProjekteInSPE.Count > 0 Then
+            ' Mouse auf Wartemodus setzen
+            appInstance.Cursor = Excel.XlMousePointer.xlWait
+            appInstance.ScreenUpdating = False
+
+            Dim outPutCollection As New Collection
+            Try
+                'Projekte downloaden 
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In editProjekteInSPE.Liste
+                    Call speExportProject(kvp.Value)
+                    Dim msgTxt As String = kvp.Key & " downloaded ... "
+                    outPutCollection.Add(msgTxt)
+                Next
+
+            Catch ex As Exception
+
+            End Try
+            ' Mouse wieder auf Normalmodus setzen
+            appInstance.Cursor = Excel.XlMousePointer.xlDefault
+            appInstance.ScreenUpdating = True
+
+            Call showOutPut(outPutCollection, "Downloads", "files In C:/Downloads")
+
+        End If
+    End Sub
 
     Public Sub PTProjectDelete(control As Office.IRibbonControl)
 
@@ -455,10 +486,12 @@ Public Class Ribbon1
 
 
     Public Sub PTProjectEditSettings(control As Office.IRibbonControl)
+
         Dim settingsEdit As New frmProjectEditSettings
         settingsEdit.ShowDialog()
 
-        Call massEditRcTeAt(currentProjektTafelModus)
+        ' tk 3.1.24 - there ist no need anymore to rebuild the pages 
+        ' Call massEditRcTeAt(currentProjektTafelModus)
     End Sub
 
     Public Sub PTProjectGoToWebUI(control As Office.IRibbonControl)

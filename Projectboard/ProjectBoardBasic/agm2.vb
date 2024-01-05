@@ -14124,11 +14124,6 @@ Public Module agm2
                 Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
                 Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
 
-                ' will be done in tabelle2.Activate Event
-                'If meModus = ptModus.massEditCosts Then
-                '    ' ausblenden der Spalte für Skills 
-                '    CType(.Columns(6), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn.Hidden = True
-                'End If
 
                 Try
                     If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
@@ -14189,11 +14184,11 @@ Public Module agm2
                         hproj = AlleProjekte.getProject(pvName)
                     End If
 
-                    Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?")
+                    'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?")
 
                     If Not IsNothing(hproj) Then
 
-                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, yes")
+                        'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, yes")
 
                         ' if setup, that one person is haviing exactly one role then make sure that each person has its role applied ...
                         If awinSettings.onePersonOneRole Then
@@ -14216,62 +14211,25 @@ Public Module agm2
                         'Dim wpItem As clsWriteProtectionItem
                         Dim isProtectedbyOthers As Boolean
 
+                        ' tk 5.1.24 finished, paused, stopped projects are not editable 
+                        ' VProjectStatus(PTVPStati.initialized)
+                        If hproj.vpStatus = VProjectStatus(PTVPStati.finished) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.paused) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
-
-                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " vor check isProtectedbyOthers")
-
-                        ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
-
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                            ' ur:20220520: versuchsweise herausgenommen
-                            'If awinSettings.visboServer Then
-                            '    isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                            'Else
-                            '    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                            'End If
-
-                        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                             isProtectedbyOthers = True
 
-                            summeEditierenErlaubt = False
-                            protectionText = "Orga-Admin kann Daten nur sehen, nicht ändern ...  "
-                            If awinSettings.englishLanguage Then
-                                protectionText = "Orga-Admin may only view data ..."
+                            Dim msgTxt As String = "finished"
+
+                            If hproj.vpStatus = VProjectStatus(PTVPStati.paused) Then
+                                msgTxt = "Paused"
+                            ElseIf hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
+                                msgTxt = "Cancelled"
                             End If
 
-                        Else
-                            ' ur:20220520: versuchsweise herausgenommen
-                            '' er kann es nur ändern, wenn er es für sich schützen kann 
-                            'Dim vNameToProtect As String = hproj.variantName
-                            'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                            '    If hproj.variantName <> "" Then
-                            '        vNameToProtect = hproj.variantName
-                            '    Else
-                            '        vNameToProtect = ptVariantFixNames.pfv.ToString
-                            '    End If
-                            'End If
-                            'isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
-                        End If
-
-                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " nach check isProtectedbyOthers")
-
-                        ' tk 19.1.20 ist doch gar nicht mehr notwendig ? 
-                        If isProtectedbyOthers Then
-
-                            Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "ist von jemand anderen gelockt")
-
-                            ' nicht erfolgreich, weil durch anderen geschützt ... 
-                            ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                            ' tk 19.1.20 ist doch gar nicht mehr notwendig ? 
-                            'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                            'writeProtections.upsert(wpItem)
-
-                            ' ur:20220520: versuchsweise herausgenommen
-                            protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+                            protectionText = "No Edit possible because of status " & msgTxt
 
                         End If
-
-                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "vor if actualDataRelColumn")
 
                         If actualDataRelColumn >= 0 And Not isProtectedbyOthers Then
                             If awinSettings.englishLanguage Then
@@ -14284,7 +14242,6 @@ Public Module agm2
 
                         pStart = getColumnOfDate(hproj.startDate)
                         pEnde = getColumnOfDate(hproj.endeDate)
-                        'Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
 
                         For p = 1 To hproj.CountPhases
 
@@ -14293,19 +14250,21 @@ Public Module agm2
                             Dim phaseName As String = cphase.name
                             Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
-                            Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "phase " & phaseNameID & " wurd gerade bearbeitet")
+                            'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "phase " & phaseNameID & " wurd gerade bearbeitet")
 
                             ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
                             Dim hasActualData As Boolean = cphase.hasActualData
                             Dim hasForecastMonths As Boolean = True
 
+                            ' tk 21.12.23 
+                            Dim showForeCastOnly As Boolean = True
+                            If hasActualData Then
+                                showForeCastOnly = von > getColumnOfDate(hproj.actualDataUntil)
+                            End If
+
                             If hasActualData Then
                                 hasForecastMonths = cphase.hasForecastMonths
                             End If
-
-                            ' tk summe editieren is allowed when the current Phase does not contain any actual data : do not lock, when only the project is having actualData
-                            'summeEditierenErlaubt = (awinSettings.allowSumEditing And actualDataRelColumn < 0)
-                            summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
 
                             Dim indentlevelPhMS As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
@@ -14313,7 +14272,7 @@ Public Module agm2
                             If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                                 ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
 
-                                Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Phase " & phaseNameID & " im Zeitraum enthalten")
+                                'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Phase " & phaseNameID & " im Zeitraum enthalten")
 
                                 ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
                                 Dim ixZeitraum As Integer
@@ -14329,6 +14288,7 @@ Public Module agm2
 
                                 If meModus = ptModus.massEditRessSkills Then
 
+
                                     For r As Integer = 1 To cphase.countRoles
 
                                         Dim role As clsRolle = cphase.getRole(r)
@@ -14340,7 +14300,6 @@ Public Module agm2
                                         Dim teamID As Integer = role.teamID
 
                                         Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-                                        Dim indentLevelRole As Integer = 0
                                         Dim validRole As Boolean = True
                                         Dim isVirtualChild As Boolean = False
 
@@ -14390,6 +14349,7 @@ Public Module agm2
                                         Dim roleUID As Integer = kvp.Value.uid
                                         Dim teamID As Integer = kvp.Value.teamID
 
+
                                         Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                                         ' tk 19.1.20 
                                         Dim roleIndentLevel As Integer = RoleDefinitions.getRoleIndent(roleNameID)
@@ -14400,8 +14360,7 @@ Public Module agm2
                                         schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                         zeilensumme = schnittmenge.Sum
 
-                                        ' ggf Schreibschutz setzen für die Zeile setzen
-                                        Dim lockZeile As Boolean = Not hasForecastMonths
+                                        Dim lockZeile As Boolean = Not hasForecastMonths And Not kvp.Value.isExtern
                                         Dim lockText As String = ""
 
                                         If isProtectedbyOthers Then
@@ -14410,6 +14369,10 @@ Public Module agm2
                                         End If
 
                                         Dim roleHasActualData As Boolean = hproj.getPhaseRCActualValues(cphase.nameID, roleNameID, True, False).Sum > 0
+
+                                        'now determine whether or ot it is allowed to edit the sum field
+                                        summeEditierenErlaubt = (awinSettings.allowSumEditing And (Not hasActualData Or showForeCastOnly Or kvp.Value.isExtern))
+
 
                                         Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, roleName, roleNameID, True,
                                                                         lockText, von, bis,
@@ -14441,7 +14404,8 @@ Public Module agm2
 
                                             zeile = zeile + 1
                                         Else
-                                            Call MsgBox("not ok")
+                                            Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "Phase, Role " & phaseNameID & ", " & roleName & " could not write Row")
+                                            Call MsgBox("Error in writing row ...")
                                         End If
 
                                     Next kvp
@@ -14464,7 +14428,9 @@ Public Module agm2
                                             zeilensumme = schnittmenge.Sum
 
                                             ' ggf Schreibschutz setzen für die Zeile setzen
-                                            Dim lockZeile As Boolean = Not hasForecastMonths
+                                            ' tk 2.1.24 Kostenarten müssen editiert werden können 
+                                            'Dim lockZeile As Boolean = Not hasForecastMonths
+                                            Dim lockZeile As Boolean = False
                                             Dim lockText As String = ""
 
                                             If isProtectedbyOthers Then
@@ -14472,9 +14438,17 @@ Public Module agm2
                                                 lockText = protectionText
                                             End If
 
+                                            ' because costs do not have yet a actualdata Import , sum editinf is always allowed
+                                            summeEditierenErlaubt = awinSettings.allowSumEditing
+
+                                            'Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, costName, "", False,
+                                            '                                    lockText, von, bis,
+                                            '                                    actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                            '                                    ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
+
                                             Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, costName, "", False,
                                                                                 lockText, von, bis,
-                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                                -1, False, summeEditierenErlaubt,
                                                                                 ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
 
                                             If ok Then
@@ -14552,7 +14526,6 @@ Public Module agm2
 
                     Else
                         Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, no")
-
                     End If
 
                 Next
@@ -14741,6 +14714,19 @@ Public Module agm2
         Dim currentWS As Excel.Worksheet = Nothing
         Dim writeResult As Boolean = False
 
+        ' tk 4.1.24 
+        Dim isExternRole As Boolean = False
+        If isRole Then
+            Try
+                If RoleDefinitions.containsName(rcName) Then
+                    isExternRole = RoleDefinitions.getRoledef(rcName).isExternRole
+                End If
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
 
         Try
             currentWS = appInstance.ActiveWorkbook.Worksheets(wsName)
@@ -14767,7 +14753,7 @@ Public Module agm2
 
                 ' den Varianten-Namen schreiben
                 CType(.Cells(zeile, 3), Excel.Range).Value = CStr(hproj.variantName)
-                'CType(.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                CType(.Cells(zeile, 3), Excel.Range).Locked = True
 
                 ' Phase und ggf PhaseNameID schreiben
                 Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevelPhMs, cphase.name, cphase.nameID)
@@ -14809,7 +14795,7 @@ Public Module agm2
                     End With
                 Else
                     ' als gesperrt kennzeichnen 
-                    'CType(.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                    CType(.Cells(zeile, 6 + 1), Excel.Range).Locked = True
                 End If
 
             End With
@@ -14823,7 +14809,7 @@ Public Module agm2
                     With CType(.Cells(zeile, spix + startSpalteDaten), Excel.Range)
                         If spix >= ixZeitraum And spix <= ixZeitraum + breite - 1 Then
 
-                            If (Not isProtectedbyOthers) And (spix > actualdataRelColumn) Then
+                            If (Not isProtectedbyOthers) And (spix > actualdataRelColumn Or Not isRole Or isExternRole) Then
                                 .Locked = False
                                 Try
                                     If Not IsNothing(.Validation) Then
@@ -14839,12 +14825,7 @@ Public Module agm2
                             End If
 
                             ' jetzt kommt die Farbsetzung ... die hängt nur von actualDataRelColumn ab
-                            If spix <= actualdataRelColumn Then
-                                ' tk 19.1.20
-                                ' .Interior.Color = awinSettings.AmpelNichtBewertet
-                                .Interior.Color = XlRgbColor.rgbLightGrey
-                                .Font.Color = XlRgbColor.rgbBlack
-                            Else
+                            If (spix > actualdataRelColumn Or Not isRole Or isExternRole) Then
 
                                 If Not isProtectedbyOthers Then
                                     .Interior.Color = visboFarbeBlau
@@ -14853,6 +14834,13 @@ Public Module agm2
                                     '.Interior.Color = XlRgbColor.rgbLightGray
                                     .Font.Color = XlRgbColor.rgbBlack
                                 End If
+
+
+                            Else
+                                ' tk 19.1.20
+                                ' .Interior.Color = awinSettings.AmpelNichtBewertet
+                                .Interior.Color = XlRgbColor.rgbLightGrey
+                                .Font.Color = XlRgbColor.rgbBlack
                             End If
 
                         Else
@@ -15060,21 +15048,26 @@ Public Module agm2
                     Dim protectionText As String = ""
                     'Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
+                    ' tk 5.1.24 finished, paused, stopped projects are not editable 
+                    If hproj.vpStatus = VProjectStatus(PTVPStati.finished) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.paused) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
+
                         isProtectedbyOthers = True
 
-                        protectionText = "Orga-Admin kann Daten nur sehen, nicht ändern ...  "
-                        If awinSettings.englishLanguage Then
-                            protectionText = "Orga-Admin may only view data ..."
+                        Dim msgTxt As String = "finished"
+
+                        If hproj.vpStatus = VProjectStatus(PTVPStati.paused) Then
+                            msgTxt = "Paused"
+                        ElseIf hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
+                            msgTxt = "Cancelled"
                         End If
-                    Else
-                        ''isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                        'If isProtectedbyOthers Then
 
-                        '    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+                        protectionText = "No Edit possible because of status " & msgTxt
 
-                        'End If
                     End If
+
 
 
                     ' jetzt wird für jedes Element in der Hierarchy eine Zeile rausgeschrieben 
@@ -15742,21 +15735,25 @@ Public Module agm2
                     'Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
-                    ' hier muss es geschützt werden ...
-                    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    ' tk 5.1.24 finished, paused, stopped projects are not editable 
+                    If hproj.vpStatus = VProjectStatus(PTVPStati.finished) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.paused) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
 
+                        isProtectedbyOthers = True
 
-                    If isProtectedbyOthers Then
+                        Dim msgTxt As String = "finished"
 
-                        ' tk ist doch überhauot nicht notwendig, wird doch schon oben geacht 
-                        ' nicht erfolgreich, weil durch anderen geschützt ... 
-                        ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        'writeProtections.upsert(wpItem)
+                        If hproj.vpStatus = VProjectStatus(PTVPStati.paused) Then
+                            msgTxt = "Paused"
+                        ElseIf hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
+                            msgTxt = "Cancelled"
+                        End If
 
-                        protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+                        protectionText = "No Edit possible because of status " & msgTxt
 
                     End If
+
 
                     ' jetzt wird für jedes Projekt genau eine Zeile geschrieben 
                     With CType(currentWS, Excel.Worksheet)

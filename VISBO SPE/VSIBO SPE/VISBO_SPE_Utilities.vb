@@ -228,8 +228,9 @@ Module VISBO_SPE_Utilities
 
                     If listOfVCs.Count > 1 And spe_vpid = "" Then
                         ' wähle das gewünschte VC aus
-                        Dim chooseVC As New frmSelectOneItem
-                        chooseVC.itemsCollection = listOfVCs
+                        Dim chooseVC As New frmSelectOneItem With {
+                            .itemsCollection = listOfVCs
+                        }
                         If chooseVC.ShowDialog = DialogResult.OK Then
                             ' alles ok 
                             awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
@@ -401,7 +402,7 @@ Module VISBO_SPE_Utilities
 
         If editProjekteInSPE.Count >= 0 Then
 
-            Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & ShowProjekte.Count)
+            Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & editProjekteInSPE.Count)
 
             ' neue Methode 
             ' For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -413,18 +414,6 @@ Module VISBO_SPE_Utilities
                 End If
             Next
 
-            ' tk 16.11.22 diese Abfrage hier rausnehmen - ein ausversehen kann hier nicht mehr passieren ... 
-            ' check, ob wirklich alle Projekte editiert werden sollen ... 
-            'If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
-            '    Dim yesNo As Integer
-            '    yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
-            '    If yesNo = MsgBoxResult.No Then
-            '        enableOnUpdate = True
-            '        Exit Sub
-            '    End If
-            'End If
-
-
 
             If todoListe.Count >= 0 Then
 
@@ -434,41 +423,48 @@ Module VISBO_SPE_Utilities
 
                     If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
+                        ' now if there are no forecasts months then set noMatterActualData = true
+                        ' make sure that something can be shown 
+
+                        If Not awinSettings.noMatterActualData Then
+
+                            Dim firstTime As Boolean = True
+                            Dim noForecastMonths As Boolean = False
+
+                            For Each pName As String In todoListe
+                                If editProjekteInSPE.contains(pName) Then
+                                    Dim hproj As clsProjekt = editProjekteInSPE.getProject(pName)
+                                    Dim hasForeCastMonths As Boolean = True
+                                    If hproj.hasActualValues Then
+                                        hasForeCastMonths = getColumnOfDate(hproj.actualDataUntil) < getColumnOfDate(hproj.endeDate)
+                                    End If
+
+                                    If firstTime Then
+                                        firstTime = False
+                                        noForecastMonths = Not hasForeCastMonths
+                                    Else
+                                        noForecastMonths = noForecastMonths And Not hasForeCastMonths
+                                    End If
+                                End If
+                            Next
+
+                            If noForecastMonths Then
+                                awinSettings.noMatterActualData = True
+                                If editProjekteInSPE.Count > 1 Then
+                                    Call MsgBox("no Forecast Months in projects - setting was changed ...")
+                                Else
+                                    Call MsgBox("no Forecast Months in project - setting was changed ...")
+                                End If
+                            End If
+
+                        End If
+
+
                         ' tk it always should only show exact this timespan , why this overlap mechanics ? 
-                        showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe)
-                        showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe)
-
-                        'If showRangeLeft = 0 Then
-                        '    ' now take editProjekte as the reference to define showRangeLeft and ShowRange Right 
-                        '    'showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                        '    'showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                        '    showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe)
-                        '    showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe)
-
-                        '    '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                        'Else
-                        '    ' beim alten ShowRangeLeft lassen, wenn es Überlappungen gibt ..
-                        '    'Dim newLeft As Integer = ShowProjekte.getMinMonthColumn(todoListe)
-                        '    'Dim newRight As Integer = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                        '    Dim newLeft As Integer = editProjekteInSPE.getMinMonthColumn(todoListe)
-                        '    Dim newRight As Integer = editProjekteInSPE.getMaxMonthColumn(todoListe)
-
-                        '    If newLeft >= showRangeRight Or newRight <= showRangeLeft Then
-                        '        ' neu bestimmen 
-                        '        '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, False)
-
-                        '        'showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                        '        'showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                        '        showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe)
-                        '        showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe)
-
-                        '        '' ur:220506:  Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-
-                        '    End If
-                        'End If
+                        ' but this depends on status of noMatterActualData
+                        ' if noMatter.. = false, then only show forecastMonths
+                        showRangeLeft = editProjekteInSPE.getMinMonthColumn(todoListe, Not awinSettings.noMatterActualData)
+                        showRangeRight = editProjekteInSPE.getMaxMonthColumn(todoListe, Not awinSettings.noMatterActualData)
 
                         '' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
                         '' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
@@ -537,7 +533,12 @@ Module VISBO_SPE_Utilities
                                 CType(meWS.Columns("B"), Excel.Range).Hidden = False
                                 CType(meWS.Columns("C"), Excel.Range).Hidden = False
                             End If
+
+                            ' tk 4.1.24
+                            meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+
                         Else
+                            meWS.Protect(Password:="x", UserInterfaceOnly:=True)
                             meWS.Activate()
                         End If
                     Catch ex As Exception
@@ -682,17 +683,6 @@ Module VISBO_SPE_Utilities
             anzSpalten = 16
         End If
 
-        'If todoListe.Count = 0 Then
-
-
-        '    If awinSettings.englishLanguage Then
-        '        Call MsgBox("no projects for mass-edit available ..")
-        '    Else
-        '        Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
-        '    End If
-
-        '    Exit Sub
-        'End If
 
         Try
 
@@ -716,7 +706,6 @@ Module VISBO_SPE_Utilities
                 Try
                     ' off setzen des AutoFilter Modus ... 
                     If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
-                        'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
                         CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                     End If
                 Catch ex As Exception
@@ -832,16 +821,26 @@ Module VISBO_SPE_Utilities
                     Dim protectionText As String = ""
                     'Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
+                    ' tk 5.1.24 finished, paused, stopped projects are not editable 
+                    If hproj.vpStatus = VProjectStatus(PTVPStati.finished) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.paused) Or
+                            hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
+
                         isProtectedbyOthers = True
 
-                        protectionText = "Orga-Admin kann Daten nur sehen, nicht ändern ...  "
-                        If awinSettings.englishLanguage Then
-                            protectionText = "Orga-Admin may only view data ..."
+                        Dim msgTxt As String = "finished"
+
+                        If hproj.vpStatus = VProjectStatus(PTVPStati.paused) Then
+                            msgTxt = "Paused"
+                        ElseIf hproj.vpStatus = VProjectStatus(PTVPStati.stopped) Then
+                            msgTxt = "Cancelled"
                         End If
-                    Else
+
+                        protectionText = "No Edit possible because of status " & msgTxt
 
                     End If
+
 
 
                     ' jetzt wird für jedes Element in der Hierarchy eine Zeile rausgeschrieben 
@@ -874,18 +873,13 @@ Module VISBO_SPE_Utilities
                         'CType(currentWS.Cells(zeile, 2), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' geschützt oder nicht geschützt ? 
-                        Dim currentCell As Excel.Range = CType(currentWS.Cells(zeile, 2), Excel.Range)
                         If isProtectedbyOthers Then
 
-                            If isProtectedbyOthers Then
-                                currentCell.Font.Color = awinSettings.protectedByOtherColor
-                            End If
-
                             ' Kommentare löschen
-                            currentCell.ClearComments()
+                            CType(currentWS.Cells(zeile, 2), Excel.Range).ClearComments()
 
-                            currentCell.AddComment(Text:=protectionText)
-                            currentCell.Comment.Visible = False
+                            CType(currentWS.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                            CType(currentWS.Cells(zeile, 2), Excel.Range).Comment.Visible = False
 
                         End If
 
@@ -921,11 +915,12 @@ Module VISBO_SPE_Utilities
 
                             ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren
                             ' Datumsformat je nach Sprache setzen
-                            If awinSettings.englishLanguage Then
-                                CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
-                            Else
-                                CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
-                            End If
+                            'If awinSettings.englishLanguage Then
+                            '    CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            'Else
+                            '    CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            'End If
+                            CType(currentWS.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                             'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
@@ -934,11 +929,12 @@ Module VISBO_SPE_Utilities
 
                             ' Ende-Datum
                             ' Datumsformat je nach Sprache setzen
-                            If awinSettings.englishLanguage Then
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
-                            Else
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
-                            End If
+                            'If awinSettings.englishLanguage Then
+                            '    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                            'Else
+                            '    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
+                            'End If
+                            CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate
                             If isPastElement Then
                                 ' Sperren ...
@@ -951,7 +947,6 @@ Module VISBO_SPE_Utilities
                             Else
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
                                 End If
@@ -962,7 +957,6 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = True
-                                'CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
                             End If
@@ -985,7 +979,6 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = True
-                                'CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
                             End If
@@ -995,7 +988,6 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
-                                'CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
                             End If
@@ -1006,7 +998,6 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = True
-                                'CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
                             End If
@@ -1026,7 +1017,6 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cMilestone.DocURL
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
-                                'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
                             End If
@@ -1055,7 +1045,8 @@ Module VISBO_SPE_Utilities
 
 
                                 If awinSettings.englishLanguage Then
-                                    CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    'CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "dd.mm.yyyy"
                                     CType(currentWS.Cells(zeile, 16), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                                 Else
                                     CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "dd.mm.yyyy"
@@ -1124,7 +1115,10 @@ Module VISBO_SPE_Utilities
                                 ' Startdatum 
                                 ' Format bestimmen je nach Language?!?
                                 If awinSettings.englishLanguage Then
-                                    CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    ' tk 3.1.24 causes lots of irritation with our german customers , 
+                                    ' that Is why it Is set to the german notation
+                                    'CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
                                 Else
                                     CType(.Cells(zeile, 5), Excel.Range).NumberFormat = "dd.mm.yyyy"
                                 End If
@@ -1138,7 +1132,6 @@ Module VISBO_SPE_Utilities
                                 Else
                                     If isProtectedbyOthers Then
                                         CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
-                                        'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                     Else
                                         CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = False
                                     End If
@@ -1149,10 +1142,14 @@ Module VISBO_SPE_Utilities
 
                                 ' Datumsformat je nach Sprache setzen
                                 If awinSettings.englishLanguage Then
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    ' tk 3.1.24 causes lots of irritation with our german customers , 
+                                    ' that Is why it Is set to the german notation
+                                    'CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
                                 Else
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).NumberFormat = "dd.mm.yyyy"
                                 End If
+
                                 CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate
 
                                 ' tk ein End-Datum muss auch dann noch verändert werden können , wenn percentDone < 100% ist 
@@ -1177,7 +1174,6 @@ Module VISBO_SPE_Utilities
                                 CType(.Cells(zeile, 7), Excel.Range).Value = cPhase.ampelStatus
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 7), Excel.Range).Locked = False
                                 End If
@@ -1199,7 +1195,6 @@ Module VISBO_SPE_Utilities
                                 CType(.Cells(zeile, 8), Excel.Range).Value = cPhase.ampelErlaeuterung
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 8), Excel.Range).Locked = False
                                 End If
@@ -1209,7 +1204,6 @@ Module VISBO_SPE_Utilities
                                 CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 9), Excel.Range).Locked = False
                                 End If
@@ -1219,17 +1213,16 @@ Module VISBO_SPE_Utilities
                                 CType(.Cells(zeile, 10), Excel.Range).Value = cPhase.verantwortlich
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 10), Excel.Range).Locked = False
                                 End If
 
 
                                 ' wieviel ist erledigt ? 
-                                CType(.Cells(zeile, 11), Excel.Range).Value = cPhase.percentDone.ToString("0#%")
+                                CType(.Cells(zeile, 11), Excel.Range).Value = cPhase.percentDone
+                                CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0#%"
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 11), Excel.Range).Locked = False
                                 End If
@@ -1240,7 +1233,6 @@ Module VISBO_SPE_Utilities
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).EntireColumn.Hidden = True
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
-                                    'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
 
@@ -1271,7 +1263,8 @@ Module VISBO_SPE_Utilities
                                     End If
 
                                     If awinSettings.englishLanguage Then
-                                        CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                        'CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "mm/dd/yyyy"
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "dd.mm.yyyy"
                                         CType(currentWS.Cells(zeile, 16), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                                     Else
                                         CType(currentWS.Cells(zeile, 16), Excel.Range).NumberFormat = "dd.mm.yyyy"
@@ -1440,6 +1433,14 @@ Module VISBO_SPE_Utilities
             appInstance.EnableEvents = True
 
             Try
+                ' jetzt schützen des Sheets
+                currentWS.Protect(Password:="x", UserInterfaceOnly:=True)
+            Catch ex As Exception
+
+            End Try
+
+            Try
+
                 ' on setzen des AutoFilter Modus ... 
                 If CType(currentWS, Excel.Worksheet).AutoFilterMode = False Then
                     'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
@@ -1569,9 +1570,9 @@ Module VISBO_SPE_Utilities
             Dim currentWS As Excel.Worksheet = Nothing
             Dim currentWB As Excel.Workbook
             Dim currentTab As Integer = ptTables.meTE
-            Dim startDateColumn As Integer = 5
-            Dim anzSpalten As Integer = visboZustaende.meColED + 20
-            Dim infoDataBlock As Excel.Range
+            'Dim startDateColumn As Integer = 5
+            'Dim anzSpalten As Integer = visboZustaende.meColED + 20
+            'Dim infoDataBlock As Excel.Range
 
             If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
                 currentTab = ptTables.meRC
@@ -1596,9 +1597,10 @@ Module VISBO_SPE_Utilities
                 ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
                 Try
                     With currentWS
-
-                        infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(2 + visboZustaende.meMaxZeile, anzSpalten)), Excel.Range)
-                        infoDataBlock.Clear()
+                        ' tk 3.1.24
+                        .Cells.Clear()
+                        'infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(2 + visboZustaende.meMaxZeile, anzSpalten)), Excel.Range)
+                        'infoDataBlock.Clear()
                     End With
                 Catch ex As Exception
 

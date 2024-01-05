@@ -26,6 +26,7 @@
 				<group id ="PT6G6" label="VISBO Simple Project Edit">
 					<button id="Pt6G6B0" label="Load" size ="large" imageMso="MindMapExportData" onAction="PTProjectLoad" />
 					<button id="Pt6G6B1" label="Save" size ="large" imageMso="MindMapImportData"  onAction="PTProjectSave" />
+          <button id="Pt6G6B2" label="Download" size ="large" imageMso="MindMapImportData"  onAction="PTDownload" />
 					<!--<button id="Pt6G6B2" label="Unload" visible="true" size ="large" imageMso="Delete" onAction="PTProjectDelete" />-->
 					<separator id="Pt6G6B0s1"/>
 					<button id="Pt6G6B3" label="Cost" size ="large"  getImage="imageSuper_GetImage" onAction="PTProjectCost" supertip="The costs for the selected projects can be edited here"/>

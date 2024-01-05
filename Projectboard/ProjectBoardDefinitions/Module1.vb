@@ -9454,6 +9454,8 @@ Public Module Module1
             currentCell.Comment.Visible = False
         End If
 
+        currentCell.Locked = True
+
     End Sub
 
     ''' <summary>
@@ -9471,6 +9473,8 @@ Public Module Module1
         currentCell.Value = pName
         ' Kommentare löschen
         currentCell.ClearComments()
+
+        currentCell.Locked = True
 
         ' ist immer locked , also entsprechend kennzeichnen
         'currentCell.Interior.Color = XlRgbColor.rgbLightGray
@@ -9536,7 +9540,8 @@ Public Module Module1
             .NumberFormat = "@"
             .Value = rcName
             .Locked = isLocked
-            .IndentLevel = indentlevel
+            '.IndentLevel = indentlevel
+            .IndentLevel = 1
 
             Try
                 If Not IsNothing(.Validation) Then
@@ -9556,7 +9561,7 @@ Public Module Module1
 
             currentRange.Cells(1, 2).value = teamName
             currentRange.Cells(1, 2).locked = isLocked
-            currentRange.Cells(1, 2).indentlevel = skillIndentLevel
+            'currentRange.Cells(1, 2).indentlevel = skillIndentLevel
 
         Else
             ' Skill Name 

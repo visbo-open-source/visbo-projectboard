@@ -938,13 +938,8 @@ Public Class Tabelle3
         hproj.vpStatus = VProjectStatus(PTVPStati.initialized)
         hproj.movable = True
 
-        'Dim allowedLeftDate As Date = hproj.startDate
-        'Dim allowedRightDate As Date = hproj.endeDate
 
         Dim allowedLeftDate As Date = StartofCalendar
-        If hproj.hasActualValues Then
-            allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
-        End If
         Dim allowedRightDate As Date = StartofCalendar.AddYears(20).AddDays(-1)
 
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
@@ -960,6 +955,7 @@ Public Class Tabelle3
 
                 ' jetzt bestimmen, ob es sich bei dem Eintrag in der Zeile um eine Phase oder einen Meilenstein handelt
                 Dim elemIsMilestone As Boolean = elemIDIstMeilenstein(elemID)
+
                 If elemIsMilestone Then
                     cMilestone = hproj.getMilestoneByID(elemID)
                     cphase = Nothing
@@ -971,16 +967,10 @@ Public Class Tabelle3
                 ' dann die allowdLeft und RightDate berechnen
                 ' jedes Elem hat eine Eltern-Phase, die nur eine Phase sein kann ...
                 Dim parentPhase As clsPhase = hproj.getParentPhaseByID(elemID)
-                If Not IsNothing(parentPhase) Then
-
+                If IsNothing(parentPhase) Then
+                    ' allowedLeft and rightDates are all set
+                Else
                     allowedLeftDate = parentPhase.getStartDate
-
-                    If hproj.hasActualValues Then
-                        If parentPhase.getStartDate < hproj.actualDataUntil Then
-                            allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
-                        End If
-                    End If
-
                     allowedRightDate = parentPhase.getEndDate
                 End If
 
@@ -994,18 +984,23 @@ Public Class Tabelle3
                         ' in target.Value ist jetzt der neue Wert
                         Dim frmDateEdit As New frmEditDates
 
+                        frmDateEdit.IsMilestone = True
+
                         frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
                         frmDateEdit.startdatePicker.Value = cMilestone.getDate
                         frmDateEdit.startdatePicker.Enabled = False
+                        frmDateEdit.startdatePicker.Visible = False
 
-                        ' Checkbox Auto Distribution is invisible ..
-                        frmDateEdit.chkbxAutoDistr.Visible = False
 
                         frmDateEdit.enddatePicker.Value = cMilestone.getDate
-                        frmDateEdit.IsMilestone = True
+                        If IsNothing(parentPhase) Then
+                            frmDateEdit.enddatePicker.MinDate = hproj.startDate
+                            frmDateEdit.enddatePicker.MaxDate = hproj.endeDate
+                        Else
+                            frmDateEdit.enddatePicker.MinDate = parentPhase.getStartDate
+                            frmDateEdit.enddatePicker.MaxDate = parentPhase.getEndDate
+                        End If
 
-                        frmDateEdit.allowedDateLeft = allowedLeftDate
-                        frmDateEdit.allowedDateRight = allowedRightDate
 
                         If frmDateEdit.ShowDialog() = DialogResult.OK Then
                             Target.Value = frmDateEdit.enddatePicker.Value
@@ -1026,10 +1021,12 @@ Public Class Tabelle3
                         Dim msChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, True)
                         Dim phaseChilds As Collection = hproj.hierarchy.getChildIDsOf(cphase.nameID, False)
                         Dim anzChilds As Integer = hproj.hierarchy.getChildIDsOf(cphase.nameID, True).Count + hproj.hierarchy.getChildIDsOf(cphase.nameID, False).Count
+
+                        ' Checkboxes Settings and visbility 
                         If anzChilds > 0 Then
                             frmDateEdit.chkbx_adjustChilds.Visible = True
                             frmDateEdit.chkbx_adjustChilds.Enabled = True
-                            'frmDateEdit.chkbx_adjustChilds.Checked = True
+
                             frmDateEdit.chkbx_adjustChilds.Checked = awinSettings.autoAjustChilds
                         End If
 
@@ -1040,28 +1037,34 @@ Public Class Tabelle3
                         frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
                         frmDateEdit.IsMilestone = False
 
+                        ' Setting and Enabling Date Pickers 
                         frmDateEdit.startdatePicker.Value = cphase.getStartDate
 
-                        If allowedLeftDate > cphase.getStartDate Then
+                        If cphase.hasActualData Then
                             frmDateEdit.startdatePicker.Enabled = False
+                        Else
+                            If IsNothing(parentPhase) Then
+                                frmDateEdit.startdatePicker.MinDate = allowedLeftDate
+                                frmDateEdit.startdatePicker.MaxDate = hproj.endeDate
+                            Else
+                                frmDateEdit.startdatePicker.MinDate = parentPhase.getStartDate
+                                frmDateEdit.startdatePicker.MaxDate = parentPhase.getEndDate
+                            End If
+
+                        End If
+
+                        frmDateEdit.enddatePicker.Value = cphase.getEndDate
+
+                        If IsNothing(parentPhase) Then
+                            frmDateEdit.enddatePicker.MinDate = hproj.startDate
+                            frmDateEdit.enddatePicker.MaxDate = allowedRightDate
+                        Else
+                            frmDateEdit.enddatePicker.MinDate = parentPhase.getStartDate
+                            frmDateEdit.enddatePicker.MaxDate = parentPhase.getEndDate
                         End If
 
 
-                        Dim maxPossibleOffset As Integer = 20 * 365
-
-                        'If Not awinSettings.autoAjustChilds Then
-                        Dim ph As clsPhase = Nothing
-                        For Each phID As String In phaseChilds
-                            ph = hproj.getPhaseByID(phID)
-                            maxPossibleOffset = Math.Min(maxPossibleOffset, ph.startOffsetinDays)
-                        Next
-                        'End If
-
-                        frmDateEdit.enddatePicker.Value = cphase.getEndDate
-                        frmDateEdit.maxPossibleStartDate = cphase.getStartDate.AddDays(maxPossibleOffset)
-
-                        frmDateEdit.allowedDateLeft = allowedLeftDate
-                        frmDateEdit.allowedDateRight = allowedRightDate
+                        Dim maxPossibleOffset As Integer = 40 * 365
 
                         If frmDateEdit.ShowDialog() = DialogResult.OK Then
                             ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
