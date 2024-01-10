@@ -951,11 +951,13 @@ Public Class clsProjekte
         Get
             Dim tmpMin As Integer = 10000
             Dim weitermachen As Boolean = False
+            Dim firstTime As Boolean = True
+
 
             If showForecastDataOnly Then
 
                 ' define the greatest startCol of actualData
-                Dim greatestStartCol As Integer = 0 ' startOfCalendar
+                Dim appropriateStartCol As Integer = 0 ' startOfCalendar
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If IsNothing(liste) Then
@@ -965,23 +967,31 @@ Public Class clsProjekte
                     End If
 
                     If weitermachen Then
+
                         If kvp.Value.hasActualValues Then
                             Dim tmpStartCol As Integer = getColumnOfDate(kvp.Value.actualDataUntil) + 1
 
-                            If tmpStartCol > greatestStartCol Then
-                                greatestStartCol = tmpStartCol
+                            If tmpStartCol > appropriateStartCol Then
+                                appropriateStartCol = tmpStartCol
                             End If
 
                         Else
+                            ' tk 8.1.24 do nothing, then it is project with forecast Months only
+
                             Dim tmpStartCol As Integer = kvp.Value.Start
-                            If tmpStartCol > greatestStartCol Then
-                                greatestStartCol = tmpStartCol
+                            If firstTime Then
+                                firstTime = False
+                                appropriateStartCol = tmpStartCol
+                            Else
+                                If tmpStartCol < appropriateStartCol Then
+                                    appropriateStartCol = tmpStartCol
+                                End If
                             End If
                         End If
                     End If
                 Next
 
-                tmpMin = greatestStartCol
+                tmpMin = appropriateStartCol
 
             Else
 

@@ -2358,7 +2358,10 @@ Public Class Tabelle2
         Dim ix As Integer
         Dim breite As Integer
         ' define breite, iXZeitraum and IX
-        Call awinIntersectZeitraum(von, bis, ixZeitraum, ix, breite)
+        ' tk 8.1.24
+        'Call awinIntersectZeitraum(von, bis, ixZeitraum, ix, breite)
+        ' von ist gleich showrangeLeft, bis ist gleich showrangeRight
+        Call awinIntersectZeitraum(phStart, phEnd, ixZeitraum, ix, breite)
 
         schnittmenge = calcArrayIntersection(von, bis, phStart, phEnd, xWerte)
 
