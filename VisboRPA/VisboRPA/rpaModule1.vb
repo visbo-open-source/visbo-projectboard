@@ -1224,11 +1224,17 @@ Module rpaModule1
                 .userName = dbUsername
             End With
 
+            ' now define settings needed in RPA, independent from interactive settings in SPE or projectboard
+            awinSettings.meAllowOverTime = False
+            awinSettings.propAnpassRess = False
+
             '
             ' now read Vorlagen - maybe Empty
             lastReadingProjectTemplates = readProjectTemplates()
 
             result = True
+
+
 
         Catch ex As Exception
 
@@ -1621,6 +1627,8 @@ Module rpaModule1
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim possibleTableNames() As String = {"Kapazität"}
         Dim verifiedStructure As Boolean = True
+        Dim row As Integer
+        Dim column As Integer
         Try
 
             Dim currentWS As xlns.Worksheet = Nothing
@@ -1657,7 +1665,7 @@ Module rpaModule1
 
                 ' now row for row
                 For r As Integer = 2 To lastRow
-
+                    row = r
                     If IsNumeric(CType(currentWS.Cells(r, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
                         verifiedStructure = False
                         Exit For
@@ -1674,10 +1682,12 @@ Module rpaModule1
 
                     For c As Integer = 3 To lastColumn
 
+                        column = c
                         If Not IsNothing(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
                             Dim myString As String = CType(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).DisplayFormat, xlns.DisplayFormat).NumberFormat
                             If myString.Contains("%") Then
                                 isCompleteAbsolut = isCompleteAbsolut And False
+
                                 If CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 1 And
                                     CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 Then
                                     atLeastOnePercentLine = True
@@ -1685,6 +1695,7 @@ Module rpaModule1
                                 Else
                                     isCompletePercent = isCompletePercent And False
                                 End If
+
                             Else
                                 isCompletePercent = isCompletePercent And False
                                 If CDbl(CType(currentWS.Cells(r, c), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 Then
@@ -1698,15 +1709,6 @@ Module rpaModule1
 
                     Next
 
-                    'If isCompletePercent Then
-                    '    verifiedStructure = True
-                    'ElseIf isCompleteAbsolut Then
-                    '    verifiedStructure = True
-                    'ElseIf Not isCompleteAbsolut Then
-                    '    ' then there is something foul ..
-                    '    verifiedStructure = False
-                    '    Exit For
-                    'End If
 
                 Next
 
@@ -1724,6 +1726,8 @@ Module rpaModule1
 
 
         Catch ex As Exception
+            Dim msg As String = "in " & currentWB.Name & " : not a number: Error in Row " & row & ", Column " & column
+            Call logger(ptErrLevel.logError, "checkModifierKapa", msg)
             result = PTRpa.visboUnknown
         End Try
 

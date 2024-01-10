@@ -1147,21 +1147,6 @@ Public Class Tabelle2
 
                                     End If
                                 Else
-                                    'Dim errMsg As String = ""
-                                    'If isCost Then
-                                    '    errMsg = "bei Kostenart ist Skill Angabe nicht zugelassen ... "
-                                    '    If awinSettings.englishLanguage Then
-                                    '        errMsg = "costs do not carry skills ... "
-                                    '    End If
-                                    'Else
-                                    '    errMsg = "Skill existiert in der angegebenen Organisations-Einheit nicht ..."
-
-                                    '    If awinSettings.englishLanguage Then
-                                    '        errMsg = "skill does not exist in orga-unit ..."
-                                    '    End If
-                                    'End If
-
-                                    'Call MsgBox(errMsg)
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
 
@@ -1210,6 +1195,7 @@ Public Class Tabelle2
                                     If awinSettings.englishLanguage Then
                                         errMsg = "please, first choose a role or cost name ..."
                                     End If
+                                    ok = False
                                     Call MsgBox(errMsg)
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
@@ -1304,12 +1290,26 @@ Public Class Tabelle2
 
                                             auslastungChanged = True
 
+                                            ' now, if requestedvalue vSum <> grantedValue xvalues.Sum 
+                                            ' provide feedback to user via comment
+                                            Try
+                                                meWS.Unprotect(Password:="x")
+                                                If vSum.Sum <> xValues.Sum Then
+                                                    Dim commentTxt As String = getCommentTxt(vSum.Sum, xValues.Sum)
+                                                    CType(Target.Cells(1, 1), Excel.Range).ClearComments()
+                                                    CType(Target.Cells(1, 1), Excel.Range).AddComment(commentTxt)
+                                                Else
+                                                    CType(Target.Cells(1, 1), Excel.Range).ClearComments()
+                                                End If
+                                                meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                                            Catch ex As Exception
+                                                meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                                            End Try
 
-                                            ' jetzt muss die Excel Zeile geschreiben werden - dort wird auch der auslastungs-Array aktualisiert 
 
                                             Call aktualisiereRoleCostInSheet(Target.Row,
                                                                                  visboZustaende.meColSD, von, bis,
-                                                                                 phStart, phEnde, xValues)
+                                                                                 phStart, phEnde, tmpRole.Xwerte)
 
 
                                         Else
@@ -1347,9 +1347,13 @@ Public Class Tabelle2
                                             kostenChanged = True
 
                                             ' jetzt muss die Excel Zeile geschreiben werden 
+                                            'Call aktualisiereRoleCostInSheet(Target.Row,
+                                            '                                     visboZustaende.meColSD, von, bis,
+                                            '                                     phStart, phEnde, xValues)
+                                            ' tk 4.1.24 last parameter has to have same dimension than whole phase
                                             Call aktualisiereRoleCostInSheet(Target.Row,
                                                                                  visboZustaende.meColSD, von, bis,
-                                                                                 phStart, phEnde, xValues)
+                                                                                 phStart, phEnde, tmpCost.Xwerte)
 
                                         End If
 
@@ -1388,6 +1392,37 @@ Public Class Tabelle2
                                 If isRole Or isCost Then
                                     ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
 
+                                    ' now check whether or not it is role and if it is valid input ..
+                                    If isRole And Not awinSettings.meAllowOverTime Then
+
+                                        Dim grantedValues As Double() = getGrantedValues(Target, pName, phaseNameID, rcNameID)
+
+                                        Try
+                                            meWS.Unprotect(Password:="x")
+                                            For ix As Integer = 0 To grantedValues.Length - 1
+                                                ' so now correct input if necessary 
+                                                CType(Target.Cells(1, ix + 1), Excel.Range).ClearComments()
+
+                                                If IsNumeric(Target.Cells(1, ix + 1).value) Then
+                                                    If CDbl(Target.Cells(1, ix + 1).value) <> grantedValues(ix) Then
+
+                                                        Dim commentTxt As String = getCommentTxt(Target.Cells(1, ix + 1).value, grantedValues(ix))
+                                                        CType(Target.Cells(1, 1), Excel.Range).AddComment(commentTxt)
+
+                                                        Target.Cells(1, ix + 1).value = grantedValues(ix)
+
+                                                    End If
+
+                                                End If
+                                            Next
+                                            meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                                        Catch ex As Exception
+                                            meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                                        End Try
+
+
+                                    End If
+
                                     Call updateDataValuesInProject(Target, isRole, rcName, rcNameID, pName, phaseNameID,
                                                                 auslastungChanged, summenChanged, kostenChanged, roleCostNames)
 
@@ -1412,22 +1447,57 @@ Public Class Tabelle2
 
                 ElseIf Target.Columns.Count > 1 Then
 
-                    If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
-                        rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
-                        isRole = RoleDefinitions.containsName(rcName)
-                    End If
+                    If Target.Column > columnRC + 2 Then
+                        ' changes in months ... 
 
-                    If isRole Or isCost Then
-
-                        If isRole Then
-                            rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
-                        ElseIf isCost Then
-                            rcNameID = rcName
+                        If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
+                            rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
+                            isRole = RoleDefinitions.containsName(rcName)
                         End If
 
-                        Call updateDataValuesInProject(Target, isRole, rcName, rcNameID, pName, phaseNameID,
-                                                                auslastungChanged, summenChanged, kostenChanged, roleCostNames)
+                        If isRole Or isCost Then
+
+                            If isRole Then
+                                rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+                            ElseIf isCost Then
+                                rcNameID = rcName
+                            End If
+
+                            ' now check whether or not it is role and if it is valid input ..
+                            If isRole And Not awinSettings.meAllowOverTime Then
+
+                                Dim grantedValues As Double() = getGrantedValues(Target, pName, phaseNameID, rcNameID)
+
+                                Try
+                                    meWS.Unprotect(Password:="x")
+                                    For ix As Integer = 0 To grantedValues.Length - 1
+                                        ' so now correct input if necessary 
+                                        CType(Target.Cells(1, ix + 1), Excel.Range).ClearComments()
+
+                                        If IsNumeric(Target.Cells(1, ix + 1).value) Then
+                                            If CDbl(Target.Cells(1, ix + 1).value) <> grantedValues(ix) Then
+
+                                                Dim commentTxt As String = getCommentTxt(Target.Cells(1, ix + 1).value, grantedValues(ix))
+                                                CType(Target.Cells(1, 1), Excel.Range).AddComment(commentTxt)
+
+                                                Target.Cells(1, ix + 1).value = grantedValues(ix)
+                                            End If
+
+                                        End If
+                                    Next
+                                    meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                                Catch ex As Exception
+                                    meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                                End Try
+
+                            End If
+
+                            Call updateDataValuesInProject(Target, isRole, rcName, rcNameID, pName, phaseNameID,
+                                                                    auslastungChanged, summenChanged, kostenChanged, roleCostNames)
+                        End If
+
                     End If
+
 
                 End If
 
@@ -1448,23 +1518,6 @@ Public Class Tabelle2
                     visboZustaende.oldValue = ""
                 End If
 
-                '' aktualisieren der Charts 
-                'Try
-                '    If auslastungChanged Or summenChanged Or kostenChanged Then
-                '        If Not IsNothing(formProjectInfo1) Then
-                '            Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
-                '        End If
-                '        ' tk 18.1.20
-
-                '        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
-
-                '        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
-
-                '    End If
-
-                'Catch ex As Exception
-
-                'End Try
 
             ElseIf Target.Rows.Count > 1 Then
 
@@ -1495,6 +1548,93 @@ Public Class Tabelle2
 
     End Sub
 
+    ''' <summary>
+    ''' returns an array of values which are possible without causing bottlenecks
+    ''' if there is no context provided: available capacity is considered to be the whole capacity of given rcNameID
+    ''' if there is context provided:  available capacity is considered to be the remaining capacity under consideration of all other projects of the given context
+    ''' </summary>
+    ''' <param name="Target"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcNameID"></param>
+    ''' <returns></returns>
+    Private Function getGrantedValues(ByVal Target As Excel.Range, ByVal pName As String,
+                                      ByVal phaseNameID As String, ByVal rcNameID As String)
+
+        Dim grantedValues As Double() ' holds finally the values which are granted
+        Dim requestedValues As Double() ' holds the values as entered by user
+        Dim projectValues As Double() ' holds the current values of roleNameID in phase/project
+
+        If Not IsNothing(Target) Then
+            Dim anzTargetColumns As Integer = Target.Columns.Count
+
+            ReDim grantedValues(anzTargetColumns - 1)
+            ReDim requestedValues(anzTargetColumns - 1)
+            ReDim projectValues(anzTargetColumns - 1)
+
+
+            ' now get the requestedValues from target 
+            For ix As Integer = 0 To anzTargetColumns - 1
+                If IsNumeric(Target.Cells(1, ix + 1).value) Then
+                    requestedValues(ix) = CDbl(Target.Cells(1, ix + 1).value)
+                Else
+                    requestedValues(ix) = 0
+                End If
+            Next
+
+            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+            If Not IsNothing(hproj) Then
+                Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+                If Not IsNothing(cphase) Then
+                    Dim role As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+
+                    If Not IsNothing(role) Then
+                        Dim von As Integer = showRangeLeft + Target.Column - columnStartData
+                        Dim bis As Integer = von + anzTargetColumns - 1
+
+                        ' freeCapacity now has the same dimension as requestedValues/target
+                        Dim availableCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(role.uid, role.teamID, von, bis)
+
+                        Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
+                        Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
+                        Dim xWerte() As Double = role.Xwerte
+
+                        For ix As Integer = 0 To anzTargetColumns - 1
+
+                            Try
+                                projectValues(ix) = xWerte(xWerteIndex + ix)
+                                ' available capacity is now including projectvalues, because the project values are being substututed
+                                availableCapacity(ix) = availableCapacity(ix) + projectValues(ix)
+                            Catch ex As Exception
+                                Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID & " " & rcNameID, ex.Message)
+                            End Try
+
+                        Next
+
+                        ' now do the Job ... 
+                        For ix As Integer = 0 To anzTargetColumns - 1
+                            grantedValues(ix) = System.Math.Min(requestedValues(ix), availableCapacity(ix))
+                        Next
+
+                    Else
+                        Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID & " " & rcNameID, " : Role was Nothing")
+                    End If
+
+                Else
+                    Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID, " : Phase was Nothing ..")
+                End If
+            Else
+                Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " : hproj was Nothing ..")
+            End If
+        Else
+            ReDim grantedValues(0)
+            Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " Cell was Nothing ..")
+        End If
+
+
+        getGrantedValues = grantedValues
+    End Function
     ''' <summary>
     ''' aktualisiert 
     ''' </summary>
@@ -1560,6 +1700,7 @@ Public Class Tabelle2
                     visboZustaende.oldValue = "0"
                 End Try
 
+                ' tk: target.column - returns the nr of the first column of the range  
                 Dim monthCol As Integer = showRangeLeft + target.Column - columnStartData
 
                 Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
@@ -1613,8 +1754,9 @@ Public Class Tabelle2
                     If IsNothing(tmpCost) Then
                         ' die Kostenart muss neu angelegt und der Phase hinzugefügt werden  
 
-                        tmpCost = New clsKostenart(cphase.relEnde - cphase.relStart)
-                        tmpCost.KostenTyp = CostDefinitions.getCostdef(rcName).UID
+                        tmpCost = New clsKostenart(cphase.relEnde - cphase.relStart) With {
+                            .KostenTyp = CostDefinitions.getCostdef(rcName).UID
+                        }
 
                         Call cphase.AddCost(tmpCost)
 
@@ -2016,10 +2158,10 @@ Public Class Tabelle2
 
                     ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                        Dim parentCollection As New Collection
 
-                        'parentCollection.Add(myCustomUserRole.specifics)
-                        parentCollection.Add(RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, skillID).name)
+                        Dim parentCollection As New Collection From {
+                            RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, skillID).name
+                        }
 
                         If RoleDefinitions.hasAnyChildParentRelationsship(newValue, parentCollection) Then
                             weiterMachen = True
@@ -2201,19 +2343,24 @@ Public Class Tabelle2
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
+        ' tk this leads to error if von bis does not correspond to Xwerte
         ' sicherstellen, dass die Länge von xWerte = phStart-phEnd +1 ist
         ' sonst funktioniert die Zuweisung weiter unten nicht 
-        If phStart < von Then
-            phStart = von
-        End If
-        If phEnd > bis Then
-            phEnd = bis
-        End If
+        'If phStart < von Then
+        '    phStart = von
+        'End If
+        'If phEnd > bis Then
+        '    phEnd = bis
+        'End If
 
 
         Dim ixZeitraum As Integer
         Dim ix As Integer
         Dim breite As Integer
+        ' define breite, iXZeitraum and IX
+        ' tk 8.1.24
+        'Call awinIntersectZeitraum(von, bis, ixZeitraum, ix, breite)
+        ' von ist gleich showrangeLeft, bis ist gleich showrangeRight
         Call awinIntersectZeitraum(phStart, phEnd, ixZeitraum, ix, breite)
 
         schnittmenge = calcArrayIntersection(von, bis, phStart, phEnd, xWerte)
@@ -2312,6 +2459,25 @@ Public Class Tabelle2
 
     End Sub
 
+    ''' <summary>
+    ''' returns a commentTxt to be used in massEdit Resources, asking for more resources than are available
+    ''' </summary>
+    ''' <param name="requested"></param>
+    ''' <param name="granted"></param>
+    ''' <returns></returns>
+    Private Function getCommentTxt(ByVal requested As Double, ByVal granted As Double) As String
+
+        Dim contextTxt As String
+        If projectConstellations.Count > 0 Then
+            contextTxt = "Context: " & projectConstellations.Liste.First.Key
+        Else
+            contextTxt = "Context: None"
+        End If
+
+        Dim commentTxt As String = contextTxt & vbLf & "requested: " & requested & vbLf & "granted: " & granted
+
+        getCommentTxt = commentTxt
+    End Function
     ''' <summary>
     ''' prüft den Input, setzt, wenn ok, den neuen Wert und die Differenz zum alten Wert 
     ''' </summary>

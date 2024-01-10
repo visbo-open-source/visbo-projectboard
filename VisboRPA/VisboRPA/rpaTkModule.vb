@@ -2309,39 +2309,56 @@ Module rpaTkModule
             Dim aggregationRoles As SortedList(Of Integer, String) = RoleDefinitions.getAggregationRoles()
             Dim teamID As Integer = -1
 
-
-            ' currently only Exclude of Roles & Skills is supported ..
-            ' checkout aggregation Roles
-            For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
-                Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
-                If Not aggregationList.Contains(tmpStrID) Then
-                    If jobParameters.donotConsiderRoleSkills.Count = 0 Then
-                        aggregationList.Add(tmpStrID)
-                    Else
-                        If Not jobParameters.donotConsiderRoleSkills.Contains(ar.Value) Then
+            ' tk 20.12 if there is given a include only 
+            If jobParameters.considerRoleSkills.Count > 0 Then
+                For Each tmpStrID As String In jobParameters.considerRoleSkills
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(tmpStrID, teamID)
+                    If teamID <= 0 Then
+                        If Not aggregationList.Contains(tmpStrID) Then
                             aggregationList.Add(tmpStrID)
                         End If
-                    End If
-                End If
-            Next
-
-            ' build Skill List 
-            Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
-
-
-            For Each si As String In skillIDs
-
-                ' new  
-                If Not skillList.Contains(si) Then
-                    If jobParameters.donotConsiderRoleSkills.Count = 0 Then
-                        skillList.Add(si)
                     Else
-                        If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
-                            skillList.Add(si)
+                        If Not skillList.Contains(tmpStrID) Then
+                            skillList.Add(tmpStrID)
                         End If
                     End If
-                End If
-            Next
+                Next
+            Else
+                ' this is the Exclude branch ... Exclude of Roles & Skills is supported ..
+                ' checkout aggregation Roles
+                For Each ar As KeyValuePair(Of Integer, String) In aggregationRoles
+                    Dim tmpStrID As String = RoleDefinitions.bestimmeRoleNameID(ar.Key, teamID)
+                    If Not aggregationList.Contains(tmpStrID) Then
+                        If jobParameters.donotConsiderRoleSkills.Count = 0 Then
+                            aggregationList.Add(tmpStrID)
+                        Else
+                            If Not jobParameters.donotConsiderRoleSkills.Contains(ar.Value) Then
+                                aggregationList.Add(tmpStrID)
+                            End If
+                        End If
+                    End If
+                Next
+
+                ' build Skill List 
+                Dim skillIDs As Collection = ImportProjekte.getRoleSkillIDs()
+
+
+                For Each si As String In skillIDs
+
+                    ' new  
+                    If Not skillList.Contains(si) Then
+                        If jobParameters.donotConsiderRoleSkills.Count = 0 Then
+                            skillList.Add(si)
+                        Else
+                            If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
+                                skillList.Add(si)
+                            End If
+                        End If
+                    End If
+                Next
+            End If
+
+
         End If
 
 
@@ -2729,20 +2746,23 @@ Module rpaTkModule
                                     referencePHValues = ShowProjekte.getPhaseFrequency(jobParameters.getPhaseNames)
                                 Else
                                     ' now define skill-List, because it is good enough to only consider skills of the hproj under consideration
-                                    skillList.Clear()
-                                    Dim skillIDs As Collection = hproj.getSkillNameIds
+                                    ' but this is only necessary if there was not a constraint on a certain role / skill 
+                                    If jobParameters.considerRoleSkills.Count = 0 Then
+                                        skillList.Clear()
+                                        Dim skillIDs As Collection = hproj.getSkillNameIds
 
-                                    For Each si As String In skillIDs
-                                        If Not skillList.Contains(si) Then
-                                            If jobParameters.donotConsiderRoleSkills.Count = 0 Then
-                                                skillList.Add(si)
-                                            Else
-                                                If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
+                                        For Each si As String In skillIDs
+                                            If Not skillList.Contains(si) Then
+                                                If jobParameters.donotConsiderRoleSkills.Count = 0 Then
                                                     skillList.Add(si)
+                                                Else
+                                                    If Not jobParameters.donotConsiderRoleSkills.Contains(si) Then
+                                                        skillList.Add(si)
+                                                    End If
                                                 End If
                                             End If
-                                        End If
-                                    Next
+                                        Next
+                                    End If
                                 End If
 
 

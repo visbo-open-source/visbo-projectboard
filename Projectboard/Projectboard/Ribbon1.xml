@@ -319,9 +319,9 @@
         </group>
       </tab>-->
       <!--label="Charts"-->
-      <tab id="PTcharts" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
+      <!--<tab id="PTcharts" getVisible="chckVisibility" getLabel ="bestimmeLabel" >-->
         <!--label="Charts"-->
-        <group id="PT7G1"  >
+        <!--<group id="PT7G1"  >-->
           <!--label="Projekt-Charts"-->
           <!--<splitButton id="PT7G1M1split" size="large">-->
             <!--label="wichtigsten Projekt-Charts "-->
@@ -356,7 +356,7 @@
           <!--<splitButton id="PT7G1M0split" size="large">-->
           <!--label="Capazity Utilization"-->
           <!--<button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>-->
-          <button id="PTXG1B7" size="large" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>
+          <!--<button id="PTXG1B7" size="large" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>-->
           <!--<menu id="PT7G1M"  getVisible="chckVisibility" >-->
             <!--label="Ressource/Cost/Milestones/Phases"-->
             <!--<button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>-->
@@ -409,56 +409,56 @@
            </splitButton>-->
             <!--label="Ergebnis"--><!--
             <button id="PT0G1B7" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>-->
-          <separator id="PT0G1sX"/>
+          <!--<separator id="PT0G1sX"/>-->
           <!--label="Charts löschen"-->
-          <button id="PT0G1BX" size="large" imageMso="Delete" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
-        </group>
-      </tab>
+          <!--<button id="PT0G1BX" size="large" imageMso="Delete" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>-->
+        <!--</group>-->
+      <!--</tab>-->
       <!--label="Reports"-->
-      <tab id="PTreport"  getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTreport"  getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT8G1" >
-          <!--label="Bericht erstellen"-->
+          --><!--label="Bericht erstellen"--><!--
           <splitButton id="PT8G1split" size="large">
             <button id="PT1G1B5" imageMso ="MicrosoftPowerPoint" getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
-            <!--label="Report-Profil definieren"-->
-            <!--<separator id="PT8G1s1"/>-->
+            --><!--label="Report-Profil definieren"--><!--
+            --><!--<separator id="PT8G1s1"/>--><!--
             <menu id="PT1G1M0"  imageMso="CreateReport" getLabel ="bestimmeLabel" supertip="ein Bericht wird von Grund auf konfiguriert; damit wird das Report-Profil definiert">
               <button id="PT1G1M0B1"  getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
-              <!--label="Einzelprojekt-Berichte"-->
+              --><!--label="Einzelprojekt-Berichte"--><!--
               <menu id ="PT1G1M01" getLabel ="bestimmeLabel">
-                <!--label="Typ I"-->
+                --><!--label="Typ I"--><!--
                 <button id="PT1G1M01B0" getLabel ="bestimmeLabel" onAction="Tom2G1Doku" supertip="zu den selektierten Projekten statische Einzelprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
-                <!--label="Typ II"-->
+                --><!--label="Typ II"--><!--
                 <button id="PT1G1M1B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
-                <!--<menu id="PT1G1M1" imageMso="FindDialog" getLabel ="bestimmeLabel"  supertip ="Auswahl von Vorgängen und Meilensteinen, um bspweise alle Varianten eines Projektes zu zeigen">
+                --><!--<menu id="PT1G1M1" imageMso="FindDialog" getLabel ="bestimmeLabel"  supertip ="Auswahl von Vorgängen und Meilensteinen, um bspweise alle Varianten eines Projektes zu zeigen">
                   --><!--label="Auswahl über Namen"--><!--
                   <button id="PT1G1M1B1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
                   --><!--label="Auswahl über Hierarchie"--><!--
                   <button id="PT1G1M1B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
-                </menu>-->
+                </menu>--><!--
               </menu>
-              <!--label="Multiprojekt-Berichte"-->
+              --><!--label="Multiprojekt-Berichte"--><!--
               <menu id="PT1G1M02" getLabel ="bestimmeLabel">
-                <!--label="Typ I"-->
+                --><!--label="Typ I"--><!--
                 <button id="PT1G1B2" getLabel ="bestimmeLabel" onAction="awinAllprojectsReport" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum statische Multiprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
-                <!--label="Typ II"-->
+                --><!--label="Typ II"--><!--
                 <button id="PT1G1M2B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
-                <!--<menu id="PT1G1M2" imageMso="FindDialog" getLabel ="bestimmeLabel" supertip="Auswahl von Vorgängen und Meilensteinen, um bspweise Multiprojekt Sichten zu erstellen">
+                --><!--<menu id="PT1G1M2" imageMso="FindDialog" getLabel ="bestimmeLabel" supertip="Auswahl von Vorgängen und Meilensteinen, um bspweise Multiprojekt Sichten zu erstellen">
                   --><!--label="Auswahl über Namen"--><!--
                   <button id="PT1G1M2B1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
                   --><!--label="Auswahl über Hierarchie"--><!--
                   <button id="PT1G1M2B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
-                </menu>-->
+                </menu>--><!--
               </menu>
-              <!--label="letztes Report-Profil speichern"-->
+              --><!--label="letztes Report-Profil speichern"--><!--
               <button id="PT1G1B4" imageMso="SaveAsPowerPointPotx" getLabel ="bestimmeLabel" onAction="PTStoreCurReportProfil" supertip ="Es wird die zuletzt verwendete Report-Definition in der Datei mit angegebenen Namen gespeichert"/>
             </menu>
           </splitButton>
-          <!--<separator id="PT8G1s2"/>-->
-          <!--label="ReportGenTemplate erstellen"-->
-          <!--<button id="PT1G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>-->
+          --><!--<separator id="PT8G1s2"/>--><!--
+          --><!--label="ReportGenTemplate erstellen"--><!--
+          --><!--<button id="PT1G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>--><!--
         </group>
-      </tab>
+      </tab>-->
       <!--label="Einstellungen"-->
       <tab id="PTeinst" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTeinstG1" >
@@ -468,7 +468,7 @@
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->
-      <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTTestG1" >
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
@@ -478,7 +478,7 @@
           <button id="PTDemoIst" label="create Istdaten for Demo"  onAction ="exportExcelIstDaten" />
           <button id="PTTestAPIvsClient" label="compare API versus Client Berechnung"  onAction ="PTTestAPI_Client" />
         </group>
-      </tab>
+      </tab>-->
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 

@@ -17784,6 +17784,426 @@ Public Module Projekte
         End If
     End Sub
 
+    ''' <summary>
+    ''' exports a VISBO Project hproj without necessity of having a export file ready 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    Public Sub speExportProject(ByVal hproj As clsProjekt)
+
+        Dim fileName As String
+        ' Dim rng As Excel.Range
+        Dim zeile As Integer, spalte As Integer
+
+        Dim delimiter As String = "."
+        Dim einrückJeStufe As String = "  "
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+
+        zeile = 1
+        spalte = 1
+
+        ' Dateiname des Projectfiles '
+        ' ur: 14.01.2015: Dateiname gleich dem Shape-Namen einschließlich VariantenNamen
+
+        fileName = hproj.getShapeText & ".xlsx"
+
+        'ur: 13.01.2015:  aus "fileName" werden die illegale Sonderzeichen eliminiert
+        fileName = cleanFileName(fileName)
+
+        ' Downloadsis the required folder 
+        Dim downLoadFolder As String = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\Downloads"
+        fileName = downLoadFolder & "\" & fileName
+
+        ' now create the new Excel Workbook 
+        Dim exportWorkbook As xlNS.Workbook = appInstance.Workbooks.Add()
+
+        ' Erstellen Sie ein neues Arbeitsblatt (Excel-Tabelle) im Arbeitsbuch
+        Dim stammdatenWS As xlNS.Worksheet = CType(exportWorkbook.Sheets.Add(), xlNS.Worksheet)
+        stammdatenWS.Name = "Stammdaten"
+
+        ' -------------------------------------------------
+        ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
+        ' -------------------------------------------------
+        Try
+            With stammdatenWS
+
+                ' Projekt-Name
+                CType(.Cells(2, 2), Excel.Range).Value = "Projekt-Name"
+                CType(.Cells(2, 3), Excel.Range).Value = hproj.name
+                exportWorkbook.Names.Add(Name:="Projekt_Name", RefersTo:="=Stammdaten!$C$2")
+
+                'Projekt Kurzbeschreibung - früher 14'
+                CType(.Cells(3, 2), Excel.Range).Value = "Kurzbeschreibung"
+                CType(.Cells(3, 3), Excel.Range).Value = hproj.description
+                CType(.Cells(3, 3), Excel.Range).Rows.AutoFit()
+                exportWorkbook.Names.Add(Name:="ProjektBeschreibung", RefersTo:="=Stammdaten!$C$3")
+
+
+                ' Varianten-Name
+                CType(.Cells(5, 2), Excel.Range).Value = "Varianten-Name"
+                CType(.Cells(5, 3), Excel.Range).Value = hproj.variantName
+                exportWorkbook.Names.Add(Name:="Variant_Name", RefersTo:="=Stammdaten!$C$5")
+
+                ' Projekt-Start
+                CType(.Cells(7, 2), Excel.Range).Value = "Projekt-Start"
+                CType(.Cells(7, 3), Excel.Range).Value = hproj.startDate
+                exportWorkbook.Names.Add(Name:="StartDatum", RefersTo:="=Stammdaten!$C$7")
+
+                If hproj.hasActualValues Then
+                    ' darf nicht mehr verändert werden 
+                    CType(.Cells(7, 3), Excel.Range).Locked = True
+                End If
+
+                ' Projekt Ende-Datum
+                CType(.Cells(8, 2), Excel.Range).Value = "Projekt-Ende"
+                CType(.Cells(8, 3), Excel.Range).Value = hproj.endeDate
+                exportWorkbook.Names.Add(Name:="EndeDatum", RefersTo:="=Stammdaten!$C$8")
+
+                ' Projekt-Nummer 
+                CType(.Cells(10, 2), Excel.Range).Value = "Projekt-Nr"
+                CType(.Cells(10, 3), Excel.Range).Value = hproj.kundenNummer
+                exportWorkbook.Names.Add(Name:="Projekt_Nr", RefersTo:="=Stammdaten!$C$10")
+
+
+                'Projektleiter
+                CType(.Cells(11, 2), Excel.Range).Value = "Projektleiter"
+                CType(.Cells(11, 3), Excel.Range).Value = hproj.leadPerson
+                exportWorkbook.Names.Add(Name:="Projektleiter", RefersTo:="=Stammdaten!$C$11")
+
+
+                '' Budget
+                'CType(.Cells(12, 2), Excel.Range).Value = "Budget in T€"
+                'CType(.Cells(12, 3), Excel.Range).Value = hproj.Erloes.ToString("#####.#")
+                'exportWorkbook.Names.Add(Name:="Budget", RefersTo:="=Stammdaten!$C$12")
+
+
+                ' Ampel-Farbe
+                CType(.Cells(12, 2), Excel.Range).Value = "Ampel"
+                CType(.Cells(12, 3), Excel.Range).Value = hproj.ampelStatus
+                exportWorkbook.Names.Add(Name:="Bewertung", RefersTo:="=Stammdaten!$C$12")
+
+
+                ' Ampel-Bewertung 
+                CType(.Cells(13, 2), Excel.Range).Value = "Ampel-Erläuterung"
+                CType(.Cells(13, 3), Excel.Range).Value = hproj.ampelErlaeuterung
+                CType(.Cells(13, 3), Excel.Range).Rows.AutoFit()
+                exportWorkbook.Names.Add(Name:="BewertgErläuterung", RefersTo:="=Stammdaten!$C$13")
+
+                'If hproj.hasActualValues Then
+                '    '  Blattschutz setzen
+                '    .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                'End If
+
+                Try
+                    CType(.Columns, Excel.Range).AutoFit()
+                    CType(.Rows, Excel.Range).AutoFit()
+                Catch ex As Exception
+
+                End Try
+
+
+            End With
+        Catch ex As Exception
+            '' Blattschutz setzen
+            'appInstance.ActiveWorkbook.Worksheets("Stammdaten").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+            appInstance.EnableEvents = formerEE
+            Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
+        End Try
+
+        ' ----------------------------------------------
+        ' jetzt werden die Termine weggeschrieben ....
+
+        Try
+            ' Erstellen Sie ein neues Arbeitsblatt (Excel-Tabelle) im Arbeitsbuch
+            Dim termineWS As xlNS.Worksheet = CType(exportWorkbook.Sheets.Add(), xlNS.Worksheet)
+            termineWS.Name = "Termine"
+            zeile = 1
+            spalte = 1
+
+
+            With termineWS
+
+                Dim cphase As New clsPhase(hproj)
+                Dim phaseName As String
+                Dim r As Integer
+                Dim cResult As New clsMeilenstein(parent:=cphase)
+                Dim cBewertung As clsBewertung = Nothing
+                Dim phaseStart As Date
+                Dim phaseEnde As Date
+                Dim tbl As Excel.Range = Nothing
+                Dim itemNameID As String
+                Dim tmpDeliverables As String
+
+
+                zeile = 2
+
+
+                ' write Header in Columns
+                .Cells(1, 1).value = "Name"
+                .Cells(1, 2).value = "Start-Date"
+                .Cells(1, 3).value = "End-Date"
+                .Cells(1, 4).value = "Traffic Light"
+                .Cells(1, 5).value = "Traffic Light Explanation"
+                .Cells(1, 6).value = "Deliverables"
+                .Cells(1, 7).value = "Responsible"
+                .Cells(1, 8).value = "%Done"
+
+
+                For p = 1 To hproj.CountPhases
+
+                    cphase = hproj.getPhase(p)
+
+                    ' Phasen-Name eintragen, Dauer einfärben
+                    itemNameID = cphase.nameID
+
+                    If awinSettings.zeitEinheit = "PM" Then
+                        phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
+                        phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
+                    ElseIf awinSettings.zeitEinheit = "PW" Then
+                        phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
+                        phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
+                    ElseIf awinSettings.zeitEinheit = "PT" Then
+                        phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
+                        phaseEnde = hproj.startDate.AddDays(cphase.relEnde - 1)
+                    End If
+
+
+                    phaseName = cphase.name
+
+                    ' hier muss die Phase geschrieben werden
+
+
+                    If itemNameID = rootPhaseName Then
+
+                        .Cells(zeile, 1).value = elemNameOfElemID(rootPhaseName)
+
+                    Else
+                        ' ur:06.05.2015: hier müssen die Einrückungen erfolgen
+
+                        Dim indlevel As Integer = hproj.hierarchy.getIndentLevel(itemNameID)
+
+                        .Cells(zeile, 1).value = elemNameOfElemID(itemNameID)
+                        With CType(.Cells(zeile, 1), Excel.Range)
+                            .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                            .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                            .IndentLevel = indlevel * einrückTiefe
+                        End With
+
+                    End If
+
+                    ' ur: 06.05 2015:Bezug fällt weg:.Cells(rowOffset + zeile, columnOffset + 2).value = ""
+
+                    If itemNameID = rootPhaseName Then
+                        .Cells(zeile, 2).FormulaR1C1 = "=StartDatum"
+                        .Cells(zeile, 2).locked = True
+
+                        .Cells(zeile, 3).FormulaR1C1 = "=EndeDatum"
+                        .Cells(zeile, 3).locked = True
+                    Else
+                        .Cells(zeile, 2).value = phaseStart
+
+                        If cphase.hasActualData Then
+                            .Cells(zeile, 2).locked = True
+                        End If
+
+                        .Cells(zeile, 3).value = phaseEnde
+                    End If
+
+
+                    ' Änderung tk 
+                    .Cells(zeile, 4).value = cphase.ampelStatus
+
+                    .Cells(zeile, 5).value = cphase.ampelErlaeuterung
+                    '.Cells(zeile, 5).WrapText = True
+
+
+                    ' Änderung tk 2.11 Ergänzung um Deliverables 
+                    tmpDeliverables = cphase.getAllDeliverables(vbLf)
+                    .Cells(zeile, 6).value = tmpDeliverables
+                    '.Cells(zeile, 6).WrapText = True
+
+
+                    .Cells(zeile, 7).value = cphase.verantwortlich
+                    .Cells(zeile, 8).value = cphase.percentDone
+                    .Cells(zeile, 8).NumberFormat = "0%"
+                    .Cells(zeile, 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    ' Änderung tk 11.5.18 Ergänzung Document Link 
+
+                    If Not IsNothing(cphase.DocURL) Then
+                        .Cells(zeile, 9).value = cphase.DocURL
+                    End If
+
+                    Try
+                        For offs As Integer = 2 To 9
+                            .Cells(zeile, offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        Next
+                    Catch ex As Exception
+
+                    End Try
+
+                    zeile = zeile + 1
+
+                    For r = 1 To cphase.countMilestones
+                        cResult = cphase.getMilestone(r)
+
+                        cBewertung = cResult.getBewertung(1)
+
+                        itemNameID = cResult.nameID
+
+                        ' ur:06.05.2015: hier müssen die Einrückungen erfolgen
+
+                        Dim indlevel As Integer = hproj.hierarchy.getIndentLevel(itemNameID)
+
+                        .Cells(zeile, 1).value = elemNameOfElemID(itemNameID)
+                        With CType(.Cells(zeile, 1), Excel.Range)
+
+                            .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                            .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                            .IndentLevel = indlevel * einrückTiefe
+
+                        End With
+
+                        .Cells(zeile, 3).value = ""
+                        .Cells(zeile, 3).value = cResult.getDate
+
+                        .Cells(zeile, 4).value = cBewertung.colorIndex
+                        .Cells(zeile, 4).interior.color = cBewertung.color
+
+                        ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
+                        .Cells(zeile, 5).value = cBewertung.description
+
+                        ' Änderung tk 2.11 Ergänzung um Deliverables 
+                        tmpDeliverables = cResult.getAllDeliverables(vbLf)
+                        .Cells(zeile, 6).value = tmpDeliverables
+
+
+                        ' Änderung tk 4.12. Schreiben verantwortlich und percentDone
+                        .Cells(zeile, 7).value = cResult.verantwortlich
+
+                        .Cells(zeile, 8).value = cResult.percentDone
+                        .Cells(zeile, 8).NumberFormat = "0%"
+                        .Cells(zeile, 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+
+                        zeile = zeile + 1
+                    Next
+
+                Next
+
+                ' Now define for the next 1000 rows Default Alignments and Formats 
+
+                ' Plan-Element-Name
+                With CType(.Range(.Cells(zeile, 1), .Cells(zeile + 1000, 1)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .IndentLevel = einrückTiefe
+                End With
+
+                ' Start-Datum
+                With CType(.Range(.Cells(2, 2), .Cells(zeile + 1000, 2)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "m/d/yyyy"
+                End With
+
+                ' Ende-Datum
+                With CType(.Range(.Cells(2, 3), .Cells(zeile + 1000, 3)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "m/d/yyyy"
+                End With
+
+                ' Traffic Light 
+                With CType(.Range(.Cells(2, 4), .Cells(zeile + 1000, 4)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "0"
+                End With
+
+                ' Traffic Light Explanation
+                With CType(.Range(.Cells(2, 5), .Cells(zeile + 1000, 5)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "@"
+                End With
+
+                ' Deliverables
+                With CType(.Range(.Cells(2, 6), .Cells(zeile + 1000, 6)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "@"
+                End With
+
+                ' Responsible 
+                With CType(.Range(.Cells(2, 7), .Cells(zeile + 1000, 7)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "@"
+                End With
+
+                ' %Done 
+                With CType(.Range(.Cells(2, 8), .Cells(zeile + 1000, 8)), Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "0%"
+                End With
+
+
+                '
+                ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
+                Try
+                    CType(.Columns, Excel.Range).AutoFit()
+                    CType(.Rows, Excel.Range).AutoFit()
+                Catch ex As Exception
+
+                End Try
+
+
+
+            End With
+
+        Catch ex As Exception
+            With appInstance.ActiveWorkbook.Worksheets.Add
+                .name = "Termine"
+                ' Tabelle ErgebnTabelle muss hier eigentlich erzeugt werden
+                appInstance.EnableEvents = formerEE
+                Throw New ArgumentException("Fehler in awinExportProject, Schreiben Termine, Worksheet Termine existiert nicht")
+            End With
+        End Try
+
+
+        Try
+
+            If My.Computer.FileSystem.FileExists(fileName) Then
+                My.Computer.FileSystem.DeleteFile(fileName)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        Try
+
+            'appInstance.ActiveWorkbook.SaveAs(fileName,
+            '                              ConflictResolution:=xlNS.XlSaveConflictResolution.xlLocalSessionChanges
+            '                              )
+
+            ' Schließen der Datei ProjektSteckbrief ohne abspeichern der Änderungen, original Zustand bleibt erhalten
+            appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=fileName)
+
+
+        Catch ex As Exception
+            appInstance.EnableEvents = formerEE
+            Throw New ArgumentException("Fehler beim Datei-Schreiben")
+        End Try
+
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
 
 
 

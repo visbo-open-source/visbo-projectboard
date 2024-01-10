@@ -24,9 +24,9 @@ Partial Class frmProjectEditSettings
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjectEditSettings))
         Me.Panel1 = New System.Windows.Forms.Panel()
-        Me.allowOverUtilization = New System.Windows.Forms.CheckBox()
+        Me.avoidOverutlization = New System.Windows.Forms.CheckBox()
         Me.adjustChilds = New System.Windows.Forms.CheckBox()
-        Me.invoices = New System.Windows.Forms.CheckBox()
+        Me.showForecastMonthsOnly = New System.Windows.Forms.CheckBox()
         Me.newCalculation = New System.Windows.Forms.CheckBox()
         Me.AdjustResourceNeeds = New System.Windows.Forms.CheckBox()
         Me.Panel1.SuspendLayout()
@@ -37,9 +37,9 @@ Partial Class frmProjectEditSettings
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Panel1.Controls.Add(Me.allowOverUtilization)
+        Me.Panel1.Controls.Add(Me.avoidOverutlization)
         Me.Panel1.Controls.Add(Me.adjustChilds)
-        Me.Panel1.Controls.Add(Me.invoices)
+        Me.Panel1.Controls.Add(Me.showForecastMonthsOnly)
         Me.Panel1.Controls.Add(Me.newCalculation)
         Me.Panel1.Controls.Add(Me.AdjustResourceNeeds)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
@@ -49,13 +49,13 @@ Partial Class frmProjectEditSettings
         '
         'allowOverUtilization
         '
-        Me.allowOverUtilization.AutoSize = True
-        Me.allowOverUtilization.Location = New System.Drawing.Point(12, 114)
-        Me.allowOverUtilization.Name = "allowOverUtilization"
-        Me.allowOverUtilization.Size = New System.Drawing.Size(137, 19)
-        Me.allowOverUtilization.TabIndex = 4
-        Me.allowOverUtilization.Text = "Allow over-utilization"
-        Me.allowOverUtilization.UseVisualStyleBackColor = True
+        Me.avoidOverutlization.AutoSize = True
+        Me.avoidOverutlization.Location = New System.Drawing.Point(12, 114)
+        Me.avoidOverutlization.Name = "allowOverUtilization"
+        Me.avoidOverutlization.Size = New System.Drawing.Size(137, 19)
+        Me.avoidOverutlization.TabIndex = 4
+        Me.avoidOverutlization.Text = "Allow over-utilization"
+        Me.avoidOverutlization.UseVisualStyleBackColor = True
         '
         'adjustChilds
         '
@@ -67,15 +67,15 @@ Partial Class frmProjectEditSettings
         Me.adjustChilds.Text = "Date changes also affect dates of subordinate tasks"
         Me.adjustChilds.UseVisualStyleBackColor = True
         '
-        'invoices
+        'showForecastMonthsOnly
         '
-        Me.invoices.AutoSize = True
-        Me.invoices.Location = New System.Drawing.Point(12, 62)
-        Me.invoices.Name = "invoices"
-        Me.invoices.Size = New System.Drawing.Size(181, 19)
-        Me.invoices.TabIndex = 2
-        Me.invoices.Text = "Show invoices and penalties"
-        Me.invoices.UseVisualStyleBackColor = True
+        Me.showForecastMonthsOnly.AutoSize = True
+        Me.showForecastMonthsOnly.Location = New System.Drawing.Point(12, 62)
+        Me.showForecastMonthsOnly.Name = "showForecastMonthsOnly"
+        Me.showForecastMonthsOnly.Size = New System.Drawing.Size(276, 19)
+        Me.showForecastMonthsOnly.TabIndex = 2
+        Me.showForecastMonthsOnly.Text = "in resource-/cost view: show forecast only Cost"
+        Me.showForecastMonthsOnly.UseVisualStyleBackColor = True
         '
         'newCalculation
         '
@@ -123,8 +123,8 @@ Partial Class frmProjectEditSettings
 
     Friend WithEvents Panel1 As Panel
     Friend WithEvents adjustChilds As CheckBox
-    Friend WithEvents invoices As CheckBox
+    Friend WithEvents showForecastMonthsOnly As CheckBox
     Friend WithEvents newCalculation As CheckBox
     Friend WithEvents AdjustResourceNeeds As CheckBox
-    Friend WithEvents allowOverUtilization As CheckBox
+    Friend WithEvents avoidOverutlization As CheckBox
 End Class

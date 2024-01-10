@@ -941,26 +941,77 @@ Public Class clsProjekte
     ''' bestimmt die kleinste auftretende Spalten-Column über alle Projekte  
     ''' wenn eine liste angegeben ist, werden nur die in der Liste vorhandenen PRoekte betrachtet 
     ''' </summary>
+    ''' <param name="liste"></param>
+    ''' <param name="showForecastDataOnly">if true then only columns with forecastdata is taken into account</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMinMonthColumn(Optional ByVal liste As Collection = Nothing) As Integer
+    Public ReadOnly Property getMinMonthColumn(Optional ByVal liste As Collection = Nothing,
+                                               Optional ByVal showForecastDataOnly As Boolean = False) As Integer
         Get
             Dim tmpMin As Integer = 10000
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                If IsNothing(liste) Then
-                    If kvp.Value.Start < tmpMin Then
-                        tmpMin = kvp.Value.Start
+            Dim weitermachen As Boolean = False
+            Dim firstTime As Boolean = True
+
+
+            If showForecastDataOnly Then
+
+                ' define the greatest startCol of actualData
+                Dim appropriateStartCol As Integer = 0 ' startOfCalendar
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    If IsNothing(liste) Then
+                        weitermachen = True
+                    Else
+                        weitermachen = liste.Contains(kvp.Key)
                     End If
-                Else
-                    If liste.Contains(kvp.Key) Then
+
+                    If weitermachen Then
+
+                        If kvp.Value.hasActualValues Then
+                            Dim tmpStartCol As Integer = getColumnOfDate(kvp.Value.actualDataUntil) + 1
+
+                            If tmpStartCol > appropriateStartCol Then
+                                appropriateStartCol = tmpStartCol
+                            End If
+
+                        Else
+                            ' tk 8.1.24 do nothing, then it is project with forecast Months only
+
+                            Dim tmpStartCol As Integer = kvp.Value.Start
+                            If firstTime Then
+                                firstTime = False
+                                appropriateStartCol = tmpStartCol
+                            Else
+                                If tmpStartCol < appropriateStartCol Then
+                                    appropriateStartCol = tmpStartCol
+                                End If
+                            End If
+                        End If
+                    End If
+                Next
+
+                tmpMin = appropriateStartCol
+
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    If IsNothing(liste) Then
                         If kvp.Value.Start < tmpMin Then
                             tmpMin = kvp.Value.Start
                         End If
+                    Else
+                        If liste.Contains(kvp.Key) Then
+                            If kvp.Value.Start < tmpMin Then
+                                tmpMin = kvp.Value.Start
+                            End If
+                        End If
                     End If
-                End If
-                
-            Next
+
+                Next
+
+            End If
+
             getMinMonthColumn = tmpMin
         End Get
     End Property
@@ -972,25 +1023,65 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMaxMonthColumn(Optional ByVal liste As Collection = Nothing) As Integer
+    Public ReadOnly Property getMaxMonthColumn(Optional ByVal liste As Collection = Nothing,
+                                               Optional ByVal showForecastDataOnly As Boolean = False) As Integer
         Get
             Dim tmpMax As Integer = 0
             Dim endeCol As Integer
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                If IsNothing(liste) Then
-                    endeCol = getColumnOfDate(kvp.Value.endeDate)
-                    If endeCol > tmpMax Then
-                        tmpMax = endeCol
+
+            Dim weitermachen As Boolean = False
+
+            If showForecastDataOnly Then
+                ' define the greatest startCol, endCol of actualData
+                Dim greatestEndCol As Integer = 0 ' startOfCalendar
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    If IsNothing(liste) Then
+                        weitermachen = True
+                    Else
+                        weitermachen = liste.Contains(kvp.Key)
                     End If
-                Else
-                    If liste.Contains(kvp.Key) Then
+
+                    If weitermachen Then
+                        If kvp.Value.hasActualValues Then
+                            Dim tmpStartCol As Integer = getColumnOfDate(kvp.Value.actualDataUntil) + 1
+                            Dim tmpEndCol As Integer = getColumnOfDate(kvp.Value.endeDate)
+
+                            If tmpEndCol >= tmpStartCol Then
+                                If tmpEndCol > greatestEndCol Then
+                                    greatestEndCol = tmpEndCol
+                                End If
+                            End If
+                        Else
+                            Dim tmpEndCol As Integer = getColumnOfDate(kvp.Value.endeDate)
+                            If tmpEndCol > greatestEndCol Then
+                                greatestEndCol = tmpEndCol
+                            End If
+                        End If
+                    End If
+                Next
+
+                tmpMax = greatestEndCol
+
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    If IsNothing(liste) Then
                         endeCol = getColumnOfDate(kvp.Value.endeDate)
                         If endeCol > tmpMax Then
                             tmpMax = endeCol
                         End If
+                    Else
+                        If liste.Contains(kvp.Key) Then
+                            endeCol = getColumnOfDate(kvp.Value.endeDate)
+                            If endeCol > tmpMax Then
+                                tmpMax = endeCol
+                            End If
+                        End If
                     End If
-                End If
-            Next
+                Next
+            End If
+
             getMaxMonthColumn = tmpMax
         End Get
     End Property
@@ -4370,7 +4461,9 @@ Public Class clsProjekte
                     Next
                 End If
 
-                If allowOvertime Or myRole.isExternRole Then
+                ' tk auch externe dürfen nicht overloaded werden 
+                'If allowOvertime Or myRole.isExternRole Then
+                If allowOvertime Then
                     Dim i As Integer = 0
                     Do While stillToDistribute >= 1
                         result(i) = result(i) + 1

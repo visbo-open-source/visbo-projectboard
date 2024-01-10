@@ -13,10 +13,18 @@ Public Class clsawinSettings
     ' tk 17.6.2020 
     ' Kurzarbeit aktiviert oder nicht 
 
+    ' tk 30.12.23
+    ' noMatterActualData = true: 
+    ' show not only Forecast-Months but all months 
+    ' necessary to edit non-Actual Data Roles and costs 
+
+    Public Property noMatterActualData As Boolean
+
     ' tk 9.7.22 eingeführt, um steuern zu können, ob Auto Login gemacht wird 
     ' wenn VISBOMode = noAutoLogin, dann kein Auto Login
     ' ansonsten immer autoLogin
     Public Property autoLogin As Boolean
+
     ' tk 22.6.21, for Instart Role Definition 
     Public Property onePersonOneRole As Boolean
 
@@ -335,6 +343,7 @@ Public Class clsawinSettings
 
         'ReDim _importSettings(17)
 
+        _noMatterActualData = False
         _autoLogin = True
         _meAllowOverTime = False
         _onePersonOneRole = False
