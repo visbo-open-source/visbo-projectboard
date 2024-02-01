@@ -54,7 +54,7 @@ Partial Class frmAddOrDeleteALine
         Me.DeleteALine.Name = "DeleteALine"
         Me.DeleteALine.Size = New System.Drawing.Size(123, 27)
         Me.DeleteALine.TabIndex = 1
-        Me.DeleteALine.Text = "Delete A Line"
+        Me.DeleteALine.Text = "Delete row"
         Me.DeleteALine.UseVisualStyleBackColor = False
         '
         'AddALine
@@ -69,7 +69,7 @@ Partial Class frmAddOrDeleteALine
         Me.AddALine.Name = "AddALine"
         Me.AddALine.Size = New System.Drawing.Size(123, 27)
         Me.AddALine.TabIndex = 0
-        Me.AddALine.Text = "Add A Line"
+        Me.AddALine.Text = "Add empty row"
         Me.AddALine.UseVisualStyleBackColor = False
         '
         'frmAddOrDeleteALine

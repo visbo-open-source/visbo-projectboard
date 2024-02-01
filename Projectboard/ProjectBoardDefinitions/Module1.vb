@@ -8871,7 +8871,7 @@ Public Module Module1
 
         End With
         ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
-        Do While Not found And curZeile <= visboZustaende.meMaxZeile
+        Do While Not found And curZeile < visboZustaende.meMaxZeile
 
 
             If chckName = pName And
@@ -9540,7 +9540,6 @@ Public Module Module1
             .NumberFormat = "@"
             .Value = rcName
             .Locked = isLocked
-            '.IndentLevel = indentlevel
             .IndentLevel = 1
 
             Try
@@ -9556,18 +9555,23 @@ Public Module Module1
         If teamName.Length > 0 Then
             ' Skill Name 
 
-            Dim skillIndentLevel As Integer
-            skillIndentLevel = RoleDefinitions.getRoleIndent(teamName)
-
             currentRange.Cells(1, 2).value = teamName
             currentRange.Cells(1, 2).locked = isLocked
-            'currentRange.Cells(1, 2).indentlevel = skillIndentLevel
+            currentRange.Cells(1, 2).indentlevel = 1
+
 
         Else
-            ' Skill Name 
-            currentRange.Cells(1, 2).value = ""
-            currentRange.Cells(1, 2).locked = isLocked
-            currentRange.Cells(1, 2).indentlevel = 1
+
+            If isRole Then
+                ' no Skill was provided  
+                currentRange.Cells(1, 2).value = ""
+                currentRange.Cells(1, 2).locked = isLocked
+                currentRange.Cells(1, 2).indentlevel = 1
+            Else
+                ' in case of cost this column may not be edited
+                currentRange.Cells(1, 2).value = ""
+                currentRange.Cells(1, 2).locked = True
+            End If
 
         End If
 

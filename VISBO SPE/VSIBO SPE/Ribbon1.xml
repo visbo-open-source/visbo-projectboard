@@ -13,7 +13,10 @@
 		<command idMso="ApplicationOptionsDialog" enabled="true"/>
 		<!-- Deaktiviert die Beenden-Schaltfläche -->
 		<command idMso="FileExit" enabled="false" />
-	</commands>
+    <!-- Deaktiviert Speichern und Speichern unter -->
+    <command idMso="FileSave" enabled="false"/>
+    <command idMso="FileSaveAs" enabled="false"/>
+  </commands>
 	<ribbon startFromScratch="true">
 		<contextualTabs>
 			<tabSet idMso="TabSetChartTools" visible="false" />

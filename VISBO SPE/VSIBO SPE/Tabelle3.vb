@@ -68,6 +68,7 @@ Public Class Tabelle3
         ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
         Try
             Application.DisplayFormulaBar = False
+            Application.ActiveWindow.DisplayWorkbookTabs = False
         Catch ex As Exception
 
         End Try
@@ -94,7 +95,7 @@ Public Class Tabelle3
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
-                .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
+                '.meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
                 ' ist die Spalte für MSTask-Name 
                 .meColRC = 4
                 ' ist die Spalte für Startdate
@@ -135,30 +136,6 @@ Public Class Tabelle3
             End If
 
             'End If
-        Catch ex As Exception
-
-        End Try
-
-        Try
-
-
-            ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
-            ' die dürfen auch nicht gelöscht werden 
-            With meWS
-                .Protect(Password:="x", UserInterfaceOnly:=True,
-                         AllowFormattingCells:=True,
-                         AllowFormattingColumns:=True,
-                         AllowInsertingColumns:=False,
-                         AllowInsertingRows:=False,
-                         AllowDeletingColumns:=False,
-                         AllowDeletingRows:=False,
-                         AllowSorting:=False,
-                         AllowFiltering:=True)
-                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
-                .EnableAutoFilter = True
-            End With
-
-
         Catch ex As Exception
 
         End Try
@@ -234,6 +211,22 @@ Public Class Tabelle3
             Dim c1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
             Dim c2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
             Dim c3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+
+
+            If massColFontValues(1, 2) = 0 Then
+                If c1 > 65 Then
+                    CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth = 65
+                End If
+
+                If c2 > 65 Then
+                    CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth = 65
+                End If
+
+                If c3 > 65 Then
+                    CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth = 65
+                End If
+            End If
+            ' now check whether or not this is too much 
 
         Catch ex As Exception
 
@@ -661,6 +654,37 @@ Public Class Tabelle3
                                 cphase.ampelErlaeuterung = myValue
                             End If
 
+                            ' adjust width when necessary 
+                            Dim formerEE As Boolean = appInstance.EnableEvents
+                            Dim contentWasProtected As Boolean = meWS.ProtectContents
+                            Try
+                                If contentWasProtected Then
+                                    meWS.Unprotect(Password:="x")
+                                End If
+                                appInstance.EnableEvents = True
+                                CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).AutoFit()
+                                If CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth > 65 Then
+                                    CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth = 65
+                                End If
+                                appInstance.EnableEvents = formerEE
+                                If contentWasProtected Then
+                                    With meWS
+                                        .Protect(Password:="x", UserInterfaceOnly:=True,
+                                                 AllowFormattingCells:=True,
+                                                 AllowFormattingColumns:=True,
+                                                 AllowInsertingColumns:=False,
+                                                 AllowInsertingRows:=False,
+                                                 AllowDeletingColumns:=False,
+                                                 AllowDeletingRows:=False,
+                                                 AllowSorting:=False,
+                                                 AllowFiltering:=True)
+                                    End With
+                                End If
+                            Catch ex As Exception
+                                appInstance.EnableEvents = formerEE
+                            End Try
+
+
 
                         ' Verantwortlichkeit, später prüfen, ob als User existent 
                         Case col(PTmeTe.responsible)
@@ -698,6 +722,37 @@ Public Class Tabelle3
                                     cphase.addDeliverable(tmpStr(i))
                                 Next
                             End If
+
+                            ' adjust width when necessary 
+                            Dim formerEE As Boolean = appInstance.EnableEvents
+                            Dim contentWasProtected As Boolean = meWS.ProtectContents
+                            Try
+                                If contentWasProtected Then
+                                    meWS.Unprotect(Password:="x")
+                                End If
+                                appInstance.EnableEvents = True
+                                CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).AutoFit()
+                                If CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth > 65 Then
+                                    CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth = 65
+                                End If
+                                appInstance.EnableEvents = formerEE
+                                If contentWasProtected Then
+                                    With meWS
+                                        .Protect(Password:="x", UserInterfaceOnly:=True,
+                                                 AllowFormattingCells:=True,
+                                                 AllowFormattingColumns:=True,
+                                                 AllowInsertingColumns:=False,
+                                                 AllowInsertingRows:=False,
+                                                 AllowDeletingColumns:=False,
+                                                 AllowDeletingRows:=False,
+                                                 AllowSorting:=False,
+                                                 AllowFiltering:=True)
+                                    End With
+                                End If
+                            Catch ex As Exception
+                                appInstance.EnableEvents = formerEE
+                            End Try
+
 
 
                         Case col(PTmeTe.percentDone)
@@ -970,7 +1025,16 @@ Public Class Tabelle3
 
 
         Dim curCell As Excel.Range = CType(appInstance.ActiveSheet.Cells(Target.Row, col(PTmeTe.pName)), Excel.Range)
-        pname = CStr(curCell.Value)
+
+        If IsNothing(curCell.Value) Then
+            pname = ""
+        Else
+            pname = CStr(curCell.Value)
+            If IsNothing(pname) Then
+                pname = ""
+            End If
+        End If
+
 
 
         curCell = CType(appInstance.ActiveSheet.Cells(Target.Row, col(PTmeTe.elemName)), Excel.Range)
@@ -1018,7 +1082,7 @@ Public Class Tabelle3
                                                 visboZustaende.currentProject.vpStatus = VProjectStatus(PTVPStati.paused))
         Try
             If Target.Cells.Count = 1 Then
-                If (Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate)) And (Target.Row > 1) Then
+                If (Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate)) And ((Target.Row > 1) And (pname <> "")) Then
                     If Not noChangePossible Then
                         Call showEditDatesForm(Target)
                     Else

@@ -524,6 +524,16 @@ Module VISBO_SPE_Utilities
 
                         If appInstance.ActiveSheet.name = meWS.Name Then
 
+                            If RoleDefinitions.getAllSkillIDs.Count > 0 Then
+                                If (meModus = ptModus.massEditCosts) Then
+                                    CType(meWS.Columns("F"), Excel.Range).Hidden = True
+                                Else
+                                    CType(meWS.Columns("F"), Excel.Range).Hidden = False
+                                End If
+                            Else
+                                CType(meWS.Columns("F"), Excel.Range).Hidden = True
+                            End If
+
                             If editProjekteInSPE.Count = 1 Then
                                 CType(meWS.Columns("A"), Excel.Range).Hidden = True
                                 CType(meWS.Columns("B"), Excel.Range).Hidden = True
@@ -535,10 +545,27 @@ Module VISBO_SPE_Utilities
                             End If
 
                             ' tk 4.1.24
-                            meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+
+                            meWS.Protect(Password:="x", UserInterfaceOnly:=True,
+                             AllowFormattingCells:=True,
+                             AllowFormattingColumns:=True,
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=False,
+                             AllowDeletingColumns:=False,
+                             AllowDeletingRows:=False,
+                             AllowSorting:=False,
+                             AllowFiltering:=True)
 
                         Else
-                            meWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                            meWS.Protect(Password:="x", UserInterfaceOnly:=True,
+                             AllowFormattingCells:=True,
+                             AllowFormattingColumns:=True,
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=False,
+                             AllowDeletingColumns:=False,
+                             AllowDeletingRows:=False,
+                             AllowSorting:=False,
+                             AllowFiltering:=True)
                             meWS.Activate()
                         End If
                     Catch ex As Exception
@@ -577,6 +604,8 @@ Module VISBO_SPE_Utilities
                                         .FreezePanes = True
                                     End If
                                 End If
+                                ' tk 12.1.24 damit Ressourcen und Kostenbedarfe, falls lange auch passend gezeigt werden können
+                                ' Video Take ... 1.2.24 - wirder zurück nehmen
                                 .DisplayHeadings = False
 
                             ElseIf meModus = ptModus.massEditTermine Then
@@ -913,6 +942,7 @@ Module VISBO_SPE_Utilities
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
 
 
+
                             ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren
                             ' Datumsformat je nach Sprache setzen
                             'If awinSettings.englishLanguage Then
@@ -1087,6 +1117,7 @@ Module VISBO_SPE_Utilities
                                 CType(currentWS.Cells(zeile, 15), Excel.Range).Clear()
                                 CType(currentWS.Cells(zeile, 16), Excel.Range).Clear()
                             End If
+
 
                         Else
 
@@ -1335,12 +1366,12 @@ Module VISBO_SPE_Utilities
             Dim firstHundredColumns As Excel.Range = Nothing
 
             With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten - 4)), Excel.Range)
-                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten - 4)), Excel.Range)
+                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten)), Excel.Range)
+                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
 
                 firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
 
-                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                'infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
                 ' die Besonderheiten abbilden 
@@ -1348,27 +1379,44 @@ Module VISBO_SPE_Utilities
 
                 appInstance.EnableEvents = True
                 Try
-                    CType(currentWS, Excel.Worksheet).Columns(2).EntireColumn.AutoFit()
-                    CType(currentWS, Excel.Worksheet).Columns(4).EntireColumn.AutoFit()
-                    CType(currentWS, Excel.Worksheet).Columns(8).EntireColumn.AutoFit()
-                    CType(currentWS, Excel.Worksheet).Columns(9).EntireColumn.AutoFit()
 
-                    CType(currentWS, Excel.Worksheet).Columns(7).EntireColumn.AutoFit() ' Ampel
-                    CType(currentWS, Excel.Worksheet).Columns(10).EntireColumn.AutoFit() ' verantwortlich
-                    CType(currentWS, Excel.Worksheet).Columns(11).EntireColumn.AutoFit() ' %Done
-                    CType(currentWS, Excel.Worksheet).Columns(13).EntireColumn.AutoFit() ' Umsatz/Benefit
-                    CType(currentWS, Excel.Worksheet).Columns(14).EntireColumn.AutoFit() ' Zahlungsziel
-                    CType(currentWS, Excel.Worksheet).Columns(15).EntireColumn.AutoFit() ' Vertragsstrafe
-                    CType(currentWS, Excel.Worksheet).Columns(16).EntireColumn.AutoFit() ' Datum der Vertrags-Strafe
+                    CType(currentWS.Columns(2), Range).AutoFit() ' Project Name
+                    CType(currentWS.Columns(4), Range).AutoFit() ' Elem-Name
+                    CType(currentWS.Columns(7), Range).AutoFit() ' Ampel
+                    CType(currentWS.Columns(8), Range).AutoFit() ' Explanation
+                    CType(currentWS.Columns(9), Range).AutoFit() ' Deliverables
+
+                    CType(currentWS.Columns(10), Range).AutoFit() ' Verantwortlich 
+                    CType(currentWS.Columns(11), Range).AutoFit() ' %Done
+                    CType(currentWS.Columns(13), Range).AutoFit() ' Umsatz / Benefit
+                    CType(currentWS.Columns(14), Range).AutoFit() ' Zahlungsziel
+                    CType(currentWS.Columns(15), Range).AutoFit() ' Vertragsstrafe
+                    CType(currentWS.Columns(16), Range).AutoFit() ' Datum der Vertrags-Strafe
+
 
                     ' wenn zu breit, dann maximum setzen
-                    If CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth > 50 Then
-                        CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth = 50
+                    ' but only, if there has been no user Action setting column width already 
+
+                    ' Project-Name 
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(2), Excel.Range).ColumnWidth > 65 Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(2), Excel.Range).ColumnWidth = 65
                     End If
 
-                    If CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth > 75 Then
-                        CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth = 75
+                    ' Element-Name
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(4), Excel.Range).ColumnWidth > 65 Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(4), Excel.Range).ColumnWidth = 65
                     End If
+
+                    ' Erläuterung / Explanation
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth > 65 Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth = 65
+                    End If
+
+                    ' Lieferumfänge / Deliverables
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth > 65 Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth = 65
+                    End If
+
 
                 Catch ex As Exception
 
@@ -1378,18 +1426,18 @@ Module VISBO_SPE_Utilities
 
 
                 ' Phasen bzw. Meilenstein Name
-                With CType(infoDataBlock.Columns(4), Excel.Range)
-                    '.WrapText = True
-                End With
+                'With CType(infoDataBlock.Columns(4), Excel.Range)
+                '    .WrapText = False
+                'End With
 
-                ' Erläuterung
-                With CType(infoDataBlock.Columns(8), Excel.Range)
-                    .WrapText = True
-                End With
-                ' Lieferumfänge 
-                With CType(infoDataBlock.Columns(9), Excel.Range)
-                    .WrapText = True
-                End With
+                '' Erläuterung
+                'With CType(infoDataBlock.Columns(8), Excel.Range)
+                '    .WrapText = True
+                'End With
+                '' Lieferumfänge 
+                'With CType(infoDataBlock.Columns(9), Excel.Range)
+                '    .WrapText = True
+                'End With
 
                 ' percent Done 
                 With CType(infoDataBlock.Columns(11), Excel.Range)
@@ -1401,7 +1449,6 @@ Module VISBO_SPE_Utilities
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
                 If massColFontValues(1, 2) > 0 Then
                     ' es wurden bereits mal Spaltenbreiten gesetzt 
-
                     For ik As Integer = 1 To 100
                         CType(firstHundredColumns.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
                     Next
@@ -1434,7 +1481,19 @@ Module VISBO_SPE_Utilities
 
             Try
                 ' jetzt schützen des Sheets
-                currentWS.Protect(Password:="x", UserInterfaceOnly:=True)
+                'currentWS.Protect(Password:="x", UserInterfaceOnly:=True)
+
+                With currentWS
+                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                             AllowFormattingCells:=True,
+                             AllowFormattingColumns:=True,
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=False,
+                             AllowDeletingColumns:=False,
+                             AllowDeletingRows:=False,
+                             AllowSorting:=False,
+                             AllowFiltering:=True)
+                End With
             Catch ex As Exception
 
             End Try

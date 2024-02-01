@@ -53,14 +53,14 @@ Partial Class frmAllocateRessources
         Me.Panel1.Controls.Add(Me.lblOrgaUnitSkill)
         Me.Panel1.Location = New System.Drawing.Point(-1, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(551, 368)
+        Me.Panel1.Size = New System.Drawing.Size(562, 352)
         Me.Panel1.TabIndex = 0
         '
         'Label1
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(113, 56)
+        Me.Label1.Location = New System.Drawing.Point(252, 56)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(265, 13)
         Me.Label1.TabIndex = 7
@@ -72,9 +72,9 @@ Partial Class frmAllocateRessources
         Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label2.Location = New System.Drawing.Point(21, 54)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(77, 16)
+        Me.Label2.Size = New System.Drawing.Size(184, 16)
         Me.Label2.TabIndex = 6
-        Me.Label2.Text = "Candidates"
+        Me.Label2.Text = "Candidates with free Capacity"
         '
         'CancelBtn
         '
@@ -104,13 +104,15 @@ Partial Class frmAllocateRessources
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.candidatesTable.BackgroundColor = System.Drawing.SystemColors.Control
+        Me.candidatesTable.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.candidatesTable.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None
         Me.candidatesTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.candidatesTable.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colLblPerson, Me.ColLblFreeCapacity, Me.ColLblIsExtern, Me.colLblAmount})
         Me.candidatesTable.Location = New System.Drawing.Point(24, 83)
         Me.candidatesTable.Name = "candidatesTable"
         Me.candidatesTable.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.candidatesTable.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect
-        Me.candidatesTable.Size = New System.Drawing.Size(505, 216)
+        Me.candidatesTable.Size = New System.Drawing.Size(516, 200)
         Me.candidatesTable.TabIndex = 3
         '
         'colLblPerson
@@ -127,6 +129,7 @@ Partial Class frmAllocateRessources
         Me.ColLblFreeCapacity.HeaderText = "Free Capacity"
         Me.ColLblFreeCapacity.Name = "ColLblFreeCapacity"
         Me.ColLblFreeCapacity.ReadOnly = True
+        Me.ColLblFreeCapacity.ToolTipText = "shows the amount of free capacity in person days "
         Me.ColLblFreeCapacity.Width = 90
         '
         'ColLblIsExtern
@@ -139,27 +142,28 @@ Partial Class frmAllocateRessources
         '
         'colLblAmount
         '
-        Me.colLblAmount.HeaderText = "Amount"
+        Me.colLblAmount.HeaderText = "will do how much?"
         Me.colLblAmount.Name = "colLblAmount"
+        Me.colLblAmount.ToolTipText = "will do how many person days "
         Me.colLblAmount.Width = 90
         '
         'lblSum
         '
         Me.lblSum.AutoSize = True
-        Me.lblSum.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblSum.Location = New System.Drawing.Point(442, 24)
+        Me.lblSum.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblSum.Location = New System.Drawing.Point(446, 19)
         Me.lblSum.Name = "lblSum"
-        Me.lblSum.Size = New System.Drawing.Size(67, 16)
+        Me.lblSum.Size = New System.Drawing.Size(83, 20)
         Me.lblSum.TabIndex = 2
         Me.lblSum.Text = "<Amount>"
         '
         'lblOrgaUnitSkill
         '
         Me.lblOrgaUnitSkill.AutoSize = True
-        Me.lblOrgaUnitSkill.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblOrgaUnitSkill.Location = New System.Drawing.Point(21, 24)
+        Me.lblOrgaUnitSkill.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblOrgaUnitSkill.Location = New System.Drawing.Point(20, 19)
         Me.lblOrgaUnitSkill.Name = "lblOrgaUnitSkill"
-        Me.lblOrgaUnitSkill.Size = New System.Drawing.Size(90, 16)
+        Me.lblOrgaUnitSkill.Size = New System.Drawing.Size(105, 20)
         Me.lblOrgaUnitSkill.TabIndex = 0
         Me.lblOrgaUnitSkill.Text = "<Name, Skill>"
         '
@@ -167,7 +171,7 @@ Partial Class frmAllocateRessources
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(547, 367)
+        Me.ClientSize = New System.Drawing.Size(558, 351)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmAllocateRessources"
@@ -187,9 +191,9 @@ Partial Class frmAllocateRessources
     Friend WithEvents Label2 As Windows.Forms.Label
     Friend WithEvents CancelBtn As Windows.Forms.Button
     Friend WithEvents okBtn As Windows.Forms.Button
+    Friend WithEvents Label1 As Windows.Forms.Label
     Friend WithEvents colLblPerson As Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents ColLblFreeCapacity As Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents ColLblIsExtern As Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colLblAmount As Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents Label1 As Windows.Forms.Label
 End Class

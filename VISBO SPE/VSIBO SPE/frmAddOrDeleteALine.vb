@@ -7,22 +7,30 @@ Public Class frmAddOrDeleteALine
     Private frmleft As Integer
     Public addLine As Boolean
     Public deleteLine As Boolean
+    Public isRoleSkill As Boolean
+    Public isCost As Boolean
+    Public isEmpty As Boolean
+
     Private Sub frmAddOrDeleteALine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'aktuell = (Selection.ColumnWidth + 0.71) / 5.1425
-
-        'aktuell = Selection.RowHeight / 29.5
-        'Selection.RowHeight = hoehe * 29.5
-        'Position für Formular bestimmen
-        Dim cw As Double = position.ColumnWidth
-        Dim startPos As FormStartPosition = MyBase.StartPosition
-
-        'If frmtop = 0 And frmleft = 0 Then
-        '    frmtop = Me.Top - 100
-        '    frmleft = Me.Left - 500
-        'End If
 
         Me.Top = 45
         Me.Left = Me.Left - 400
+
+        Try
+            Me.AddALine.Text = "Add empty row"
+            If isRoleSkill Then
+                Me.DeleteALine.Text = "Delete resource"
+            ElseIf isCost Then
+                Me.DeleteALine.Text = "Delete cost"
+            End If
+
+            If isEmpty Then
+                Me.DeleteALine.Text = "Delete row"
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
 
     End Sub

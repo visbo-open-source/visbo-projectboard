@@ -14,6 +14,7 @@ Public Class Tabelle4
         ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
         Try
             Application.DisplayFormulaBar = True
+            Application.ActiveWindow.DisplayWorkbookTabs = False
         Catch ex As Exception
 
         End Try
@@ -36,7 +37,7 @@ Public Class Tabelle4
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
-                .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
+                '.meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
                 .meColRC = -1 ' keine Bedeutung
                 .meColSD = -1 ' keine Bedeutung 
                 .meColED = -1

@@ -12066,7 +12066,9 @@ Public Module agm2
         For i As Integer = 1 To RoleDefinitions.Count
 
             Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-            Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(curRole.name)
+            ' tk 10.1.24
+            Dim indentLevel As Integer = 1
+            'Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(curRole.name)
 
             Dim myCollection As New Collection
             myCollection.Add(curRole.name)
@@ -13493,6 +13495,8 @@ Public Module agm2
                           ByVal rcNameID As String,
                           ByVal isRole As Boolean)
 
+
+        Dim oldRow As Integer = zeile
         Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
         appInstance.EnableEvents = False
 
@@ -13509,7 +13513,7 @@ Public Module agm2
                 currentCost = CostDefinitions.getCostdef(rcNameID)
             End If
 
-            If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
+            If zeile >= 2 And zeile < visboZustaende.meMaxZeile Then
                 Dim columnEndData As Integer = visboZustaende.meColED
                 Dim columnStartData As Integer = visboZustaende.meColSD
                 Dim columnRC As Integer = visboZustaende.meColRC
@@ -13571,21 +13575,22 @@ Public Module agm2
                             CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
                         Next
                     Else
+
                         CType(meWS.Rows(zeile), Excel.Range).Delete()
-                        zeile = zeile - 1
-                        If zeile < 2 Then
-                            zeile = 2
+                        visboZustaende.meMaxZeile = visboZustaende.meMaxZeile - 1
+
+                        If zeile >= visboZustaende.meMaxZeile Then
+                            zeile = visboZustaende.meMaxZeile - 1
                         End If
                     End If
 
                     ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
+                    CType(meWS.Cells(zeile, columnRC - 1), Excel.Range).Select()
 
                     ' jetzt wird der Old-Value gesetzt 
                     With visboZustaende
                         .oldRow = zeile
                         .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
-                        .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
                     End With
 
                 Else
@@ -13643,10 +13648,10 @@ Public Module agm2
         appInstance.EnableEvents = False
 
         ' tk 26.1.20 
-        Dim rcIndentLevel As Integer = 0
-        If isRole Then
-            rcIndentLevel = RoleDefinitions.getRoleIndent(rcName)
-        End If
+        Dim rcIndentLevel As Integer = 1
+        'If isRole Then
+        '    rcIndentLevel = RoleDefinitions.getRoleIndent(rcName)
+        'End If
 
         Try
 
@@ -13716,10 +13721,11 @@ Public Module agm2
                 End With
 
                 With currentCell.Cells(1, 2)
-                    If skillName <> "" Then
-                        rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
-                        .IndentLevel = rcIndentLevel
-                    End If
+                    'If skillName <> "" Then
+                    '    'rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
+                    '    .IndentLevel = rcIndentLevel
+                    'End If
+                    .IndentLevel = rcIndentLevel
                     .Value = skillName
                     .Locked = islocked
                     If .Locked = False Then
@@ -13765,12 +13771,14 @@ Public Module agm2
 
             ' jetzt wird der Old-Value gesetzt 
             With visboZustaende
-                'If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
-                '    Call MsgBox("Fehler 099 in PTzeileEinfügen")
-                'End If
+
                 .oldRow = newZeile
                 .oldValue = rcName
-                .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
+                If insertRow Then
+                    .meMaxZeile = .meMaxZeile + 1
+                End If
+                ' tk 29.1.24 UsedRage seems to produce unreliable results 
+                '.meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
 
             ' tk 14.12.18 wird an aufrufender Stelle gemacht 
@@ -14351,8 +14359,9 @@ Public Module agm2
 
 
                                         Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-                                        ' tk 19.1.20 
-                                        Dim roleIndentLevel As Integer = RoleDefinitions.getRoleIndent(roleNameID)
+                                        ' tk 10.1.24 
+                                        'Dim roleIndentLevel As Integer = RoleDefinitions.getRoleIndent(roleNameID)
+                                        Dim roleIndentLevel As Integer = 1
 
 
                                         Dim xValues() As Double = kvp.Value.Xwerte
@@ -14502,7 +14511,11 @@ Public Module agm2
                                     End If
 
                                     Try
-                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", False,
+                                        Dim isRole As Boolean = True
+                                        If meModus = ptModus.massEditCosts Then
+                                            isRole = False
+                                        End If
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", isRole,
                                                                             lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 0)
@@ -14670,7 +14683,8 @@ Public Module agm2
             ' now define the visbo-zustaende.meMAxZeile 
             ' if resource sheet is already active this value is not updated after new projects have been loaded
             Try
-                visboZustaende.meMaxZeile = CType(currentWS, Excel.Worksheet).UsedRange.Rows.Count
+                'visboZustaende.meMaxZeile = CType(currentWS, Excel.Worksheet).UsedRange.Rows.Count
+                visboZustaende.meMaxZeile = zeile
             Catch ex As Exception
                 Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "when defining meMaxZeile ")
             End Try
@@ -15533,6 +15547,14 @@ Public Module agm2
                 End If
 
             End With
+
+            ' now define the visbo-zustaende.meMAxZeile 
+            ' 
+            Try
+                visboZustaende.meMaxZeile = zeile
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "writeOnlineMassEditTermine", "when defining meMaxZeile ")
+            End Try
 
             appInstance.EnableEvents = True
 

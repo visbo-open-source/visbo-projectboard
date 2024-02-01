@@ -278,68 +278,78 @@ Public Class Ribbon1
         Dim errMsg As String = ""
         Dim allowOvertime As Boolean = awinSettings.meAllowOverTime
 
-        Try
-            If currentProjektTafelModus = ptModus.massEditRessSkills Then
+        If editProjekteInSPE.Count > 0 Then
 
-                If projectConstellations.Count = 1 Then
-                    ' only then there is a Portfolio loaded in Context 
+            Try
+                If currentProjektTafelModus = ptModus.massEditRessSkills Then
 
-                    If editProjekteInSPE.Count > 0 Then
+                    If projectConstellations.Count = 1 Then
+                        ' only then there is a Portfolio loaded in Context 
 
-                        If appInstance.ScreenUpdating = True Then
-                            appInstance.ScreenUpdating = False
-                        End If
-
-                        ' now auto-allocate each project in ediTProjekteInSPE
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In editProjekteInSPE.Liste
-                            Call ShowProjekte.autoAllocate(kvp.Key, "", allowOvertime, errMsg)
-                        Next
-
-                        ' now re-build the table 
                         If editProjekteInSPE.Count > 0 Then
-                            Call clearTable(currentProjektTafelModus)
+
+                            If appInstance.ScreenUpdating = True Then
+                                appInstance.ScreenUpdating = False
+                            End If
+
+                            ' now auto-allocate each project in ediTProjekteInSPE
+                            For Each kvp As KeyValuePair(Of String, clsProjekt) In editProjekteInSPE.Liste
+                                Call ShowProjekte.autoAllocate(kvp.Key, "", allowOvertime, errMsg)
+                            Next
+
+                            ' now re-build the table 
+                            If editProjekteInSPE.Count > 0 Then
+                                Call clearTable(currentProjektTafelModus)
+                            End If
+
+                            visboZustaende.currentProject = editProjekteInSPE.getProject(1)
+                            Call massEditRcTeAt(currentProjektTafelModus)
+
+                            If appInstance.ScreenUpdating = False Then
+                                appInstance.ScreenUpdating = True
+                            End If
+
+                            If appInstance.EnableEvents = False Then
+                                appInstance.EnableEvents = True
+                            End If
+
                         End If
 
-                        visboZustaende.currentProject = editProjekteInSPE.getProject(1)
-                        Call massEditRcTeAt(currentProjektTafelModus)
-
-                        If appInstance.ScreenUpdating = False Then
-                            appInstance.ScreenUpdating = True
-                        End If
-
-                        If appInstance.EnableEvents = False Then
-                            appInstance.EnableEvents = True
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please load a portfolio as Context first ..")
+                        Else
+                            Call MsgBox("bitte vorher ein Portfolio als Kontext laden ..")
                         End If
 
                     End If
 
                 Else
                     If awinSettings.englishLanguage Then
-                        Call MsgBox("please load a portfolio as Context first ..")
+                        Call MsgBox("only active in resource mode ..")
                     Else
-                        Call MsgBox("bitte vorher ein Portfolio als Kontext laden ..")
+                        Call MsgBox("nur aktiv im Ressourcen View")
                     End If
 
                 End If
+            Catch ex As Exception
 
-            Else
                 If awinSettings.englishLanguage Then
-                    Call MsgBox("only active in resource mode ..")
+                    Call MsgBox("Error occurred .. better leave without storing ... ")
                 Else
-                    Call MsgBox("nur aktiv im Ressourcen View")
+                    Call MsgBox("Ein Fehler ist aufgetreten - es ist besser zu beenden und nicht zu speichern... ")
                 End If
 
+
+            End Try
+
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
             End If
-        Catch ex As Exception
-
-            If awinSettings.englishLanguage Then
-                Call MsgBox("Error occurred .. better leave without storing ... ")
-            Else
-                Call MsgBox("Ein Fehler ist aufgetreten - es ist besser zu beenden und nicht zu speichern... ")
-            End If
-
-
-        End Try
+            Call MsgBox(msgTxt)
+        End If
 
 
 
@@ -348,8 +358,8 @@ Public Class Ribbon1
 
 
     Public Sub PTProjectSave(control As Office.IRibbonControl)
-        'Call MsgBox("Save")
-        If AlleProjekte.Count > 0 Then
+
+        If editProjekteInSPE.Count > 0 Then
             ' Mouse auf Wartemodus setzen
             appInstance.Cursor = Excel.XlMousePointer.xlWait
             Try
@@ -360,6 +370,12 @@ Public Class Ribbon1
             End Try
             ' Mouse wieder auf Normalmodus setzen
             appInstance.Cursor = Excel.XlMousePointer.xlDefault
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
     End Sub
 
@@ -392,6 +408,12 @@ Public Class Ribbon1
 
             Call showOutPut(outPutCollection, "Downloads", "files In C:/Downloads")
 
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
     End Sub
 
@@ -435,6 +457,12 @@ Public Class Ribbon1
             If appInstance.ScreenUpdating = False Then
                 appInstance.ScreenUpdating = True
             End If
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
 
         ' nww invalidate 
@@ -456,7 +484,12 @@ Public Class Ribbon1
             If appInstance.ScreenUpdating = False Then
                 appInstance.ScreenUpdating = True
             End If
-
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
 
         ' nww invalidate 
@@ -477,6 +510,12 @@ Public Class Ribbon1
             If appInstance.ScreenUpdating = False Then
                 appInstance.ScreenUpdating = True
             End If
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
 
         ' nww invalidate 
@@ -490,8 +529,6 @@ Public Class Ribbon1
         Dim settingsEdit As New frmProjectEditSettings
         settingsEdit.ShowDialog()
 
-        ' tk 3.1.24 - there ist no need anymore to rebuild the pages 
-        ' Call massEditRcTeAt(currentProjektTafelModus)
     End Sub
 
     Public Sub PTProjectGoToWebUI(control As Office.IRibbonControl)
@@ -514,229 +551,243 @@ Public Class Ribbon1
             End Select
 
             Call FollowHyperlinkToWebsite(visboZustaende.currentProject, view)
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
 
-        'Call MsgBox("GoToWebUI for " & pname & ":" & vname)
     End Sub
 
     Public Sub PTLoadPiC_ConstellationFromDB(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
 
+        If editProjekteInSPE.Count > 0 Then
+            ' now first check whether or not context was already loaded ..
+            ' Load Context
+            If projectConstellations.Count > 0 Then
+                ' just show name of loaded context portfolio 
+                Call MsgBox("loaded Context is Portfolio" & vbLf & projectConstellations.Liste.First.Value.constellationName)
 
-        ' now first check whether or not context was already loaded ..
-        ' Load Context
-        If projectConstellations.Count > 0 Then
-            ' just show name of loaded context portfolio 
-            Call MsgBox("loaded Context is Portfolio" & vbLf & projectConstellations.Liste.First.Value.constellationName)
+            Else
 
-        Else
+                ' Timer
+                Dim sw As clsStopWatch
+                sw = New clsStopWatch
+                sw.StartTimer()
 
-            ' Timer
-            Dim sw As clsStopWatch
-            sw = New clsStopWatch
-            sw.StartTimer()
+                Dim loadConstellationFrm As New frmLoadConstellation
+                ' do not show Date Selector
+                loadConstellationFrm.lblStandvom.Visible = False
+                loadConstellationFrm.requiredDate.Visible = False
 
-            Dim loadConstellationFrm As New frmLoadConstellation
-            ' do not show Date Selector
-            loadConstellationFrm.lblStandvom.Visible = False
-            loadConstellationFrm.requiredDate.Visible = False
+                loadConstellationFrm.addToSession.Checked = False
+                loadConstellationFrm.addToSession.Visible = False
 
-            loadConstellationFrm.addToSession.Checked = False
-            loadConstellationFrm.addToSession.Visible = False
+                loadConstellationFrm.loadAsSummary.Visible = False
+                loadConstellationFrm.loadAsSummary.Checked = False
 
-            loadConstellationFrm.loadAsSummary.Visible = False
-            loadConstellationFrm.loadAsSummary.Checked = False
-
-            loadConstellationFrm.retrieveFromDB = True
-
-
-
-            Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
-
-            Dim timeStampsCollection As New Collection
-
-            Dim dbPortfolioNames As New SortedList(Of String, String)
-            Dim cTimestamp As Date
-            Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
+                loadConstellationFrm.retrieveFromDB = True
 
 
-            Dim outPutCollection As New Collection
-            Dim outputLine As String = ""
 
-            Dim successMessage As String = initMessage
-            Dim returnValue As DialogResult
+                Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
 
-            Dim addToContext As Boolean = False
+                Dim timeStampsCollection As New Collection
 
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-            Call projektTafelInit()
+                Dim dbPortfolioNames As New SortedList(Of String, String)
+                Dim cTimestamp As Date
+                Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
 
-            ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
+                Dim outPutCollection As New Collection
+                Dim outputLine As String = ""
+
+                Dim successMessage As String = initMessage
+                Dim returnValue As DialogResult
+
+                Dim addToContext As Boolean = False
+
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                Call projektTafelInit()
 
 
-            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
-
-                If dbPortfolioNames.Count > 0 Then
-
-                    Try
-                        enableOnUpdate = False
-
-                        loadConstellationFrm.constellationsToShow = dbPortfolioNames
-
-                        ' Titel anpassen 
-
-                        returnValue = loadConstellationFrm.ShowDialog
-
-                        sw.StartTimer()
-
-                        If returnValue = DialogResult.OK Then
-
-                            ' it is only possible to load one portfolio as Context 
-                            ' now just load the Context in AlleProjekte resp. ShowProjekte 
-
-                            ' if AlleProjekte already contains the Name#variantName then don't do replace it 
-                            ' if ShowProjekte already contains the name, then don't replace it. 
-
-                            ' should not be possible to load an Portfolio of earlier dates into Context 
-                            storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
+                ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
 
-                            Dim constellationsToDo As New clsConstellations
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                            ' Liste der ausgewählten Portfolio/Variante Paaren (pro Portfolio nur eine Variante)
-                            Dim constellationsChecked As New SortedList(Of String, String)
+                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
 
-                            ' WaitCursor einschalten ...
-                            Cursor.Current = Cursors.WaitCursor
+                    If dbPortfolioNames.Count > 0 Then
 
-                            ' liste, welche Portfolios und Portfolio-Varianten geladen werden sollen, wird erstellt
-                            constellationsChecked = New SortedList(Of String, String)
+                        Try
+                            enableOnUpdate = False
 
-                            For Each tNode As TreeNode In loadConstellationFrm.TreeViewPortfolios.Nodes
-                                If tNode.Checked Then
-                                    Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
-                                    For Each vNode As TreeNode In tNode.Nodes
-                                        If vNode.Checked Then
-                                            If Not constellationsChecked.ContainsKey(tNode.Text) Then
-                                                Dim vname As String = deleteBrackets(vNode.Text)
-                                                constellationsChecked.Add(tNode.Text, vname)
-                                            Else
-                                                Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
+                            loadConstellationFrm.constellationsToShow = dbPortfolioNames
+
+                            ' Titel anpassen 
+
+                            returnValue = loadConstellationFrm.ShowDialog
+
+                            sw.StartTimer()
+
+                            If returnValue = DialogResult.OK Then
+
+                                ' it is only possible to load one portfolio as Context 
+                                ' now just load the Context in AlleProjekte resp. ShowProjekte 
+
+                                ' if AlleProjekte already contains the Name#variantName then don't do replace it 
+                                ' if ShowProjekte already contains the name, then don't replace it. 
+
+                                ' should not be possible to load an Portfolio of earlier dates into Context 
+                                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
+
+
+                                Dim constellationsToDo As New clsConstellations
+
+                                ' Liste der ausgewählten Portfolio/Variante Paaren (pro Portfolio nur eine Variante)
+                                Dim constellationsChecked As New SortedList(Of String, String)
+
+                                ' WaitCursor einschalten ...
+                                Cursor.Current = Cursors.WaitCursor
+
+                                ' liste, welche Portfolios und Portfolio-Varianten geladen werden sollen, wird erstellt
+                                constellationsChecked = New SortedList(Of String, String)
+
+                                For Each tNode As TreeNode In loadConstellationFrm.TreeViewPortfolios.Nodes
+                                    If tNode.Checked Then
+                                        Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
+                                        For Each vNode As TreeNode In tNode.Nodes
+                                            If vNode.Checked Then
+                                                If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                                    Dim vname As String = deleteBrackets(vNode.Text)
+                                                    constellationsChecked.Add(tNode.Text, vname)
+                                                Else
+                                                    Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
+                                                End If
+                                                checkedVariants = checkedVariants + 1
                                             End If
-                                            checkedVariants = checkedVariants + 1
-                                        End If
-                                    Next
-                                    If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
-                                        If Not constellationsChecked.ContainsKey(tNode.Text) Then
-                                            constellationsChecked.Add(tNode.Text, "")
-                                        End If
+                                        Next
+                                        If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
+                                            If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                                constellationsChecked.Add(tNode.Text, "")
+                                            End If
 
-                                    ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
-                                        ' alles schon getan
-                                    Else
-                                        Call MsgBox("Error in Portfolio-Selection")
+                                        ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
+                                            ' alles schon getan
+                                        Else
+                                            Call MsgBox("Error in Portfolio-Selection")
+                                        End If
                                     End If
-                                End If
-                            Next
+                                Next
 
-                            If constellationsChecked.Count = 1 Then
-                                ' tk , 14.11.22 AlleProjekte, ShowProjekte must not be changed 
-                                ' it contains one or more projects which were loaded to be edited 
-                                projectConstellations.clearLoadedPortfolios()
+                                If constellationsChecked.Count = 1 Then
+                                    ' tk , 14.11.22 AlleProjekte, ShowProjekte must not be changed 
+                                    ' it contains one or more projects which were loaded to be edited 
+                                    projectConstellations.clearLoadedPortfolios()
 
-                                ' hole Portfolio (pName,vName) aus den db
-                                Dim portfolioName As String = constellationsChecked.First.Key
-                                Dim portfolioVariantName As String = constellationsChecked.First.Value
-                                Dim PiCPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(portfolioName,
+                                    ' hole Portfolio (pName,vName) aus den db
+                                    Dim portfolioName As String = constellationsChecked.First.Key
+                                    Dim portfolioVariantName As String = constellationsChecked.First.Value
+                                    Dim PiCPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(portfolioName,
                                                                                                                                    dbPortfolioNames(portfolioName),
                                                                                                                                    cTimestamp, err,
                                                                                                                                    variantName:=portfolioVariantName,
                                                                                                                                    storedAtOrBefore:=storedAtOrBefore)
-                                projectConstellations.Add(PiCPortfolio)
+                                    projectConstellations.Add(PiCPortfolio)
 
-                                sw.StartTimer()
+                                    sw.StartTimer()
 
-                                ' now load the single projects of the Portfolio 
-                                If Not IsNothing(PiCPortfolio) Then
-                                    Dim msgKey As String = calcProjektKey(portfolioName, portfolioVariantName)
-                                    Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " start of Operation ... ")
+                                    ' now load the single projects of the Portfolio 
+                                    If Not IsNothing(PiCPortfolio) Then
+                                        Dim msgKey As String = calcProjektKey(portfolioName, portfolioVariantName)
+                                        Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " start of Operation ... ")
 
-                                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In PiCPortfolio.Liste
+                                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In PiCPortfolio.Liste
 
-                                        Dim pName As String = getPnameFromKey(kvp.Key)
-                                        Dim vName As String = getVariantnameFromKey(kvp.Key)
-                                        If kvp.Value.show = True Then
-                                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, storedAtOrBefore)
+                                            Dim pName As String = getPnameFromKey(kvp.Key)
+                                            Dim vName As String = getVariantnameFromKey(kvp.Key)
+                                            If kvp.Value.show = True Then
+                                                Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, vName, AlleProjekte, storedAtOrBefore)
 
-                                            If Not IsNothing(hproj) Then
+                                                If Not IsNothing(hproj) Then
 
-                                                If Not AlleProjekte.Containskey(calcProjektKey(pName, vName)) Then
-                                                    AlleProjekte.Add(hproj)
+                                                    If Not AlleProjekte.Containskey(calcProjektKey(pName, vName)) Then
+                                                        AlleProjekte.Add(hproj)
+                                                    End If
+
+                                                    If Not ShowProjekte.contains(pName) Then
+                                                        ' removes hproj from ShowProjekte, if already in there
+                                                        ShowProjekte.Add(hproj)
+                                                    End If
+
+                                                Else
+                                                    Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
                                                 End If
-
-                                                If Not ShowProjekte.contains(pName) Then
-                                                    ' removes hproj from ShowProjekte, if already in there
-                                                    ShowProjekte.Add(hproj)
-                                                End If
-
-                                            Else
-                                                Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
                                             End If
-                                        End If
 
-                                    Next
+                                        Next
 
-                                    Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " End of Operation ... ")
+                                        Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " End of Operation ... ")
 
-                                Else
-                                    Dim msgTxt As String = "Load Portfolio " & portfolioName & " failed .."
-                                    Call logger(ptErrLevel.logError, "Load Portfolio " & portfolioName, " failed ..")
-                                    Throw New ArgumentException(msgTxt)
+                                    Else
+                                        Dim msgTxt As String = "Load Portfolio " & portfolioName & " failed .."
+                                        Call logger(ptErrLevel.logError, "Load Portfolio " & portfolioName, " failed ..")
+                                        Throw New ArgumentException(msgTxt)
+                                    End If
+
+                                    sw.EndTimer()
+
                                 End If
-
-                                sw.EndTimer()
 
                             End If
 
-                        End If
+
+                            Cursor.Current = Cursors.Default
 
 
-                        Cursor.Current = Cursors.Default
+                            ' Timer
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("PTLadenKonstellation 3rd Part took: " & sw.EndTimer & "milliseconds")
+                            End If
 
+                            enableOnUpdate = True
+                        Catch ex As Exception
 
-                        ' Timer
-                        If awinSettings.visboDebug Then
-                            Call MsgBox("PTLadenKonstellation 3rd Part took: " & sw.EndTimer & "milliseconds")
-                        End If
+                        End Try
 
-                        enableOnUpdate = True
-                    Catch ex As Exception
-
-                    End Try
-
-                Else
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("there is no portfolio ...")
                     Else
-                        Call MsgBox("kein Portfolio vorhanden ...")
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("there is no portfolio ...")
+                        Else
+                            Call MsgBox("kein Portfolio vorhanden ...")
+                        End If
+
                     End If
 
+
+                Else
+                    Call MsgBox("Datebase Connection lost ...")
                 End If
 
+                ' nww invalidate 
+                Me.ribbon.Invalidate()
 
-            Else
-                Call MsgBox("Datebase Connection lost ...")
             End If
 
-            ' nww invalidate 
-            Me.ribbon.Invalidate()
-
+        Else
+            Dim msgTxt As String = "please load at least one project first"
+            If Not awinSettings.englishLanguage Then
+                msgTxt = "bitte zunächst wenigstens ein Projekt laden"
+            End If
+            Call MsgBox(msgTxt)
         End If
+
 
 
 

@@ -907,7 +907,7 @@ Public Class Tabelle2
 
                                         If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
 
-                                            Dim rcIndentLevel As Integer = 0
+                                            Dim rcIndentLevel As Integer = 1
                                             If isRole Then
                                                 ' es handelt sich um eine Rollen-Änderung
 
@@ -915,7 +915,7 @@ Public Class Tabelle2
                                                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID)
 
                                                 ' jetzt den Indentlevel der Rolle vestimmen bestimmen 
-                                                rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
+                                                'rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
                                                 currentCell.IndentLevel = rcIndentLevel
 
                                                 Dim newRoleID As Integer = tmpRole.UID
@@ -1027,7 +1027,7 @@ Public Class Tabelle2
 
                                     Dim rcIndentLevel As Integer = 1
                                     If skillName <> "" Then
-                                        rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
+                                        'rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
                                         skillID = RoleDefinitions.getRoledef(skillName).UID
                                         Target.Cells(1, 1).IndentLevel = rcIndentLevel
                                     End If
@@ -1049,7 +1049,7 @@ Public Class Tabelle2
                                             Try
                                                 Target.Cells(1, 1).offset(0, -1).value = rcName
                                                 ' jetzt den richtigen Indent setzen ..
-                                                rcIndentLevel = RoleDefinitions.getRoleIndent(rcName)
+                                                'rcIndentLevel = RoleDefinitions.getRoleIndent(rcName)
                                                 Target.Cells(1, 1).offset(0, -1).IndentLevel = rcIndentLevel
                                             Catch ex As Exception
 
