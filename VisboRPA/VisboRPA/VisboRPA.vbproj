@@ -29,7 +29,7 @@
     <PublisherName>VISBO GmbH</PublisherName>
     <MinimumRequiredVersion>1.0.0.10</MinimumRequiredVersion>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>6.1.1.0</ApplicationVersion>
+    <ApplicationVersion>6.1.2.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -71,7 +71,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>75220B92C6B747DCE63AD7FFAEA368C221639C8F</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>9F0D3B6D880264A07D18814628FC45144A51C648</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
