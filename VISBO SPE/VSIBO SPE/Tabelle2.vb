@@ -1401,6 +1401,16 @@ Public Class Tabelle2
 
                                                         CType(Target.Cells(1, 1), Excel.Range).AddComment(commentTxt)
 
+                                                        ' now delete comments in single months 
+                                                        For isp As Integer = visboZustaende.meColSD To visboZustaende.meColED
+                                                            Try
+                                                                CType(meWS.Cells(Target.Row, isp), Range).Comment.Delete()
+                                                            Catch ex As Exception
+
+                                                            End Try
+                                                        Next
+
+
                                                         With meWS
                                                             .Protect(Password:="x", UserInterfaceOnly:=True,
                                                                      AllowFormattingCells:=True,
@@ -1513,7 +1523,7 @@ Public Class Tabelle2
                                             ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
 
                                             ' now check whether or not it is role and if it is valid input ..
-                                            If isRole And Not awinSettings.meAllowOverTime Then
+                                            If isRole Then
 
                                                 Dim grantedValues As Double() = getGrantedValues(Target, pName, phaseNameID, rcNameID)
 
@@ -1538,6 +1548,13 @@ Public Class Tabelle2
 
                                                         End If
                                                     Next
+
+                                                    ' now delete comment in Sum Cell 
+                                                    Try
+                                                        CType(meWS.Cells(Target.Row, visboZustaende.meColSD - 1), Range).Comment.Delete()
+                                                    Catch ex As Exception
+
+                                                    End Try
 
                                                     With meWS
                                                         .Protect(Password:="x", UserInterfaceOnly:=True,
@@ -1631,9 +1648,18 @@ Public Class Tabelle2
                                                     CType(Target.Cells(1, 1), Excel.Range).AddComment(commentTxt)
                                                     Target.Cells(1, ix + 1).value = grantedValues(ix)
 
+
                                                 End If
 
                                             Next
+
+                                            ' now delete comment in Sum Cell 
+                                            Try
+                                                CType(meWS.Cells(Target.Row, visboZustaende.meColSD - 1), Range).Comment.Delete()
+                                            Catch ex As Exception
+
+                                            End Try
+
                                             With meWS
                                                 .Protect(Password:="x", UserInterfaceOnly:=True,
                                                                      AllowFormattingCells:=True,
