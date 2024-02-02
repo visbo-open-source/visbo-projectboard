@@ -1789,6 +1789,9 @@ Public Class Tabelle2
         Dim requestedValues As Double() ' holds the values as entered by user
         Dim projectValues As Double() ' holds the current values of roleNameID in phase/project
 
+        ' make sure there is a value deifned
+        ReDim grantedValues(0)
+
         If Not IsNothing(Target) Then
 
             Try
@@ -1873,7 +1876,6 @@ Public Class Tabelle2
             ReDim grantedValues(0)
             Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " Cell was Nothing ..")
         End If
-
 
         getGrantedValues = grantedValues
     End Function

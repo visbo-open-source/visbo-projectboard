@@ -200,30 +200,30 @@ Public Class Tabelle3
 
         ' tk 23.11.22. now set width of columns so that it looks good ... 
         Try
-            Dim w1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
-            Dim w2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
-            Dim w3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+            Dim w1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Range).ColumnWidth
+            Dim w2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Range).ColumnWidth
+            Dim w3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth
 
-            CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).AutoFit()
-            CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).AutoFit()
-            CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.elemName)), Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.explanation)), Range).AutoFit()
+            CType(meWS.Columns(col(PTmeTe.deliverables)), Range).AutoFit()
 
-            Dim c1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth
-            Dim c2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth
-            Dim c3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth
+            Dim c1 As Double = CType(meWS.Columns(col(PTmeTe.elemName)), Range).ColumnWidth
+            Dim c2 As Double = CType(meWS.Columns(col(PTmeTe.explanation)), Range).ColumnWidth
+            Dim c3 As Double = CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth
 
 
             If massColFontValues(1, 2) = 0 Then
                 If c1 > 65 Then
-                    CType(meWS.Columns(col(PTmeTe.elemName)), Excel.Range).ColumnWidth = 65
+                    CType(meWS.Columns(col(PTmeTe.elemName)), Range).ColumnWidth = 65
                 End If
 
                 If c2 > 65 Then
-                    CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth = 65
+                    CType(meWS.Columns(col(PTmeTe.explanation)), Range).ColumnWidth = 65
                 End If
 
                 If c3 > 65 Then
-                    CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth = 65
+                    CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth = 65
                 End If
             End If
             ' now check whether or not this is too much 
@@ -662,9 +662,9 @@ Public Class Tabelle3
                                     meWS.Unprotect(Password:="x")
                                 End If
                                 appInstance.EnableEvents = True
-                                CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).AutoFit()
-                                If CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth > 65 Then
-                                    CType(meWS.Columns(col(PTmeTe.explanation)), Excel.Range).ColumnWidth = 65
+                                CType(meWS.Columns(col(PTmeTe.explanation)), Range).AutoFit()
+                                If CType(meWS.Columns(col(PTmeTe.explanation)), Range).ColumnWidth > 65 Then
+                                    CType(meWS.Columns(col(PTmeTe.explanation)), Range).ColumnWidth = 65
                                 End If
                                 appInstance.EnableEvents = formerEE
                                 If contentWasProtected Then
@@ -731,9 +731,9 @@ Public Class Tabelle3
                                     meWS.Unprotect(Password:="x")
                                 End If
                                 appInstance.EnableEvents = True
-                                CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).AutoFit()
-                                If CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth > 65 Then
-                                    CType(meWS.Columns(col(PTmeTe.deliverables)), Excel.Range).ColumnWidth = 65
+                                CType(meWS.Columns(col(PTmeTe.deliverables)), Range).AutoFit()
+                                If CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth > 65 Then
+                                    CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth = 65
                                 End If
                                 appInstance.EnableEvents = formerEE
                                 If contentWasProtected Then
