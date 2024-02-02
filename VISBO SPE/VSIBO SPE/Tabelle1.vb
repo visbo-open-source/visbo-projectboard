@@ -27,7 +27,7 @@ Public Class Tabelle1
         End Try
 
         Try
-            Application.ActiveWindow.DisplayHeadings = False
+            Application.ActiveWindow.DisplayHeadings = True
         Catch ex As Exception
 
         End Try

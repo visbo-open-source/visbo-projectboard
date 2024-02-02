@@ -185,7 +185,9 @@ Public Class frmAllocateRessources
         End If
 
         If candidatesTable.Rows.Count > 0 Then
-            candidatesTable.Rows.Item(0).Selected = True
+            'candidatesTable.Rows.Item(0).Selected = True
+            'candidatesTable.Rows.Item(candidatesTable.Rows.Count - 1).Selected = False
+            candidatesTable.CurrentCell.Selected = False
             candidatesTable.Rows.Item(0).Cells(3).Selected = True
         End If
 

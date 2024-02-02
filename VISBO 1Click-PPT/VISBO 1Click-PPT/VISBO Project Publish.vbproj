@@ -303,7 +303,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>75220B92C6B747DCE63AD7FFAEA368C221639C8F</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>50A4E36216AFE7819B7F3C088642409CBDFB0F9E</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <MyType>Windows</MyType>

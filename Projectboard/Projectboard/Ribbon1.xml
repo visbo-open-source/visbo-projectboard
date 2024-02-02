@@ -80,7 +80,9 @@
             <menu id="PT4G1M" imageMso="Import" size ="large" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
               <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="Organisation"-->
-                <button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
+                <!--<button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>-->
+                <!--label="Ist-Daten"-->
+                <button id="PT4G1B12" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>
                 <!--label="Kapazitäten"-->
                 <button id="PT4G1B13" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportKapas" supertip ="Es werden die Kapazitätsdateien für interne / externe Mitarbeiter eingelesen"/>
                 <!--label="Custom User Roles"-->
@@ -91,9 +93,7 @@
                 <button id="PT4G1B16" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomization" supertip ="Es werden die Kundenspezifischen Einstellungen importiert "/>
                 <!--label="Project-Templates"-->
                 <!--<button id="PT4G1B17" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportProjectTemplates" supertip ="Es werden die Projekt-Vorlagen importiert "/>-->
-              </menu> 
-              <!--label="Ist-Daten"-->
-              <button id="PT4G1B12" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>
+              </menu>               
               <!--label="Offline Erfassung"-->
               <!--
               <button id="PT4G1B14" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportOfflineData" supertip ="Es werden offline editierte Ressourcenbedarfe eingelesen"/>-->
@@ -126,13 +126,11 @@
                 <!--label="Import Portfolio Definition"-->
                 <button id="PT4G1B5" imageMso="ImportExcel" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>
                 <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
-              <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
-              -->
+                 <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
+                 -->
               </menu>              
             <!--<button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
             <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
-            <!--
-            </menu>-->
            </menu>
           <!--</splitButton>-->
           <!--<splitButton id="PT4G2split" size ="large">-->
@@ -177,19 +175,19 @@
             </menu>
           <!--</splitButton>-->
         </group>
-        <group id="PTneu" getVisible="chckVisibility" >
-          <!--label="Neues Projekt anlegen"-->
+        <!--<group id="PTneu" getVisible="chckVisibility" >
+          --><!--label="Neues Projekt anlegen"--><!--
           <splitButton getVisible ="chckVisibility" id="PT2G1split" size ="large">
             <button id="PT2G1M0" getLabel ="bestimmeLabel" imageMso="CreateNewDrawing" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
             <menu id="PT2G1M" getVisible="chckVisibility">
-              <!--label="Neu auf Basis Vorlage"-->
+              --><!--label="Neu auf Basis Vorlage"--><!--
               <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
               <button id="PT2G1M0B1" getLabel="bestimmeLabel" enabled="true" onAction="PT2ProjektNeuBasisProjekt" />
             </menu>
           </splitButton>
-          <!--label="neue Variante anlegen"-->
+          --><!--label="neue Variante anlegen"--><!--
           <button id="PT2G1M1B0" getVisible="chckVisibility" getLabel ="bestimmeLabel" size ="large" imageMso="Copy" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden."/>
-        </group>
+        </group>-->
         <!--<group id ="PT9G1" >-->
         <group id="PT2G3" getVisible="chckVisibility">
           <!--label="aus der Session löschen"-->
@@ -219,7 +217,7 @@
           <!--<splitButton getVisible ="chckVisibility" id="PT2G2split" size ="large">-->
             <!--label="Modify Ressourcen und Kosten"-->
             <!--<button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>-->
-            <menu id="PT2G2M" getLabel ="bestimmeLabel" getVisible="chckVisibility" size ="large" imageMso="EditDocument">
+          <menu id="PT2G2M" getLabel ="bestimmeLabel" getVisible="chckVisibility" size ="large" imageMso="EditDocument">
               <!--label="Modify Ressourcen"-->
               <button id="PT2G1M2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Kosten"-->
@@ -228,9 +226,7 @@
               <button id="PT2G1M2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ampel, Ampel-Erläuterung und aktuelle Risiko Einschätzung editiert werden"/>
               <!--label="Modify Dates of Phases & Milestones"-->
               <button id="PT2G1M2B2" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled ="true" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>              
-              <!--<button id="PT2G1M2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Editieren von Budget, strategischer Fit, Risiko"/>-->
-              <!--<menuSeparator id="separator1" />-->
-              <menuSeparator id="separator2"  />
+              <!--<button id="PT2G1M2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Editieren von Budget, strategischer Fit, Risiko"/>-->              
               <!--label="Schutz setzen / aufheben"-->
               <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
               <menuSeparator id="separator3" />
@@ -238,18 +234,18 @@
               <button id="PTfreezeB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTFreezeProject" supertip ="ein fixiertes Projekt kann nicht mehr durch Drag und Drop verschoben, verkürzt, verlängert werden."/>
               <!--label="De-Freeze for moving"-->
               <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTDeFreezeProject" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
-              <menuSeparator id="separator4" />
-              <!--label="Unmark"-->
+              <!--<menuSeparator id="separator4" />
+              --><!--label="Unmark"--><!--
               <button id="PTMarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTMarkProjects" supertip ="Projekt oder Projekte markieren."/>
               <button id="PTunmarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTUnMarkProject" supertip ="die Markierung eines Projektes aufheben."/>
-              <menuSeparator id="separator5" />  
+              <menuSeparator id="separator5" />-->  
               <!--label="Variante zum Standard machen"-->
-              <button id="PT2G1M1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
+              <!--<button id="PT2G1M1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>-->
               <menuSeparator id="separator6" />
               <!--label=" Projekt Umbenennen"-->
-              <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
+              <!--<button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>-->
               <!--label="den Status eines Projektes ändern"-->
-              <button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
+              <!--<button id="PT2G1M1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>-->
               <!--label="Auto-Allocate"-->
               <button id="PT2G1M1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2AutoAllocate" supertip ="Automatisierte Ressourcen Allokation"/>
               <!--label="Auto-Distribute"-->

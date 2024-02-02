@@ -1394,7 +1394,7 @@ Public Class Tabelle2
                                                         Dim commentTxt As String = ""
 
                                                         If awinSettings.meAllowOverTime Then
-                                                            commentTxt = "not assisted : allow Overtime"
+                                                            commentTxt = "not assisted - this may cause overloads"
                                                         Else
                                                             commentTxt = getCommentTxt(vSum.Sum, xValues.Sum)
                                                         End If
@@ -1528,7 +1528,7 @@ Public Class Tabelle2
                                                         If IsNumeric(Target.Cells(1, ix + 1).value) Then
 
                                                             If awinSettings.meAllowOverTime Then
-                                                                commentTxt = "not assisted : allow Overtime"
+                                                                commentTxt = "not assisted - this may cause overloads"
                                                             Else
                                                                 commentTxt = getCommentTxt(Target.Cells(1, ix + 1).value, grantedValues(ix))
                                                             End If
@@ -1623,7 +1623,7 @@ Public Class Tabelle2
 
                                                 If IsNumeric(Target.Cells(1, ix + 1).value) Then
                                                     If awinSettings.meAllowOverTime Then
-                                                        commentTxt = "not assisted : allow Overtime"
+                                                        commentTxt = "not assisted - this may cause overloads"
                                                     Else
                                                         commentTxt = getCommentTxt(Target.Cells(1, ix + 1).value, grantedValues(ix))
                                                     End If
@@ -2718,9 +2718,12 @@ Public Class Tabelle2
 
         Dim contextTxt As String
         If projectConstellations.Count > 0 Then
-            contextTxt = "Context: " & projectConstellations.Liste.First.Key
+            contextTxt = "Consider all " & projectConstellations.Liste.First.Key
+            If contextTxt.Last = "#" Then
+                contextTxt = contextTxt.Substring(0, contextTxt.Length - 1)
+            End If
         Else
-            contextTxt = "Context: None"
+            contextTxt = "Consider no other projects"
         End If
 
         Dim commentTxt As String = contextTxt & vbLf & "requested: " & requested.ToString("0.#") & vbLf & "granted: " & granted.ToString("0.#")

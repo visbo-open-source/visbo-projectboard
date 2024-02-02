@@ -606,7 +606,7 @@ Module VISBO_SPE_Utilities
                                 End If
                                 ' tk 12.1.24 damit Ressourcen und Kostenbedarfe, falls lange auch passend gezeigt werden können
                                 ' Video Take ... 1.2.24 - wirder zurück nehmen
-                                .DisplayHeadings = False
+                                .DisplayHeadings = True
 
                             ElseIf meModus = ptModus.massEditTermine Then
                                 If editProjekteInSPE.Count = 1 Then
@@ -737,6 +737,9 @@ Module VISBO_SPE_Utilities
                     If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
                         CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                     End If
+
+                    ' jetzt jede Zelle auf Wrap = false setzen
+                    CType(currentWS.Range(currentWS.Cells(1, 1), currentWS.Cells(1000, 1000)), Range).WrapText = False
                 Catch ex As Exception
 
                 End Try
@@ -753,7 +756,7 @@ Module VISBO_SPE_Utilities
 
 
             Catch ex As Exception
-                Call MsgBox("es gibt Probleme mit dem Mass-Edit Termine Worksheet ...")
+                Call MsgBox("Problems with write Schedules for editing code 098 ...")
                 appInstance.EnableEvents = True
                 Exit Sub
             End Try
@@ -1422,22 +1425,17 @@ Module VISBO_SPE_Utilities
 
                 End Try
 
-                'appInstance.EnableEvents = False
+                ' now do the AutoFit with respect to Row Height
 
+                Try
+                    For iz As Integer = 2 To zeile
+                        CType(currentWS.Rows(iz), Range).AutoFit()
+                    Next
+                Catch ex As Exception
+                    Call MsgBox("Problems with write Schedules for editing code 099 ...")
+                    appInstance.EnableEvents = True
+                End Try
 
-                ' Phasen bzw. Meilenstein Name
-                'With CType(infoDataBlock.Columns(4), Excel.Range)
-                '    .WrapText = False
-                'End With
-
-                '' Erläuterung
-                'With CType(infoDataBlock.Columns(8), Excel.Range)
-                '    .WrapText = True
-                'End With
-                '' Lieferumfänge 
-                'With CType(infoDataBlock.Columns(9), Excel.Range)
-                '    .WrapText = True
-                'End With
 
                 ' percent Done 
                 With CType(infoDataBlock.Columns(11), Excel.Range)
@@ -1448,22 +1446,11 @@ Module VISBO_SPE_Utilities
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
                 If massColFontValues(1, 2) > 0 Then
+
                     ' es wurden bereits mal Spaltenbreiten gesetzt 
                     For ik As Integer = 1 To 100
                         CType(firstHundredColumns.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
                     Next
-
-                Else
-                    '' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
-                    'appInstance.EnableEvents = True
-                    'Try
-                    '    CType(currentWS, Excel.Worksheet).Columns.EntireColumn.AutoFit()
-                    '    'firstHundredColumns.AutoFit()
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    'appInstance.EnableEvents = False
 
                 End If
 
@@ -1495,7 +1482,8 @@ Module VISBO_SPE_Utilities
                              AllowFiltering:=True)
                 End With
             Catch ex As Exception
-
+                Call MsgBox("Problems with write Schedules for editing code 100 ...")
+                appInstance.EnableEvents = True
             End Try
 
             Try
@@ -1506,13 +1494,14 @@ Module VISBO_SPE_Utilities
                     CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                 End If
             Catch ex As Exception
-
+                Call MsgBox("Problems with write Schedules for editing code 101 ...")
+                appInstance.EnableEvents = True
             End Try
 
 
 
         Catch ex As Exception
-            Call MsgBox("Fehler in Aufbereitung Termine" & vbLf & ex.Message)
+            Call MsgBox("Problems with write Schedules for editing code 102 ...")
             appInstance.EnableEvents = True
         End Try
 
