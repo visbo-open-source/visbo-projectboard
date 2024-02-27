@@ -1972,7 +1972,7 @@ Public Module agm3
             ' Schliessen des CustomUser Role-Files
             appInstance.Workbooks(wbName).Close(SaveChanges:=True)
 
-            If oCollection.Count = 0 Then
+            If oCollection.Count = 0 And Not visboClient = divClients(client.VisboRPA) Then
                 'sessionConstellationP enthält alle Projekte aus dem Import 
                 Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
 
@@ -1997,9 +1997,12 @@ Public Module agm3
             Else
                 If Not visboClient = divClients(client.VisboRPA) Then
                     Call showOutPut(oCollection, "Errors occurred .. no import", "")
+                    Call logger(ptErrLevel.logError, "readActualData", oCollection)
+                Else
+                    Call logger(ptErrLevel.logInfo, "read ActualData", "Success")
                 End If
 
-                Call logger(ptErrLevel.logError, "readActualData", oCollection)
+
             End If
 
 

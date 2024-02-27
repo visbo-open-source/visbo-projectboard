@@ -9585,7 +9585,7 @@ Public Module agm2
                         ' now it is safe that role Name exists and 
                         If weitermachen Then
 
-                            Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                            Dim excelProjectName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                             Dim tmpPNr As String = ""
 
                             If Not IsNothing(CType(.Cells(zeile, colProjectNr), Excel.Range).Value) Then
@@ -9597,19 +9597,12 @@ Public Module agm2
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
 
                             Dim pName As String = ""
-                            If Not isValidPVName(tmpPName) Then
-                                pName = makeValidProjectName(tmpPName)
+                            If Not isValidPVName(excelProjectName) Then
+                                pName = makeValidProjectName(excelProjectName)
                             Else
-                                pName = tmpPName
+                                pName = excelProjectName
                             End If
 
-
-
-
-                            ' jetzt sollen die Projekte geladen werden, die referenziert werden 
-                            If Not handledNames.ContainsKey(tmpPName) Then
-                                handledNames.Add(tmpPName, pName)
-                            End If
 
                             Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
                             Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
@@ -9629,23 +9622,33 @@ Public Module agm2
                             Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, "", ImportProjekte, Date.Now, kdNr:=tmpPNr)
 
                             If Not IsNothing(hproj) Then
-                                If Not ImportProjekte.Containskey(calcProjektKey(hproj)) Then
-                                    ImportProjekte.Add(hproj, False)
 
+                                If pName <> hproj.name Then
+                                    pName = hproj.name
+                                    Call logger(ptErrLevel.logWarning, "Import Actual Data: Name in Excel is different from project Name in VISBO", "VISBO Name is used: " & hproj.name)
                                 End If
 
-                                If MinMaxInformations.ContainsKey(pName) Then
-                                    If MinMaxInformations.Item(pName)(0) > currentDateColumn Then
-                                        MinMaxInformations.Item(pName)(0) = currentDateColumn
-                                    End If
 
-                                    If MinMaxInformations.Item(pName)(1) < currentDateColumn Then
-                                        MinMaxInformations.Item(pName)(1) = currentDateColumn
-                                    End If
+                                ' jetzt sollen die Projekte geladen werden, die referenziert werden 
+                                If Not handledNames.ContainsKey(excelProjectName) Then
+                                    handledNames.Add(excelProjectName, pName)
+                                End If
 
-                                Else
+                                If Not ImportProjekte.Containskey(calcProjektKey(hproj)) Then
+                                    ImportProjekte.Add(hproj, False)
+                                End If
+
+                                If Not MinMaxInformations.ContainsKey(pName) Then
                                     Dim tmpColArray() As Integer = {1000000, 0}
                                     MinMaxInformations.Add(pName, tmpColArray)
+                                End If
+
+                                If MinMaxInformations.Item(pName)(0) > currentDateColumn Then
+                                    MinMaxInformations.Item(pName)(0) = currentDateColumn
+                                End If
+
+                                If MinMaxInformations.Item(pName)(1) < currentDateColumn Then
+                                    MinMaxInformations.Item(pName)(1) = currentDateColumn
                                 End If
 
                                 ' now build / update the validPName / RoleNames
@@ -9659,7 +9662,7 @@ Public Module agm2
                                     Dim tmpRoleNameListe As New List(Of String) From {
                                         roleName
                                     }
-                                    validPNameRoleNameIDs.Add(pName, tmpRoleNameListe)
+                                    validPNameRoleNameIDs.Add(hproj.name, tmpRoleNameListe)
                                 End If
                             Else
                                 outPutLine = "ImportIstdatenStdFormat , Unkown Project: " & pName
@@ -9836,9 +9839,10 @@ Public Module agm2
                             Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
                             'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                            Dim relMonthCol As Integer = lastValidMonth - newProj.Start + 1
-                            If relMonthCol > 0 Then
-                                oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, relMonthCol, True)
+                            Dim relvonCol As Integer = firstValidMonth - newProj.Start + 1
+                            Dim relbisCol As Integer = lastValidMonth - newProj.Start + 1
+                            If relbisCol > 0 Then
+                                oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, relvonCol, relbisCol, True)
                             End If
 
                             'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
@@ -9854,7 +9858,7 @@ Public Module agm2
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                             ' Test tk 
                             'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, relMonthCol, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, relvonCol, relbisCol, False)
 
                             Dim abweichungGesamt As Double = 0.0
                             If gesamtNachher <> checkNachher Then
@@ -9889,7 +9893,7 @@ Public Module agm2
                             Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
                             With newProj
                                 Dim anzDays As Integer = newProj.startDate.Day
-                                .actualDataUntil = newProj.startDate.AddMonths(relMonthCol - 1).AddDays(-1 * (anzDays) + 16)
+                                .actualDataUntil = newProj.startDate.AddMonths(relbisCol - 1).AddDays(-1 * (anzDays) + 16)
                                 .variantName = ""   ' eliminieren von VariantenName acd
                                 .variantDescription = ""
                             End With

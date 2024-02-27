@@ -606,7 +606,7 @@ Module VISBO_SPE_Utilities
                                 End If
                                 ' tk 12.1.24 damit Ressourcen und Kostenbedarfe, falls lange auch passend gezeigt werden können
                                 ' Video Take ... 1.2.24 - wirder zurück nehmen
-                                .DisplayHeadings = True
+                                .DisplayHeadings = False
 
                             ElseIf meModus = ptModus.massEditTermine Then
                                 If editProjekteInSPE.Count = 1 Then

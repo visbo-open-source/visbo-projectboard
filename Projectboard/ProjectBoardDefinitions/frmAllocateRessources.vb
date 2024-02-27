@@ -27,6 +27,9 @@ Public Class frmAllocateRessources
     ' holds the last value a Amount cell contained 
     Private lastValue As Double = 0.0
 
+    ' holds the Date String from-to for the TimeSpan
+    Private timeSpanText As String = ""
+
     ' holds all people alreay in project team
     Private teamList As New Collection
 
@@ -63,6 +66,49 @@ Public Class frmAllocateRessources
         lookUpID = rcNameID
 
         Call buildAllocationContent(errMsg)
+
+        ' now add the timeSpan to the text
+        explanationLbl.Text = explanationLbl.Text & " " & timeSpanText
+
+        If projectConstellations.Count = 1 Then
+
+            Dim nrOfProjects As Integer = projectConstellations.Liste.First.Value.count
+            Dim contextName As String = projectConstellations.Liste.First.Key
+            If contextName.Last = "#" Then
+                ' stellt sicher, dass das Trennzeichen zwischen Name und Varianten-Name nur angezeigt wird, wenn nötig
+                contextName = contextName.Substring(0, contextName.Length - 1)
+            End If
+
+            lblContext.Text = lblContext.Text & " plus all " & nrOfProjects & " projects of portfolio " & contextName
+
+        Else
+            lblContext.Text = lblContext.Text & " only"
+        End If
+
+        If awinSettings.meAllowOverTime Then
+            lblAllowOverloads.Visible = True
+        Else
+            lblAllowOverloads.Visible = False
+        End If
+
+
+        ' Set the alignment of the second column to right
+        candidatesTable.Columns(1).DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight  ' FreeCapacity
+        candidatesTable.Columns(2).DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter ' is Extern
+        candidatesTable.Columns(3).DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight  ' will do how much?
+
+
+        ' Set right padding for the cells in the second column
+        Dim rightPadding As Integer = 40 ' Adjust this value as needed
+
+        rightPadding = CInt(System.Math.Truncate(candidatesTable.Columns(1).Width / 3))
+        candidatesTable.Columns(1).DefaultCellStyle.Padding = New Padding(0, 0, rightPadding, 0)
+
+        rightPadding = CInt(System.Math.Truncate(candidatesTable.Columns(3).Width / 3))
+        candidatesTable.Columns(3).DefaultCellStyle.Padding = New Padding(0, 0, rightPadding, 0)
+
+        lblSum.TextAlign = Drawing.ContentAlignment.MiddleRight
+
 
         If errMsg <> "" Then
             Call MsgBox(errMsg)
@@ -139,6 +185,11 @@ Public Class frmAllocateRessources
                     foreCastOffset = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(cPhase.getStartDate) + 1
                 End If
 
+                ' now set the explanation Label by showrangeLeft and Showrange Right 
+                Dim vonMonth As String = Format(cPhase.getStartDate.AddMonths(foreCastOffset), "MMM yy")
+                Dim bisMonth As String = Format(cPhase.getEndDate, "MMM yy")
+                timeSpanText = vonMonth & " - " & bisMonth
+
                 amountToSubstitute = myRole.Xwerte.Sum
                 If foreCastOffset > 0 Then
                     ' sum ist calculated from index + 1 
@@ -181,14 +232,25 @@ Public Class frmAllocateRessources
                 ' phase does not have any forecast months, so it is not possible to change anything anymore
                 lblOrgaUnitSkill.Text = "Phase with no forecast months anymore - so changing is not possible"
                 lblSum.Text = ""
+                timeSpanText = ""
             End If
         End If
 
         If candidatesTable.Rows.Count > 0 Then
-            'candidatesTable.Rows.Item(0).Selected = True
-            'candidatesTable.Rows.Item(candidatesTable.Rows.Count - 1).Selected = False
-            candidatesTable.CurrentCell.Selected = False
-            candidatesTable.Rows.Item(0).Cells(3).Selected = True
+
+            ' Assuming your DataGridView is named 'yourDataGridView'
+            ' Ensure the DataGridView has been populated with data before executing this code
+
+            ' Select the cell in the first row, last column
+            ' as was recommended by ChatGPT
+            Dim lastColumnIndex As Integer = candidatesTable.ColumnCount - 1
+            candidatesTable.CurrentCell = candidatesTable.Rows(0).Cells(lastColumnIndex)
+
+            ' Optionally, you might want to put the DataGridView in edit mode
+            ' no I don't, because User might rather prefer other people ...
+            'candidatesTable.BeginEdit(True)
+
+
         End If
 
     End Sub
@@ -263,7 +325,11 @@ Public Class frmAllocateRessources
 
     End Sub
 
-    Private Sub Label2_Click(sender As Object, e As EventArgs) Handles Label2.Click
+    Private Sub Label2_Click(sender As Object, e As EventArgs) Handles explanationLbl.Click
+
+    End Sub
+
+    Private Sub frmAllocateRessources_Closed(sender As Object, e As EventArgs) Handles Me.Closed
 
     End Sub
 End Class
