@@ -1969,7 +1969,8 @@ Module rpaTkModule
 
         Try
             Dim jobParameters As clsJobParameters = getJobParameters("Actual Target Report", myKennung)
-            Dim phMsParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
+            ' Error - there is no Parameters File 
+            ' Dim phMsParameters As clsJobParameters = getJobParameters("Parameters", myKennung)
 
             msgTxt = jobParameters.portfolioName
             If jobParameters.portfolioVariantName <> "" Then
@@ -4182,7 +4183,7 @@ Module rpaTkModule
 
                                 If System.Math.Abs(checkValue2 - (planValue + checkValue1)) >= 0.01 Then
                                     Dim msgTxt As String = "MisMatch Sum of intern and extern personell cost of plan does not equal total personell cost " & hproj.name
-                                    Call logger(ptErrLevel.logError, "write Report Actual Target ", msgTxt)
+                                    Call logger(ptErrLevel.logWarning, "write Report Actual Target ", msgTxt)
                                 End If
 
                             Catch ex As Exception
@@ -4203,9 +4204,9 @@ Module rpaTkModule
                                     Dim checkValue1 As Double = 1000 * baseline.getAllPersonalKosten(mode:=PTrt.intern).Sum
                                     Dim checkValue2 As Double = 1000 * baseline.getAllPersonalKosten.Sum
 
-                                    If System.Math.Abs(checkValue2 - (planValue + checkValue1)) >= 0.01 Then
+                                    If System.Math.Abs(checkValue2 - (baselineValue + checkValue1)) >= 0.01 Then
                                         Dim msgTxt As String = "MisMatch Sum of intern and extern personell cost of baseline does not equal total personell cost " & hproj.name
-                                        Call logger(ptErrLevel.logError, "write Report Actual Target ", msgTxt)
+                                        Call logger(ptErrLevel.logWarning, "write Report Actual Target ", msgTxt)
                                     End If
 
                                 Else

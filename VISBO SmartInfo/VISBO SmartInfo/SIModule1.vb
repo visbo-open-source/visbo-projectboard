@@ -4055,22 +4055,27 @@ Module SIModule1
                     Case ptReportComponents.prStand
                         If scInfo.prPF = ptPRPFType.project Then
 
-                            If Not IsNothing(hproj) Then
-                                Dim descriptor As String = ""
-                                Try
-                                    Dim substr() As String = Split(pptShape.TextFrame2.TextRange.Text, ":")
-                                    descriptor = substr(0)
-                                    ' if it is ending with 'DB' then there was no leading descriptor
-                                    If descriptor.EndsWith("DB") Then
-                                        descriptor = ""
-                                    Else
-                                        descriptor = descriptor & ": "
-                                    End If
-                                Catch ex As Exception
-                                    descriptor = "Version: "
-                                End Try
+                            Dim pvName As String = calcProjektKey(hproj.name, "")
+                            Dim lProj As clsProjekt = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
-                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
+                            If Not IsNothing(hproj) Then
+                                Dim descriptor As String = "Version: "
+
+                                Dim baselineTxt As String = "last Baseline: "
+                                If Not IsNothing(lProj) Then
+                                    baselineTxt = baselineTxt & lProj.timeStamp.ToString("g", repCult)
+                                Else
+                                    baselineTxt = baselineTxt & "-"
+                                End If
+
+                                Dim hProjTxt As String = "Current Plan: "
+                                If Not IsNothing(hproj) Then
+                                    hProjTxt = hProjTxt & hproj.timeStamp.ToString("g", repCult)
+                                Else
+                                    hProjTxt = hProjTxt & "-"
+                                End If
+
+                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (" & hProjTxt & "  " & baselineTxt & ")"
                             Else
                                 pptShape.TextFrame2.TextRange.Text = " "
                             End If
@@ -4420,9 +4425,15 @@ Module SIModule1
                                     End Try
                                 End If
 
+                                If scInfo.detailID = PTprdk.ActualTargetReve Or
+                                        scInfo.detailID = PTprdk.ActualTargetRess Or
+                                        scInfo.detailID = PTprdk.ActualTargetCost Then
+                                    ' the actualTarget Create or Update Routine
+                                    Call createProjektATChart(scInfo, Nothing, pptShape, False)
+                                Else
+                                    Call updateProjectChartInPPT(scInfo, pptShape)
+                                End If
 
-                                ' Alternative 1a - pptApp.activate auskommentiert
-                                Call updateProjectChartInPPT(scInfo, pptShape)
 
 
                             ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then

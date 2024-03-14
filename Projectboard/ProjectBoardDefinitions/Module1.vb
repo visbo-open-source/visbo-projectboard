@@ -468,6 +468,7 @@ Public Module Module1
         internExternShort = 9
         cashflow = 10
         roleCostInvoices = 11
+        revenueSavings = 12
     End Enum
 
 
@@ -665,6 +666,9 @@ Public Module Module1
         SollIstRolleC2 = 34
         SollIstKostenartC2 = 35
         ProjektbedarfsChart = 36
+        ActualTargetReve = 37
+        ActualTargetCost = 38
+        ActualTargetRess = 39
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
