@@ -2830,11 +2830,66 @@ Module creationModule
 
             ' now draw projectValues
 
+            'Dim planColor(1) As Integer
+            'planColor(0) = visboFarbeBlau
+            'planColor(1) = visboFarbeBlau
+
+            'If IsNothing(sCInfo.vglProj) Then
+            '    If sCInfo.detailID = PTprdk.ActualTargetReve Then
+            '        planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '    Else
+            '        ' in all other cases : resources or cost it is negativ
+            '        planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '    End If
+            'Else
+            '    If sCInfo.detailID = PTprdk.ActualTargetReve Then
+
+            '        ' up-to-now values
+            '        If projectValues(0) < baselineValues(0) Then
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        Else
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        End If
+
+            '        ' Total sum 
+            '        If projectValues.Sum < baselineValues.Sum Then
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        Else
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        End If
+
+
+
+            '    ElseIf sCInfo.detailID = PTprdk.ActualTargetRess Or sCInfo.detailID = PTprdk.ActualTargetCost Then
+
+            '        ' in all other cases : resources or cost 
+
+            '        ' up-to-now value
+            '        If projectValues(0) <= baselineValues(0) Then
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        Else
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        End If
+
+            '        ' Total Sum
+            '        If projectValues.Sum <= baselineValues.Sum Then
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        Else
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        End If
+
+            '    End If
+            'End If
+
             With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                 .Name = "Current Plan"
-                .Interior.Color = visboFarbeBlau
                 .Values = projectValues
+                .Interior.Color = visboFarbeBlau
+                '.Points(1).Interior.color = planColor(0)
+                '.Points(2).Interior.color = planColor(1)
 
                 .XValues = Xdatenreihe
                 .ChartType = PlanChartType
@@ -2843,9 +2898,9 @@ Module creationModule
             End With
 
 
-            ' now draw baselineValues , but only it there are baselineValues 
+                ' now draw baselineValues , but only it there are baselineValues 
 
-            If Not IsNothing(sCInfo.vglProj) Then
+                If Not IsNothing(sCInfo.vglProj) Then
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                     .Name = "Baseline"
@@ -2932,7 +2987,7 @@ Module creationModule
             End If
 
 
-            If projectValues.Sum < baselineValues.Sum * 0.95 Then
+            If projectValues.Sum < baselineValues.Sum Then
 
                 If sCInfo.detailID = PTprdk.ActualTargetReve Then
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
@@ -2941,7 +2996,7 @@ Module creationModule
                 End If
 
 
-            ElseIf projectValues.Sum > 1.05 * baselineValues.Sum Then
+            ElseIf projectValues.Sum > baselineValues.Sum Then
 
                 If sCInfo.detailID = PTprdk.ActualTargetReve Then
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
@@ -2950,7 +3005,7 @@ Module creationModule
                 End If
 
             Else
-                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
             End If
 
         End With
@@ -7861,6 +7916,16 @@ Module creationModule
             Dim baselineIX As Integer
 
             Dim upToNowCol As Integer = getColumnOfDate(upToNowDate)
+
+            ' 18.3.24
+            ' Do this to ensure _Dauer ist set properly 
+            If Not IsNothing(scInfo.hproj) Then
+                Dim a As Integer = scInfo.hproj.dauerInDays
+            End If
+
+            If Not IsNothing(scInfo.vglProj) Then
+                Dim a As Integer = scInfo.vglProj.dauerInDays
+            End If
 
             If scInfo.detailID = PTprdk.ActualTargetCost Then
 
