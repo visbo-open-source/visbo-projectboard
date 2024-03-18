@@ -14387,7 +14387,12 @@ Public Module testModule
             If segmentID = swimlaneNameID Then
                 .TextFrame2.TextRange.Text = ""
             Else
-                .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
+                If swimlaneNameID = rootPhaseName Then
+                    .TextFrame2.TextRange.Text = hproj.name
+                Else
+                    .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
+                End If
+
             End If
 
             .Name = .Name & .Id
@@ -17540,7 +17545,7 @@ Public Module testModule
                 ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
                 ' überdeckt werden soll 
 
-                If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
+                If awinSettings.mppShowMsName Then
 
                     Dim doDraw As Boolean = False
                     Dim myText As String = ""
@@ -17552,11 +17557,11 @@ Public Module testModule
                         myText = msBeschriftung
                         myType = PTpptAnnotationType.text
                         myTitle = "Beschriftung"
-                    ElseIf cMilestone.invoice.Key > 0 Then
-                        doDraw = True
-                        myText = cMilestone.invoice.Key.ToString("##0.#") & " T€"
-                        myType = PTpptAnnotationType.invoice
-                        myTitle = "Invoice"
+                        'ElseIf cMilestone.invoice.Key > 0 Then
+                        '    doDraw = True
+                        '    myText = cMilestone.invoice.Key.ToString("##0.#") & " T€"
+                        '    myType = PTpptAnnotationType.invoice
+                        '    myTitle = "Invoice"
                     End If
 
                     If doDraw Then
@@ -17565,9 +17570,7 @@ Public Module testModule
 
                             .TextFrame2.TextRange.Text = myText
                             .Top = CSng(yPosition - rds.YMilestoneText)
-                            '.Left = CSng(x1) - .Width / 2
                             .Left = CSng(x1) - .Width / 2
-                            '.Name = .Name & .Id
                             Try
                                 .Name = msShapeName & myType
                             Catch ex As Exception
@@ -17584,7 +17587,7 @@ Public Module testModule
 
                 ' jetzt muss ggf das Datum angebracht werden 
                 Dim msDateText As String = ""
-                If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
+                If awinSettings.mppShowMsDate Then
 
                     Dim doDraw As Boolean = False
                     Dim myText As String = ""
@@ -17597,11 +17600,11 @@ Public Module testModule
                         myType = PTpptAnnotationType.datum
                         myTitle = "Datum"
 
-                    ElseIf cMilestone.penalty.Value > 0 Then
-                        doDraw = True
-                        myText = cMilestone.penalty.Value.ToString("##0.#") & " T€ (" & cMilestone.penalty.Key.ToShortDateString & ")"
-                        myType = PTpptAnnotationType.penalty
-                        myTitle = "Penalty"
+                        'ElseIf cMilestone.penalty.Value > 0 Then
+                        '    doDraw = True
+                        '    myText = cMilestone.penalty.Value.ToString("##0.#") & " T€ (" & cMilestone.penalty.Key.ToShortDateString & ")"
+                        '    myType = PTpptAnnotationType.penalty
+                        '    myTitle = "Penalty"
                     End If
 
 

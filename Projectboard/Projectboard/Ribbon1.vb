@@ -7838,7 +7838,7 @@ Public Class Ribbon1
                                     Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
                                     'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                                    oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, True)
+                                    oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, 1, lastValidMonth - newProj.Start + 1, True)
                                     'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
 
                                     newIstValue = calcIstValueOf(vPKvP.Value)
@@ -7853,7 +7853,7 @@ Public Class Ribbon1
                                     Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                                     ' Test tk 
                                     'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                                    Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, False)
+                                    Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, 1, lastValidMonth - newProj.Start + 1, False)
 
                                     Dim abweichungGesamt As Double = 0.0
                                     If gesamtNachher <> checkNachher Then

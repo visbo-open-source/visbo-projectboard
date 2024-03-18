@@ -7,11 +7,13 @@ Imports ProjectBoardBasic
 Module creationModule
 
     ' defines the keyWords fpr Powerpoint Reporting Compoents, so that report component can be generated
+    ' 29.2.24 ActualTargetReve = ActualTarget Chart Revenue /Savings, ActualTargetCost=Chart Other Cost, ActualTargetRess = Chart Gesamt Resources
     Friend projectComponentNames As String() = {"Projekt-Name", "Custom-Field", "selectedItems", "Einzelprojektsicht",
                                                 "AllePlanElemente", "Swimlanes", "Swimlanes2", "TableBudgetCostAPVCV",
                                                 "TableMilestoneAPVCV", "ProjektBedarfsChart", "Ampel-Farbe", "Ampel-Text",
                                                 "Beschreibung", "Business-Unit", "SymTrafficLight", "SymRisks", "SymGoals",
-                                                "SymTeam", "SymFinance", "SymSchedules", "SymPrPf", "Stand:", "Laufzeit:", "Verantwortlich:"}
+                                                "SymTeam", "SymFinance", "SymSchedules", "SymPrPf", "Stand:", "Laufzeit:", "Verantwortlich:",
+                                                "ActualTargetReve", "ActualTargetCost", "ActualTargetRess"}
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
@@ -417,6 +419,9 @@ Module creationModule
                         kennzeichnung = "TableMilestoneAPVCV" Or
                         kennzeichnung = "Tabelle Projektziele" Or
                         kennzeichnung = "ProjektBedarfsChart" Or
+                        kennzeichnung = "ActualTargetReve" Or
+                        kennzeichnung = "ActualTargetCost" Or
+                        kennzeichnung = "ActualTargetRess" Or
                         kennzeichnung = "Ampel-Farbe" Or
                         kennzeichnung = "Ampel-Text" Or
                         kennzeichnung = "Beschreibung" Or
@@ -468,7 +473,10 @@ Module creationModule
                 ElseIf kennzeichnung = "TableBudgetCostAPVCV" Or
                        kennzeichnung = "Rolle" Or
                        kennzeichnung = "Kostenart" Or
-                       kennzeichnung = "ProjektBedarfsChart" Then
+                       kennzeichnung = "ProjektBedarfsChart" Or
+                       kennzeichnung = "ActualTargetReve" Or
+                       kennzeichnung = "ActualTargetCost" Or
+                       kennzeichnung = "ActualTargetRess" Then
                     ' it should only be given as text in the Powerpoint Templates. Currently there is no interactive selection 
                     roleCostSelNeeded(0) = False
                 End If
@@ -1210,6 +1218,174 @@ Module creationModule
                                 End Try
 
 
+                            Case "ActualTargetReve"
+
+                                Try
+
+                                    Dim smartChartInfo As New clsSmartPPTChartInfo
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+
+                                    With smartChartInfo
+
+                                        .prPF = ptPRPFType.project
+                                        .chartTyp = PTChartTypen.Balken
+                                        .vergleichsArt = PTVergleichsArt.beauftragung
+                                        .vergleichsTyp = PTVergleichsTyp.letzter
+                                        .einheit = PTEinheiten.euro
+                                        .elementTyp = ptElementTypen.revenueSavings
+
+                                        .bigType = ptReportBigTypes.charts
+                                        .detailID = PTprdk.ActualTargetReve
+
+                                        If qualifier2.Length > 0 Then
+                                            .q2 = qualifier2
+                                        Else
+                                            .q2 = ""
+                                        End If
+
+
+                                        ' muss mit dem ersten oder letzten verglichen werden ? 
+                                        .hproj = hproj
+                                        .vpid = hproj.vpID
+                                        If .vergleichsTyp = PTVergleichsTyp.erster Then
+                                            .vglProj = bproj
+                                        ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            .vglProj = lproj
+                                        End If
+
+                                    End With
+
+
+                                    Call createProjektATChart(smartChartInfo, pptShape, Nothing, False)
+
+                                    boxName = ""
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+
+                                    msgTxt = "Component 'ProjektBedarfsChart':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
+                                End Try
+
+
+                            Case "ActualTargetCost"
+
+
+                                Try
+                                    Dim smartChartInfo As New clsSmartPPTChartInfo
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+
+                                    With smartChartInfo
+
+                                        .prPF = ptPRPFType.project
+                                        .chartTyp = PTChartTypen.Balken
+                                        .vergleichsArt = PTVergleichsArt.beauftragung
+                                        .vergleichsTyp = PTVergleichsTyp.letzter
+                                        .einheit = PTEinheiten.euro
+                                        .elementTyp = ptElementTypen.costs
+
+                                        .bigType = ptReportBigTypes.charts
+                                        .detailID = PTprdk.ActualTargetCost
+
+                                        If qualifier2.Length > 0 Then
+                                            .q2 = qualifier2
+                                        Else
+                                            .q2 = ""
+                                        End If
+
+                                        ' muss mit dem ersten oder letzten verglichen werden ? 
+                                        .hproj = hproj
+                                        .vpid = hproj.vpID
+                                        If .vergleichsTyp = PTVergleichsTyp.erster Then
+                                            .vglProj = bproj
+                                        ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            .vglProj = lproj
+                                        End If
+
+                                    End With
+
+
+                                    'Call createProjektChartInPPTNew(smartChartInfo, pptShape, nolegend)
+                                    Call createProjektATChart(smartChartInfo, pptShape, Nothing, False)
+
+                                    boxName = ""
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+
+                                    msgTxt = "Component 'ProjektBedarfsChart':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
+                                End Try
+
+
+                            Case "ActualTargetRess"
+
+
+
+                                Try
+                                    Dim smartChartInfo As New clsSmartPPTChartInfo
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+
+                                    With smartChartInfo
+
+                                        .prPF = ptPRPFType.project
+                                        .chartTyp = PTChartTypen.Balken
+                                        .vergleichsArt = PTVergleichsArt.beauftragung
+                                        .vergleichsTyp = PTVergleichsTyp.letzter
+                                        .einheit = PTEinheiten.personentage
+                                        .elementTyp = ptElementTypen.roles
+
+                                        .bigType = ptReportBigTypes.charts
+                                        .detailID = PTprdk.ActualTargetRess
+
+                                        If qualifier2.Length > 0 Then
+                                            .q2 = qualifier2
+                                        Else
+                                            .q2 = ""
+                                        End If
+
+                                        ' muss mit dem ersten oder letzten verglichen werden ? 
+                                        .hproj = hproj
+                                        .vpid = hproj.vpID
+                                        If .vergleichsTyp = PTVergleichsTyp.erster Then
+                                            .vglProj = bproj
+                                        ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            .vglProj = lproj
+                                        End If
+
+                                    End With
+
+
+                                    Call createProjektATChart(smartChartInfo, pptShape, Nothing, False)
+
+                                    boxName = ""
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+
+                                    msgTxt = "Component 'ProjektBedarfsChart':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
+                                End Try
+
+
                             Case "ProjektBedarfsChart"
 
                                 Try
@@ -1828,17 +2004,23 @@ Module creationModule
                             Case "Stand:"
 
                                 Try
-                                    If boxName = kennzeichnung Then
-                                        ' reportMessages now read from VCSetting
-                                        'If englishLanguage Then
-                                        '    boxName = "Version:"
-                                        'Else
-                                        '    boxName = "Stand:"
-                                        'End If
-                                        boxName = repMessages.getmsg(223)
+                                    boxName = "Version: "
+
+                                    Dim baselineTxt As String = "last Baseline: "
+                                    If Not IsNothing(lproj) Then
+                                        baselineTxt = baselineTxt & lproj.timeStamp.ToString("g", repCult)
+                                    Else
+                                        baselineTxt = baselineTxt & "-"
                                     End If
 
-                                    .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("g", repCult) & ")"
+                                    Dim hProjTxt As String = "Current Plan: "
+                                    If Not IsNothing(hproj) Then
+                                        hProjTxt = hProjTxt & hproj.timeStamp.ToString("g", repCult)
+                                    Else
+                                        hProjTxt = hProjTxt & "-"
+                                    End If
+
+                                    .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (" & hProjTxt & "  " & baselineTxt & ")"
                                     '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                     bigType = ptReportBigTypes.components
                                     compID = ptReportComponents.prStand
@@ -2435,6 +2617,404 @@ Module creationModule
 
     End Sub
 
+    ''' <summary>
+    ''' create the Actual versus Target Reports , initiated by Telair
+    ''' </summary>
+    ''' <param name="sCInfo"></param>
+    ''' <param name="chartContainer">wenn Nothing und pptshape not Nothing: es muss aktualisiert werden</param>
+    ''' <param name="pptShape">wenn Nothing und chartContainer not Nothing: es muss erzeugt werden</param>
+    ''' <param name="noLegend"></param>
+    Public Sub createProjektATChart(ByVal sCInfo As clsSmartPPTChartInfo,
+                                      ByVal chartContainer As PowerPoint.Shape,
+                                      ByVal pptShape As PowerPoint.Shape,
+                                      Optional ByVal noLegend As Boolean = False)
+
+        ' Festlegen der Titel Schriftgrösse
+        Dim upDateChart As Boolean = False
+        Dim titleFontSize As Single = 14
+        Dim tlFontSize As Single = 10
+        Dim legendFontSize As Single = 10
+
+        If Not IsNothing(pptShape) Then
+            upDateChart = True
+            noLegend = Not pptShape.Chart.HasLegend
+
+            With pptShape.Chart
+
+                Try
+                    titleFontSize = CSng(.ChartTitle.Font.Size)
+
+                    If Not noLegend Then
+                        legendFontSize = CSng(.Legend.Font.Size)
+                    End If
+
+                    With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
+                        tlFontSize = CSng(.TickLabels.Font.Size)
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+            End With
+
+        End If
+
+        If Not upDateChart And IsNothing(chartContainer) Then
+            Exit Sub
+        End If
+
+
+
+        Dim top As Single = 10
+        Dim left As Single = 10
+        Dim height As Single = 50
+        Dim width As Single = 50
+
+
+        If Not upDateChart Then
+
+            If chartContainer.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+
+                titleFontSize = chartContainer.TextFrame2.TextRange.Font.Size
+
+                If titleFontSize - 4 > 6 Then
+                    tlFontSize = titleFontSize - 4
+                Else
+                    tlFontSize = 6
+                End If
+
+                legendFontSize = tlFontSize
+            End If
+
+            top = chartContainer.Top
+            left = chartContainer.Left
+            height = chartContainer.Height
+            width = chartContainer.Width
+
+        End If
+
+
+
+        ' Parameter Definitionen
+
+        ' tk 5.10.19 hier nicht notwendig , weil in ppt
+        'Dim currentPresentation As PowerPoint.Presentation = pptAppl.Presentations.Item(presentationName)
+        'Dim currentSlide As PowerPoint.Slide = currentPresentation.Slides.Item(currentSlideName)
+
+        Dim diagramTitle As String = " "
+
+        Dim PlanChartType As Microsoft.Office.Core.XlChartType
+        Dim vglChartType As Microsoft.Office.Core.XlChartType
+
+        ' gibt den letzten Tag des Vormonats zurück
+        Dim upToNowDate As Date = Date.Now.AddDays(-1 * Date.Now.Day)
+
+        If Not IsNothing(sCInfo.hproj) Then
+            upToNowDate = sCInfo.hproj.timeStamp.AddDays(-1 * sCInfo.hproj.timeStamp.Day)
+        Else
+            Exit Sub
+        End If
+
+        Dim tmpStr As String = upToNowDate.ToString("MMM yy")
+
+        PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnClustered
+        vglChartType = Microsoft.Office.Core.XlChartType.xlColumnClustered
+        'vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+
+
+        Dim Xdatenreihe() As String
+        ReDim Xdatenreihe(1)
+
+        ReDim Xdatenreihe(1)
+
+        If awinSettings.englishLanguage Then
+            Xdatenreihe(0) = "Up-to " & tmpStr
+            Xdatenreihe(1) = "Total"
+        Else
+            Xdatenreihe(0) = "Bis " & tmpStr
+            Xdatenreihe(1) = "Gesamt"
+        End If
+
+
+        ' Now these are the values we do need
+        Dim projectValues() As Double
+        ReDim projectValues(1)
+
+        Dim baselineValues() As Double
+        ReDim baselineValues(1)
+
+
+        If sCInfo.detailID = PTprdk.ActualTargetCost Then
+
+            If sCInfo.q2 = "" Then
+                diagramTitle = "Other Cost [T€]"
+            Else
+                diagramTitle = sCInfo.q2
+            End If
+
+            Call calculateValuesForATCharts(sCInfo, upToNowDate, projectValues, baselineValues)
+
+
+        ElseIf sCInfo.detailID = PTprdk.ActualTargetRess Then
+
+            If sCInfo.q2 = "" Then
+                diagramTitle = "Resources [PD]"
+            Else
+                diagramTitle = sCInfo.q2
+            End If
+
+            Call calculateValuesForATCharts(sCInfo, upToNowDate, projectValues, baselineValues)
+
+        ElseIf sCInfo.detailID = PTprdk.ActualTargetReve Then
+
+            If sCInfo.q2 = "" Then
+                diagramTitle = "Revenue/Benefit [T€]"
+            Else
+                diagramTitle = sCInfo.q2
+            End If
+
+            Call calculateValuesForATCharts(sCInfo, upToNowDate, projectValues, baselineValues)
+
+        Else
+            Exit Sub
+        End If
+
+
+        ' jetzt wird das Diagramm in Powerpoint erzeugt ...
+        Dim newPPTChart As PowerPoint.Shape
+
+        If upDateChart Then
+            newPPTChart = pptShape
+        Else
+            newPPTChart = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
+        End If
+
+
+        ' jetzt kommt das Löschen der alten SeriesCollections . . 
+        With newPPTChart.Chart
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+        End With
+
+        ' Start
+        Try
+
+            If Not IsNothing(newPPTChart.Chart.ChartData) Then
+
+                With newPPTChart.Chart.ChartData
+                    .Workbook.Application.Visible = False
+                    .Workbook.Application.Width = 50
+                    .Workbook.Application.Height = 15
+                    .Workbook.Application.Top = 10
+                    .Workbook.Application.Left = -120
+                    .Workbook.Application.WindowState = -4140 '## Minimize Excel
+                End With
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        ' Ende 
+
+
+        ' jetzt werden die Collections in dem Chart aufgebaut ...
+        With newPPTChart.Chart
+
+            ' now draw projectValues
+
+            'Dim planColor(1) As Integer
+            'planColor(0) = visboFarbeBlau
+            'planColor(1) = visboFarbeBlau
+
+            'If IsNothing(sCInfo.vglProj) Then
+            '    If sCInfo.detailID = PTprdk.ActualTargetReve Then
+            '        planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '    Else
+            '        ' in all other cases : resources or cost it is negativ
+            '        planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '    End If
+            'Else
+            '    If sCInfo.detailID = PTprdk.ActualTargetReve Then
+
+            '        ' up-to-now values
+            '        If projectValues(0) < baselineValues(0) Then
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        Else
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        End If
+
+            '        ' Total sum 
+            '        If projectValues.Sum < baselineValues.Sum Then
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        Else
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        End If
+
+
+
+            '    ElseIf sCInfo.detailID = PTprdk.ActualTargetRess Or sCInfo.detailID = PTprdk.ActualTargetCost Then
+
+            '        ' in all other cases : resources or cost 
+
+            '        ' up-to-now value
+            '        If projectValues(0) <= baselineValues(0) Then
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        Else
+            '            planColor(0) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        End If
+
+            '        ' Total Sum
+            '        If projectValues.Sum <= baselineValues.Sum Then
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            '        Else
+            '            planColor(1) = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            '        End If
+
+            '    End If
+            'End If
+
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = "Current Plan"
+                .Values = projectValues
+                .Interior.Color = visboFarbeBlau
+                '.Points(1).Interior.color = planColor(0)
+                '.Points(2).Interior.color = planColor(1)
+
+                .XValues = Xdatenreihe
+                .ChartType = PlanChartType
+
+
+            End With
+
+
+                ' now draw baselineValues , but only it there are baselineValues 
+
+                If Not IsNothing(sCInfo.vglProj) Then
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                    .Name = "Baseline"
+                    .Interior.Color = visboFarbeOrange
+                    .Values = baselineValues
+
+                    .XValues = Xdatenreihe
+                    .ChartType = vglChartType
+
+                End With
+            End If
+
+        End With
+
+        ' ---- ab hier Achsen und Überschrift setzen 
+
+        With CType(newPPTChart.Chart, PowerPoint.Chart)
+            '
+            .HasAxis(PowerPoint.XlAxisType.xlCategory) = True
+            .HasAxis(PowerPoint.XlAxisType.xlValue) = True
+
+            .SetElement(Microsoft.Office.Core.MsoChartElementType.msoElementPrimaryValueAxisShow)
+
+            Try
+                With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
+
+                    .HasTitle = False
+                    .TickLabels.Font.Size = tlFontSize
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+
+                    .HasTitle = False
+                    .MinimumScale = 0
+
+                    If sCInfo.elementTyp = ptElementTypen.phases Or
+                                sCInfo.elementTyp = ptElementTypen.milestones Then
+                        .MajorUnitIsAuto = True
+                    End If
+
+                    .TickLabels.Font.Size = tlFontSize
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            If Not noLegend Then
+
+                Try
+                    .HasLegend = True
+                    With .Legend
+
+                        .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
+
+                        .Font.Size = legendFontSize
+
+                    End With
+                Catch ex As Exception
+
+                End Try
+            Else
+                .HasLegend = False
+            End If
+
+        End With
+
+
+
+        ' 
+        ' ---- hier dann final den Titel setzen 
+        With newPPTChart.Chart
+
+            If Not upDateChart Then
+                .HasTitle = True
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Font.Size = titleFontSize
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+            End If
+
+
+            If projectValues.Sum < baselineValues.Sum Then
+
+                If sCInfo.detailID = PTprdk.ActualTargetReve Then
+                    .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                Else
+                    .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                End If
+
+
+            ElseIf projectValues.Sum > baselineValues.Sum Then
+
+                If sCInfo.detailID = PTprdk.ActualTargetReve Then
+                    .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                Else
+                    .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                End If
+
+            Else
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+            End If
+
+        End With
+
+        newPPTChart.Chart.Refresh()
+
+        Call addSmartPPTChartInfo(newPPTChart, sCInfo)
+
+    End Sub
 
     '''' <summary>
     '''' erstellt Balken und Curve Projekt-Diagramme , Soll-Ist 
@@ -6434,20 +7014,6 @@ Module creationModule
             Exit Function ' einfach nichts machen 
         End If
 
-        ' now find out whether or not 
-        ' there is a milestone with NAme Invoice at the end of a proejct 
-        Dim specialCaseInvoice As Boolean = False
-
-        Try
-
-            specialCaseInvoice = (cMilestone.invoice.Key > 0) And
-                                (DateDiff(DateInterval.Day, cMilestone.getDate, hproj.endeDate) = 0) And
-                                (cMilestone.name = "Invoice")
-
-
-        Catch ex As Exception
-
-        End Try
 
 
         Dim x1 As Double
@@ -6499,7 +7065,7 @@ Module creationModule
                 ' jetzt muss ggf die Beschriftung angebracht werden 
                 ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
                 ' überdeckt werden soll 
-                If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
+                If awinSettings.mppShowMsName Then
 
                     Dim doDraw As Boolean = False
                     Dim myText As String = ""
@@ -6511,11 +7077,11 @@ Module creationModule
                         myText = msBeschriftung
                         myType = PTpptAnnotationType.text
                         myTitle = "Beschriftung"
-                    ElseIf cMilestone.invoice.Key > 0 Then
-                        doDraw = True
-                        myText = cMilestone.invoice.Key.ToString("##0.#") & " T€"
-                        myType = PTpptAnnotationType.invoice
-                        myTitle = "Invoice"
+                        'ElseIf cMilestone.invoice.Key > 0 Then
+                        '    doDraw = True
+                        '    myText = cMilestone.invoice.Key.ToString("##0.#") & " T€"
+                        '    myType = PTpptAnnotationType.invoice
+                        '    myTitle = "Invoice"
                     End If
 
                     If doDraw Then
@@ -6523,17 +7089,21 @@ Module creationModule
                                                  myText, "", myTitle, schriftGroesse)
 
 
-                        If specialCaseInvoice Then
-                            With newShape
-                                .Top = CSng(yPosition) - .Height / 2
-                                .Left = CSng(x1) + rds.milestoneVorlagenShape.Width
-                            End With
-                        Else
-                            With newShape
-                                .Top = CSng(yPosition - rds.YMilestoneText)
-                                .Left = CSng(x1) - .Width / 2
-                            End With
-                        End If
+                        With newShape
+                            .Top = CSng(yPosition - rds.YMilestoneText)
+                            .Left = CSng(x1) - .Width / 2
+                        End With
+                        'If specialCaseInvoice Then
+                        '    With newShape
+                        '        .Top = CSng(yPosition) - .Height / 2
+                        '        .Left = CSng(x1) + rds.milestoneVorlagenShape.Width
+                        '    End With
+                        'Else
+                        '    With newShape
+                        '        .Top = CSng(yPosition - rds.YMilestoneText)
+                        '        .Left = CSng(x1) - .Width / 2
+                        '    End With
+                        'End If
 
                     End If
 
@@ -6543,7 +7113,7 @@ Module creationModule
 
                 ' jetzt muss ggf das Datum angebracht werden 
                 Dim msDateText As String = ""
-                If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
+                If awinSettings.mppShowMsDate Then
 
                     Dim doDraw As Boolean = False
                     Dim myText As String = ""
@@ -6556,11 +7126,11 @@ Module creationModule
                         myType = PTpptAnnotationType.datum
                         myTitle = "Datum"
 
-                    ElseIf cMilestone.penalty.Value > 0 Then
-                        doDraw = True
-                        myText = cMilestone.penalty.Value.ToString("##0.#") & " T€ (" & cMilestone.penalty.Key.ToShortDateString & ")"
-                        myType = PTpptAnnotationType.penalty
-                        myTitle = "Penalty"
+                        'ElseIf cMilestone.penalty.Value > 0 Then
+                        '    doDraw = True
+                        '    myText = cMilestone.penalty.Value.ToString("##0.#") & " T€ (" & cMilestone.penalty.Key.ToShortDateString & ")"
+                        '    myType = PTpptAnnotationType.penalty
+                        '    myTitle = "Penalty"
                     End If
 
                     If doDraw Then
@@ -7318,6 +7888,147 @@ Module creationModule
             End Try
         End If
 
+
+    End Sub
+
+    ''' <summary>
+    ''' necessary for Report Components ActuaTarget Compariosn initially requested by Telair
+    ''' </summary>
+    ''' <param name="scInfo">contains hproj, vproj, requested type </param>
+    ''' <param name="projectValues">returns both values for project: up-to-now and forecast</param>
+    ''' <param name="baselineValues">returns both values for baseline: up-to-now and forecast</param>
+    Private Sub calculateValuesForATCharts(ByVal scInfo As clsSmartPPTChartInfo,
+                                           ByVal upToNowDate As Date,
+                                           ByRef projectValues() As Double,
+                                           ByRef baselineValues() As Double)
+
+        Try
+            ' reset values 
+            ReDim projectValues(1)
+            ReDim baselineValues(1)
+
+            Dim projectArray() As Double
+            ReDim projectArray(1)
+            Dim projectIX As Integer
+
+            Dim baselineArray() As Double
+            ReDim baselineArray(1)
+            Dim baselineIX As Integer
+
+            Dim upToNowCol As Integer = getColumnOfDate(upToNowDate)
+
+            ' 18.3.24
+            ' Do this to ensure _Dauer ist set properly 
+            If Not IsNothing(scInfo.hproj) Then
+                Dim a As Integer = scInfo.hproj.dauerInDays
+            End If
+
+            If Not IsNothing(scInfo.vglProj) Then
+                Dim a As Integer = scInfo.vglProj.dauerInDays
+            End If
+
+            If scInfo.detailID = PTprdk.ActualTargetCost Then
+
+                If IsNothing(scInfo.vglProj) Then
+                    baselineValues(0) = 0.0
+                    baselineValues(1) = 0.0
+                Else
+                    baselineArray = scInfo.vglProj.getGesamtAndereKosten
+                    baselineIX = upToNowCol - getColumnOfDate(scInfo.vglProj.startDate)
+                End If
+
+                ' now define the projectValues
+                projectArray = scInfo.hproj.getGesamtAndereKosten
+                projectIX = upToNowCol - getColumnOfDate(scInfo.hproj.startDate)
+
+            ElseIf scInfo.detailID = PTprdk.ActualTargetRess Then
+
+                If IsNothing(scInfo.vglProj) Then
+                    baselineValues(0) = 0.0
+                    baselineValues(1) = 0.0
+                Else
+                    baselineArray = scInfo.vglProj.getAlleRessourcen
+                    baselineIX = upToNowCol - getColumnOfDate(scInfo.vglProj.startDate)
+                End If
+
+                ' now define the projectValues
+                projectArray = scInfo.hproj.getAlleRessourcen
+                projectIX = upToNowCol - getColumnOfDate(scInfo.hproj.startDate)
+
+
+            ElseIf scInfo.detailID = PTprdk.ActualTargetReve Then
+
+                If IsNothing(scInfo.vglProj) Then
+                    baselineValues(0) = 0.0
+                    baselineValues(1) = 0.0
+                Else
+                    baselineArray = scInfo.vglProj.getInvoicesPenalties(False)
+                    baselineIX = upToNowCol - getColumnOfDate(scInfo.vglProj.startDate)
+                End If
+
+                ' now define the projectValues
+                projectArray = scInfo.hproj.getInvoicesPenalties(False)
+                projectIX = upToNowCol - getColumnOfDate(scInfo.hproj.startDate)
+            Else
+                Exit Sub
+            End If
+
+            ' now do the projectValues and baselineValues Calculation
+            ' baseline Calculation
+
+            If Not IsNothing(scInfo.vglProj) Then
+
+                If baselineIX < 0 Then
+                    ' there are no Actuals
+                    baselineValues(0) = 0.0
+                    baselineValues(1) = baselineArray.Sum
+                Else
+                    ' get up-to-Now values
+                    Dim tmpLen As Integer = System.Math.Min(baselineIX, baselineArray.Length - 1)
+                    For tmpIX As Integer = 0 To tmpLen
+                        baselineValues(0) = baselineValues(0) + baselineArray(tmpIX)
+                    Next
+
+                    '' get forecast values
+                    'tmpLen = baselineValues.Length - 1
+                    'For tmpIX As Integer = baselineIX + 1 To tmpLen
+                    '    baselineValues(1) = baselineValues(1) + baselineArray(tmpIX)
+                    'Next
+
+                    ' get total values
+                    baselineValues(1) = baselineArray.Sum
+                End If
+
+            End If
+
+            ' project Values Calculation
+
+            If projectIX < 0 Then
+                ' there are no Actuals
+                projectValues(0) = 0.0
+                projectValues(1) = projectArray.Sum
+            Else
+                ' get up-to-Now values
+                Dim tmpLen As Integer = System.Math.Min(projectIX, projectArray.Length - 1)
+                For tmpIX As Integer = 0 To tmpLen
+                    projectValues(0) = projectValues(0) + projectArray(tmpIX)
+                Next
+
+                '' get forecast values
+                'tmpLen = projectValues.Length - 1
+                'For tmpIX As Integer = projectIX + 1 To tmpLen
+                '    projectValues(1) = projectValues(1) + projectArray(tmpIX)
+                'Next
+
+                ' get total values 
+                projectValues(1) = projectArray.Sum
+
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 

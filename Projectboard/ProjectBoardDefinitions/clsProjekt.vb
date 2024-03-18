@@ -5317,10 +5317,11 @@ Public Class clsProjekt
     ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich relMonthCol auf Null, die in der roleCostCollection verzeichnet sind   
     ''' </summary>
     ''' <param name="roleCostCollection"></param>
-    ''' <param name="relMonthCol"></param>
+    ''' <param name="relvonCol">gibt den relativen Start der neuen Istdaten relativ zum Projekt-Start an</param>
+    ''' <param name="relbisCol">gibt das relative Ende der neuen Istdaten relativ zum Projekt-Ende an</param>
     ''' <param name="resetValuesToNull">gibt an, ob die entsprechenden Werte dann auf Null gesetzt werden sollen</param>
     ''' <returns></returns>
-    Public Function getSetRoleCostUntil(ByVal roleCostCollection As Collection, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+    Public Function getSetRoleCostUntil(ByVal roleCostCollection As Collection, ByVal relvonCol As Integer, ByVal relbisCol As Integer, ByVal resetValuesToNull As Boolean) As Double
 
         Dim usedRoleNameIDs As Collection = Me.getRoleNameIDs
         Dim usedCosts As Collection = Me.getCostNames
@@ -5329,7 +5330,7 @@ Public Class clsProjekt
 
         For Each roleNameID As String In usedRoleNameIDs
             If isRelevantForNulling(roleNameID, roleCostCollection) Then
-                actualValue = actualValue + Me.getSetRoleValuesUntil(roleNameID, relMonthCol, resetValuesToNull)
+                actualValue = actualValue + Me.getSetRoleValuesUntil(roleNameID, relvonCol, relbisCol, resetValuesToNull)
             End If
         Next
 
@@ -5610,9 +5611,10 @@ Public Class clsProjekt
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
     ''' <param name="roleNameID"></param>
-    ''' <param name="relMonthCol">der relative Wert: columnOFDate - hproj.start +1</param>
+    ''' <param name="relvonCol">gibt den relativen Start der neuen Istdaten relativ zum Projekt-Start an</param>
+    ''' <param name="relbisCol">gibt das relative Ende der neuen Istdaten relativ zum Projekt-Ende an; der relative Wert: columnOFDate - hproj.start +1</param>
     ''' <returns></returns>
-    Public Function getSetRoleValuesUntil(ByVal roleNameID As String, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+    Public Function getSetRoleValuesUntil(ByVal roleNameID As String, ByVal relvonCol As Integer, ByVal relbisCol As Integer, ByVal resetValuesToNull As Boolean) As Double
 
         Dim tmpValue As Double = 0.0
         Dim teamID As Integer = -1
@@ -5646,16 +5648,18 @@ Public Class clsProjekt
                     If Not IsNothing(cPhase) Then
                         With cPhase
 
-                            If .relStart <= relMonthCol Then
+                            If .relStart <= relbisCol And .relEnde >= relvonCol Then
                                 ' jetzt die Werte auslesen und ggf. auf Null setzen 
                                 'Dim cRole As clsRolle = .getRole(currentRoleDef.name)
                                 Dim cRole As clsRolle = .getRoleByRoleNameID(roleNameID)
 
                                 If Not IsNothing(cRole) Then
                                     Dim oldSum As Double = 0.0
-                                    Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
 
-                                    For ix As Integer = 0 To ende - .relStart
+                                    Dim anfang As Integer = relvonCol - .relStart
+                                    Dim ende As Integer = System.Math.Min(.relEnde, relbisCol) - .relStart
+
+                                    For ix As Integer = anfang To ende
                                         oldSum = oldSum + cRole.Xwerte(ix)
 
                                         ' hier werden ggf die Werte zurückgesetzt 

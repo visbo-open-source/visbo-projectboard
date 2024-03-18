@@ -24,8 +24,10 @@ Partial Class frmAllocateRessources
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmAllocateRessources))
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.lblContext = New System.Windows.Forms.Label()
+        Me.lblUnit = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
+        Me.explanationLbl = New System.Windows.Forms.Label()
         Me.CancelBtn = New System.Windows.Forms.Button()
         Me.okBtn = New System.Windows.Forms.Button()
         Me.candidatesTable = New System.Windows.Forms.DataGridView()
@@ -35,6 +37,7 @@ Partial Class frmAllocateRessources
         Me.colLblAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.lblSum = New System.Windows.Forms.Label()
         Me.lblOrgaUnitSkill = New System.Windows.Forms.Label()
+        Me.lblAllowOverloads = New System.Windows.Forms.Label()
         Me.Panel1.SuspendLayout()
         CType(Me.candidatesTable, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
@@ -44,37 +47,64 @@ Partial Class frmAllocateRessources
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.lblAllowOverloads)
+        Me.Panel1.Controls.Add(Me.lblContext)
+        Me.Panel1.Controls.Add(Me.lblUnit)
         Me.Panel1.Controls.Add(Me.Label1)
-        Me.Panel1.Controls.Add(Me.Label2)
+        Me.Panel1.Controls.Add(Me.explanationLbl)
         Me.Panel1.Controls.Add(Me.CancelBtn)
         Me.Panel1.Controls.Add(Me.okBtn)
         Me.Panel1.Controls.Add(Me.candidatesTable)
         Me.Panel1.Controls.Add(Me.lblSum)
         Me.Panel1.Controls.Add(Me.lblOrgaUnitSkill)
-        Me.Panel1.Location = New System.Drawing.Point(-1, 2)
+        Me.Panel1.Location = New System.Drawing.Point(-1, 1)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(562, 352)
         Me.Panel1.TabIndex = 0
+        '
+        'lblContext
+        '
+        Me.lblContext.AutoSize = True
+        Me.lblContext.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblContext.Location = New System.Drawing.Point(23, 61)
+        Me.lblContext.Name = "lblContext"
+        Me.lblContext.Size = New System.Drawing.Size(175, 16)
+        Me.lblContext.TabIndex = 9
+        Me.lblContext.Text = "considering loaded projects"
+        Me.lblContext.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'lblUnit
+        '
+        Me.lblUnit.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.lblUnit.AutoSize = True
+        Me.lblUnit.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblUnit.Location = New System.Drawing.Point(507, 12)
+        Me.lblUnit.Name = "lblUnit"
+        Me.lblUnit.Size = New System.Drawing.Size(31, 20)
+        Me.lblUnit.TabIndex = 8
+        Me.lblUnit.Text = "PD"
+        Me.lblUnit.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         'Label1
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(252, 56)
+        Me.Label1.Location = New System.Drawing.Point(21, 286)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(265, 13)
+        Me.Label1.Size = New System.Drawing.Size(233, 13)
         Me.Label1.TabIndex = 7
-        Me.Label1.Text = "(Names with color mark are already in the project team)"
+        Me.Label1.Text = "Names with color are already in the project team"
         '
-        'Label2
+        'explanationLbl
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label2.Location = New System.Drawing.Point(21, 54)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(184, 16)
-        Me.Label2.TabIndex = 6
-        Me.Label2.Text = "Candidates with free Capacity"
+        Me.explanationLbl.AutoSize = True
+        Me.explanationLbl.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.explanationLbl.Location = New System.Drawing.Point(23, 42)
+        Me.explanationLbl.Name = "explanationLbl"
+        Me.explanationLbl.Size = New System.Drawing.Size(285, 16)
+        Me.explanationLbl.TabIndex = 6
+        Me.explanationLbl.Text = "Candidates with free Capacity [PD] in timespan"
+        Me.explanationLbl.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'CancelBtn
         '
@@ -83,7 +113,7 @@ Partial Class frmAllocateRessources
         Me.CancelBtn.Name = "CancelBtn"
         Me.CancelBtn.Size = New System.Drawing.Size(75, 23)
         Me.CancelBtn.TabIndex = 5
-        Me.CancelBtn.Text = "Abbrechen"
+        Me.CancelBtn.Text = "Cancel"
         Me.CancelBtn.UseVisualStyleBackColor = True
         '
         'okBtn
@@ -121,16 +151,16 @@ Partial Class frmAllocateRessources
         Me.colLblPerson.HeaderText = "Name"
         Me.colLblPerson.Name = "colLblPerson"
         Me.colLblPerson.ReadOnly = True
-        Me.colLblPerson.Width = 240
+        Me.colLblPerson.Width = 220
         '
         'ColLblFreeCapacity
         '
         Me.ColLblFreeCapacity.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None
-        Me.ColLblFreeCapacity.HeaderText = "Free Capacity"
+        Me.ColLblFreeCapacity.HeaderText = "Free Capacity in PD [1 PD = 8 hrs]"
         Me.ColLblFreeCapacity.Name = "ColLblFreeCapacity"
         Me.ColLblFreeCapacity.ReadOnly = True
         Me.ColLblFreeCapacity.ToolTipText = "shows the amount of free capacity in person days "
-        Me.ColLblFreeCapacity.Width = 90
+        Me.ColLblFreeCapacity.Width = 120
         '
         'ColLblIsExtern
         '
@@ -142,30 +172,44 @@ Partial Class frmAllocateRessources
         '
         'colLblAmount
         '
-        Me.colLblAmount.HeaderText = "will do how much?"
+        Me.colLblAmount.HeaderText = "will do how much PD?"
         Me.colLblAmount.Name = "colLblAmount"
         Me.colLblAmount.ToolTipText = "will do how many person days "
         Me.colLblAmount.Width = 90
         '
         'lblSum
         '
+        Me.lblSum.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.lblSum.AutoSize = True
         Me.lblSum.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblSum.Location = New System.Drawing.Point(446, 19)
+        Me.lblSum.Location = New System.Drawing.Point(426, 12)
         Me.lblSum.Name = "lblSum"
         Me.lblSum.Size = New System.Drawing.Size(83, 20)
         Me.lblSum.TabIndex = 2
         Me.lblSum.Text = "<Amount>"
+        Me.lblSum.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         'lblOrgaUnitSkill
         '
         Me.lblOrgaUnitSkill.AutoSize = True
         Me.lblOrgaUnitSkill.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblOrgaUnitSkill.Location = New System.Drawing.Point(20, 19)
+        Me.lblOrgaUnitSkill.Location = New System.Drawing.Point(20, 12)
         Me.lblOrgaUnitSkill.Name = "lblOrgaUnitSkill"
         Me.lblOrgaUnitSkill.Size = New System.Drawing.Size(105, 20)
         Me.lblOrgaUnitSkill.TabIndex = 0
         Me.lblOrgaUnitSkill.Text = "<Name, Skill>"
+        Me.lblOrgaUnitSkill.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'lblAllowOverloads
+        '
+        Me.lblAllowOverloads.AutoSize = True
+        Me.lblAllowOverloads.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblAllowOverloads.ForeColor = System.Drawing.Color.Maroon
+        Me.lblAllowOverloads.Location = New System.Drawing.Point(432, 286)
+        Me.lblAllowOverloads.Name = "lblAllowOverloads"
+        Me.lblAllowOverloads.Size = New System.Drawing.Size(108, 13)
+        Me.lblAllowOverloads.TabIndex = 10
+        Me.lblAllowOverloads.Text = "Overload is allowed ! "
         '
         'frmAllocateRessources
         '
@@ -188,7 +232,7 @@ Partial Class frmAllocateRessources
     Friend WithEvents candidatesTable As Windows.Forms.DataGridView
     Friend WithEvents lblSum As Windows.Forms.Label
     Friend WithEvents lblOrgaUnitSkill As Windows.Forms.Label
-    Friend WithEvents Label2 As Windows.Forms.Label
+    Friend WithEvents explanationLbl As Windows.Forms.Label
     Friend WithEvents CancelBtn As Windows.Forms.Button
     Friend WithEvents okBtn As Windows.Forms.Button
     Friend WithEvents Label1 As Windows.Forms.Label
@@ -196,4 +240,7 @@ Partial Class frmAllocateRessources
     Friend WithEvents ColLblFreeCapacity As Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents ColLblIsExtern As Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colLblAmount As Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents lblUnit As Windows.Forms.Label
+    Friend WithEvents lblContext As Windows.Forms.Label
+    Friend WithEvents lblAllowOverloads As Windows.Forms.Label
 End Class

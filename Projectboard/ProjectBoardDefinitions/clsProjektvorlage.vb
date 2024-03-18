@@ -7,9 +7,6 @@
     ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
     Public hierarchy As clsHierarchy
 
-    ' Änderung tk 20.9.16 sortierte Listen, wo welche Rollen vorkommen ... 
-    'Public rcLists As clsListOfCostAndRoles
-
 
 
     Private relStart As Integer
@@ -49,16 +46,6 @@
         End Get
         Set(value As Integer)
             _projectType = ptPRPFType.projectTemplate
-            ' 30.9.18 in der Klasse Vorlage immer auf 2 gesetzt ..
-            'If Not IsNothing(value) Then
-            '    If value >= 0 And value <= 2 Then
-            '        _projectType = value
-            '    Else
-            '        _projectType = ptPRPFType.project
-            '    End If
-            'Else
-            '    _projectType = ptPRPFType.project
-            'End If
         End Set
     End Property
 
@@ -537,51 +524,10 @@
 
                             description2 = Me.getMilestoneByID(nameID).shortName
 
-                            'Dim msDef As clsMeilensteinDefinition
-                            'msDef = MilestoneDefinitions.getMilestoneDef(description2)
-                            'If IsNothing(msDef) Then
-                            '    msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
-                            'End If
-
-                            'If IsNothing(msDef) Then
-                            '    ' nichts zu tun
-                            'Else
-                            '    If IsNothing(msDef.shortName) Then
-                            '        description2 = ""
-                            '    Else
-                            '        If msDef.shortName = "" Then
-                            '            description2 = ""
-                            '        Else
-                            '            description2 = msDef.shortName
-                            '        End If
-
-                            '    End If
-                            'End If
 
                         Else
 
                             description2 = Me.getPhaseByID(nameID).shortName
-                            'phDef = PhaseDefinitions.getPhaseDef(description2)
-                            'If IsNothing(phDef) Then
-
-                            '    phDef = missingPhaseDefinitions.getPhaseDef(description2)
-                            'End If
-
-                            'If IsNothing(phDef) Then
-                            '    ' nichts zu tun
-                            'Else
-
-                            '    If IsNothing(phDef.shortName) Then
-                            '        description2 = ""
-                            '    Else
-                            '        If phDef.shortName = "" Then
-                            '            description2 = ""
-                            '        Else
-                            '            description2 = phDef.shortName
-                            '        End If
-
-                            '    End If
-                            'End If
 
                         End If
                     Else
@@ -590,52 +536,11 @@
                         If isMilestone Then
 
                             description2 = Me.getMilestoneByID(nameID).shortName
-                            'Dim msDef As clsMeilensteinDefinition
-                            'msDef = MilestoneDefinitions.getMilestoneDef(description2)
-                            'If IsNothing(msDef) Then
-                            '    msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
-                            'End If
 
-                            'If IsNothing(msDef) Then
-                            '    description2 = ""
-                            'Else
-
-                            '    If IsNothing(msDef.shortName) Then
-                            '        description2 = ""
-                            '    Else
-                            '        If msDef.shortName = "" Then
-                            '            description2 = ""
-                            '        Else
-                            '            description2 = msDef.shortName
-                            '        End If
-
-                            '    End If
-                            'End If
 
                         Else
 
                             description2 = Me.getPhaseByID(nameID).shortName
-                            'phDef = PhaseDefinitions.getPhaseDef(description2)
-                            'If IsNothing(phDef) Then
-
-                            '    phDef = missingPhaseDefinitions.getPhaseDef(description2)
-                            'End If
-
-                            'If IsNothing(phDef) Then
-                            '    'description2 = "-"
-                            'Else
-
-                            '    If IsNothing(phDef.shortName) Then
-                            '        description2 = ""
-                            '    Else
-                            '        If phDef.shortName = "" Then
-                            '            description2 = ""
-                            '        Else
-                            '            description2 = phDef.shortName
-                            '        End If
-
-                            '    End If
-                            'End If
 
                         End If
 

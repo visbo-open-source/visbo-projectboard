@@ -571,7 +571,8 @@ Module rpaCollectModul
     ''' <returns></returns>
     Friend Function readRpaKapaModifier(ByVal dateiName As String, ByRef meldungen As Collection,
                                         ByVal roleMonthList As SortedList(Of String, List(Of Integer)), ByVal applyPercent As Boolean,
-                                        ByVal namesProcessed As SortedList(Of String, String)) As Boolean
+                                        ByVal namesProcessed As SortedList(Of String, String),
+                                        ByVal fullProtocol As Boolean) As Boolean
 
 
         Dim ok As Boolean = True
@@ -703,6 +704,9 @@ Module rpaCollectModul
                                                     End Try
                                                 Loop
 
+                                                Dim firstTimer() As Boolean = {True, True}
+                                                Dim warnMsg As New Collection
+
                                                 Do While spalte < 241 And spalte <= lastSpalte
 
                                                     Try
@@ -712,30 +716,41 @@ Module rpaCollectModul
 
                                                             If tmpKapa >= 0 Then
                                                                 ' allow only valid values ge 0 
+
                                                                 Dim myDisplayFormat As String = CType(CType(currentWS.Cells(aktzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).DisplayFormat, Excel.DisplayFormat).NumberFormat
                                                                 Dim cellISPercent As Boolean = myDisplayFormat.Contains("%")
 
                                                                 If index <= 240 And index > 0 And tmpKapa >= 0 Then
                                                                     If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
                                                                         If applyPercent And cellISPercent Then
-                                                                            If tmpKapa <= 1.0 And Not IsNothing(roleMonthList) Then
+                                                                            ' now it has to be a precent assumption - do not allow values gt 1.0
+                                                                            If tmpKapa > 1.0 Then
+                                                                                tmpKapa = 1.0
+                                                                            End If
+                                                                            If Not IsNothing(roleMonthList) Then
                                                                                 ' prozentuale Anwendung ... aber nur, wenn zuvor über z.B Zeuss Import ein absoluter Wert gelesen wurde 
                                                                                 ' andernfalls wäre eine wiederholte Anwendung von applyPercent möglich -> nicht die Absicht !
                                                                                 If roleMonthList.ContainsKey(subRole.name) Then
                                                                                     If roleMonthList.Item(subRole.name).Contains(index) Then
                                                                                         subRole.kapazitaet(index) = subRole.kapazitaet(index) * tmpKapa
                                                                                     Else
-                                                                                        msgTxt = "capacity remains unchanged: no data provided for role " & subRole.name & " month " & getDateofColumn(index, False).ToString(“MM-yy”, Globalization.CultureInfo.InvariantCulture) & " in previous import step"
-                                                                                        Call logger(ptErrLevel.logWarning, msgTxt, dateiName, anzFehler)
+                                                                                        If fullProtocol Then
+                                                                                            msgTxt = "capacity remains unchanged: no data provided for role " & subRole.name & " in month " & getDateofColumn(index, False).ToString(“MM-yy”, Globalization.CultureInfo.InvariantCulture) & " in previous import step"
+                                                                                            warnMsg.Add(msgTxt)
+                                                                                        End If
+
                                                                                     End If
                                                                                 Else
-                                                                                    msgTxt = "capacity remains unchanged: no data provided for role " & subRole.name & " at all in previous import step"
-                                                                                    Call logger(ptErrLevel.logWarning, msgTxt, dateiName, anzFehler)
+                                                                                    If fullProtocol And firstTimer(0) Then
+                                                                                        firstTimer(0) = False
+                                                                                        msgTxt = "capacity remains unchanged: no data provided for role " & subRole.name & " at all in previous Zeuss import step"
+                                                                                        warnMsg.Add(msgTxt)
+                                                                                    End If
                                                                                 End If
-                                                                            Else
-                                                                                msgTxt = "capacity remains unchanged: invalid percentage provided or no data imported previously "
-                                                                                meldungen.Add(msgTxt)
-                                                                                Call logger(ptErrLevel.logError, msgTxt, dateiName, anzFehler)
+                                                                            ElseIf fullProtocol And firstTimer(1) Then
+                                                                                firstTimer(1) = False
+                                                                                msgTxt = "capacity remains unchanged: no roles / data imported at all in previous Zeuss Import  "
+                                                                                warnMsg.Add(msgTxt)
                                                                             End If
                                                                         Else
                                                                             subRole.kapazitaet(index) = tmpKapa
@@ -754,13 +769,21 @@ Module rpaCollectModul
                                                         tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
                                                     Catch ex As Exception
                                                         noError = False
-                                                        errMsg = ex.Message & vbLf & "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
+                                                        errMsg = ex.Message & vbLf & "File " & dateiName & ": error when setting capa-value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
                                                         meldungen.Add(errMsg)
                                                         Call logger(ptErrLevel.logError, errMsg, dateiName, anzFehler)
+                                                        Exit Do
                                                     End Try
 
 
                                                 Loop
+
+                                                ' now check whether or not something has to be protocolled
+                                                If warnMsg.Count > 0 Then
+                                                    For Each tmpMsg As String In warnMsg
+                                                        Call logger(ptErrLevel.logWarning, tmpMsg, dateiName, anzFehler)
+                                                    Next
+                                                End If
 
                                             Catch ex As Exception
 
@@ -768,22 +791,20 @@ Module rpaCollectModul
                                         Else
                                             noError = True
                                             errMsg = "Name " & subRole.name & " in " & dateiName & " was ignored  because it has already been processed in " & namesProcessed.Item(subRole.name)
-
                                             Call logger(ptErrLevel.logWarning, errMsg, dateiName, anzFehler)
                                         End If
 
                                     Else
                                         noError = True
                                         errMsg = "Name " & subRoleName & " is combinedRole; combinedRoles are calculated automatically" & " (File " & dateiName & " )"
-
                                         Call logger(ptErrLevel.logWarning, errMsg, dateiName, anzFehler)
                                     End If
 
                                 Else
                                     ' die Rolle existiert überhaupt nicht im Ressourcen Pool 
-                                    noError = False
+                                    noError = True
                                     errMsg = "Nr resp. Name " & subRolePersNr & " : " & subRoleName & " does not exist in VISBO Organisation"
-                                    Call logger(ptErrLevel.logError, errMsg, dateiName, anzFehler)
+                                    Call logger(ptErrLevel.logWarning, errMsg, dateiName, anzFehler)
                                 End If
 
                                 aktzeile = aktzeile + 1

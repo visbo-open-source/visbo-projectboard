@@ -684,7 +684,8 @@ Public Class Ribbon1
                         Try
                             pptAPP.ActivePresentation.SaveAs(fullFileName)
                         Catch ex As Exception
-                            Call MsgBox("Could not save powerpoint to " & fullFileName)
+                            Call MsgBox("Name contains characters which are not allowed in a Windwos file-Name..." & vbLf & "Single Project Report.pptx used instead")
+                            pptAPP.ActivePresentation.SaveAs(My.Computer.FileSystem.CombinePath(savePath, "Single Project Report"))
                         End Try
 
                     Else

@@ -362,7 +362,8 @@ Module rpaModule1
     ''' <param name="rpaCat"></param>
     ''' <param name="importDate"></param>
     ''' <returns></returns>
-    Public Function importOneProject(ByVal fname As String, ByVal rpaCat As PTRpa, ByVal importDate As Date) As Boolean
+    Public Function importOneProject(ByVal fname As String, ByVal rpaCat As PTRpa, ByVal importDate As Date,
+                                     Optional ByVal fullProtocol As Boolean = False) As Boolean
 
 
         Dim myName As String = My.Computer.FileSystem.GetName(fname)
@@ -416,7 +417,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboModifierCapacities)
 
-                    allOk = processModifierCapacities(fname, errMessages)
+                    allOk = processModifierCapacities(fname, errMessages, fullProtocol)
 
 
                 Case CInt(PTRpa.visboExternalContracts)
@@ -485,7 +486,7 @@ Module rpaModule1
 
                 Case CInt(PTRpa.visboZeussStdCapacity)
 
-                    allOk = processZeussStdCapacity(importDate, errMessages)
+                    allOk = processZeussStdCapacity(importDate, errMessages, fullProtocol)
 
 
                 Case CInt(PTRpa.visboFindProjectStart)
@@ -2987,7 +2988,7 @@ Module rpaModule1
     ''' <param name="myName"></param>
     ''' <param name="errMessages"></param>
     ''' <returns></returns>
-    Private Function processModifierCapacities(ByVal myName As String, ByRef errMessages As Collection) As Boolean
+    Private Function processModifierCapacities(ByVal myName As String, ByRef errMessages As Collection, ByVal fullProtocol As Boolean) As Boolean
 
         Dim result As Boolean = False
 
@@ -3012,7 +3013,7 @@ Module rpaModule1
                 ' wenn es gibt - lesen der Externen Verträge 
 
                 Dim namesProcessed As New SortedList(Of String, String)
-                result = readRpaKapaModifier(myName, outputCollection, Nothing, False, namesProcessed)
+                result = readRpaKapaModifier(myName, outputCollection, Nothing, False, namesProcessed, fullProtocol)
 
                 'old , changed Oct 2023 by tk 
                 'result = readKapaModifier(myName, listOfArchivExtern, errMessages)
@@ -3354,7 +3355,7 @@ Module rpaModule1
     ''' <param name="importDate"></param>
     ''' <param name="errMessages"></param>
     ''' <returns></returns>
-    Private Function processZeussStdCapacity(ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
+    Private Function processZeussStdCapacity(ByVal importDate As Date, ByRef errMessages As Collection, ByVal fullProtocol As Boolean) As Boolean
 
 
         Dim errMsg As String = ""
@@ -3486,7 +3487,7 @@ Module rpaModule1
                         For Each fname As String In listOfCapaPercentModifierfiles
                             outPutline = "Processing " & fname & " ..."
                             Call logger(ptErrLevel.logInfo, "Reading %-Capa Modifier: ", outPutline)
-                            Dim fileOK As Boolean = readRpaKapaModifier(fname, outputCollection, roleMonthList, True, namesProcessed)
+                            Dim fileOK As Boolean = readRpaKapaModifier(fname, outputCollection, roleMonthList, True, namesProcessed, fullProtocol)
                             If fileOK Then
                                 Call logger(ptErrLevel.logInfo, "Reading %-Capa Modifier: ", fname & " : ok")
 
@@ -4437,7 +4438,7 @@ Module rpaModule1
                             Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
                             'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, True)
+                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, 0, lastValidMonth - newProj.Start + 1, True)
                             'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
 
                             newIstValue = calcIstValueOf(vPKvP.Value)
@@ -4452,7 +4453,7 @@ Module rpaModule1
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                             ' Test tk 
                             'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, 0, lastValidMonth - newProj.Start + 1, False)
 
                             Dim abweichungGesamt As Double = 0.0
                             If gesamtNachher <> checkNachher Then
