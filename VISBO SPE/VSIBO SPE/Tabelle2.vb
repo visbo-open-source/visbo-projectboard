@@ -1343,19 +1343,30 @@ Public Class Tabelle2
                                                     ' calculate a distribution of values over months, dependent of months and number days / per Months
                                                     'considerValueOnly = True heisst, dass bei einem 1-dimensionaler
                                                     ' Xwerte Array die noNewCalculation, falls gesetzt, nicht berücksichtigt wird
-                                                    Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
+                                                    Dim newValues() As Double = cphase.berechneBedarfeNew(xStartDate,
                                                                                                     xEndDate, vSum, 1, True)
 
-                                                    If IsNothing(tmpRole) Then
-                                                        ReDim oldValues(xValues.Length - 1)
-                                                    Else
-                                                        oldValues = tmpRole.Xwerte
+                                                    ReDim oldValues(newValues.Length - 1)
+                                                    If Not IsNothing(tmpRole) Then
+
+                                                        ' now copy the according values of tmpRole.XWerte into oldValues 
+                                                        ' oldvalues should have the same length than newValues
+                                                        ' ix is coming from the call awinintersectZeitraum, see above
+                                                        ' Konsistenz-Bedingung: breite sollte = newValues.length sein ...
+                                                        For ti As Integer = 0 To newValues.Length - 1
+                                                            If ix + ti <= tmpRole.Xwerte.Length - 1 Then
+                                                                oldValues(ti) = tmpRole.Xwerte(ix + ti)
+                                                            Else
+                                                                Call MsgBox("Error in Edit Forecast Months ...")
+                                                            End If
+                                                        Next
+                                                        'oldValues = tmpRole.Xwerte
                                                     End If
 
                                                     ' now check and verify whether this is feasible with given capacity 
                                                     ' if not, then do corrections in a way, that free capacity is taken and the rest of needs going over free capacity is distributed equally over the timeFrame
                                                     Dim allowOvertime As Boolean = awinSettings.meAllowOverTime
-                                                    xValues = ShowProjekte.adjustToCapacity(uid, teamID, allowOvertime, xValues, xStartDate, oldValues)
+                                                    newValues = ShowProjekte.adjustToCapacity(uid, teamID, allowOvertime, newValues, xStartDate, oldValues)
 
 
                                                     If IsNothing(tmpRole) Then
@@ -1370,18 +1381,18 @@ Public Class Tabelle2
                                                         End With
                                                     End If
 
-                                                    If tmpRole.Xwerte.Length <> xValues.Length Then
+                                                    If tmpRole.Xwerte.Length <> newValues.Length Then
                                                         For lx As Integer = 0 To breite - 1
-                                                            tmpRole.Xwerte(lx + ix) = xValues(lx)
+                                                            tmpRole.Xwerte(lx + ix) = newValues(lx)
                                                         Next
                                                     Else
                                                         For i As Integer = 0 To tmpRole.Xwerte.Length - 1
-                                                            tmpRole.Xwerte(i) = xValues(i)
+                                                            tmpRole.Xwerte(i) = newValues(i)
                                                         Next
                                                     End If
 
                                                     ' jetzt die tatsächliche Summe zeigen 
-                                                    Target.Cells(1, 1).value = xValues.Sum
+                                                    Target.Cells(1, 1).value = newValues.Sum
 
                                                     auslastungChanged = True
 
@@ -1396,7 +1407,7 @@ Public Class Tabelle2
                                                         If awinSettings.meAllowOverTime Then
                                                             commentTxt = "not assisted - this may cause overloads"
                                                         Else
-                                                            commentTxt = getCommentTxt(vSum.Sum, xValues.Sum)
+                                                            commentTxt = getCommentTxt(vSum.Sum, newValues.Sum)
                                                         End If
 
                                                         CType(Target.Cells(1, 1), Excel.Range).AddComment(commentTxt)
@@ -1817,49 +1828,51 @@ Public Class Tabelle2
 
                     If Not IsNothing(cphase) Then
 
-                        Try
+                        If Not awinSettings.meAllowOverTime Then
+                            Dim roleUID As Integer
+                            Dim teamID As Integer = -1
 
-                        Catch ex As Exception
+                            roleUID = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).UID
 
-                        End Try
+                            Dim von As Integer = showRangeLeft + Target.Column - columnStartData
+                            Dim bis As Integer = von + anzTargetColumns - 1
 
-                        Dim roleUID As Integer
-                        Dim teamID As Integer = -1
+                            ' freeCapacity now has the same dimension as requestedValues/target
+                            Dim availableCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(roleUID, teamID, von, bis)
 
-                        roleUID = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).UID
+                            Dim role As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                            If Not IsNothing(role) Then
 
-                        Dim von As Integer = showRangeLeft + Target.Column - columnStartData
-                        Dim bis As Integer = von + anzTargetColumns - 1
+                                ' you have to adjust the array availablecapacity by the projectvalues itself
+                                Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
+                                Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
+                                Dim xWerte() As Double = role.Xwerte
 
-                        ' freeCapacity now has the same dimension as requestedValues/target
-                        Dim availableCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(roleUID, teamID, von, bis)
+                                For ix As Integer = 0 To anzTargetColumns - 1
 
-                        Dim role As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
-                        If Not IsNothing(role) Then
+                                    Try
+                                        projectValues(ix) = xWerte(xWerteIndex + ix)
+                                        ' available capacity is now including projectvalues, because the project values are being substututed
+                                        availableCapacity(ix) = availableCapacity(ix) + projectValues(ix)
+                                    Catch ex As Exception
+                                        Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID & " " & rcNameID, ex.Message)
+                                    End Try
 
-                            ' you have to adjust the array availablecapacity by the projectvalues itself
-                            Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
-                            Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
-                            Dim xWerte() As Double = role.Xwerte
+                                Next
+                            End If
 
+
+                            ' now do the Job ... 
                             For ix As Integer = 0 To anzTargetColumns - 1
-
-                                Try
-                                    projectValues(ix) = xWerte(xWerteIndex + ix)
-                                    ' available capacity is now including projectvalues, because the project values are being substututed
-                                    availableCapacity(ix) = availableCapacity(ix) + projectValues(ix)
-                                Catch ex As Exception
-                                    Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID & " " & rcNameID, ex.Message)
-                                End Try
-
+                                grantedValues(ix) = System.Math.Min(requestedValues(ix), availableCapacity(ix))
+                            Next
+                        Else
+                            ' now accept whatever was requested 
+                            For ix As Integer = 0 To anzTargetColumns - 1
+                                grantedValues(ix) = requestedValues(ix)
                             Next
                         End If
 
-
-                        ' now do the Job ... 
-                        For ix As Integer = 0 To anzTargetColumns - 1
-                            grantedValues(ix) = System.Math.Min(requestedValues(ix), availableCapacity(ix))
-                        Next
 
 
                     Else
@@ -2272,32 +2285,29 @@ Public Class Tabelle2
 
                     ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
 
-                    If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
+                    If visboClient = divClients(client.Projectboard) Then
+                        If pNameChanged Or changeBecauseRCNameChanged Or (changeBecausePhaseNameIDChanged And Not awinSettings.considerProjectTotals) Then
 
-                        ' umgesetzte timeZone
-                        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
+                            ' umgesetzte timeZone
+                            Dim ok As Boolean = setTimeZoneIfTimeZonewasOff(True)
 
-                        ' tk 16.11 
-                        'Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+                            ' tk 16.11 
+                            'Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
-                        If pNameChanged Then
-                            selectedProjekte.Clear(False)
-                            selectedProjekte.Add(.currentProject, False)
-                        End If
-
-                        If Not IsNothing(rcNameID) Then
-
-                            If rcNameID <> "" Then
-                                Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                            If pNameChanged Then
+                                selectedProjekte.Clear(False)
+                                selectedProjekte.Add(.currentProject, False)
                             End If
+
+                            If Not IsNothing(rcNameID) Then
+
+                                If rcNameID <> "" Then
+                                    Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                                End If
+                            End If
+
+
                         End If
-
-
-                        'If Not IsNothing(formProjectInfo1) Then
-                        '    Call updateProjectInfo1(.currentProject, .currentProjectinSession)
-                        '    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
-                        'End If
-
 
                     End If
 

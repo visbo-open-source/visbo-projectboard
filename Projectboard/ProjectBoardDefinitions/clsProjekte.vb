@@ -968,24 +968,20 @@ Public Class clsProjekte
 
                     If weitermachen Then
 
+                        Dim tmpStartCol As Integer
+
                         If kvp.Value.hasActualValues Then
-                            Dim tmpStartCol As Integer = getColumnOfDate(kvp.Value.actualDataUntil) + 1
-
-                            If tmpStartCol > appropriateStartCol Then
-                                appropriateStartCol = tmpStartCol
-                            End If
-
+                            tmpStartCol = getColumnOfDate(kvp.Value.actualDataUntil) + 1
                         Else
-                            ' tk 8.1.24 do nothing, then it is project with forecast Months only
+                            tmpStartCol = kvp.Value.Start
+                        End If
 
-                            Dim tmpStartCol As Integer = kvp.Value.Start
-                            If firstTime Then
-                                firstTime = False
+                        If firstTime Then
+                            firstTime = False
+                            appropriateStartCol = tmpStartCol
+                        Else
+                            If tmpStartCol < appropriateStartCol Then
                                 appropriateStartCol = tmpStartCol
-                            Else
-                                If tmpStartCol < appropriateStartCol Then
-                                    appropriateStartCol = tmpStartCol
-                                End If
                             End If
                         End If
                     End If
@@ -4386,9 +4382,8 @@ Public Class clsProjekte
 
             Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(uid)
 
-            Dim myTeam As clsRollenDefinition = Nothing
-            If teamID > 0 Then
-                myTeam = RoleDefinitions.getRoleDefByID(teamID)
+            If Not myRole.isCombinedRole Then
+                teamID = -1
             End If
 
             freeCapacity = getFreeCapacityOfRole(uid, teamID, von, bis)
@@ -4516,6 +4511,12 @@ Public Class clsProjekte
 
             Try
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
+                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
+                If Not istSammelRolle Then
+                    ' if it is a person then there is no need to distinguish
+                    skillID = -1
+                End If
 
                 Dim roleUID As Integer = tmpRole.UID
                 Dim roleName As String = tmpRole.name
@@ -4530,7 +4531,7 @@ Public Class clsProjekte
                 Dim ix As Integer
                 Dim zeitraum As Integer = bis - von
 
-                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
 
                 ReDim roleValues(zeitraum)
                 ReDim kapaValues(zeitraum)
