@@ -467,7 +467,7 @@ Public Class clsawinSettings
         _mppOnePage = False
         _mppExtendedMode = False
         _mppShowHorizontals = False
-        _mppUseAbbreviation = True
+        _mppUseAbbreviation = False
         _mppUseOriginalNames = False
         _mppKwInMilestone = False
         _mppUseInnerText = False
