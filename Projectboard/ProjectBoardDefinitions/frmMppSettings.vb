@@ -71,6 +71,8 @@ Public Class frmMppSettings
             shwHorizontals.Checked = .mppShowHorizontals
             allOnOnePage.Checked = .mppOnePage
             shwExtendedMode.Checked = .mppExtendedMode
+            ' tk 19.3.24
+            shwInvoices.Visible = False
             shwInvoices.Checked = .mppInvoicesPenalties
 
             filterEmptyProjects.Checked = Not .mppProjectsWithNoMPmayPass
