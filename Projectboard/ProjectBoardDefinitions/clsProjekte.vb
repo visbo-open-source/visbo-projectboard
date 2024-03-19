@@ -968,24 +968,20 @@ Public Class clsProjekte
 
                     If weitermachen Then
 
+                        Dim tmpStartCol As Integer
+
                         If kvp.Value.hasActualValues Then
-                            Dim tmpStartCol As Integer = getColumnOfDate(kvp.Value.actualDataUntil) + 1
-
-                            If tmpStartCol > appropriateStartCol Then
-                                appropriateStartCol = tmpStartCol
-                            End If
-
+                            tmpStartCol = getColumnOfDate(kvp.Value.actualDataUntil) + 1
                         Else
-                            ' tk 8.1.24 do nothing, then it is project with forecast Months only
+                            tmpStartCol = kvp.Value.Start
+                        End If
 
-                            Dim tmpStartCol As Integer = kvp.Value.Start
-                            If firstTime Then
-                                firstTime = False
+                        If firstTime Then
+                            firstTime = False
+                            appropriateStartCol = tmpStartCol
+                        Else
+                            If tmpStartCol < appropriateStartCol Then
                                 appropriateStartCol = tmpStartCol
-                            Else
-                                If tmpStartCol < appropriateStartCol Then
-                                    appropriateStartCol = tmpStartCol
-                                End If
                             End If
                         End If
                     End If
