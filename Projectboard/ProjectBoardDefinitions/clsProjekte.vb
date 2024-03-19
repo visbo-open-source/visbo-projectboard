@@ -4386,9 +4386,8 @@ Public Class clsProjekte
 
             Dim myRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(uid)
 
-            Dim myTeam As clsRollenDefinition = Nothing
-            If teamID > 0 Then
-                myTeam = RoleDefinitions.getRoleDefByID(teamID)
+            If Not myRole.isCombinedRole Then
+                teamID = -1
             End If
 
             freeCapacity = getFreeCapacityOfRole(uid, teamID, von, bis)
@@ -4516,6 +4515,12 @@ Public Class clsProjekte
 
             Try
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
+                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
+                If Not istSammelRolle Then
+                    ' if it is a person then there is no need to distinguish
+                    skillID = -1
+                End If
 
                 Dim roleUID As Integer = tmpRole.UID
                 Dim roleName As String = tmpRole.name
@@ -4530,7 +4535,7 @@ Public Class clsProjekte
                 Dim ix As Integer
                 Dim zeitraum As Integer = bis - von
 
-                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
 
                 ReDim roleValues(zeitraum)
                 ReDim kapaValues(zeitraum)

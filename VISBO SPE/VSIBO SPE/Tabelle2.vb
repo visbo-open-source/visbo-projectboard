@@ -1817,49 +1817,51 @@ Public Class Tabelle2
 
                     If Not IsNothing(cphase) Then
 
-                        Try
+                        If Not awinSettings.meAllowOverTime Then
+                            Dim roleUID As Integer
+                            Dim teamID As Integer = -1
 
-                        Catch ex As Exception
+                            roleUID = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).UID
 
-                        End Try
+                            Dim von As Integer = showRangeLeft + Target.Column - columnStartData
+                            Dim bis As Integer = von + anzTargetColumns - 1
 
-                        Dim roleUID As Integer
-                        Dim teamID As Integer = -1
+                            ' freeCapacity now has the same dimension as requestedValues/target
+                            Dim availableCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(roleUID, teamID, von, bis)
 
-                        roleUID = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).UID
+                            Dim role As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                            If Not IsNothing(role) Then
 
-                        Dim von As Integer = showRangeLeft + Target.Column - columnStartData
-                        Dim bis As Integer = von + anzTargetColumns - 1
+                                ' you have to adjust the array availablecapacity by the projectvalues itself
+                                Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
+                                Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
+                                Dim xWerte() As Double = role.Xwerte
 
-                        ' freeCapacity now has the same dimension as requestedValues/target
-                        Dim availableCapacity As Double() = ShowProjekte.getFreeCapacityOfRole(roleUID, teamID, von, bis)
+                                For ix As Integer = 0 To anzTargetColumns - 1
 
-                        Dim role As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
-                        If Not IsNothing(role) Then
+                                    Try
+                                        projectValues(ix) = xWerte(xWerteIndex + ix)
+                                        ' available capacity is now including projectvalues, because the project values are being substututed
+                                        availableCapacity(ix) = availableCapacity(ix) + projectValues(ix)
+                                    Catch ex As Exception
+                                        Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID & " " & rcNameID, ex.Message)
+                                    End Try
 
-                            ' you have to adjust the array availablecapacity by the projectvalues itself
-                            Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
-                            Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
-                            Dim xWerte() As Double = role.Xwerte
+                                Next
+                            End If
 
+
+                            ' now do the Job ... 
                             For ix As Integer = 0 To anzTargetColumns - 1
-
-                                Try
-                                    projectValues(ix) = xWerte(xWerteIndex + ix)
-                                    ' available capacity is now including projectvalues, because the project values are being substututed
-                                    availableCapacity(ix) = availableCapacity(ix) + projectValues(ix)
-                                Catch ex As Exception
-                                    Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID & " " & rcNameID, ex.Message)
-                                End Try
-
+                                grantedValues(ix) = System.Math.Min(requestedValues(ix), availableCapacity(ix))
+                            Next
+                        Else
+                            ' now accept whatever was requested 
+                            For ix As Integer = 0 To anzTargetColumns - 1
+                                grantedValues(ix) = requestedValues(ix)
                             Next
                         End If
 
-
-                        ' now do the Job ... 
-                        For ix As Integer = 0 To anzTargetColumns - 1
-                            grantedValues(ix) = System.Math.Min(requestedValues(ix), availableCapacity(ix))
-                        Next
 
 
                     Else
