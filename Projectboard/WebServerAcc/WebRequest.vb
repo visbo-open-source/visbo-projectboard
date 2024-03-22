@@ -6333,7 +6333,12 @@ Public Class Request
                     Dim x As Date = CDate(vpf.timestamp)
                     Dim constellationName As String = GETpName(vpid)
                     If vpf.name = constellationName Then
-                        result.Add(vpf.timestamp, vpf)
+                        ' tk 21.3.24 check whether or not timestamp is already in the list 
+                        ' otherwise with same timestampes exception occurs; happened 21.4.23
+                        Do While result.ContainsKey(x)
+                            x = x.AddMilliseconds(1)
+                        Loop
+                        result.Add(x, vpf)
                     End If
 
                 Next

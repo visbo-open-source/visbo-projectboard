@@ -4440,51 +4440,43 @@ Module rpaTkModule
                 ws.Cells(zeile, 5).value = "End Date"
                 CType(ws.Cells(zeile, 5), xlns.Range).AddComment("if it differs much from inner End Date: check MS Project setting <Project Information> and publish to VISBO again ")
 
-                ws.Cells(zeile, 6).value = "Inner Start "
-                CType(ws.Cells(zeile, 6), xlns.Range).AddComment("earliest occuring date of any published task / milestone in MS Project Plan")
 
-                ws.Cells(zeile, 7).value = "Inner End "
-                CType(ws.Cells(zeile, 7), xlns.Range).AddComment("latest occuring date of any published task / milestone in MS Project Plan")
+                ws.Cells(zeile, 6).value = "Has Template Structure?"
+                CType(ws.Cells(zeile, 6), xlns.Range).AddComment("Yes, if structure/hierarchy of template is 100% identical to current plan")
 
-                ws.Cells(zeile, 8).value = "is current or future Project?"
-                CType(ws.Cells(zeile, 8), xlns.Range).AddComment("Yes, if today < innerEndDate")
+                ws.Cells(zeile, 7).value = "Template Name"
+                CType(ws.Cells(zeile, 7), xlns.Range).AddComment("the Name of the template used to compare the current plan structure ")
 
-                ws.Cells(zeile, 9).value = "Has Template Structure?"
-                CType(ws.Cells(zeile, 9), xlns.Range).AddComment("Yes, if structure/hierarchy of template is 100% identical to current plan")
+                ws.Cells(zeile, 8).value = "contains standard-Elements"
+                CType(ws.Cells(zeile, 8), xlns.Range).AddComment(" to which percentage standard names do exist in the current plan?")
 
-                ws.Cells(zeile, 10).value = "Template Name"
-                CType(ws.Cells(zeile, 10), xlns.Range).AddComment("the Name of the template used to compare the current plan structure ")
+                ws.Cells(zeile, 9).value = "Missing Names"
+                CType(ws.Cells(zeile, 9), xlns.Range).AddComment("which standard names are missing? ")
 
-                ws.Cells(zeile, 11).value = "contains standard-Elements"
-                CType(ws.Cells(zeile, 11), xlns.Range).AddComment(" to which percentage standard names do exist in the current plan?")
+                ws.Cells(zeile, 10).value = "Max Occurrence"
+                CType(ws.Cells(zeile, 10), xlns.Range).AddComment("max count of occurrences of any standard name")
 
-                ws.Cells(zeile, 12).value = "Missing Names"
-                CType(ws.Cells(zeile, 12), xlns.Range).AddComment("which standard names are missing? ")
+                ws.Cells(zeile, 11).value = "%Done Quality"
+                CType(ws.Cells(zeile, 11), xlns.Range).AddComment("how many published plan-elements with a date < last publish date do have 100%-Done attribute?")
 
-                ws.Cells(zeile, 13).value = "Max Occurrence"
-                CType(ws.Cells(zeile, 13), xlns.Range).AddComment("max count of occurrences of any standard name")
+                ws.Cells(zeile, 12).value = "last Publish"
+                CType(ws.Cells(zeile, 12), xlns.Range).AddComment("when was the last VISBO publish / store of schedules, resources, deliverables of the project")
 
-                ws.Cells(zeile, 14).value = "%Done Quality"
-                CType(ws.Cells(zeile, 14), xlns.Range).AddComment("how many published plan-elements with a date < last publish date do have 100%-Done attribute?")
+                'ws.Cells(zeile, 16).value = "Comparability Index Project Versions"
+                'CType(ws.Cells(zeile, 16), xlns.Range).AddComment("checks the similarity between former versions and current project version; 100%: all names of former version are existing in current version")
 
-                ws.Cells(zeile, 15).value = "last Publish"
-                CType(ws.Cells(zeile, 15), xlns.Range).AddComment("when was the last VISBO publish / store of schedules, resources, deliverables of the project")
+                ws.Cells(zeile, 13).value = "Comparability Index Baseline vs current Plan Version"
+                CType(ws.Cells(zeile, 13), xlns.Range).AddComment("checks the similarity between baseline and current project version; 100%: all names of baseline are existing in current version")
 
-                ws.Cells(zeile, 16).value = "Comparability Index Project Versions"
-                CType(ws.Cells(zeile, 16), xlns.Range).AddComment("checks the similarity between former versions and current project version; 100%: all names of former version are existing in current version")
+                ws.Cells(zeile, 14).value = "is Part of Portfolio"
+                CType(ws.Cells(zeile, 14), xlns.Range).AddComment("first found portfolio the project is in")
 
-                ws.Cells(zeile, 17).value = "Comparability Index Baseline vs current Plan Version"
-                CType(ws.Cells(zeile, 17), xlns.Range).AddComment("checks the similarity between baseline and current project version; 100%: all names of baseline are existing in current version")
-
-                ws.Cells(zeile, 18).value = "is Part of Portfolio"
-                CType(ws.Cells(zeile, 18), xlns.Range).AddComment("first found portfolio the project is in (Name=<test dataquality> is not considered")
-
-                ws.Cells(zeile, 19).value = "is Part of other Portfolios"
-                CType(ws.Cells(zeile, 19), xlns.Range).AddComment("other portfolios containing the project")
+                ws.Cells(zeile, 15).value = "is Part of other Portfolios"
+                CType(ws.Cells(zeile, 15), xlns.Range).AddComment("other portfolios containing the project")
 
                 ' added 19.05.23 by tk
-                ws.Cells(zeile, 20).value = "Responsible"
-                CType(ws.Cells(zeile, 20), xlns.Range).AddComment("project manager assigned to this project")
+                ws.Cells(zeile, 16).value = "Responsible"
+                CType(ws.Cells(zeile, 16), xlns.Range).AddComment("project manager assigned to this project")
 
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In myConstellation.Liste
@@ -4497,17 +4489,18 @@ Module rpaTkModule
 
                     If Not IsNothing(hproj) Then
 
-                        If IsNothing(compareTemplate) And hproj.VorlagenName <> "" Then
-                            Try
-                                Dim tmpProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(hproj.VorlagenName, tmpID, heute, err)
-                                If Not IsNothing(tmpProj) Then
-                                    compareTemplate = tmpProj
-                                End If
-                            Catch ex As Exception
+                        ' currently no consideration of hproj.vorlage
+                        'If IsNothing(compareTemplate) And hproj.VorlagenName <> "" Then
+                        '    Try
+                        '        Dim tmpProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectTemplatefromDB(hproj.VorlagenName, tmpID, heute, err)
+                        '        If Not IsNothing(tmpProj) Then
+                        '            compareTemplate = tmpProj
+                        '        End If
+                        '    Catch ex As Exception
 
-                            End Try
+                        '    End Try
 
-                        End If
+                        'End If
 
                         Dim innerStartEndDate() As Date = hproj.getInnerStartEndDate
 
@@ -4520,42 +4513,35 @@ Module rpaTkModule
                         ws.Cells(zeile, 3).value = hproj.vpStatus
                         ws.Cells(zeile, 4).value = hproj.startDate
                         ws.Cells(zeile, 5).value = hproj.endeDate
-                        ws.Cells(zeile, 6).value = innerStartEndDate(0)
-                        ws.Cells(zeile, 7).value = innerStartEndDate(1)
-
-                        ' now check whether it seems to be an active project 
-                        Dim isActive As Boolean = DateDiff(DateInterval.Day, innerStartEndDate(0), heute) >= 0 And
-                                                    DateDiff(DateInterval.Day, innerStartEndDate(1), heute) <= 0
-
-                        If isActive Then
-                            ws.Cells(zeile, 8).value = "Yes"
-                        Else
-                            ws.Cells(zeile, 8).value = "No"
-                        End If
 
                         ' now check whether it complies to TMS structure and  to which one 
                         Try
-                            Dim hasTMS As Boolean = hproj.hasStructureOf(compareTemplate)
+                            If Not IsNothing(compareTemplate) Then
+                                Dim hasTMS As Boolean = hproj.hasStructureOf(compareTemplate)
 
-                            If hasTMS Then
-                                ws.Cells(zeile, 9).value = "Yes"
+                                If hasTMS Then
+                                    ws.Cells(zeile, 6).value = "Yes"
+                                Else
+                                    ws.Cells(zeile, 6).value = "No"
+                                End If
                             Else
-                                ws.Cells(zeile, 9).value = "No"
+                                ws.Cells(zeile, 6).value = "n.a"
                             End If
 
+
                         Catch ex As Exception
-                            ws.Cells(zeile, 9).value = "n.a"
+                            ws.Cells(zeile, 6).value = "n.a"
                         End Try
 
                         Try
                             If Not IsNothing(compareTemplate) Then
-                                ws.Cells(zeile, 10).value = compareTemplate.VorlagenName
+                                ws.Cells(zeile, 7).value = compareTemplate.VorlagenName
                             Else
-                                ws.Cells(zeile, 10).value = ""
+                                ws.Cells(zeile, 7).value = ""
                             End If
 
                         Catch ex As Exception
-                            ws.Cells(zeile, 10).value = "?"
+                            ws.Cells(zeile, 7).value = "?"
                         End Try
 
                         ' check the contains Standard-Elements 
@@ -4565,7 +4551,7 @@ Module rpaTkModule
                                 Dim missingNames As New Collection
                                 Dim multipleOccurences As New Collection
                                 Dim containsStdElemKPI As Double = hproj.containsStdElemKPI(msNames, phNames, maxOccurrences, missingNames, multipleOccurences)
-                                ws.Cells(zeile, 11).value = containsStdElemKPI.ToString("0.0%")
+                                ws.Cells(zeile, 8).value = containsStdElemKPI.ToString("0.0%")
 
                                 ' call logger ...
 
@@ -4578,8 +4564,8 @@ Module rpaTkModule
                                     End If
                                 Next
 
-                                ws.Cells(zeile, 12).value = missingNamesString
-                                ws.Cells(zeile, 13).value = maxOccurrences.ToString
+                                ws.Cells(zeile, 9).value = missingNamesString
+                                ws.Cells(zeile, 10).value = maxOccurrences.ToString
 
                                 If missingNames.Count > 0 Then
                                     Call logger(ptErrLevel.logInfo, "missingNames " & hproj.name, missingNames)
@@ -4588,63 +4574,63 @@ Module rpaTkModule
                                     Call logger(ptErrLevel.logInfo, "multiple occurences  " & hproj.name, multipleOccurences)
                                 End If
                             Else
-                                ws.Cells(zeile, 11).value = "n.a"
-                                ws.Cells(zeile, 12).value = "n.a"
-                                ws.Cells(zeile, 13).value = "n.a"
+                                ws.Cells(zeile, 8).value = "n.a"
+                                ws.Cells(zeile, 9).value = "n.a"
+                                ws.Cells(zeile, 10).value = "n.a"
                             End If
 
 
                         Catch ex As Exception
-                            ws.Cells(zeile, 11).value = "?"
-                            ws.Cells(zeile, 12).value = "?"
-                            ws.Cells(zeile, 13).value = "?"
+                            ws.Cells(zeile, 8).value = "?"
+                            ws.Cells(zeile, 9).value = "?"
+                            ws.Cells(zeile, 10).value = "?"
                         End Try
 
                         ' check the %-Done Quality of Past Elements : Past meaning elements before hproj.timestamp
                         Try
                             Dim doneQualityKPI As Double = hproj.getdoneQualityKPI()
                             If doneQualityKPI >= 0 Then
-                                ws.Cells(zeile, 14).value = doneQualityKPI.ToString("0.0%")
+                                ws.Cells(zeile, 11).value = doneQualityKPI.ToString("0.0%")
                             Else
-                                ws.Cells(zeile, 14).value = "n.a"
+                                ws.Cells(zeile, 11).value = "n.a"
                             End If
 
                         Catch ex As Exception
-                            ws.Cells(zeile, 14).value = "?"
+                            ws.Cells(zeile, 11).value = "?"
                         End Try
 
 
                         ' Check the last publish - again an indicator of how reliable data is ... 
-                        ws.Cells(zeile, 15).value = hproj.timeStamp
+                        ws.Cells(zeile, 12).value = hproj.timeStamp
 
                         'check the Comparability Index: keep the current and compare with former versions. How many elements of former versions are in current version ? 
 
-                        Try
-                            Dim resultString As String = ""
-                            Dim timeStampString As String = ""
-                            Dim lookForTimeStamp As Date = hproj.timeStamp.AddMonths(-1)
-                            Dim compareVersion As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
+                        'Try
+                        '    Dim resultString As String = ""
+                        '    Dim timeStampString As String = ""
+                        '    Dim lookForTimeStamp As Date = hproj.timeStamp.AddMonths(-1)
+                        '    Dim compareVersion As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
 
-                            Do While Not IsNothing(compareVersion)
+                        '    Do While Not IsNothing(compareVersion)
 
-                                If resultString = "" Then
-                                    timeStampString = compareVersion.timeStamp.ToShortDateString
-                                    resultString = hproj.getCompareKPI(compareVersion).ToString("00%")
-                                Else
-                                    timeStampString = timeStampString & " / " & compareVersion.timeStamp.ToShortDateString
-                                    resultString = resultString & " / " & hproj.getCompareKPI(compareVersion).ToString("00%")
-                                End If
+                        '        If resultString = "" Then
+                        '            timeStampString = compareVersion.timeStamp.ToShortDateString
+                        '            resultString = hproj.getCompareKPI(compareVersion).ToString("00%")
+                        '        Else
+                        '            timeStampString = timeStampString & " / " & compareVersion.timeStamp.ToShortDateString
+                        '            resultString = resultString & " / " & hproj.getCompareKPI(compareVersion).ToString("00%")
+                        '        End If
 
-                                lookForTimeStamp = compareVersion.timeStamp.AddMonths(-1)
-                                compareVersion = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
-                            Loop
+                        '        lookForTimeStamp = compareVersion.timeStamp.AddMonths(-1)
+                        '        compareVersion = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.vpID, lookForTimeStamp, err)
+                        '    Loop
 
-                            CType(ws.Cells(zeile, 16), xlns.Range).AddComment(timeStampString)
-                            CType(ws.Cells(zeile, 16), xlns.Range).Value = "'" & resultString
+                        '    CType(ws.Cells(zeile, 16), xlns.Range).AddComment(timeStampString)
+                        '    CType(ws.Cells(zeile, 16), xlns.Range).Value = "'" & resultString
 
-                        Catch ex As Exception
-                            Call logger(ptErrLevel.logError, "Write Column 16  ", ex.Message)
-                        End Try
+                        'Catch ex As Exception
+                        '    Call logger(ptErrLevel.logError, "Write Column 16  ", ex.Message)
+                        'End Try
 
                         ' now check the comparability index between Project and baseline ... 
                         Try
@@ -4659,11 +4645,11 @@ Module rpaTkModule
                             End If
 
 
-                            CType(ws.Cells(zeile, 17), xlns.Range).AddComment(commentString)
-                            CType(ws.Cells(zeile, 17), xlns.Range).Value = "'" & resultString
+                            CType(ws.Cells(zeile, 13), xlns.Range).AddComment(commentString)
+                            CType(ws.Cells(zeile, 13), xlns.Range).Value = "'" & resultString
 
                         Catch ex As Exception
-                            Call logger(ptErrLevel.logError, "Write Column 17  ", ex.Message)
+                            Call logger(ptErrLevel.logError, "Write Column 13  ", ex.Message)
                         End Try
 
 
@@ -4717,8 +4703,8 @@ Module rpaTkModule
 
                             Next
 
-                            ws.Cells(zeile, 18).value = containedIn
-                            ws.Cells(zeile, 19).value = containedAlsoIn
+                            ws.Cells(zeile, 14).value = containedIn
+                            ws.Cells(zeile, 15).value = containedAlsoIn
                         Catch ex As Exception
 
                         End Try
@@ -4727,10 +4713,10 @@ Module rpaTkModule
                         ' now write how is responsible 
                         Try
                             If Not IsNothing(hproj.leadPerson) Then
-                                ws.Cells(zeile, 20).value = hproj.leadPerson
+                                ws.Cells(zeile, 16).value = hproj.leadPerson
                             End If
                         Catch ex As Exception
-                            ws.Cells(zeile, 20).value = "n.a."
+                            ws.Cells(zeile, 16).value = "n.a."
                         End Try
 
 
