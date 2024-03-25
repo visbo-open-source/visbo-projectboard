@@ -10,11 +10,28 @@ Public Class frmAddOrDeleteALine
     Public isRoleSkill As Boolean
     Public isCost As Boolean
     Public isEmpty As Boolean
+    Public enableDeleteLine As Boolean
+
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        InitializeComponent()
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+        addLine = False
+        deleteLine = False
+        isRoleSkill = False
+        isCost = False
+        isEmpty = False
+        enableDeleteLine = False
+
+    End Sub
 
     Private Sub frmAddOrDeleteALine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Me.Top = 45
         Me.Left = Me.Left - 400
+
 
         Try
             Me.AddALine.Text = "Add empty row"
@@ -27,6 +44,8 @@ Public Class frmAddOrDeleteALine
             If isEmpty Then
                 Me.DeleteALine.Text = "Delete row"
             End If
+
+            Me.DeleteALine.Enabled = enableDeleteLine
 
         Catch ex As Exception
 

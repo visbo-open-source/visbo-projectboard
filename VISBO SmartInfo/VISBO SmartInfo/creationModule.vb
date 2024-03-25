@@ -8,12 +8,12 @@ Module creationModule
 
     ' defines the keyWords fpr Powerpoint Reporting Compoents, so that report component can be generated
     ' 29.2.24 ActualTargetReve = ActualTarget Chart Revenue /Savings, ActualTargetCost=Chart Other Cost, ActualTargetRess = Chart Gesamt Resources
-    Friend projectComponentNames As String() = {"Projekt-Name", "Custom-Field", "selectedItems", "Einzelprojektsicht",
+    Friend projectComponentNames As String() = {"Projekt-Name", "SKPI", "RKPI", "Custom-Field", "selectedItems", "Einzelprojektsicht",
                                                 "AllePlanElemente", "Swimlanes", "Swimlanes2", "TableBudgetCostAPVCV",
                                                 "TableMilestoneAPVCV", "ProjektBedarfsChart", "Ampel-Farbe", "Ampel-Text",
                                                 "Beschreibung", "Business-Unit", "SymTrafficLight", "SymRisks", "SymGoals",
                                                 "SymTeam", "SymFinance", "SymSchedules", "SymPrPf", "Stand:", "Laufzeit:", "Verantwortlich:",
-                                                "ActualTargetReve", "ActualTargetCost", "ActualTargetRess"}
+                                                "ActualTargetReve", "ActualTargetCost", "ActualTargetRess", "ActualTargetProfit"}
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
@@ -332,6 +332,7 @@ Module creationModule
             For i = 1 To anzShapes
                 pptShape = currentSlide.Shapes(i)
                 qualifier = ""
+                kennzeichnung = ""
                 With pptShape
 
                     Dim tmpStr(3) As String
@@ -422,6 +423,7 @@ Module creationModule
                         kennzeichnung = "ActualTargetReve" Or
                         kennzeichnung = "ActualTargetCost" Or
                         kennzeichnung = "ActualTargetRess" Or
+                        kennzeichnung = "ActualTargetProfit" Or
                         kennzeichnung = "Ampel-Farbe" Or
                         kennzeichnung = "Ampel-Text" Or
                         kennzeichnung = "Beschreibung" Or
@@ -435,6 +437,8 @@ Module creationModule
                         kennzeichnung = "SymPrPf" Or
                         kennzeichnung = "Stand:" Or
                         kennzeichnung = "Laufzeit:" Or
+                        kennzeichnung = "SKPI" Or
+                        kennzeichnung = "RKPI" Or
                         kennzeichnung = "Verantwortlich:" Then
 
                         listofShapes.Add(pptShape)
@@ -476,7 +480,8 @@ Module creationModule
                        kennzeichnung = "ProjektBedarfsChart" Or
                        kennzeichnung = "ActualTargetReve" Or
                        kennzeichnung = "ActualTargetCost" Or
-                       kennzeichnung = "ActualTargetRess" Then
+                       kennzeichnung = "ActualTargetRess" Or
+                       kennzeichnung = "ActualTargetProfit" Then
                     ' it should only be given as text in the Powerpoint Templates. Currently there is no interactive selection 
                     roleCostSelNeeded(0) = False
                 End If
@@ -598,10 +603,10 @@ Module creationModule
                             Dim tmpstr() As String
 
                             If .AlternativeText.Contains(vbLf) Then
-                                tmpStr = .AlternativeText.Trim.Split(New Char() {CChar(vbLf)})
-                                altText1 = tmpStr(0)
+                                tmpstr = .AlternativeText.Trim.Split(New Char() {CChar(vbLf)})
+                                altText1 = tmpstr(0)
 
-                                For ix As Integer = 1 To tmpStr.Length - 1
+                                For ix As Integer = 1 To tmpstr.Length - 1
                                     If tmpstr(ix).Length > 0 Then
                                         If altText2.Length = 0 Then
                                             altText2 = tmpstr(ix)
@@ -665,6 +670,40 @@ Module creationModule
                                                                ptReportBigTypes.components, ptReportComponents.prName)
                                 Catch ex As Exception
                                     msgTxt = "Component 'Projekt-Name':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
+                            Case "SKPI"
+
+                                Try
+                                    Dim skpi As String = hproj.StrategicFit.ToString("0.#")
+
+                                    .TextFrame2.TextRange.Text = skpi
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                               ptReportBigTypes.components, ptReportComponents.prStrategyKPI)
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Strategy-KPI':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
+                            Case "RKPI"
+
+                                Try
+                                    Dim riskKpi As String = hproj.Risiko.ToString("0.#")
+
+                                    .TextFrame2.TextRange.Text = riskKpi
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                               ptReportBigTypes.components, ptReportComponents.prRiskKPI)
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Risk-KPI':" & ex.Message
                                     msgCollection.Add(msgTxt)
                                 End Try
 
@@ -1385,6 +1424,60 @@ Module creationModule
 
                                 End Try
 
+                            Case "ActualTargetProfit"
+
+
+
+                                Try
+                                    Dim smartChartInfo As New clsSmartPPTChartInfo
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
+
+                                    With smartChartInfo
+
+                                        .prPF = ptPRPFType.project
+                                        .chartTyp = PTChartTypen.Balken
+                                        .vergleichsArt = PTVergleichsArt.beauftragung
+                                        .vergleichsTyp = PTVergleichsTyp.letzter
+                                        .einheit = PTEinheiten.euro
+                                        .elementTyp = ptElementTypen.ergebnis
+
+                                        .bigType = ptReportBigTypes.charts
+                                        .detailID = PTprdk.ActualTargetProfit
+
+                                        If qualifier2.Length > 0 Then
+                                            .q2 = qualifier2
+                                        Else
+                                            .q2 = ""
+                                        End If
+
+                                        ' muss mit dem ersten oder letzten verglichen werden ? 
+                                        .hproj = hproj
+                                        .vpid = hproj.vpID
+                                        If .vergleichsTyp = PTVergleichsTyp.erster Then
+                                            .vglProj = bproj
+                                        ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            .vglProj = lproj
+                                        End If
+
+                                    End With
+
+
+                                    Call createProjektATChart(smartChartInfo, pptShape, Nothing, False)
+
+                                    boxName = ""
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+
+                                    msgTxt = "Component 'Actual Target Profit':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
+                                End Try
 
                             Case "ProjektBedarfsChart"
 
@@ -1605,11 +1698,11 @@ Module creationModule
                                     If options.Length > 0 Then
 
                                         Dim tmpStr() As String = options.Trim.Split(New Char() {CChar("-"), CChar("–")})
-                                        If tmpstr.Length = 2 Then
+                                        If tmpStr.Length = 2 Then
                                             ' only then it can be start- and end-Date
                                             Try
-                                                Dim leftDate As Date = CDate(tmpstr(0))
-                                                Dim rightDate As Date = CDate(tmpstr(1))
+                                                Dim leftDate As Date = CDate(tmpStr(0))
+                                                Dim rightDate As Date = CDate(tmpStr(1))
                                                 showRangeLeft = getColumnOfDate(leftDate)
                                                 showRangeRight = getColumnOfDate(rightDate)
 
@@ -2008,14 +2101,14 @@ Module creationModule
 
                                     Dim baselineTxt As String = "last Baseline: "
                                     If Not IsNothing(lproj) Then
-                                        baselineTxt = baselineTxt & lproj.timeStamp.ToString("g", repCult)
+                                        baselineTxt = baselineTxt & lproj.timeStamp.ToString("d", repCult)
                                     Else
                                         baselineTxt = baselineTxt & "-"
                                     End If
 
                                     Dim hProjTxt As String = "Current Plan: "
                                     If Not IsNothing(hproj) Then
-                                        hProjTxt = hProjTxt & hproj.timeStamp.ToString("g", repCult)
+                                        hProjTxt = hProjTxt & hproj.timeStamp.ToString("d", repCult)
                                     Else
                                         hProjTxt = hProjTxt & "-"
                                     End If
@@ -2093,8 +2186,8 @@ Module creationModule
 
 
                             Case Else
-                                msgTxt = "unknown Component: " & kennzeichnung
-                                msgCollection.Add(msgTxt)
+                                Dim a As Integer = 0
+                                ' do Nothing
                         End Select
 
 
@@ -2775,10 +2868,23 @@ Module creationModule
 
             Call calculateValuesForATCharts(sCInfo, upToNowDate, projectValues, baselineValues)
 
+        ElseIf sCInfo.detailID = PTprdk.ActualTargetProfit Then
+
+            If sCInfo.q2 = "" Then
+                diagramTitle = "Profit [T€]"
+            Else
+                diagramTitle = sCInfo.q2
+            End If
+
+            Call calculateValuesForATCharts(sCInfo, upToNowDate, projectValues, baselineValues)
         Else
             Exit Sub
         End If
 
+        Dim minChartScale As Single = CSng(System.Math.Min(System.Math.Min(projectValues(0), projectValues(1)), System.Math.Min(baselineValues(0), baselineValues(1))))
+        If minChartScale >= 0 Then
+            minChartScale = 0.0
+        End If
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
         Dim newPPTChart As PowerPoint.Shape
@@ -2870,6 +2976,7 @@ Module creationModule
             Try
                 With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
 
+                    .TickLabelPosition = PowerPoint.XlTickLabelPosition.xlTickLabelPositionLow
                     .HasTitle = False
                     .TickLabels.Font.Size = tlFontSize
 
@@ -2882,11 +2989,12 @@ Module creationModule
                 With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
 
                     .HasTitle = False
-                    .MinimumScale = 0
-
-                    If sCInfo.elementTyp = ptElementTypen.phases Or
-                                sCInfo.elementTyp = ptElementTypen.milestones Then
-                        .MajorUnitIsAuto = True
+                    .HasMajorGridlines = False
+                    .HasMinorGridlines = False
+                    If minChartScale < 0 Then
+                        .MinimumScaleIsAuto = True
+                    Else
+                        .MinimumScale = 0.0
                     End If
 
                     .TickLabels.Font.Size = tlFontSize
@@ -2932,7 +3040,7 @@ Module creationModule
 
             If projectValues.Sum < baselineValues.Sum Then
 
-                If sCInfo.detailID = PTprdk.ActualTargetReve Then
+                If sCInfo.detailID = PTprdk.ActualTargetReve Or sCInfo.detailID = PTprdk.ActualTargetProfit Then
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
                 Else
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
@@ -2941,7 +3049,7 @@ Module creationModule
 
             ElseIf projectValues.Sum > baselineValues.Sum Then
 
-                If sCInfo.detailID = PTprdk.ActualTargetReve Then
+                If sCInfo.detailID = PTprdk.ActualTargetReve Or sCInfo.detailID = PTprdk.ActualTargetProfit Then
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
                 Else
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
@@ -7912,6 +8020,20 @@ Module creationModule
                 ' now define the projectValues
                 projectArray = scInfo.hproj.getInvoicesPenalties(False)
                 projectIX = upToNowCol - getColumnOfDate(scInfo.hproj.startDate)
+
+            ElseIf scInfo.detailID = PTprdk.ActualTargetProfit Then
+
+                If IsNothing(scInfo.vglProj) Then
+                    baselineValues(0) = 0.0
+                    baselineValues(1) = 0.0
+                Else
+                    baselineArray = scInfo.vglProj.getProfit
+                    baselineIX = upToNowCol - getColumnOfDate(scInfo.vglProj.startDate)
+                End If
+
+                ' now define the projectValues
+                projectArray = scInfo.hproj.getProfit
+                projectIX = upToNowCol - getColumnOfDate(scInfo.hproj.startDate)
             Else
                 Exit Sub
             End If
@@ -7932,12 +8054,6 @@ Module creationModule
                         baselineValues(0) = baselineValues(0) + baselineArray(tmpIX)
                     Next
 
-                    '' get forecast values
-                    'tmpLen = baselineValues.Length - 1
-                    'For tmpIX As Integer = baselineIX + 1 To tmpLen
-                    '    baselineValues(1) = baselineValues(1) + baselineArray(tmpIX)
-                    'Next
-
                     ' get total values
                     baselineValues(1) = baselineArray.Sum
                 End If
@@ -7956,12 +8072,6 @@ Module creationModule
                 For tmpIX As Integer = 0 To tmpLen
                     projectValues(0) = projectValues(0) + projectArray(tmpIX)
                 Next
-
-                '' get forecast values
-                'tmpLen = projectValues.Length - 1
-                'For tmpIX As Integer = projectIX + 1 To tmpLen
-                '    projectValues(1) = projectValues(1) + projectArray(tmpIX)
-                'Next
 
                 ' get total values 
                 projectValues(1) = projectArray.Sum

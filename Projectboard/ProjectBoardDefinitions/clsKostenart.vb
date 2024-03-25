@@ -43,6 +43,55 @@
     End Property
 
 
+    ''' <summary>
+    ''' gibt die Summe zurück bis zum angegebenen Index einschließlich
+    ''' kann verwendet werden, um die actualdata.sum für die Rolle zu bestimmen ...
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getSumUntil(ByVal index As Integer) As Double
+        Get
+
+            Dim ergebnis As Double = 0.0
+            If index < 0 Or index > _bedarf.Length - 1 Then
+                ergebnis = 0.0
+            Else
+                For i As Integer = 0 To index
+                    ergebnis = ergebnis + _bedarf(i)
+                Next
+            End If
+
+            getSumUntil = ergebnis
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Summe zurück ab index+1 bis Ende des Arrays
+    ''' kann verwendet werden, um die forecast.sum für die Rolle zu bestimmen ...
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getSumFrom(ByVal index As Integer) As Double
+        Get
+            Dim ergebnis As Double = 0.0
+            If index < 0 Then
+                ' damit das dann nachher einfach alles aufsummiert ...
+                index = -1
+            End If
+
+            If index > _bedarf.Length - 1 Then
+                ergebnis = 0.0
+            Else
+                For i As Integer = index + 1 To _bedarf.Length - 1
+                    ergebnis = ergebnis + _bedarf(i)
+                Next
+            End If
+
+            getSumFrom = ergebnis
+        End Get
+    End Property
+
+
     Public Property Xwerte() As Double()
         Get
             Xwerte = _bedarf

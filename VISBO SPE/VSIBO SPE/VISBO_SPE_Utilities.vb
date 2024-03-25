@@ -402,7 +402,7 @@ Module VISBO_SPE_Utilities
 
         If editProjekteInSPE.Count >= 0 Then
 
-            Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & editProjekteInSPE.Count)
+            'Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "Projekte: " & editProjekteInSPE.Count)
 
             ' neue Methode 
             ' For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -473,7 +473,7 @@ Module VISBO_SPE_Utilities
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
-                        Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
+                        'Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
 
                         Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight, meModus)
 
@@ -486,7 +486,7 @@ Module VISBO_SPE_Utilities
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
-                        Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
+                        'Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
 
                         Call writeOnlineMassEditTermineSPE(projektTodoliste)
 
@@ -498,7 +498,7 @@ Module VISBO_SPE_Utilities
                         ' jetzt aufbauen der dbCacheProjekte, names are pNames
                         Call buildCacheProjekte(todoListe, namesArePvNames:=False)
 
-                        Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
+                        'Call logger(ptErrLevel.logInfo, "massEditRcTeAt", "before writeOnlineMassEditRessCost: " & showRangeLeft & " ,  " & showRangeRight & " ,  " & meModus)
 
                         Call writeOnlineMassEditAttribute(projektTodoliste)
                     Else
@@ -744,10 +744,10 @@ Module VISBO_SPE_Utilities
 
                 End Try
 
-                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                ' braucht man schon wieder - wenn vorher ein PRojekt mit vielen Phasen und Meilensteinen drin war 
                 Try
                     With currentWS
-                        Dim zRange As Excel.Range = CType(.Range(.Cells(2, 1), .Cells(visboZustaende.meMaxZeile, visboZustaende.meColED)), Excel.Range)
+                        Dim zRange As Excel.Range = CType(.Range(.Cells(2, 1), .Cells(10000, 100)), Excel.Range)
                         zRange.Clear()
                     End With
                 Catch ex As Exception

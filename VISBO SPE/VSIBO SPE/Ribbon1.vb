@@ -706,7 +706,7 @@ Public Class Ribbon1
                                     ' now load the single projects of the Portfolio 
                                     If Not IsNothing(PiCPortfolio) Then
                                         Dim msgKey As String = calcProjektKey(portfolioName, portfolioVariantName)
-                                        Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " start of Operation ... ")
+                                        'Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " start of Operation ... ")
 
                                         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In PiCPortfolio.Liste
 
@@ -727,17 +727,17 @@ Public Class Ribbon1
                                                     End If
 
                                                 Else
-                                                    Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
+                                                    'Call logger(ptErrLevel.logWarning, "Loading " & kvp.Key & " failed ..", " Operation continued ...")
                                                 End If
                                             End If
 
                                         Next
 
-                                        Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " End of Operation ... ")
+                                        'Call logger(ptErrLevel.logInfo, "Loading Projects from Portfolio " & portfolioName, " End of Operation ... ")
 
                                     Else
                                         Dim msgTxt As String = "Load Portfolio " & portfolioName & " failed .."
-                                        Call logger(ptErrLevel.logError, "Load Portfolio " & portfolioName, " failed ..")
+                                        'Call logger(ptErrLevel.logError, "Load Portfolio " & portfolioName, " failed ..")
                                         Throw New ArgumentException(msgTxt)
                                     End If
 

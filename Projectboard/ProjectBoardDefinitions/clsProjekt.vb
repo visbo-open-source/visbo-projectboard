@@ -44,6 +44,7 @@ Public Class clsProjekt
         Get
             kundenNummer = _kundenNummer
         End Get
+
         Set(value As String)
             If Not IsNothing(value) Then
                 _kundenNummer = value
@@ -2313,10 +2314,10 @@ Public Class clsProjekt
                             Me.getPhase(1).ampelStatus = value
                         End If
                     Else
-                        Throw New ArgumentException("unzulässiger Ampel-Wert")
+                        ' do nothing Throw New ArgumentException("unzulässiger Ampel-Wert")
                     End If
                 Else
-                    Throw New ArgumentException("nicht-numerischer Ampel-Wert")
+                    ' do nothing Throw New ArgumentException("nicht-numerischer Ampel-Wert")
                 End If
             Else
                 ' ohne Bewertung
@@ -3575,36 +3576,98 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' copies the attributes from der given project
+    ''' is used when a new project structure is read and all other items should be the same 
+    ''' </summary>
+    ''' <param name="fromProject"></param>
+    Public Sub copyAttributesFrom(ByVal fromProject As clsProjekt)
+        With fromProject
+
+            VorlagenName = .VorlagenName
+
+            Risiko = .Risiko
+            StrategicFit = .StrategicFit
+
+            ampelErlaeuterung = .ampelErlaeuterung
+            ampelStatus = .ampelStatus
+
+            Erloes = .Erloes
+
+            description = .description
+            variantName = .variantName
+            variantDescription = .variantDescription
+            ' eigentlich sollte hier überprüft werden, ob es sich hier um eine gültige Business Unit handelt  
+            businessUnit = .businessUnit
+
+            projectType = .projectType
+
+            leadPerson = .leadPerson
+
+            vpStatus = .vpStatus
+
+            actualDataUntil = .actualDataUntil
+
+            kundenNummer = .kundenNummer
+
+            vpID = .vpID
+
+
+        End With
+
+
+
+        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
+        Try
+            With fromProject
+                For Each kvp As KeyValuePair(Of Integer, String) In .customStringFields
+                    customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In .customDblFields
+                    customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In .customBoolFields
+                    customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+
+            End With
+        Catch ex As Exception
+
+        End Try
+    End Sub
+    ''' <summary>
     ''' übernimmt für die eigenen Phasen die entsprechenden Ressourcenbedarfe aus dem anderen Projekt 
     ''' berücksichtigt ausschließlich Phasen, die im eigenen Projekt vorkommen .. 
     ''' wennactualDataUntil > projektstart, dann muss dafür gesorgt werden , dass die Ist-Werte erhalten bleiben ...  
     ''' wenn das eigene PRojekt bereits Ressourcen enthält , dann wird nichts gemacht !  
     ''' es wird auch das Budget übernommen, wenn es nicht schon existiert 
     ''' </summary>
-    ''' <param name="pRessources">das Projekt mit Ressourcen </param>
+    ''' <param name="formerProject">das Projekt mit Ressourcen </param>
     ''' <returns></returns>
-    Public Function updateProjectWithRessourcesFrom(ByVal pRessources As clsProjekt) As clsProjekt
+    Public Function updateProjectWithResourceCostFrom(ByVal formerProject As clsProjekt) As clsProjekt
 
         Dim ergebnisProjekt As clsProjekt = Nothing
         Try
-            ergebnisProjekt = createVariant("$temp$", "Ressource-Merge")
+            ergebnisProjekt = createVariant("$temp$", "Ressource-/Cost-Merge")
 
             ' Budget übernehmen ? 
-            If ergebnisProjekt.Erloes = 0 And pRessources.Erloes > 0 Then
-                ergebnisProjekt.Erloes = pRessources.Erloes
+            If ergebnisProjekt.Erloes = 0 And formerProject.Erloes > 0 Then
+                ergebnisProjekt.Erloes = formerProject.Erloes
             End If
 
 
-            If getGesamtKostenBedarf.Sum > 0 Or pRessources.getGesamtKostenBedarf.Sum = 0 Then
+            If getGesamtKostenBedarf.Sum > 0 Or formerProject.getGesamtKostenBedarf.Sum = 0 Then
                 ' es gibt bereits Ressourcen oder AndereKosten .. nichts machen oder das andere Projekt hat gar keine Ressourcen
                 ergebnisProjekt = Nothing
             Else
 
-                Dim considerActualData As Boolean = pRessources.getPhase(1).hasActualData
+                Dim considerActualData As Boolean = formerProject.hasActualValues
+
                 Dim actualDataIX As Integer = -1
 
                 If considerActualData Then
-                    actualDataIX = getColumnOfDate(pRessources.actualDataUntil) - getColumnOfDate(pRessources.startDate)
+                    actualDataIX = getColumnOfDate(formerProject.actualDataUntil) - getColumnOfDate(formerProject.startDate)
                 End If
 
                 For Each cphase As clsPhase In ergebnisProjekt.AllPhases
@@ -3612,89 +3675,168 @@ Public Class clsProjekt
                     Dim dimension As Integer = cphase.relEnde - cphase.relStart
 
                     Dim NameID As String = cphase.nameID
-                    Dim otherPhase As clsPhase = pRessources.getPhaseByID(NameID)
+                    Dim formerPhase As clsPhase = formerProject.getPhaseByID(NameID)
 
 
 
-                    If Not IsNothing(otherPhase) Then
+                    If Not IsNothing(formerPhase) Then
+
+                        ' now check whether or not the dimension is equal, if so then just copy the values 
+                        ' without new distribution 
+
+                        Dim isEqualDimension As Boolean = ((getColumnOfDate(cphase.getStartDate) = getColumnOfDate(formerPhase.getStartDate)) And
+                                                            (getColumnOfDate(cphase.getEndDate) = getColumnOfDate(formerPhase.getEndDate)))
+
+
                         ' die Phase wurde gefunden, jetzt muss überprüft werden, ob es actualdataUntil gibt ... 
-                        Dim considerActualPhaseData As Boolean = considerActualData And actualDataIX >= otherPhase.relStart - 1
-                        Dim phaseActualIX As Integer = actualDataIX - otherPhase.relStart + 1
+                        Dim considerActualPhaseData As Boolean = considerActualData And actualDataIX >= formerPhase.relStart - 1
+                        Dim phaseActualIX As Integer = actualDataIX - formerPhase.relStart + 1
 
                         Dim hasForeCastValues As Boolean = True
                         If considerActualPhaseData Then
-                            hasForeCastValues = actualDataIX < otherPhase.relEnde
+                            hasForeCastValues = actualDataIX < formerPhase.relEnde
                         End If
 
                         ' Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0)
 
-                        For Each role As clsRolle In otherPhase.rollenListe
-                            ' gibt es für diese Rolle ActualData 
-                            Dim sumActualValues As Double = 0
-                            Dim sumForecastValues As Double = 0
+                        For Each formerRole As clsRolle In formerPhase.rollenListe
 
-                            If considerActualPhaseData Then
-                                sumActualValues = role.getSumUntil(phaseActualIX)
-                                sumForecastValues = role.getSumFrom(phaseActualIX)
-                            Else
-                                sumForecastValues = role.Xwerte.Sum
-                            End If
-
-                            ' jetzt muss das ggf in dem neuen PRojekt angelegt werden 
-                            ' die Rolle hat bisher noch nicht existiert ...
-
-                            Dim tmpRole As clsRolle = New clsRolle(dimension)
-
+                            Dim newRole As clsRolle = New clsRolle(dimension)
                             Dim newXwerte(dimension) As Double
 
-                            If considerActualPhaseData Then
-                                ' sind sumActualValues > 0 ? 
-                                If sumActualValues > 0 Then
+                            If isEqualDimension Then
+                                ' now copy values ..
+                                For ix As Integer = 0 To dimension
+                                    newXwerte(ix) = formerRole.Xwerte(ix)
+                                Next
+                            Else
+                                Dim sumActualValues As Double = 0
+                                Dim sumForecastValues As Double = 0
 
-                                    ' dann muss Start der beiden Phasen identisch sein .. 
-                                    If getColumnOfDate(cphase.getStartDate) = getColumnOfDate(otherPhase.getStartDate) Then
-                                        ' alles ok 
-                                        For i As Integer = 0 To Min(phaseActualIX, dimension - 1)
-                                            newXwerte(i) = role.Xwerte(i)
-                                        Next
-                                    Else
-                                        ' nicht zugelassen, weil ja beim alten Projekt schon Ist-Daten Zuordnungen da waren ... 
-                                        Throw New ArgumentException("Phasen haben Ist-Daten, aber unterschiedliche Start-Daten ... " & cphase.name)
-                                    End If
+                                If considerActualPhaseData Then
+                                    sumActualValues = formerRole.getSumUntil(phaseActualIX)
+                                    sumForecastValues = formerRole.getSumFrom(phaseActualIX)
                                 Else
-                                    For i As Integer = 0 To Min(phaseActualIX, dimension - 1)
-                                        newXwerte(i) = 0
-                                    Next
+                                    sumForecastValues = formerRole.Xwerte.Sum
                                 End If
 
-                                If hasForeCastValues Then
+                                If considerActualPhaseData Then
+                                    ' sind sumActualValues > 0 ? 
+                                    If sumActualValues > 0 Then
+
+                                        ' dann muss Start der beiden Phasen identisch sein .. 
+                                        If getColumnOfDate(cphase.getStartDate) = getColumnOfDate(formerPhase.getStartDate) Then
+                                            ' alles ok 
+                                            For i As Integer = 0 To Min(phaseActualIX, dimension - 1)
+                                                newXwerte(i) = formerRole.Xwerte(i)
+                                            Next
+                                        Else
+                                            ' nicht zugelassen, weil ja beim alten Projekt schon Ist-Daten Zuordnungen da waren ... 
+                                            Throw New ArgumentException("Phasen haben Ist-Daten, aber unterschiedliche Start-Daten ... " & cphase.name)
+                                        End If
+                                    Else
+                                        For i As Integer = 0 To Min(phaseActualIX, dimension - 1)
+                                            newXwerte(i) = 0
+                                        Next
+                                    End If
+
+                                    If hasForeCastValues Then
+                                        Dim csum(0) As Double
+                                        csum(0) = sumForecastValues
+                                        Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0, True)
+                                        For i As Integer = 0 To forecastWerte.Length - 1
+                                            newXwerte(i + phaseActualIX + 1) = forecastWerte(i)
+                                        Next
+                                    End If
+
+
+                                Else
                                     Dim csum(0) As Double
                                     csum(0) = sumForecastValues
-                                    Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0, True)
-                                    For i As Integer = 0 To forecastWerte.Length - 1
-                                        newXwerte(i + phaseActualIX + 1) = forecastWerte(i)
-                                    Next
+                                    newXwerte = calcVerteilungAufMonate(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0, True)
+                                    'Dim chcknewXwerte() As Double = cphase.berechneBedarfeNew(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
                                 End If
 
-
-                            Else
-                                Dim csum(0) As Double
-                                csum(0) = sumForecastValues
-                                newXwerte = calcVerteilungAufMonate(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0, True)
-                                'Dim chcknewXwerte() As Double = cphase.berechneBedarfeNew(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
                             End If
 
-
-                            With tmpRole
-                                .uid = role.uid
-                                .teamID = role.teamID
+                            With newRole
+                                .uid = formerRole.uid
+                                .teamID = formerRole.teamID
                                 .Xwerte = newXwerte
                             End With
 
-                            cphase.addRole(tmpRole)
+                            cphase.addRole(newRole)
 
                         Next
 
+                        For Each formerCost As clsKostenart In formerPhase.kostenListe
+
+                            Dim newCost As clsKostenart = New clsKostenart(dimension)
+                            Dim newXwerte(dimension) As Double
+
+                            If isEqualDimension Then
+                                ' now copy values ..
+                                For ix As Integer = 0 To dimension
+                                    newXwerte(ix) = formerCost.Xwerte(ix)
+                                Next
+                            Else
+                                Dim sumActualValues As Double = 0
+                                Dim sumForecastValues As Double = 0
+
+                                If considerActualPhaseData Then
+                                    sumActualValues = formerCost.getSumUntil(phaseActualIX)
+                                    sumForecastValues = formerCost.getSumFrom(phaseActualIX)
+                                Else
+                                    sumForecastValues = formerCost.Xwerte.Sum
+                                End If
+
+                                If considerActualPhaseData Then
+                                    ' sind sumActualValues > 0 ? 
+                                    If sumActualValues > 0 Then
+
+                                        ' dann muss Start der beiden Phasen identisch sein .. 
+                                        If getColumnOfDate(cphase.getStartDate) = getColumnOfDate(formerPhase.getStartDate) Then
+                                            ' alles ok 
+                                            For i As Integer = 0 To Min(phaseActualIX, dimension - 1)
+                                                newXwerte(i) = formerCost.Xwerte(i)
+                                            Next
+                                        Else
+                                            ' nicht zugelassen, weil ja beim alten Projekt schon Ist-Daten Zuordnungen da waren ... 
+                                            Throw New ArgumentException("Phasen haben Ist-Daten, aber unterschiedliche Start-Daten ... " & cphase.name)
+                                        End If
+                                    Else
+                                        For i As Integer = 0 To Min(phaseActualIX, dimension - 1)
+                                            newXwerte(i) = 0
+                                        Next
+                                    End If
+
+                                    If hasForeCastValues Then
+                                        Dim csum(0) As Double
+                                        csum(0) = sumForecastValues
+                                        Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0, True)
+                                        For i As Integer = 0 To forecastWerte.Length - 1
+                                            newXwerte(i + phaseActualIX + 1) = forecastWerte(i)
+                                        Next
+                                    End If
+
+
+                                Else
+                                    Dim csum(0) As Double
+                                    csum(0) = sumForecastValues
+                                    newXwerte = calcVerteilungAufMonate(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0, True)
+                                    'Dim chcknewXwerte() As Double = cphase.berechneBedarfeNew(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
+                                End If
+
+                            End If
+
+                            With newCost
+                                .KostenTyp = formerCost.KostenTyp
+                                .Xwerte = newXwerte
+                            End With
+
+                            cphase.AddCost(newCost)
+
+                        Next
                     End If
                 Next
 
@@ -3705,9 +3847,7 @@ Public Class clsProjekt
             ergebnisProjekt = Nothing
         End Try
 
-
-
-        updateProjectWithRessourcesFrom = ergebnisProjekt
+        updateProjectWithResourceCostFrom = ergebnisProjekt
     End Function
 
     ''' <summary>
@@ -5976,6 +6116,43 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' returns an array with the monthly difference between revenue/savings and total cost in that month 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getProfit() As Double()
+
+        Dim revenueArray As Double() = getInvoicesPenalties(False)
+        Dim costArray As Double() = getGesamtKostenBedarf
+
+        Dim profitArray As Double()
+        ReDim profitArray(System.Math.Max(revenueArray.Length, costArray.Length) - 1)
+
+        Try
+            For ix As Integer = 0 To profitArray.Length - 1
+
+                If ix <= revenueArray.Length - 1 And ix <= costArray.Length - 1 Then
+                    profitArray(ix) = revenueArray(ix) - costArray(ix)
+
+                ElseIf ix <= revenueArray.Length - 1 Then
+                    profitArray(ix) = revenueArray(ix)
+
+                ElseIf ix <= costArray.Length - 1 Then
+                    profitArray(ix) = -1 * costArray(ix)
+
+                Else
+                    profitArray(ix) = 0.0
+                End If
+            Next
+
+        Catch ex As Exception
+
+        End Try
+
+        getProfit = profitArray
+
+    End Function
+
+    ''' <summary>
     ''' returns the amount of total cost in T€ until and including the month untilDate
     ''' </summary>
     ''' <param name="untilDate"></param>
@@ -7032,12 +7209,13 @@ Public Class clsProjekt
         Get
             vpStatus = _vpStatus
         End Get
+
         Set(value As String)
 
-            _vpStatus = value
+            If IsNothing(value) Then
+                _vpStatus = VProjectStatus(PTVPStati.initialized)
 
-            If IsNothing(value) Or
-                value = VProjectStatus(PTVPStati.initialized) Or
+            ElseIf value = VProjectStatus(PTVPStati.initialized) Or
                 value = VProjectStatus(PTVPStati.proposed) Or
                 value = VProjectStatus(PTVPStati.ordered) Or
                 value = VProjectStatus(PTVPStati.paused) Or
@@ -7045,10 +7223,11 @@ Public Class clsProjekt
                 value = VProjectStatus(PTVPStati.stopped) Then
 
                 _vpStatus = value
-                '  _Status = value
+
             Else
-                Call MsgBox("Wert als Status nicht zugelassen: " & value)
+                _vpStatus = VProjectStatus(PTVPStati.initialized)
             End If
+
         End Set
     End Property
 
@@ -7062,7 +7241,7 @@ Public Class clsProjekt
             If value >= _earliestStart And value <= _latestStart Then
                 _StartOffset = value
             Else
-                Call MsgBox("unzulässiger Wert für StartOffset ...")
+                'Call MsgBox("unzulässiger Wert für StartOffset ...")
             End If
         End Set
 

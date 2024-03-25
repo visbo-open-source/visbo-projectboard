@@ -137,7 +137,13 @@ Public Class ThisAddIn
             Dim hucPropView As ucProperties
 
             ' Id des aktiven Windows
-            Dim hWinID As Integer = Application.ActiveWindow.HWND
+            Dim hWinID As Integer
+
+            Try
+                hWinID = Application.ActiveWindow.HWND
+            Catch ex As Exception
+
+            End Try
 
             'Checks if the current window handle exists in the list of TaskPanes
             If listOfWindows.Contains(hWinID) Then

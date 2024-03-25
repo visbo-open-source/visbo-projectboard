@@ -13533,36 +13533,84 @@ Public Module agm2
                     ' nichts tun
                 ElseIf rcNameID.Trim.Length = 0 Then
                     ' nichts tun ... 
+
                 ElseIf Not IsNothing(currentRole) Then
                     ' es handelt sich um eine Rolle
                     ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
                     ' gibt es Ist-Daten ? 
 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
+                    Dim deleteContinue As Boolean = False
+                    Dim istWerte As Double = cphase.getActualRCValues(rcNameID, True, False).Sum
+
+                    If istWerte = 0 Then
+                        deleteContinue = True
+
+                    ElseIf currentRole.isExternRole Then
+                        If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
                                              showRangeLeft, showRangeRight, True) Then
-                        cphase.removeRoleByNameID(rcNameID)
-                        nothingHappened = False
-                    Else
-                        Dim rcName As String = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).name
+                            deleteContinue = True
+                        ElseIf istWerte > 0 Then
 
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
+                            Dim askQuestion As String = "there are values in months, which are not shown: Delete All?"
+                            If Not awinSettings.englishLanguage Then
+                                askQuestion = "es gibt Werte in Monaten, die nicht angezeigt werden. Trotzdem löschen?"
+                            End If
 
-                        ok = False
+                            If MsgBox(askQuestion, MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                                deleteContinue = True
+                            Else
+                                deleteContinue = False
+                            End If
+
+                        Else ' istWerte = 0 
+                            deleteContinue = True
+                        End If
+
                     End If
 
-                ElseIf CostDefinitions.containsName(rcNameID) Then
-                    ' es handelt sich um eine Kostenart 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) Then
-                        cphase.removeCostByName(rcNameID)
+                    If deleteContinue Then
+                        Call cphase.removeRoleByNameID(rcNameID)
+                        ok = True
                         nothingHappened = False
                     Else
-
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcNameID & vbLf &
-                                    " nicht gelöscht werden ...")
-
                         ok = False
+                        nothingHappened = True
+                    End If
+
+
+                ElseIf CostDefinitions.containsName(rcNameID) Then
+
+                    Dim deleteContinue As Boolean = False
+                    Dim istWerte As Double = cphase.getActualRCValues(rcNameID, True, False).Sum
+
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
+                                             showRangeLeft, showRangeRight, True) Then
+                        deleteContinue = True
+
+                    ElseIf istWerte > 0 Then
+                        Dim askQuestion As String = "there are values in months, which are not shown: Delete All?"
+
+                        If Not awinSettings.englishLanguage Then
+                            askQuestion = "es gibt Werte in Monaten, die nicht angezeigt werden. Trotzdem löschen?"
+                        End If
+
+                        If MsgBox(askQuestion, MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                            deleteContinue = True
+                        Else
+                            deleteContinue = False
+                        End If
+
+                    Else ' istWerte = 0 
+                        deleteContinue = True
+                    End If
+
+                    If deleteContinue Then
+                        Call cphase.removeCostByName(rcNameID)
+                        ok = True
+                        nothingHappened = False
+                    Else
+                        ok = False
+                        nothingHappened = True
                     End If
 
 
@@ -13606,7 +13654,7 @@ Public Module agm2
                 Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
             End If
 
-            If Not nothingHappened Then
+            If Not nothingHappened And Not visboClient = divClients(client.VisboSPE) Then
                 Try
 
                     If Not IsNothing(formProjectInfo1) Then
@@ -14120,7 +14168,7 @@ Public Module agm2
 
 
 
-                Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", " vor massEditZeile1Appearance")
+                'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", " vor massEditZeile1Appearance")
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
                 Call massEditZeile1Appearance(ptTables.meRC)
@@ -14189,7 +14237,7 @@ Public Module agm2
 
                 For Each pvName As String In todoListe
 
-                    Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " wird bearbeitet")
+                    'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " wird bearbeitet")
 
                     Dim hproj As clsProjekt = Nothing
                     If AlleProjekte.Containskey(pvName) Then
@@ -14417,7 +14465,7 @@ Public Module agm2
 
                                             zeile = zeile + 1
                                         Else
-                                            Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "Phase, Role " & phaseNameID & ", " & roleName & " could not write Row")
+                                            'Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "Phase, Role " & phaseNameID & ", " & roleName & " could not write Row")
                                             Call MsgBox("Error in writing row ...")
                                         End If
 
@@ -14451,6 +14499,8 @@ Public Module agm2
                                                 lockText = protectionText
                                             End If
 
+                                            Dim costHasActualData As Boolean = hproj.getPhaseRCActualValues(cphase.nameID, costName, False, True).Sum > 0
+
                                             ' because costs do not have yet a actualdata Import , sum editinf is always allowed
                                             summeEditierenErlaubt = awinSettings.allowSumEditing
 
@@ -14461,7 +14511,7 @@ Public Module agm2
 
                                             Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, costName, "", False,
                                                                                 lockText, von, bis,
-                                                                                -1, False, summeEditierenErlaubt,
+                                                                                actualDataRelColumn, costHasActualData, summeEditierenErlaubt,
                                                                                 ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
 
                                             If ok Then
@@ -14489,7 +14539,7 @@ Public Module agm2
 
                                                 zeile = zeile + 1
                                             Else
-                                                Call MsgBox("not ok")
+                                                'Call MsgBox("not ok")
                                             End If
 
                                         Next c
@@ -14520,17 +14570,17 @@ Public Module agm2
                                             isRole = False
                                         End If
                                         Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", isRole,
-                                                                            lockText, von, bis,
+                                        lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 0)
                                         If ok Then
                                             zeile = zeile + 1
                                         Else
-                                            Call MsgBox("not ok")
+                                            'Call MsgBox("not ok")
                                         End If
 
                                     Catch ex As Exception
-                                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "leere Projekt-Phase-Info")
+                                        'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "leere Projekt-Phase-Info")
                                     End Try
 
 
@@ -14542,7 +14592,7 @@ Public Module agm2
                         Next p
 
                     Else
-                        Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, no")
+                        'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, no")
                     End If
 
                 Next
@@ -14690,7 +14740,7 @@ Public Module agm2
                 'visboZustaende.meMaxZeile = CType(currentWS, Excel.Worksheet).UsedRange.Rows.Count
                 visboZustaende.meMaxZeile = zeile
             Catch ex As Exception
-                Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "when defining meMaxZeile ")
+                'Call logger(ptErrLevel.logError, "writeOnlineMassEditRessCost", "when defining meMaxZeile ")
             End Try
 
         Catch ex As Exception
@@ -14776,9 +14826,22 @@ Public Module agm2
                 ' Phase und ggf PhaseNameID schreiben
                 Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevelPhMs, cphase.name, cphase.nameID)
 
+                ' tk 22.3.24 if editProjekte.count > 1 dann ggf markieren 
+                If editProjekteInSPE.Count = 1 And Not IsNothing(protectiontext) Then
+                    If protectiontext <> "" Then
+                        If isProtectedbyOthers Then
+                            CType(.Cells(zeile, 4), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                            CType(.Cells(zeile, 4), Excel.Range).ClearComments()
+                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=protectiontext)
+                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                        End If
+
+                    End If
+                End If
+
 
                 ' Rolle oder Kostenart schreiben 
-                Dim isLocked As Boolean = isProtectedbyOthers Or (hasActualdata And rcName <> "")
+                Dim isLocked As Boolean = (isProtectedbyOthers) Or ((hasActualdata And rcName <> "") And (isRole And Not isExternRole))
                 Call writeMECellWithRoleNameID(CType(.Range(.Cells(zeile, 5), .Cells(zeile, 5 + 1)), Excel.Range), isLocked, rcName, rcNameID, isRole, indentlevelRC)
 
 
@@ -14812,8 +14875,10 @@ Public Module agm2
 
                     End With
                 Else
-                    ' als gesperrt kennzeichnen 
-                    CType(.Cells(zeile, 6 + 1), Excel.Range).Locked = True
+
+                    ' tk 22.3.24 ggf als gesperrt kennzeichnen 
+                    'CType(.Cells(zeile, 6 + 1), Excel.Range).Locked = True
+                    CType(.Cells(zeile, 6 + 1), Excel.Range).Locked = isLocked
                 End If
 
             End With
@@ -14827,38 +14892,56 @@ Public Module agm2
                     With CType(.Cells(zeile, spix + startSpalteDaten), Excel.Range)
                         If spix >= ixZeitraum And spix <= ixZeitraum + breite - 1 Then
 
-                            If (Not isProtectedbyOthers) And (spix > actualdataRelColumn Or Not isRole Or isExternRole) Then
-                                .Locked = False
-                                Try
-                                    If Not IsNothing(.Validation) Then
-                                        .Validation.Delete()
-                                    End If
-                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                                Operator:=XlFormatConditionOperator.xlGreaterEqual,
-                                                Formula1:="0")
-                                Catch ex As Exception
+                            ' now show all forecast values in blue
+                            ' now show all actual values of externs and cost values in grey, but with blue font : it's editable
 
-                                End Try
-                            End If
+                            If spix > actualdataRelColumn Then
+                                ' forecast only , everything is blue and editable
 
-                            ' jetzt kommt die Farbsetzung ... die hängt nur von actualDataRelColumn ab
-                            If (spix > actualdataRelColumn Or Not isRole Or isExternRole) Then
-
-                                If Not isProtectedbyOthers Then
+                                If isProtectedbyOthers Then
+                                    .Locked = True
+                                    .Interior.Color = visboFarbeBlau
+                                    .Font.Color = XlRgbColor.rgbGrey
+                                Else
+                                    .Locked = False
                                     .Interior.Color = visboFarbeBlau
                                     .Font.Color = XlRgbColor.rgbWhite
+                                    Try
+                                        If Not IsNothing(.Validation) Then
+                                            .Validation.Delete()
+                                        End If
+                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                    Formula1:="0")
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+
+                            Else
+                                .Interior.Color = XlRgbColor.rgbLightGrey
+
+                                If ((Not isRole Or isExternRole) And (Not isProtectedbyOthers)) Then
+                                    .Locked = False
+                                    .Font.Color = visboFarbeBlau
+                                    Try
+                                        If Not IsNothing(.Validation) Then
+                                            .Validation.Delete()
+                                        End If
+                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                    Formula1:="0")
+                                    Catch ex As Exception
+
+                                    End Try
                                 Else
-                                    '.Interior.Color = XlRgbColor.rgbLightGray
+                                    .Locked = True
                                     .Font.Color = XlRgbColor.rgbBlack
                                 End If
 
 
-                            Else
-                                ' tk 19.1.20
-                                ' .Interior.Color = awinSettings.AmpelNichtBewertet
-                                .Interior.Color = XlRgbColor.rgbLightGrey
-                                .Font.Color = XlRgbColor.rgbBlack
                             End If
 
                         Else
@@ -15557,7 +15640,7 @@ Public Module agm2
             Try
                 visboZustaende.meMaxZeile = zeile
             Catch ex As Exception
-                Call logger(ptErrLevel.logError, "writeOnlineMassEditTermine", "when defining meMaxZeile ")
+                'Call logger(ptErrLevel.logError, "writeOnlineMassEditTermine", "when defining meMaxZeile ")
             End Try
 
             appInstance.EnableEvents = True

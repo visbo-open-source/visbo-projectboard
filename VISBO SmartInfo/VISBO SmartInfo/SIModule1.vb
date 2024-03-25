@@ -1065,7 +1065,7 @@ Module SIModule1
                             historicDate = StartofCalendar
                             Try
                                 If awinSettings.englishLanguage Then
-                                    menuCult = ReportLang(PTSprache.englisch)
+                                    menuCult = ReportLang(PTSprache.deutsch)
                                     repCult = menuCult
                                     awinSettings.kapaEinheit = "PD"
                                 Else
@@ -3916,6 +3916,20 @@ Module SIModule1
                             pptShape.TextFrame2.TextRange.Text = "Name not found: " & pptShape.TextFrame2.TextRange.Text
                         End If
 
+                    Case ptReportComponents.prStrategyKPI
+                        If Not IsNothing(hproj) Then
+                            pptShape.TextFrame2.TextRange.Text = hproj.StrategicFit.ToString("0.#")
+                        Else
+                            pptShape.TextFrame2.TextRange.Text = "n.a"
+                        End If
+
+                    Case ptReportComponents.prRiskKPI
+
+                        If Not IsNothing(hproj) Then
+                            pptShape.TextFrame2.TextRange.Text = hproj.Risiko.ToString("0.#")
+                        Else
+                            pptShape.TextFrame2.TextRange.Text = "n.a"
+                        End If
                     Case ptReportComponents.pfName
 
                         If Not IsNothing(portfolio) Then
@@ -4063,19 +4077,19 @@ Module SIModule1
 
                                 Dim baselineTxt As String = "last Baseline: "
                                 If Not IsNothing(lProj) Then
-                                    baselineTxt = baselineTxt & lProj.timeStamp.ToString("g", repCult)
+                                    baselineTxt = baselineTxt & lProj.timeStamp.ToString("d", repCult)
                                 Else
                                     baselineTxt = baselineTxt & "-"
                                 End If
 
                                 Dim hProjTxt As String = "Current Plan: "
                                 If Not IsNothing(hproj) Then
-                                    hProjTxt = hProjTxt & hproj.timeStamp.ToString("g", repCult)
+                                    hProjTxt = hProjTxt & hproj.timeStamp.ToString("d", repCult)
                                 Else
                                     hProjTxt = hProjTxt & "-"
                                 End If
 
-                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (" & hProjTxt & "  " & baselineTxt & ")"
+                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToString("d", repCult) & " (" & hProjTxt & "  " & baselineTxt & ")"
                             Else
                                 pptShape.TextFrame2.TextRange.Text = " "
                             End If
@@ -4095,7 +4109,7 @@ Module SIModule1
                                 Catch ex As Exception
                                     descriptor = "Version:"
                                 End Try
-                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("g", repCult) & ")"
+                                pptShape.TextFrame2.TextRange.Text = descriptor & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("d", repCult) & ")"
                             Else
                                 pptShape.TextFrame2.TextRange.Text = " "
                             End If
@@ -4427,6 +4441,7 @@ Module SIModule1
 
                                 If scInfo.detailID = PTprdk.ActualTargetReve Or
                                         scInfo.detailID = PTprdk.ActualTargetRess Or
+                                        scInfo.detailID = PTprdk.ActualTargetProfit Or
                                         scInfo.detailID = PTprdk.ActualTargetCost Then
                                     ' the actualTarget Create or Update Routine
                                     Call createProjektATChart(scInfo, Nothing, pptShape, False)

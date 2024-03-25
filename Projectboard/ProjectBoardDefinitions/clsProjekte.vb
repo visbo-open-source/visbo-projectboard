@@ -4481,6 +4481,12 @@ Public Class clsProjekte
             showRangeLeft = srlSav
             showRangeRight = srrSav
 
+            ' now make sure , that in result there are no negative values at all
+            For ix As Integer = 0 To result.Length - 1
+                If result(ix) < 0 Then
+                    result(ix) = 0
+                End If
+            Next
 
             adjustToCapacity = result
 

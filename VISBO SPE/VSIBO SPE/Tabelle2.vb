@@ -813,13 +813,40 @@ Public Class Tabelle2
                             addOrDeleteLine.position = Target
                             addOrDeleteLine.addLine = False
                             addOrDeleteLine.deleteLine = False
+
                             If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
                                 addOrDeleteLine.isRoleSkill = True
                             ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
                                 addOrDeleteLine.isCost = True
                             End If
 
-                            addOrDeleteLine.isEmpty = rcName = ""
+                            addOrDeleteLine.isEmpty = (rcName = "")
+                            ' tk 23.3.24 it is not allowed to delete A line when it contains actualData
+                            addOrDeleteLine.enableDeleteLine = False
+                            Try
+                                ' to delete a line is allowed for all empty rows, for all external roles, for all cost items
+                                ' to delete a line with role/skill is only allowed if there is no  actualData
+                                If addOrDeleteLine.isCost Then
+                                    addOrDeleteLine.enableDeleteLine = True
+
+                                ElseIf addOrDeleteLine.isEmpty Then
+                                    addOrDeleteLine.enableDeleteLine = True
+
+                                ElseIf addOrDeleteLine.isRoleSkill Then
+                                    If Not IsNothing(visboZustaende.getcurrentPhase) Then
+
+                                        If RoleDefinitions.getRoledef(rcName).isExternRole Then
+                                            addOrDeleteLine.enableDeleteLine = True
+                                        Else
+                                            addOrDeleteLine.enableDeleteLine = visboZustaende.getcurrentPhase.getActualRCValues(rcNameID, True, False).Sum = 0
+                                        End If
+
+                                    End If
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
 
                             addOrDeleteLine.ShowDialog()
                             If addOrDeleteLine.addLine Then
@@ -829,7 +856,9 @@ Public Class Tabelle2
                             ElseIf addOrDeleteLine.deleteLine Then
                                 ' Zeile löschen
                                 Call meRCZeileLoeschen(zeile, pname, phaseNameID, rcNameID, isRole)
+
                             End If
+
                         End If
                     Catch ex As Exception
 
@@ -1088,6 +1117,37 @@ Public Class Tabelle2
                                                             ' muss an dieser Stelle nur die  gar nichts gemacht werden ..
                                                             ' es sollen aber gleich die Auslastungs-Werte aktualisiert werden ...
                                                             auslastungChanged = True
+
+                                                            ' tk 23.3.24 now if it changed from empty to something and not showforecast only and hasActualData then 
+                                                            ' make cell sum locked ...
+                                                            Try
+                                                                If getColumnOfDate(visboZustaende.currentProject.actualDataUntil) >= showRangeLeft Then
+                                                                    Dim curRow As Integer = Target.Cells(1, 1).row
+
+                                                                    Dim formerEE As Boolean = appInstance.EnableEvents
+                                                                    If appInstance.EnableEvents = False Then
+                                                                        appInstance.EnableEvents = True
+                                                                    End If
+                                                                    meWS.Unprotect(Password:="x")
+                                                                    meWS.Cells(curRow, columnStartData - 1).locked = True
+                                                                    With meWS
+                                                                        .Protect(Password:="x", UserInterfaceOnly:=True,
+                                                                     AllowFormattingCells:=True,
+                                                                     AllowFormattingColumns:=True,
+                                                                     AllowInsertingColumns:=False,
+                                                                     AllowInsertingRows:=False,
+                                                                     AllowDeletingColumns:=False,
+                                                                     AllowDeletingRows:=False,
+                                                                     AllowSorting:=False,
+                                                                     AllowFiltering:=True)
+                                                                    End With
+
+                                                                    appInstance.EnableEvents = formerEE
+                                                                End If
+                                                            Catch ex As Exception
+
+                                                            End Try
+
                                                         End If
 
 
@@ -1876,10 +1936,10 @@ Public Class Tabelle2
 
 
                     Else
-                        Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID, " : Phase was Nothing ..")
+                        'Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName & " " & phaseNameID, " : Phase was Nothing ..")
                     End If
                 Else
-                    Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " : hproj was Nothing ..")
+                    'Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " : hproj was Nothing ..")
                 End If
             Catch ex As Exception
 
@@ -1887,7 +1947,7 @@ Public Class Tabelle2
 
         Else
             ReDim grantedValues(0)
-            Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " Cell was Nothing ..")
+            'Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " Cell was Nothing ..")
         End If
 
         getGrantedValues = grantedValues

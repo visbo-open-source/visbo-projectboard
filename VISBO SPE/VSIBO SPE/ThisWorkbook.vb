@@ -61,19 +61,19 @@ Public Class ThisWorkbook
             End If
 
             '----nur zum Test
-            Call logger(ptErrLevel.logInfo, "Startup", "cmdline: " & CmdLine)
+            'Call logger(ptErrLevel.logInfo, "Startup", "cmdline: " & CmdLine)
 
             Dim hstr() As String = CmdLine.Split("/")
-            Dim parameter As String = ""
-            If hstr.Length > 2 Then
-                Call logger(ptErrLevel.logInfo, "Startup", "parameter1: " & hstr(2))
-            End If
-            If hstr.Length > 3 Then
-                Call logger(ptErrLevel.logInfo, "Startup", "parameter2: " & hstr(3))
-            End If
-            If hstr.Length > 4 Then
-                Call logger(ptErrLevel.logInfo, "Startup", "parameter3: " & hstr(4))
-            End If
+            'Dim parameter As String = ""
+            'If hstr.Length > 2 Then
+            '    'Call logger(ptErrLevel.logInfo, "Startup", "parameter1: " & hstr(2))
+            'End If
+            'If hstr.Length > 3 Then
+            '    Call logger(ptErrLevel.logInfo, "Startup", "parameter2: " & hstr(3))
+            'End If
+            'If hstr.Length > 4 Then
+            '    Call logger(ptErrLevel.logInfo, "Startup", "parameter3: " & hstr(4))
+            'End If
 
             If hstr.Length > 2 Then
                 For i = 2 To hstr.Length - 2
@@ -82,16 +82,16 @@ Public Class ThisWorkbook
                     Select Case bezeichner
                         Case "vpid"
                             spe_vpid = (elem.Split(":"))(1)
-                            Call logger(ptErrLevel.logInfo, "Startup", "vpid = " & spe_vpid)
+                            'Call logger(ptErrLevel.logInfo, "Startup", "vpid = " & spe_vpid)
                         Case "vpvid"
                             spe_vpvid = (elem.Split(":"))(1)
-                            Call logger(ptErrLevel.logInfo, "Startup", "vpvid = " & spe_vpvid)
+                            'Call logger(ptErrLevel.logInfo, "Startup", "vpvid = " & spe_vpvid)
                         Case "ott"
                             spe_ott = (elem.Split(":"))(1)
-                            Call logger(ptErrLevel.logInfo, "Startup", "oneTimeToken = " & spe_ott)
+                            'Call logger(ptErrLevel.logInfo, "Startup", "oneTimeToken = " & spe_ott)
                         Case Else
                             rest = (elem.Split(":"))(1)
-                            Call logger(ptErrLevel.logInfo, "Startup", "rest = " & rest)
+                            'Call logger(ptErrLevel.logInfo, "Startup", "rest = " & rest)
                     End Select
                 Next
             End If
@@ -188,7 +188,7 @@ Public Class ThisWorkbook
                 appInstance.EnableEvents = False
                 Call speSetTypen(spe_ott)
 
-                Call logger(ptErrLevel.logInfo, "Startup- nach speSetTypen", "English Language =  " & awinSettings.englishLanguage.ToString)
+                'Call logger(ptErrLevel.logInfo, "Startup- nach speSetTypen", "English Language =  " & awinSettings.englishLanguage.ToString)
 
                 appInstance.EnableEvents = True
 
@@ -221,7 +221,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
         Try
-            Call logger(ptErrLevel.logInfo, "VisboSPE", "Add-In was finished!")
+            'Call logger(ptErrLevel.logInfo, "VisboSPE", "Add-In was finished!")
 
             If loginErfolgreich Then
 
@@ -321,7 +321,7 @@ Public Class ThisWorkbook
                                 Call MsgBox(msg)
                             End If
 
-                            Call logger(ptErrLevel.logInfo, "Worksbook.Before Close", msg)
+                            'Call logger(ptErrLevel.logInfo, "Worksbook.Before Close", msg)
 
                         End If
                     End If

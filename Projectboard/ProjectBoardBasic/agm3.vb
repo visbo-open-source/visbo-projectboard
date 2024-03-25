@@ -1690,204 +1690,208 @@ Public Module agm3
                                                         If match.Success Then
                                                             projektKDNr = match.Value
                                                         Else
-                                                            projektKDNr = Nothing
-                                                            If awinSettings.englishLanguage Then
-                                                                outputline = "Attention: " & hrole.name & " Sheet: " & currentWS.Name & " Line: " & z.ToString & " no project No. given!"
-                                                            Else
-                                                                outputline = "Achtung: " & hrole.name & " Tabelle: " & currentWS.Name & " Zeile: " & z.ToString & " keine ProjektNr. angegeben!"
-                                                            End If
-                                                            oPCollection.Add(outputline)
-                                                            Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
+                                                            ' just ignore it ...
+                                                            'projektKDNr = ""
+                                                            'If awinSettings.englishLanguage Then
+                                                            '    outputline = "Attention: " & hrole.name & " Sheet: " & currentWS.Name & " Line: " & z.ToString & " no project No. given!"
+                                                            'Else
+                                                            '    outputline = "Achtung: " & hrole.name & " Tabelle: " & currentWS.Name & " Zeile: " & z.ToString & " keine ProjektNr. angegeben!"
+                                                            'End If
+                                                            'oPCollection.Add(outputline)
+                                                            'Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                                         End If
                                                     End If
                                                 End If
                                             End If
 
                                             If Not IsNothing(projektKDNr) Then
+                                                If projektKDNr <> "" Then
 
-                                                Dim projektName As String = ""
-                                                projektName = CStr(currentWS.Cells(z, ActualDataConfig("ProjectName").column.von).value)
+                                                    Dim projektName As String = ""
+                                                    projektName = CStr(currentWS.Cells(z, ActualDataConfig("ProjectName").column.von).value)
 
-                                                stundenTotal = CDbl(currentWS.Cells(z, stdSpalteTotal).value)
+                                                    stundenTotal = CDbl(currentWS.Cells(z, stdSpalteTotal).value)
 
-                                                ' Check mit der Summenbildung in der Zeile
-                                                ' die Werte gehen erst in der Spalte 6 los, also column.von + 4
-                                                'Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 2), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
-                                                Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 4), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
-                                                Dim stundenSumme As Double = 0
-                                                Try
-                                                    ' tk hat bei Matthias Urch mal Fehler produziert - deswegen Warnung ausgeben , aber weiter machen 
-                                                    ' da konnte die Worksheet Funktion .sum nicht ausgeführt werden 
-                                                    stundenSumme = appInstance.WorksheetFunction.Sum(stdRange)
-
-                                                    If stundenTotal <> stundenSumme Then
-                                                        If awinSettings.englishLanguage Then
-                                                            outputline = "Attention: " & hrole.name & ": in '" & currentWS.Name & "': sum of the single values (" & stundenSumme.ToString & ") isn 't the same as the value in column '" & hspalte & "' (" & stundenTotal.ToString & ")"
-                                                        Else
-                                                            outputline = "Achtung: " & hrole.name & ": in '" & currentWS.Name & "': Die Summe der einzelnen Werte (" & stundenSumme.ToString & ") ist nicht gleich dem Eintrag in Spalte '" & hspalte & "' (" & stundenTotal.ToString & ")"
-                                                        End If
-                                                        oPCollection.Add(outputline)
-                                                        Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
-                                                    End If
-
-                                                Catch ex As Exception
-
-                                                    stundenSumme = stundenTotal
-
-                                                    If awinSettings.englishLanguage Then
-                                                        outputline = "Attention: " & hrole.name & ": " & ex.Message & currentWS.Name
-                                                    Else
-                                                        outputline = "Achtung: " & hrole.name & ": " & ex.Message & currentWS.Name
-                                                    End If
-                                                    oPCollection.Add(outputline)
-                                                    Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
-                                                End Try
-
-
-                                                Dim pvkey As String
-                                                If Not IsNothing(projektName) Then
+                                                    ' Check mit der Summenbildung in der Zeile
+                                                    ' die Werte gehen erst in der Spalte 6 los, also column.von + 4
+                                                    'Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 2), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
+                                                    Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 4), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
+                                                    Dim stundenSumme As Double = 0
                                                     Try
-                                                        pvkey = calcProjektKey(projektName, "")
-                                                    Catch ex As Exception
-                                                        pvkey = ""
-                                                    End Try
+                                                        ' tk hat bei Matthias Urch mal Fehler produziert - deswegen Warnung ausgeben , aber weiter machen 
+                                                        ' da konnte die Worksheet Funktion .sum nicht ausgeführt werden 
+                                                        stundenSumme = appInstance.WorksheetFunction.Sum(stdRange)
 
-                                                Else
-                                                    pvkey = ""
-                                                End If
-
-                                                If cacheProjekte.containsPNr(projektKDNr) Then
-                                                    hproj = cacheProjekte.getProjectByKDNr(projektKDNr)
-                                                    pName = hproj.name
-                                                Else
-                                                    hproj = Nothing         ' Vorbesetzung
-
-                                                    Dim pNames As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
-                                                    If pNames.Count = 1 Then
-                                                        pName = pNames(1)
-
-                                                        Dim pname_ok As Boolean = pName = projektName
-                                                        ' Meldung noch ins Logbuch, wenn die Namen nicht übereinstimmen
-                                                        If Not pname_ok Then
+                                                        If stundenTotal <> stundenSumme Then
                                                             If awinSettings.englishLanguage Then
-                                                                outputline = "different projectnames of project No. '" & projektKDNr & "': in the sheet it's called '" & projektName & "' in the DB it's called '" & pName & "'"
+                                                                outputline = "Attention: " & hrole.name & ": in '" & currentWS.Name & "': sum of the single values (" & stundenSumme.ToString & ") isn 't the same as the value in column '" & hspalte & "' (" & stundenTotal.ToString & ")"
                                                             Else
-                                                                outputline = "Unterschiedlicher Projektname für Projekt Nr. '" & projektKDNr & "': in der ExcelTabelle heißt es '" & projektName & "' in der DB  '" & pName & "'"
+                                                                outputline = "Achtung: " & hrole.name & ": in '" & currentWS.Name & "': Die Summe der einzelnen Werte (" & stundenSumme.ToString & ") ist nicht gleich dem Eintrag in Spalte '" & hspalte & "' (" & stundenTotal.ToString & ")"
                                                             End If
+                                                            oPCollection.Add(outputline)
                                                             Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                                         End If
 
-                                                        hproj = New clsProjekt
-                                                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", "", Date.Now, err)
+                                                    Catch ex As Exception
 
-                                                    ElseIf pNames.Count > 1 Then
-                                                        ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
+                                                        stundenSumme = stundenTotal
+
                                                         If awinSettings.englishLanguage Then
-                                                            outputline = "There exists more than one project to project No. '" & projektKDNr & "'"
+                                                            outputline = "Attention: " & hrole.name & ": " & ex.Message & currentWS.Name
                                                         Else
-                                                            outputline = "Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
+                                                            outputline = "Achtung: " & hrole.name & ": " & ex.Message & currentWS.Name
                                                         End If
-
                                                         oPCollection.Add(outputline)
-                                                        Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                                        Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
+                                                    End Try
+
+
+                                                    Dim pvkey As String
+                                                    If Not IsNothing(projektName) Then
+                                                        Try
+                                                            pvkey = calcProjektKey(projektName, "")
+                                                        Catch ex As Exception
+                                                            pvkey = ""
+                                                        End Try
 
                                                     Else
-                                                        ' Fehlermeldung, falls kein Projekt zu einer ProjektKdNr. existieren
-                                                        If awinSettings.englishLanguage Then
-                                                            outputline = "No project to project No. '" & projektKDNr & "' User: '" & hrole.name & "' month: '" & currentWS.Name & "'"
-                                                        Else
-                                                            outputline = "Es existiert kein Projekt zu Projekt-Nr. '" & projektKDNr & "' User: '" & hrole.name & "' Monat: '" & currentWS.Name & "'"
-                                                        End If
-                                                        oPCollection.Add(outputline)
-                                                        Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
-
+                                                        pvkey = ""
                                                     End If
-                                                End If
 
-                                                If IsNothing(hproj) Then
-                                                    'Fehler, Projekt mit einer ProjektNr. existiert in DB nicht, Keine Istdaten hierzu einlesbar
-                                                    'If awinSettings.englishLanguage Then
-                                                    '    outputline = "project Nr. " & projektKDNr & " doesn't exist in the DB. No actual data can be stored"
-                                                    'Else
-                                                    '    outputline = "Projekt mit der  Projekt-Nummer " & projektKDNr & "existiert in der DB nicht. Istdaten sind nicht zuordenbar"
-                                                    'End If
-                                                    'oPCollection.Add(outputline)
-                                                    'Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
-                                                    'result = False
+                                                    If cacheProjekte.containsPNr(projektKDNr) Then
+                                                        hproj = cacheProjekte.getProjectByKDNr(projektKDNr)
+                                                        pName = hproj.name
+                                                    Else
+                                                        hproj = Nothing         ' Vorbesetzung
 
-                                                Else
-                                                    cacheProjekte.Add(hproj, updateCurrentConstellation:=False)                    ' Projekt in cacheProjekte merken
+                                                        Dim pNames As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
+                                                        If pNames.Count = 1 Then
+                                                            pName = pNames(1)
 
-                                                    Dim projBeginn = getColumnOfDate(hproj.startDate)
-                                                    Dim projEnde As Integer = getColumnOfDate(hproj.endeDate)
+                                                            Dim pname_ok As Boolean = pName = projektName
+                                                            ' Meldung noch ins Logbuch, wenn die Namen nicht übereinstimmen
+                                                            If Not pname_ok Then
+                                                                If awinSettings.englishLanguage Then
+                                                                    outputline = "different projectnames of project No. '" & projektKDNr & "': in the sheet it's called '" & projektName & "' in the DB it's called '" & pName & "'"
+                                                                Else
+                                                                    outputline = "Unterschiedlicher Projektname für Projekt Nr. '" & projektKDNr & "': in der ExcelTabelle heißt es '" & projektName & "' in der DB  '" & pName & "'"
+                                                                End If
+                                                                Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
+                                                            End If
 
-                                                    ' Aufbauen des Eintrags
-                                                    Dim roleValues As New SortedList(Of String, Double())
-                                                    Dim tmpValues() As Double
+                                                            hproj = New clsProjekt
+                                                            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", "", Date.Now, err)
 
-                                                    ReDim tmpValues(lastValidMonth - projBeginn)
-                                                    Dim teamID As Integer = -1
+                                                        ElseIf pNames.Count > 1 Then
+                                                            ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
+                                                            If awinSettings.englishLanguage Then
+                                                                outputline = "There exists more than one project to project No. '" & projektKDNr & "'"
+                                                            Else
+                                                                outputline = "Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
+                                                            End If
 
-                                                    If Not IsNothing(hrole) Then
-
-                                                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(hrole.name, "")
-
-                                                        If Not validProjectNames.ContainsKey(pName) Then
-
-                                                            roleValues = New SortedList(Of String, Double())
-
-                                                            ' es handelt sich um Stunden, also in PT umrechnen 
-                                                            tmpValues(curmonth - projBeginn) = stundenTotal / 8
-
-                                                            roleValues.Add(roleNameID, tmpValues)
-                                                            validProjectNames.Add(pName, roleValues)
+                                                            oPCollection.Add(outputline)
+                                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
 
                                                         Else
-                                                            roleValues = validProjectNames.Item(pName)
-                                                            If roleValues.ContainsKey(roleNameID) Then
-                                                                ' rolle ist bereits enthalten 
-                                                                ' also summieren 
-                                                                tmpValues = roleValues.Item(roleNameID)
-
-                                                                tmpValues(curmonth - projBeginn) = tmpValues(curmonth - projBeginn) + stundenTotal / 8
-
-
+                                                            ' Fehlermeldung, falls kein Projekt zu einer ProjektKdNr. existieren
+                                                            If awinSettings.englishLanguage Then
+                                                                outputline = "No project to project No. '" & projektKDNr & "' User: '" & hrole.name & "' month: '" & currentWS.Name & "'"
                                                             Else
-                                                                ' Rolle ist noch nicht enthalten 
+                                                                outputline = "Es existiert kein Projekt zu Projekt-Nr. '" & projektKDNr & "' User: '" & hrole.name & "' Monat: '" & currentWS.Name & "'"
+                                                            End If
+                                                            oPCollection.Add(outputline)
+                                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
 
-                                                                ' es handelt sich Stunden, also in PT umrechnen 
+                                                        End If
+                                                    End If
+
+                                                    If IsNothing(hproj) Then
+                                                        'Fehler, Projekt mit einer ProjektNr. existiert in DB nicht, Keine Istdaten hierzu einlesbar
+                                                        'If awinSettings.englishLanguage Then
+                                                        '    outputline = "project Nr. " & projektKDNr & " doesn't exist in the DB. No actual data can be stored"
+                                                        'Else
+                                                        '    outputline = "Projekt mit der  Projekt-Nummer " & projektKDNr & "existiert in der DB nicht. Istdaten sind nicht zuordenbar"
+                                                        'End If
+                                                        'oPCollection.Add(outputline)
+                                                        'Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                        'result = False
+
+                                                    Else
+                                                        cacheProjekte.Add(hproj, updateCurrentConstellation:=False)                    ' Projekt in cacheProjekte merken
+
+                                                        Dim projBeginn = getColumnOfDate(hproj.startDate)
+                                                        Dim projEnde As Integer = getColumnOfDate(hproj.endeDate)
+
+                                                        ' Aufbauen des Eintrags
+                                                        Dim roleValues As New SortedList(Of String, Double())
+                                                        Dim tmpValues() As Double
+
+                                                        ReDim tmpValues(lastValidMonth - projBeginn)
+                                                        Dim teamID As Integer = -1
+
+                                                        If Not IsNothing(hrole) Then
+
+                                                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(hrole.name, "")
+
+                                                            If Not validProjectNames.ContainsKey(pName) Then
+
+                                                                roleValues = New SortedList(Of String, Double())
+
+                                                                ' es handelt sich um Stunden, also in PT umrechnen 
                                                                 tmpValues(curmonth - projBeginn) = stundenTotal / 8
 
                                                                 roleValues.Add(roleNameID, tmpValues)
+                                                                validProjectNames.Add(pName, roleValues)
+
+                                                            Else
+                                                                roleValues = validProjectNames.Item(pName)
+                                                                If roleValues.ContainsKey(roleNameID) Then
+                                                                    ' rolle ist bereits enthalten 
+                                                                    ' also summieren 
+                                                                    tmpValues = roleValues.Item(roleNameID)
+
+                                                                    tmpValues(curmonth - projBeginn) = tmpValues(curmonth - projBeginn) + stundenTotal / 8
+
+
+                                                                Else
+                                                                    ' Rolle ist noch nicht enthalten 
+
+                                                                    ' es handelt sich Stunden, also in PT umrechnen 
+                                                                    tmpValues(curmonth - projBeginn) = stundenTotal / 8
+
+                                                                    roleValues.Add(roleNameID, tmpValues)
+                                                                End If
+
                                                             End If
 
-                                                        End If
-
-                                                    Else
-                                                        'Fehler, darf nur ein Name zu einer ProjektNr. existieren => TimeSheets nicht ins archiv
-                                                        If awinSettings.englishLanguage Then
-                                                            outputline = "Role '" & hrole.name & "' does not exist in your organization"
                                                         Else
-                                                            outputline = hrole.name & " ist nicht in Ihrer Organisation enthalten!"
-                                                        End If
+                                                            'Fehler, darf nur ein Name zu einer ProjektNr. existieren => TimeSheets nicht ins archiv
+                                                            If awinSettings.englishLanguage Then
+                                                                outputline = "Role '" & hrole.name & "' does not exist in your organization"
+                                                            Else
+                                                                outputline = hrole.name & " ist nicht in Ihrer Organisation enthalten!"
+                                                            End If
 
+                                                            oPCollection.Add(outputline)
+                                                            result = False
+                                                        End If
+                                                    End If
+                                                Else
+                                                    'Fehler, es ist keine ProjektKDNr angegeben, Keine Istdaten hierzu einlesbar
+                                                    If stundenTotal <> 0 Then
+                                                        If awinSettings.englishLanguage Then
+                                                            outputline = "Error: Actual Data cannot be imported: '" & hrole.name & "'/'" & currentWS.Name & "' There exists no project No. in line " & z.ToString
+                                                        Else
+                                                            outputline = "Fehler: Istdaten sind nicht zuordenbar: '" & hrole.name & "'/'" & currentWS.Name & "' Es ist keine Projekt-Nummer angegeben in Zeile " & z.ToString
+                                                        End If
                                                         oPCollection.Add(outputline)
+                                                        Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                                         result = False
                                                     End If
-                                                End If
-                                            Else
-                                                'Fehler, es ist keine ProjektKDNr angegeben, Keine Istdaten hierzu einlesbar
-                                                If stundenTotal <> 0 Then
-                                                    If awinSettings.englishLanguage Then
-                                                        outputline = "Error: Actual Data cannot be imported: '" & hrole.name & "'/'" & currentWS.Name & "' There exists no project No. in line " & z.ToString
-                                                    Else
-                                                        outputline = "Fehler: Istdaten sind nicht zuordenbar: '" & hrole.name & "'/'" & currentWS.Name & "' Es ist keine Projekt-Nummer angegeben in Zeile " & z.ToString
-                                                    End If
-                                                    oPCollection.Add(outputline)
-                                                    Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
-                                                    result = False
-                                                End If
-                                            End If      ' if ProjektKDNr = ""
+                                                End If      ' if ProjektKDNr = ""
+                                            End If
+
 
                                         Next z          'nächste Zeile lesen
                                     Else

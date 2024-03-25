@@ -440,6 +440,8 @@ Public Module Module1
         prSymProject = 20
         pfName = 21
         pfStrategieRisiko = 22
+        prStrategyKPI = 23
+        prRiskKPI = 24
     End Enum
 
     ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
@@ -669,6 +671,7 @@ Public Module Module1
         ActualTargetReve = 37
         ActualTargetCost = 38
         ActualTargetRess = 39
+        ActualTargetProfit = 40
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 

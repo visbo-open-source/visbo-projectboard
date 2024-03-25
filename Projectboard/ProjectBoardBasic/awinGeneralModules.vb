@@ -1713,19 +1713,12 @@ Public Module awinGeneralModules
         Try
             With hproj
 
-
-                ' Änderung tk: das wird mit 28.12.16 nicht mehr benötigt ...  
-                '.earliestStart = cproj.earliestStart
-                '.earliestStartDate = cproj.earliestStartDate
-                '.latestStart = cproj.latestStart
-                '.latestStartDate = cproj.latestStartDate
                 .earliestStartDate = .startDate
                 .latestStartDate = .startDate
 
                 .Id = vglName & "#" & importDate.ToString
 
                 .StartOffset = 0
-                '.Status = formerProj.Status
                 .vpStatus = formerProj.vpStatus
 
                 ' 
@@ -1772,7 +1765,7 @@ Public Module awinGeneralModules
                 If hproj.getGesamtKostenBedarf.Sum = 0 And formerProj.getGesamtKostenBedarf.Sum > 0 Then
                     ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
                     Try
-                        Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(formerProj)
+                        Dim tmpProj As clsProjekt = hproj.updateProjectWithResourceCostFrom(formerProj)
                         If Not IsNothing(tmpProj) Then
                             hproj = tmpProj
                         End If
@@ -1785,39 +1778,10 @@ Public Module awinGeneralModules
 
                 If fileFrom3rdParty Then
 
-                    '.farbe = cproj.farbe
-                    .Schrift = formerProj.Schrift
-                    .Schriftfarbe = formerProj.Schriftfarbe
-
-
-
-                    ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 
-                    'If hproj.leadPerson = "" And formerProj.leadPerson <> "" Then
-                    '    hproj.leadPerson = formerProj.leadPerson
-                    'End If
-
-                    'If hproj.Erloes = 0 And formerProj.Erloes > 0 Then
-                    '    hproj.Erloes = formerProj.Erloes
-                    'End If
-
-
-                    'If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And formerProj.ampelStatus > 0 Then
-                    '    hproj.ampelStatus = formerProj.ampelStatus
-                    '    hproj.ampelErlaeuterung = formerProj.ampelErlaeuterung
-                    'End If
-
-                    'If hproj.description = "" And formerProj.description <> "" Then
-                    '    hproj.description = formerProj.description
-                    'End If
-
-
-                    'hproj.Risiko = formerProj.Risiko
-                    'hproj.StrategicFit = formerProj.StrategicFit
-                    'hproj.projectType = formerProj.projectType
+                    Call hproj.copyAttributesFrom(formerProj)
 
                 End If
 
-                ' jetzt muss noch geprüft werden, ob 
 
 
             End With
