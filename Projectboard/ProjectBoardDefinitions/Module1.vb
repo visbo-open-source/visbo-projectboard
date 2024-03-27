@@ -6247,7 +6247,7 @@ Public Module Module1
             ' tk 17.6.20 Checks ....
             Dim checkExternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.extern)
             'Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
-            Dim checkSonstCost As Double() = ShowProjekte.getTotalCostValuesInMonth(False)
+            Dim checkSonstCost As Double() = ShowProjekte.getTotalCostValuesInMonth(includingPeopleCost:=False)
 
             ' hier muss geprüft werden, ob die internen Kosten größer als die OrgaFullCost , also die max internen Pers-Kosten sind
             ' Alles was darüber hinaus geht , muss auf OrgaFullCost beschränkt und auf Externcost verteilt werden 

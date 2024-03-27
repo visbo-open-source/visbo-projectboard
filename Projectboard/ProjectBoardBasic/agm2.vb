@@ -21271,15 +21271,19 @@ Public Module agm2
                             With hcost
                                 If CStr(c.Value) <> "" Then
                                     tmpStr = CType(c.Value, String)
-                                    .name = tmpStr.Trim
-                                Else
-                                    .name = "Personalkosten"
+
+                                    If Not kostendefinitionen.containsName(tmpStr) Then
+                                        .name = tmpStr.Trim
+                                        .farbe = c.Interior.Color
+                                        .UID = index
+                                        kostendefinitionen.Add(hcost)
+                                    End If
+
                                 End If
-                                .farbe = c.Interior.Color
-                                .UID = index
+
                             End With
 
-                            kostendefinitionen.Add(hcost)
+
                         End If
 
                     Next
@@ -21419,17 +21423,21 @@ Public Module agm2
                             ' jetzt kommt die Kostenarten Definition
                             hcost = New clsKostenartDefinition
                             With hcost
+
                                 If CStr(c.Value) <> "" Then
                                     tmpStr = CType(c.Value, String)
-                                    .name = tmpStr.Trim
-                                Else
-                                    .name = "Personalkosten"
+
+                                    If Not kostendefinitionen.containsName(tmpStr) Then
+                                        .name = tmpStr.Trim
+                                        .farbe = c.Interior.Color
+                                        .UID = UID
+                                        kostendefinitionen.Add(hcost)
+                                    End If
+
                                 End If
-                                .farbe = c.Interior.Color
-                                .UID = UID
+
                             End With
 
-                            kostendefinitionen.Add(hcost)
                         End If
 
                     Next

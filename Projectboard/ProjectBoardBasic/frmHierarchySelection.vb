@@ -4819,7 +4819,8 @@ Public Class frmHierarchySelection
                         allCosts = selectedProjekte.getCostNames
                     Else
                         ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
-                        For i As Integer = 1 To CostDefinitions.Count - 1
+                        ' tk 27.3.24 Personalkosten ist jetzt raus 
+                        For i As Integer = 1 To CostDefinitions.Count
                             Dim tmpName As String = CostDefinitions.getCostdef(i).name
                             If Not allCosts.Contains(tmpName) Then
                                 allCosts.Add(tmpName, tmpName)
@@ -4834,7 +4835,8 @@ Public Class frmHierarchySelection
                     ElseIf ShowProjekte.Count > 0 Then
                         allCosts = ShowProjekte.getCostNames
                     Else
-                        For i As Integer = 1 To CostDefinitions.Count - 1
+                        ' tk 27.3.24 Personalkosten ist jetzt raus
+                        For i As Integer = 1 To CostDefinitions.Count
                             Dim tmpName As String = CostDefinitions.getCostdef(i).name
                             If Not allCosts.Contains(tmpName) Then
                                 allCosts.Add(tmpName, tmpName)

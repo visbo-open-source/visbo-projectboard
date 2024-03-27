@@ -528,14 +528,14 @@ Public Module awinDiagrams
                             ElseIf prcName = "OtherCost" Then
                                 objektFarbe = visboFarbeOrange
                                 isPersCost = False
-                                datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPersonalCosts:=False)
+                                datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPeopleCost:=False)
 
-                            ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                                'ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
 
-                                ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
-                                isPersCost = True
-                                objektFarbe = visboFarbeBlau
-                                'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                                '    ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
+                                '    isPersCost = True
+                                '    objektFarbe = visboFarbeBlau
+                                '    'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                                 'datenreihe = ShowProjekte.getCostiValuesInMonth
                                 'edatenreihe = ShowProjekte.getCosteValuesInMonth
                                 datenreihe = ShowProjekte.getCostGpValuesInMonth
@@ -1643,16 +1643,16 @@ Public Module awinDiagrams
                     ElseIf prcName = "OtherCost" Then
                         objektFarbe = visboFarbeOrange
                         isPersCost = False
-                        datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPersonalCosts:=False)
+                        datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPeopleCost:=False)
 
-                    ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
-                        ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
-                        isPersCost = True
-                        objektFarbe = visboFarbeBlau
-                        'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
-                        'datenreihe = ShowProjekte.getCostiValuesInMonth
-                        'edatenreihe = ShowProjekte.getCosteValuesInMonth
-                        datenreihe = ShowProjekte.getCostGpValuesInMonth
+                        'ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                        '    ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
+                        '    isPersCost = True
+                        '    objektFarbe = visboFarbeBlau
+                        '    'objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                        '    'datenreihe = ShowProjekte.getCostiValuesInMonth
+                        '    'edatenreihe = ShowProjekte.getCosteValuesInMonth
+                        '    datenreihe = ShowProjekte.getCostGpValuesInMonth
 
                     Else
                         ' es handelt sich nicht um die Personalkosten
@@ -6883,7 +6883,7 @@ Public Module awinDiagrams
         Dim tDatenSumme As Double
 
 
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
 
 
         Dim titelTeile(1) As String

@@ -468,7 +468,8 @@ Public Class frmMEhryRoleCost
                 If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
                     If CostDefinitions.Count > 1 Then
 
-                        For i = 1 To CostDefinitions.Count - 1
+                        'For i = 1 To CostDefinitions.Count - 1
+                        For i = 1 To CostDefinitions.Count
                             Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
 
                             topLevelNode = .Nodes.Add(cost.name)

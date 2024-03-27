@@ -4953,7 +4953,7 @@ Public Module Projekte
         Dim ampelfarben() As Long
         Dim tmpdatenreihe() As Date
         Dim chtTitle As String
-        Dim pkIndex As Integer = CostDefinitions.Count
+
         Dim chtobj As Excel.ChartObject
         Dim ErgebnisListeR As New Collection
         Dim msName As String
@@ -5482,7 +5482,7 @@ Public Module Projekte
         Dim i As Integer
 
         'Dim chtTitle As String
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
 
         Dim tmpcollection As New Collection
         Dim currentSheetName As String
@@ -5982,7 +5982,7 @@ Public Module Projekte
         'Dim sumdatenreihe() As Double
         Dim hsum(1) As Double, gesamt_summe As Double
         'Dim anzElemente As Integer
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         'Dim ErgebnisListeRC As New Collection
         'Dim roleCostName As String
@@ -6437,7 +6437,7 @@ Public Module Projekte
 
 
         'Dim anzRollen As Integer
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
 
         Dim diagramTitle As String = " "
         Dim IstCharttype As xlNS.XlChartType
@@ -6847,7 +6847,7 @@ Public Module Projekte
         Dim gesamt_Summe As Double
 
         'Dim anzRollen As Integer
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         'Dim ErgebnisListeR As New Collection
         'Dim roleName As String
@@ -7178,7 +7178,7 @@ Public Module Projekte
         Dim gesamt_summe As Double
         'Dim anzKostenarten As Integer
 
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
 
         Dim titelTeile(1) As String
@@ -7612,7 +7612,7 @@ Public Module Projekte
         Dim gesamt_summe As Double
         Dim anzKostenarten As Integer
 
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
 
         Dim titelTeile(1) As String
@@ -8130,7 +8130,7 @@ Public Module Projekte
         Dim anzKostenarten As Integer
         'Dim costname As String
         'Dim chtTitle As String
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
 
         Dim titelTeile(1) As String
@@ -8704,7 +8704,7 @@ Public Module Projekte
         Dim gesamt_summe As Double = 0.0
         Dim anzKostenarten As Integer
 
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim diagramTitle As String
         Dim titelTeile(1) As String
@@ -10127,7 +10127,7 @@ Public Module Projekte
         Dim anzKostenarten As Integer
         Dim costname As String
 
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim pname As String = hproj.name
 
@@ -10318,27 +10318,36 @@ Public Module Projekte
                     End With
 
                     For k = 0 To anzKostenarten - 1 + auswahl - 1
-                        If k = anzKostenarten Then
-                            'costname = "Personal-Kosten"
-                            costname = repMessages.getmsg(164)
-                            With .SeriesCollection(1).Points(k + 1)
-                                .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                                If calledFromReporting Then
-                                    .DataLabel.Font.Size = 10
-                                End If
+                        ' tk 27.3.24 Personalkosten raus
+                        costname = CStr(ErgebnisListeK.Item(k + 1))
+                        With .SeriesCollection(1).Points(k + 1)
+                            .Interior.Color = CostDefinitions.getCostdef(costname).farbe
+                            If calledFromReporting Then
+                                .DataLabel.Font.Size = 10
+                            End If
+
+                        End With
+                        'If k = anzKostenarten Then
+                        '    'costname = "Personal-Kosten"
+                        '    costname = repMessages.getmsg(164)
+                        '    With .SeriesCollection(1).Points(k + 1)
+                        '        .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
+                        '        If calledFromReporting Then
+                        '            .DataLabel.Font.Size = 10
+                        '        End If
 
 
-                            End With
-                        Else
-                            costname = CStr(ErgebnisListeK.Item(k + 1))
-                            With .SeriesCollection(1).Points(k + 1)
-                                .Interior.Color = CostDefinitions.getCostdef(costname).farbe
-                                If calledFromReporting Then
-                                    .DataLabel.Font.Size = 10
-                                End If
+                        '    End With
+                        'Else
+                        '    costname = CStr(ErgebnisListeK.Item(k + 1))
+                        '    With .SeriesCollection(1).Points(k + 1)
+                        '        .Interior.Color = CostDefinitions.getCostdef(costname).farbe
+                        '        If calledFromReporting Then
+                        '            .DataLabel.Font.Size = 10
+                        '        End If
 
-                            End With
-                        End If
+                        '    End With
+                        'End If
 
                     Next k
 
@@ -10405,7 +10414,7 @@ Public Module Projekte
         Dim anzKostenarten As Integer
         Dim costname As String
 
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim pname As String = hproj.name
 
@@ -10531,23 +10540,27 @@ Public Module Projekte
             End With
 
             For k = 0 To anzKostenarten - 1 + auswahl - 1
-                If k = anzKostenarten Then
-                    costname = "Personal-Kosten"
-                    With .SeriesCollection(1).Points(k + 1)
-                        .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
-                        ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
-                        '.DataLabel.Font.Size = 10
+                costname = CStr(ErgebnisListeK.Item(k + 1))
+                With .SeriesCollection(1).Points(k + 1)
+                    .Interior.color = CostDefinitions.getCostdef(costname).farbe
+                End With
+                'If k = anzKostenarten Then
+                '    costname = "Personal-Kosten"
+                '    With .SeriesCollection(1).Points(k + 1)
+                '        .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
+                '        ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '        '.DataLabel.Font.Size = 10
 
-                    End With
-                Else
-                    costname = CStr(ErgebnisListeK.Item(k + 1))
-                    With .SeriesCollection(1).Points(k + 1)
-                        .Interior.color = CostDefinitions.getCostdef(costname).farbe
-                        ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
-                        '.DataLabel.Font.Size = 10
+                '    End With
+                'Else
+                '    costname = CStr(ErgebnisListeK.Item(k + 1))
+                '    With .SeriesCollection(1).Points(k + 1)
+                '        .Interior.color = CostDefinitions.getCostdef(costname).farbe
+                '        ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '        '.DataLabel.Font.Size = 10
 
-                    End With
-                End If
+                '    End With
+                'End If
 
             Next k
 
@@ -10597,7 +10610,7 @@ Public Module Projekte
 
 
         Dim chtTitle As String
-        Dim pkIndex As Integer = CostDefinitions.Count
+        'Dim pkIndex As Integer = CostDefinitions.Count
 
         Dim chtobj As Excel.ChartObject
         Dim ErgebnisListeR As New Collection
@@ -18864,7 +18877,7 @@ Public Module Projekte
 
                 startKosten = zeile
 
-                For i = 1 To CostDefinitions.Count - 1
+                For i = 1 To CostDefinitions.Count
                     ' die Personalkosten sind die letzte Kostenart, wird nicht mit aufgenommen, da sie 
                     ' automatisch berücksichtigt wird 
                     .cells(zeile, spalte).value = CostDefinitions.getCostdef(i).name
@@ -21682,7 +21695,7 @@ Public Module Projekte
                     inputstr = inputstr & ";" & RoleDefinitions.getRoledef(i).name
                 Next i
                 'Kostenarten zur Auswahlliste hinzufügen
-                For i = 2 To CostDefinitions.Count - 1
+                For i = 2 To CostDefinitions.Count
                     inputstr = inputstr & ";" & CostDefinitions.getCostdef(i).name
                 Next i
                 iTitle = "Rollen/Kostenarten"

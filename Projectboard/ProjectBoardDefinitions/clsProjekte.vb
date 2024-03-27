@@ -3321,7 +3321,7 @@ Public Class clsProjekte
                 Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
                 Dim externCost As Double() = getCostGpValuesInMonth(PTrt.extern)
                 Dim internCost As Double() = getCostGpValuesInMonth(PTrt.intern)
-                Dim otherCost As Double() = getTotalCostValuesInMonth(False)
+                Dim otherCost As Double() = getTotalCostValuesInMonth(includingPeopleCost:=False)
 
                 For i As Integer = 0 To zeitraum
                     If internCost(i) > orgaFullCost(i) Then
@@ -3529,7 +3529,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getTotalCostValuesInMonth(Optional ByVal includingPersonalCosts As Boolean = True) As Double()
+    Public ReadOnly Property getTotalCostValuesInMonth(Optional includingPeopleCost As Boolean = True) As Double()
         Get
             Dim costValues() As Double
             Dim zeitraum As Integer
@@ -3540,11 +3540,11 @@ Public Class clsProjekte
             zeitraum = showRangeRight - showRangeLeft
             ReDim costValues(zeitraum)
 
-            Dim anzCosts As Integer = CostDefinitions.Count
-            ' die Persoanlkosten sind immer der letzte Eintrag in der Liste der Kostenarten ... 
-            If Not includingPersonalCosts Then
-                anzCosts = anzCosts - 1
+            If includingPeopleCost Then
+                costValues = Me.getCostGpValuesInMonth()
             End If
+
+            Dim anzCosts As Integer = CostDefinitions.Count
 
             For k As Integer = 1 To anzCosts
                 tempArray = Me.getCostValuesInMonth(k)
@@ -3553,36 +3553,6 @@ Public Class clsProjekte
                 Next
             Next
 
-
-            ' Änderung tk 19.5.16 
-            ' alt und falsch: weil die Überstundenkosten nicht berücksichtigt werden ... 
-            ''For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
-            ''    hproj = kvp.Value
-
-            ''    Dauer = hproj.anzahlRasterElemente
-
-            ''    ReDim tempArray(Dauer - 1)
-
-            ''    With hproj
-            ''        prAnfang = .Start + .StartOffset
-            ''        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-            ''    End With
-
-            ''    anzLoops = 0
-            ''    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
-
-            ''    If anzLoops > 0 Then
-
-            ''        tempArray = hproj.getGesamtKostenBedarf
-
-            ''        For i = 0 To anzLoops - 1
-            ''            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
-            ''        Next i
-
-
-            ''    End If
-            ''    'hproj = Nothing
-            ''Next kvp
 
             getTotalCostValuesInMonth = costValues
 
@@ -3609,7 +3579,7 @@ Public Class clsProjekte
             Dim anzCosts As Integer = CostDefinitions.Count
             '
             ' die Personalkosten sind immer die letzte Kostenart ...
-            For k As Integer = 1 To anzCosts - 1
+            For k As Integer = 1 To anzCosts
                 tempArray = Me.getCostValuesInMonth(k)
                 For l As Integer = 0 To tempArray.Length - 1
                     costValues(l) = costValues(l) + tempArray(l)
@@ -3625,8 +3595,8 @@ Public Class clsProjekte
     '
     '
     ''' <summary>
-    ''' gibt die Gesamtkosten , Personalkosten und alle sonstigen Kosten im betrachteten Zeitraum zurück 
-    ''' bei den Personalkosten sind die Überstundensätze bzw. externen Tagessätze im Normalfall nicht berücksichtigt  
+    ''' gibt die Kosten der costID im betrachteten Zeitraum zurück 
+    ''' keine Personalkosten !! 
     ''' </summary>
     ''' <param name="CostID"></param>
     ''' <value></value>
@@ -3641,62 +3611,44 @@ Public Class clsProjekte
             Dim i As Integer
             Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
             Dim hproj As clsProjekt
-            Dim lookforIndex As Boolean
-            Dim isPersCost As Boolean
+
             Dim tempArray() As Double
             Dim prAnfang As Integer, prEnde As Integer
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
 
-            lookforIndex = IsNumeric(CostID)
-
-            If lookforIndex Then
-                If CostID = CostDefinitions.Count Then
-                    isPersCost = True
-                End If
-            Else
-                If CostID = "Personalkosten" Then
-                    isPersCost = True
-                End If
-            End If
-
             zeitraum = showRangeRight - showRangeLeft
             ReDim costValues(zeitraum)
 
 
-            If isPersCost Then
-                costValues = Me.getCostGpValuesInMonth
-            Else
 
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                    hproj = kvp.Value
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                hproj = kvp.Value
 
-                    Dauer = hproj.anzahlRasterElemente
+                Dauer = hproj.anzahlRasterElemente
 
-                    ReDim tempArray(Dauer - 1)
+                ReDim tempArray(Dauer - 1)
 
-                    With hproj
-                        prAnfang = .Start + .StartOffset
-                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                    End With
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                End With
 
-                    anzLoops = 0
-                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
 
-                    If anzLoops > 0 Then
+                If anzLoops > 0 Then
 
-                        tempArray = hproj.getKostenBedarf(CostID)
+                    tempArray = hproj.getKostenBedarf(CostID)
 
-                        For i = 0 To anzLoops - 1
-                            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
-                        Next i
+                    For i = 0 To anzLoops - 1
+                        costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+                    Next i
 
 
-                    End If
-                    'hproj = Nothing
-                Next kvp
-
-            End If
+                End If
+                'hproj = Nothing
+            Next kvp
 
 
 
@@ -3724,62 +3676,42 @@ Public Class clsProjekte
             Dim i As Integer
             Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
             Dim hproj As clsProjekt
-            Dim lookforIndex As Boolean
-            Dim isPersCost As Boolean
+
             Dim tempArray() As Double
             Dim prAnfang As Integer, prEnde As Integer
 
-            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
-
-            lookforIndex = IsNumeric(CostID)
-
-            If lookforIndex Then
-                If CostID = CostDefinitions.Count Then
-                    isPersCost = True
-                End If
-            Else
-                If CostID = "Personalkosten" Then
-                    isPersCost = True
-                End If
-            End If
 
             zeitraum = showRangeRight - showRangeLeft
             ReDim costValues(zeitraum)
 
 
-            If isPersCost Then
-                costValues = Me.getCostGpValuesInMonth
-            Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                hproj = kvp.Value
 
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                    hproj = kvp.Value
+                Dauer = hproj.anzahlRasterElemente
 
-                    Dauer = hproj.anzahlRasterElemente
+                ReDim tempArray(Dauer - 1)
 
-                    ReDim tempArray(Dauer - 1)
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                End With
 
-                    With hproj
-                        prAnfang = .Start + .StartOffset
-                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                    End With
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
 
-                    anzLoops = 0
-                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+                If anzLoops > 0 Then
 
-                    If anzLoops > 0 Then
+                    tempArray = hproj.getKostenBedarf(CostID)
 
-                        tempArray = hproj.getKostenBedarf(CostID)
-
-                        For i = 0 To anzLoops - 1
-                            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
-                        Next i
+                    For i = 0 To anzLoops - 1
+                        costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+                    Next i
 
 
-                    End If
-                    'hproj = Nothing
-                Next kvp
+                End If
 
-            End If
+            Next kvp
 
 
 
@@ -5145,6 +5077,7 @@ Public Class clsProjekte
             ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
             zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
             zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
 
             ' das ist der Risiko Abschlag  
             zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10

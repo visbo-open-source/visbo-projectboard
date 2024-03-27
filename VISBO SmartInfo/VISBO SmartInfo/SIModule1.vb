@@ -1418,7 +1418,7 @@ Module SIModule1
             ' Vorbesetzung
             sld = Pres.Slides.Item(1)
             If isVisboSlide(sld) Then
-                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+                activeSlideTS = getCurrentTimeStampFromSlide(sld).Date
             End If
 
             For i = 2 To Pres.Slides.Count
@@ -1428,7 +1428,7 @@ Module SIModule1
 
                 If isVisboSlide(sld) Then
 
-                    activeSlideTS = getCurrentTimeStampFromSlide(sld)
+                    activeSlideTS = getCurrentTimeStampFromSlide(sld).Date
 
                     If activeSlideTS <> beforeSlideTS Then
                         canBeSaved = False
