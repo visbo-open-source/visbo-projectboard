@@ -6224,111 +6224,62 @@ Public Class clsProjekt
     Public ReadOnly Property getInvoicesPenalties(Optional ByVal liquidity As Boolean = True) As Double()
         Get
             Dim invoiceValues() As Double = Nothing
-            Dim penaltyValues() As Double = Nothing
+            'Dim penaltyValues() As Double = Nothing
 
             ' dieser Array nimmt die Werte auf, der key steht dabei für den relativen Monat des Projektes, key=0 im ersten Monat des Projektes 
-            Dim invoiceArray As New SortedList(Of Integer, Double)
-            Dim penaltyArray As New SortedList(Of Integer, Double)
+            Dim invoiceList As New SortedList(Of Integer, Double)
+            Dim penaltyList As New SortedList(Of Integer, Double)
 
-            ' bestimme die Länge des Invoice-Arrays
+            Try
 
+                If _Dauer > 0 Then
 
-            If _Dauer > 0 Then
+                    ' bestimme die Default Länge Länge des Invoice-Arrays
+                    ReDim invoiceValues(_Dauer - 1)
 
-                ' if liquidity = true , this length will be changed in the course of this Method 
-                ReDim invoiceValues(_Dauer - 1)
-                ReDim penaltyValues(_Dauer - 1)
-                ' bestimme die Länge des Invoice-Arrays
+                    Dim projectStartCol As Integer = getColumnOfDate(startDate)
+                    Dim invoiceRelCol As Integer = -1
+                    Dim penaltyRelCol As Integer = -1
 
-                Dim projectStartCol As Integer = getColumnOfDate(startDate)
-                Dim invoiceRelCol As Integer = -1
-                Dim penaltyRelCol As Integer = -1
+                    For p = 1 To CountPhases
+                        Dim curPhase As clsPhase = getPhase(p)
 
-                For p = 1 To CountPhases
-                    Dim curPhase As clsPhase = getPhase(p)
-
-                    ' kann Rechnung gesteltl werden ? 
-                    If curPhase.invoice.Key > 0 Then
-
-                        If liquidity Then
-                            invoiceRelCol = getColumnOfDate(curPhase.getEndDate.AddDays(curPhase.invoice.Value)) - projectStartCol
-                        Else
-                            invoiceRelCol = getColumnOfDate(curPhase.getEndDate) - projectStartCol
-                        End If
-
-
-                        If invoiceRelCol > 0 Then
-                            If invoiceArray.ContainsKey(invoiceRelCol) Then
-                                invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curPhase.invoice.Key
-                            Else
-                                invoiceArray.Add(invoiceRelCol, curPhase.invoice.Key)
-                            End If
-                        End If
-
-                    End If
-
-                    ' Penalty relevant ?
-                    If curPhase.penalty.Key > StartofCalendar Then
-                        If curPhase.penalty.Key <= curPhase.getEndDate Then
+                        ' kann Rechnung gestellt werden ? 
+                        If curPhase.invoice.Key > 0 Then
 
                             If liquidity Then
-                                penaltyRelCol = getColumnOfDate(curPhase.penalty.Key.AddDays(30)) - projectStartCol
+                                invoiceRelCol = getColumnOfDate(curPhase.getEndDate.AddDays(curPhase.invoice.Value)) - projectStartCol
                             Else
-                                penaltyRelCol = getColumnOfDate(curPhase.penalty.Key) - projectStartCol
-                            End If
-
-
-                            If penaltyRelCol > 0 Then
-                                If penaltyArray.ContainsKey(penaltyRelCol) Then
-                                    penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curPhase.penalty.Value
-                                Else
-                                    penaltyArray.Add(penaltyRelCol, curPhase.penalty.Value)
-                                End If
-                            End If
-
-                        End If
-                    End If
-
-
-                    For msIx As Integer = 1 To curPhase.countMilestones
-
-                        Dim curMilestone As clsMeilenstein = curPhase.getMilestone(msIx)
-
-                        If curMilestone.invoice.Key > 0 Then
-
-                            If liquidity Then
-                                invoiceRelCol = getColumnOfDate(curMilestone.getDate.AddDays(curMilestone.invoice.Value)) - projectStartCol
-                            Else
-                                invoiceRelCol = getColumnOfDate(curMilestone.getDate) - projectStartCol
+                                invoiceRelCol = getColumnOfDate(curPhase.getEndDate) - projectStartCol
                             End If
 
 
                             If invoiceRelCol > 0 Then
-                                If invoiceArray.ContainsKey(invoiceRelCol) Then
-                                    invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curMilestone.invoice.Key
+                                If invoiceList.ContainsKey(invoiceRelCol) Then
+                                    invoiceList.Item(invoiceRelCol) = invoiceList.Item(invoiceRelCol) + curPhase.invoice.Key
                                 Else
-                                    invoiceArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+                                    invoiceList.Add(invoiceRelCol, curPhase.invoice.Key)
                                 End If
                             End If
 
                         End If
 
                         ' Penalty relevant ?
-                        If curMilestone.penalty.Key > StartofCalendar Then
-                            If curMilestone.penalty.Key <= curMilestone.getDate Then
+                        If curPhase.penalty.Key > StartofCalendar Then
+                            If curPhase.penalty.Key <= curPhase.getEndDate Then
 
                                 If liquidity Then
-                                    penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key.AddDays(30)) - projectStartCol
+                                    penaltyRelCol = getColumnOfDate(curPhase.penalty.Key.AddDays(30)) - projectStartCol
                                 Else
-                                    penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key) - projectStartCol
+                                    penaltyRelCol = getColumnOfDate(curPhase.penalty.Key) - projectStartCol
                                 End If
 
 
                                 If penaltyRelCol > 0 Then
-                                    If penaltyArray.ContainsKey(penaltyRelCol) Then
-                                        penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curMilestone.penalty.Value
+                                    If penaltyList.ContainsKey(penaltyRelCol) Then
+                                        penaltyList.Item(penaltyRelCol) = penaltyList.Item(penaltyRelCol) + curPhase.penalty.Value
                                     Else
-                                        penaltyArray.Add(penaltyRelCol, curMilestone.penalty.Value)
+                                        penaltyList.Add(penaltyRelCol, curPhase.penalty.Value)
                                     End If
                                 End If
 
@@ -6336,43 +6287,96 @@ Public Class clsProjekt
                         End If
 
 
-                    Next msIx
+                        For msIx As Integer = 1 To curPhase.countMilestones
 
-                Next p
+                            Dim curMilestone As clsMeilenstein = curPhase.getMilestone(msIx)
 
-                If invoiceArray.Count > 0 Or penaltyArray.Count > 0 Then
+                            If curMilestone.invoice.Key > 0 Then
 
-                    Dim lenInvoices As Integer = 0
-                    Dim lenPenalties As Integer = 0
+                                If liquidity Then
+                                    invoiceRelCol = getColumnOfDate(curMilestone.getDate.AddDays(curMilestone.invoice.Value)) - projectStartCol
+                                Else
+                                    invoiceRelCol = getColumnOfDate(curMilestone.getDate) - projectStartCol
+                                End If
 
-                    If liquidity Then
-                        If invoiceArray.Count > 0 Then
-                            lenInvoices = invoiceArray.Last.Key
+
+                                If invoiceRelCol > 0 Then
+                                    If invoiceList.ContainsKey(invoiceRelCol) Then
+                                        invoiceList.Item(invoiceRelCol) = invoiceList.Item(invoiceRelCol) + curMilestone.invoice.Key
+                                    Else
+                                        invoiceList.Add(invoiceRelCol, curMilestone.invoice.Key)
+                                    End If
+                                End If
+
+                            End If
+
+                            ' Penalty relevant ?
+                            If curMilestone.penalty.Key > StartofCalendar Then
+                                If curMilestone.penalty.Key <= curMilestone.getDate Then
+
+                                    If liquidity Then
+                                        penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key.AddDays(30)) - projectStartCol
+                                    Else
+                                        penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key) - projectStartCol
+                                    End If
+
+
+                                    If penaltyRelCol > 0 Then
+                                        If penaltyList.ContainsKey(penaltyRelCol) Then
+                                            penaltyList.Item(penaltyRelCol) = penaltyList.Item(penaltyRelCol) + curMilestone.penalty.Value
+                                        Else
+                                            penaltyList.Add(penaltyRelCol, curMilestone.penalty.Value)
+                                        End If
+                                    End If
+
+                                End If
+                            End If
+
+
+                        Next msIx
+
+                    Next p
+
+                    ' now make sure the dimension of the array is correct 
+
+
+
+                    If invoiceList.Count > 0 Or penaltyList.Count > 0 Then
+
+                        Dim lenInvoices As Integer = 0
+                        Dim lenPenalties As Integer = 0
+
+                        If invoiceList.Count > 0 Then
+                            lenInvoices = invoiceList.Last.Key
                         End If
-                        If penaltyArray.Count > 0 Then
-                            lenPenalties = penaltyArray.Last.Key
+                        If penaltyList.Count > 0 Then
+                            lenPenalties = penaltyList.Last.Key
                         End If
                         Dim invPenMax As Integer = System.Math.Max(lenInvoices, lenPenalties)
                         Dim resultDimension As Integer = System.Math.Max(_Dauer - 1, invPenMax)
                         ReDim invoiceValues(resultDimension)
+
+                        For Each kvp As KeyValuePair(Of Integer, Double) In invoiceList
+                            ' auch wenn es mehrere Rechnungen, in einem Monat geben sollte: die sind jetzt schon alle aufsummert
+                            invoiceValues(kvp.Key) = kvp.Value
+                        Next
+
+                        For Each kvp As KeyValuePair(Of Integer, Double) In penaltyList
+                            invoiceValues(kvp.Key) = invoiceValues(kvp.Key) - kvp.Value
+                        Next
+
+                    Else
+                        ' nicht auf Nothing setzen ! 
+                        ' einfach auf Null lassen ... 
                     End If
 
-
-                    For Each kvp As KeyValuePair(Of Integer, Double) In invoiceArray
-                        ' auch wenn es mehrere Rechnungen, in einem Monat geben sollte: die sind jetzt schon alle aufsummert
-                        invoiceValues(kvp.Key) = kvp.Value
-                    Next
-
-                    For Each kvp As KeyValuePair(Of Integer, Double) In penaltyArray
-                        invoiceValues(kvp.Key) = invoiceValues(kvp.Key) - kvp.Value
-                    Next
-
-                Else
-                    ' nicht auf Nothing setzen ! 
-                    ' einfach auf Null lassen ... 
                 End If
 
-            End If
+            Catch ex As Exception
+
+            End Try
+
+
 
             getInvoicesPenalties = invoiceValues
 
