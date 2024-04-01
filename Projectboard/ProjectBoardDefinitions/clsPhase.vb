@@ -4523,15 +4523,28 @@ Public Class clsPhase
 
                 ' actualData needs to be transferred without factor because actual data must no be changed
                 For ri As Integer = 0 To actualIndex
-                    newXwerte(ri) = oldXwerte(ri)
+                    If ri <= oldXwerte.Length - 1 Then
+                        newXwerte(ri) = oldXwerte(ri)
+                    Else
+                        ' in this case: fill with 0 
+                        newXwerte(ri) = 0.0
+                    End If
+
                 Next
 
                 Dim oldForecastXWerte() As Double
-                ReDim oldForecastXWerte(oldForecastDimension)
 
-                For ri As Integer = actualIndex + 1 To oldXwerte.Length - 1
-                    oldForecastXWerte(ri - (actualIndex + 1)) = oldXwerte(ri)
-                Next
+                If oldForecastDimension >= 0 Then
+                    ReDim oldForecastXWerte(oldForecastDimension)
+                    For ri As Integer = actualIndex + 1 To oldXwerte.Length - 1
+                        If ri - (actualIndex + 1) <= oldForecastXWerte.Length - 1 And ri <= oldXwerte.Length - 1 Then
+                            oldForecastXWerte(ri - (actualIndex + 1)) = oldXwerte(ri)
+                        End If
+                    Next
+                Else
+                    ReDim oldForecastXWerte(0)
+                    considerValueOnly = True
+                End If
 
 
                 Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, oldForecastXWerte, faktor, considerValueOnly)
@@ -4539,7 +4552,13 @@ Public Class clsPhase
 
                 ' jetzt die Forecast Werte übernehmen 
                 For ri As Integer = actualIndex + 1 To dimension
-                    newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+
+                    If ri <= newXwerte.Length - 1 And ri - (actualIndex + 1) <= newForecastXWerte.Length - 1 Then
+                        newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+                    Else
+                        newXwerte(ri) = 0.0
+                    End If
+
                 Next
 
                 Me.getRole(r).Xwerte = newXwerte
@@ -4552,21 +4571,41 @@ Public Class clsPhase
                 ReDim newXwerte(dimension)
 
                 For ri As Integer = 0 To actualIndex
-                    newXwerte(ri) = oldXwerte(ri)
+                    If ri <= oldXwerte.Length - 1 Then
+                        newXwerte(ri) = oldXwerte(ri)
+                    Else
+                        newXwerte(ri) = 0.0
+                    End If
                 Next
 
                 Dim oldForecastXWerte() As Double
-                ReDim oldForecastXWerte(oldForecastDimension)
 
-                For ri As Integer = actualIndex + 1 To oldXwerte.Length - 1
-                    oldForecastXWerte(ri - (actualIndex + 1)) = oldXwerte(ri)
-                Next
+                If oldForecastDimension >= 0 Then
+                    ReDim oldForecastXWerte(oldForecastDimension)
+                    For ri As Integer = actualIndex + 1 To oldXwerte.Length - 1
+                        If ri - (actualIndex + 1) <= oldForecastXWerte.Length - 1 And ri <= oldXwerte.Length - 1 Then
+                            oldForecastXWerte(ri - (actualIndex + 1)) = oldXwerte(ri)
+                        End If
+                    Next
+                    ' has been false - see below
+                    considerValueOnly = False
+                Else
+                    ReDim oldForecastXWerte(0)
+                    considerValueOnly = True
+                End If
 
-                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, oldForecastXWerte, faktor, False)
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, oldForecastXWerte, faktor, considerValueOnly)
 
-                ' jetzt die Forecast Werte übernehmen 
+                'Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, oldForecastXWerte, faktor, False)
+
                 For ri As Integer = actualIndex + 1 To dimension
-                    newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+
+                    If ri <= newXwerte.Length - 1 And ri - (actualIndex + 1) <= newForecastXWerte.Length - 1 Then
+                        newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+                    Else
+                        newXwerte(ri) = 0.0
+                    End If
+
                 Next
 
                 Me.getCost(k).Xwerte = newXwerte

@@ -5959,12 +5959,14 @@ Public Module agm2
         Dim atLeastOneError As Boolean = False
 
         Dim description As String = ""
+        Dim projectNumber As String = ""
         Dim businessUnit As String = ""
         Dim createdProjects As Integer = 0
         Dim responsiblePerson As String = ""
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
-        Dim nrOfStdColumns As Integer = 15
+        ' tk 30.4.24 es kam hinzu: Project-Nr als Spalte 16
+        Dim nrOfStdColumns As Integer = 16
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
@@ -6292,6 +6294,8 @@ Public Module agm2
                                     lastSpaltenValue = spalte + 14
                                     description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
+                                    lastSpaltenValue = spalte + 15
+                                    projectNumber = CStr(CType(.Cells(zeile, spalte + 15), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     If lastColumn > nrOfStdColumns Then
                                         ' es gibt evtl Custom fields 
@@ -6469,6 +6473,10 @@ Public Module agm2
 
 
                                 If Not IsNothing(hproj) Then
+
+                                    If projectNumber <> "" Then
+                                        hproj.kundenNummer = projectNumber
+                                    End If
 
                                     ' ein neu angelegtes Projekt bekommt immer den Status geplant ... 
 
