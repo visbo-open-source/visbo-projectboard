@@ -3241,6 +3241,7 @@ Public Class Request
                 result.Add(costDef)
             Next
 
+            result.buildTopNodes()
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -3974,6 +3975,9 @@ Public Class Request
 
                         ' bestimmen der _topLevelNodeIDs
                         result.allRoles.buildTopNodes()
+
+                        ' bestimmen der _topLevelNodeIDs Kostenarten
+                        result.allCosts.buildTopNodes()
 
 
                     Else

@@ -1466,7 +1466,8 @@ Module rpaModule1
                         CStr(ersteZeile.Cells(1, 12).value).Trim = "Risk" And
                         CStr(ersteZeile.Cells(1, 13).value).Trim = "Strategy" And
                         CStr(ersteZeile.Cells(1, 14).value).Trim = "Business Unit" And
-                        CStr(ersteZeile.Cells(1, 15).value).Trim = "Description"
+                        CStr(ersteZeile.Cells(1, 15).value).Trim = "Description" And
+                        CStr(ersteZeile.Cells(1, 16).value).Trim = "Project-Nr"
 
                 Catch ex As Exception
                     verifiedStructure = False

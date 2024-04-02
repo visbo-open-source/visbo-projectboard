@@ -4286,78 +4286,60 @@
             Dim i As Integer, p As Integer, k As Integer
             Dim phase As clsPhase
             Dim cost As clsKostenart
-            Dim lookforIndex As Boolean, isPersCost As Boolean
+
             Dim phasenStart As Integer
             Dim tempArray() As Double
             Dim dimension As Integer
 
+            Dim lookforIndex As Boolean = IsNumeric(CostID)
 
             If _Dauer > 0 Then
 
                 ReDim costValues(_Dauer - 1)
 
-                lookforIndex = IsNumeric(CostID)
-                isPersCost = False
+                anzPhasen = AllPhases.Count
 
-                If lookforIndex Then
-                    If CostID = CostDefinitions.Count Then
-                        isPersCost = True
-                    End If
-                Else
-                    If CostID = "Personalkosten" Then
-                        isPersCost = True
-                    End If
-                End If
-
-                If isPersCost Then
-                    ' costvalues = AllPersonalKosten
-                    costValues = Me.getRessourcenBedarf("", outPutInEuro:=True)
-                Else
-
-                    anzPhasen = AllPhases.Count
-
-                    For p = 0 To anzPhasen - 1
-                        phase = AllPhases.Item(p)
-                        With phase
-                            ' Off1
-                            anzKostenarten = .countCosts
-                            phasenStart = .relStart - 1
-                            'phasenEnde = .relEnde - 1
+                For p = 0 To anzPhasen - 1
+                    phase = AllPhases.Item(p)
+                    With phase
+                        ' Off1
+                        anzKostenarten = .countCosts
+                        phasenStart = .relStart - 1
+                        'phasenEnde = .relEnde - 1
 
 
-                            For k = 1 To anzKostenarten
-                                cost = .getCost(k)
-                                found = False
+                        For k = 1 To anzKostenarten
+                            cost = .getCost(k)
+                            found = False
 
-                                With cost
-                                    If lookforIndex Then
-                                        If .KostenTyp = CostID Then
-                                            found = True
-                                        End If
-                                    Else
-                                        If .name = CostID Then
-                                            found = True
-                                        End If
+                            With cost
+                                If lookforIndex Then
+                                    If .KostenTyp = CostID Then
+                                        found = True
                                     End If
-                                    If found Then
-                                        dimension = .getDimension
-                                        ReDim tempArray(dimension)
-                                        tempArray = .Xwerte
-                                        For i = phasenStart To phasenStart + dimension
-
-                                            costValues(i) = costValues(i) + tempArray(i - phasenStart)
-
-
-                                        Next i
+                                Else
+                                    If .name = CostID Then
+                                        found = True
                                     End If
-                                End With ' cost
+                                End If
+                                If found Then
+                                    dimension = .getDimension
+                                    ReDim tempArray(dimension)
+                                    tempArray = .Xwerte
+                                    For i = phasenStart To phasenStart + dimension
 
-                            Next k
+                                        costValues(i) = costValues(i) + tempArray(i - phasenStart)
 
-                        End With ' phase
 
-                    Next p ' Loop über alle Phasen
-                End If
+                                    Next i
+                                End If
+                            End With ' cost
+
+                        Next k
+
+                    End With ' phase
+
+                Next p ' Loop über alle Phasen
             Else
                 ReDim costValues(0)
                 costValues(0) = 0

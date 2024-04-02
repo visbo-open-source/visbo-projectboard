@@ -100,6 +100,7 @@
     <Compile Include="clsStringBoolean.vb" />
     <Compile Include="clsStringDouble.vb" />
     <Compile Include="clsStringString.vb" />
+    <Compile Include="clsSubCostID.vb" />
     <Compile Include="clsSubRoleID.vb" />
     <Compile Include="clsTSOOrganisationWeb.vb" />
     <Compile Include="clsTSORoleDefinitionWeb.vb" />
