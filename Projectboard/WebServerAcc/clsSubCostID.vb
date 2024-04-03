@@ -6,4 +6,5 @@
         _key = 0
         _value = 0.0
     End Sub
+
 End Class

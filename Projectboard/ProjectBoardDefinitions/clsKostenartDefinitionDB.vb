@@ -1,4 +1,5 @@
-﻿Public Class clsKostenartDefinitionDB
+﻿
+Public Class clsKostenartDefinitionDB
 
     Public name As String
     Public farbe As Long

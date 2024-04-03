@@ -137,6 +137,6 @@
     End Property
 
     Public Sub New()
-
+        _subCostIDs = New SortedList(Of Integer, Double)
     End Sub
 End Class
