@@ -450,10 +450,10 @@ Module VISBO_SPE_Utilities
 
                             If noForecastMonths Then
                                 awinSettings.noMatterActualData = True
-                                If editProjekteInSPE.Count > 1 Then
-                                    Call MsgBox("no Forecast Months in projects - setting was changed ...")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("for your Information: there are no Forecast Months in projects - all months will be shown ... ")
                                 Else
-                                    Call MsgBox("no Forecast Months in project - setting was changed ...")
+                                    Call MsgBox("zur Information: es gibt keine Forecast Monate in den Projekten - alle Monate mit Ist-Daten werden gezeigt  ... ")
                                 End If
                             End If
 
@@ -530,7 +530,7 @@ Module VISBO_SPE_Utilities
                                 Else
                                     CType(meWS.Columns("F"), Excel.Range).Hidden = False
                                 End If
-                            Else
+                            ElseIf meModus <> ptModus.massEditTermine Then
                                 CType(meWS.Columns("F"), Excel.Range).Hidden = True
                             End If
 
@@ -583,68 +583,95 @@ Module VISBO_SPE_Utilities
 
                             If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
-                                If awinSettings.meExtendedColumnsView = True Then
+                                Try
+                                    If awinSettings.meExtendedColumnsView = True Then
+                                        If editProjekteInSPE.Count = 1 Then
+                                            .SplitRow = 1
+                                            .SplitColumn = 5
+                                            .FreezePanes = True
+                                        Else
+                                            .SplitRow = 1
+                                            .SplitColumn = 8
+                                            .FreezePanes = True
+                                        End If
+                                    Else
+                                        If editProjekteInSPE.Count = 1 Then
+                                            .SplitRow = 1
+                                            .SplitColumn = 4
+                                            .FreezePanes = True
+                                        Else
+                                            .SplitRow = 1
+                                            .SplitColumn = 7
+                                            .FreezePanes = True
+                                        End If
+                                    End If
+
+                                    ' tk 12.1.24 damit Ressourcen und Kostenbedarfe, falls lange auch passend gezeigt werden können
+                                    ' Video Take ... 1.2.24 - wieder zurück nehmen
+                                    .DisplayHeadings = False
+                                Catch ex As Exception
+                                    Call logger(ptErrLevel.logInfo, "in massEditRcTeAt, EditRess bzw EditCost ", ex.Message)
+                                End Try
+
+
+
+                            ElseIf meModus = ptModus.massEditTermine Then
+
+                                Try
                                     If editProjekteInSPE.Count = 1 Then
+                                        .SplitRow = 1
+                                        .SplitColumn = 3
+                                        .FreezePanes = True
+                                    Else
+                                        .SplitRow = 1
+                                        .SplitColumn = 6
+                                        .FreezePanes = True
+                                    End If
+
+                                Catch ex As Exception
+                                    Call logger(ptErrLevel.logInfo, "in massEditRcTeAt, EditTermine ", ex.Message)
+                                End Try
+
+                            ElseIf meModus = ptModus.massEditAttribute Then
+
+                                Try
+                                    If editProjekteInSPE.Count = 1 Then
+                                        .SplitRow = 1
+                                        .SplitColumn = 2
+                                        .FreezePanes = True
+                                    Else
                                         .SplitRow = 1
                                         .SplitColumn = 5
                                         .FreezePanes = True
-                                    Else
-                                        .SplitRow = 1
-                                        .SplitColumn = 8
-                                        .FreezePanes = True
                                     End If
-                                Else
-                                    If editProjekteInSPE.Count = 1 Then
-                                        .SplitRow = 1
-                                        .SplitColumn = 4
-                                        .FreezePanes = True
-                                    Else
-                                        .SplitRow = 1
-                                        .SplitColumn = 7
-                                        .FreezePanes = True
-                                    End If
-                                End If
-                                ' tk 12.1.24 damit Ressourcen und Kostenbedarfe, falls lange auch passend gezeigt werden können
-                                ' Video Take ... 1.2.24 - wirder zurück nehmen
-                                .DisplayHeadings = False
+                                    .DisplayHeadings = True
+                                Catch ex As Exception
+                                    Call logger(ptErrLevel.logInfo, "in massEditRcTeAt, EditAttributes ", ex.Message)
+                                End Try
 
-                            ElseIf meModus = ptModus.massEditTermine Then
-                                If editProjekteInSPE.Count = 1 Then
-                                    .SplitRow = 1
-                                    .SplitColumn = 3
-                                    .FreezePanes = True
-                                Else
-                                    .SplitRow = 1
-                                    .SplitColumn = 6
-                                    .FreezePanes = True
-                                End If
-
-                            ElseIf meModus = ptModus.massEditAttribute Then
-                                If editProjekteInSPE.Count = 1 Then
-                                    .SplitRow = 1
-                                    .SplitColumn = 2
-                                    .FreezePanes = True
-                                Else
-                                    .SplitRow = 1
-                                    .SplitColumn = 5
-                                    .FreezePanes = True
-                                End If
-                                .DisplayHeadings = True
 
                             Else
+                                Call logger(ptErrLevel.logInfo, "in massEditRcTeAt, unexpected Exit Sub !? ", "??")
                                 Exit Sub
                             End If
 
-                            .DisplayFormulas = False
-                            .DisplayGridlines = True
-                            '.GridlineColor = RGB(220, 220, 220)
-                            .GridlineColor = Excel.XlRgbColor.rgbBlack
-                            .DisplayWorkbookTabs = False
-                            .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
-                            .WindowState = Excel.XlWindowState.xlMaximized
+                            Try
+                                .DisplayFormulas = False
+                                .DisplayGridlines = True
+                                '.GridlineColor = RGB(220, 220, 220)
+                                .GridlineColor = Excel.XlRgbColor.rgbBlack
+                                .DisplayWorkbookTabs = False
+                                .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
+                                .WindowState = Excel.XlWindowState.xlMaximized
+                            Catch ex As Exception
+                                Call logger(ptErrLevel.logInfo, "in massEditRcTeAt, .DisplayFormulas etc", ex.Message)
+                            End Try
+
                             .Activate()
+
                         Catch ex As Exception
-                            Call MsgBox("Fehler in massEditRcTeAt")
+                            Call logger(ptErrLevel.logInfo, "in massEditRcTeAt", ex.Message)
+                            'Call MsgBox("Fehler in massEditRcTeAt")
                         End Try
 
 
@@ -654,7 +681,9 @@ Module VISBO_SPE_Utilities
                     ' Ende Ausblenden 
 
                 Catch ex As Exception
-                    Call MsgBox("Fehler: " & ex.Message)
+                    'Call MsgBox("Fehler: " & ex.Message)
+                    Call logger(ptErrLevel.logError, "in massEditRcTeAt, High-Level unknown Error ", ex.Message)
+
                     If appInstance.EnableEvents = False Then
                         appInstance.EnableEvents = True
                     End If
@@ -663,15 +692,13 @@ Module VISBO_SPE_Utilities
 
             Else
 
+                Call logger(ptErrLevel.logWarning, "massEditRcTeAt", "todoListe.Count = 0 Anzahl Edit Projekte: " & editProjekteInSPE.Count)
+
                 enableOnUpdate = True
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
-                'If awinSettings.englishLanguage Then
-                '    Call MsgBox("no projects apply to criterias ...")
-                'Else
-                '    Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
-                'End If
+
             End If
 
 
