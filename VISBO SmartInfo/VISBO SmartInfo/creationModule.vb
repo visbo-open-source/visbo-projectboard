@@ -3037,8 +3037,10 @@ Module creationModule
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
             End If
 
+            ' projectValues(1) and baseline(values(1) does contain the sum of baselineArray resp projectValues !! 
+            ' that is why (1) need to be compared with each other
 
-            If projectValues.Sum < baselineValues.Sum Then
+            If projectValues(1) < baselineValues(1) Then
 
                 If sCInfo.detailID = PTprdk.ActualTargetReve Or sCInfo.detailID = PTprdk.ActualTargetProfit Then
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
@@ -3046,8 +3048,7 @@ Module creationModule
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
                 End If
 
-
-            ElseIf projectValues.Sum > baselineValues.Sum Then
+            ElseIf projectValues(1) > baselineValues(1) Then
 
                 If sCInfo.detailID = PTprdk.ActualTargetReve Or sCInfo.detailID = PTprdk.ActualTargetProfit Then
                     .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
