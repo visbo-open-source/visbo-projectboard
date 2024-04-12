@@ -1950,6 +1950,17 @@ Public Class Tabelle2
             'Call logger(ptErrLevel.logError, "getGrantedValues in Edit Cell " & pName, " Cell was Nothing ..")
         End If
 
+
+        ' tk 12.4.24
+        ' now check that no value is negative
+        ' if so, set that to zero;
+        For ix As Integer = 0 To grantedValues.Length - 1
+            If grantedValues(ix) < 0 Then
+                grantedValues(ix) = 0
+            End If
+        Next
+
+
         getGrantedValues = grantedValues
     End Function
     ''' <summary>
