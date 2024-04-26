@@ -1425,8 +1425,11 @@ Public Class Tabelle2
 
                                                     ' now check and verify whether this is feasible with given capacity 
                                                     ' if not, then do corrections in a way, that free capacity is taken and the rest of needs going over free capacity is distributed equally over the timeFrame
-                                                    Dim allowOvertime As Boolean = awinSettings.meAllowOverTime
-                                                    newValues = ShowProjekte.adjustToCapacity(uid, teamID, allowOvertime, newValues, xStartDate, oldValues)
+
+                                                    If Not awinSettings.meAllowOverTime Then
+                                                        Dim allowOvertime As Boolean = awinSettings.meAllowOverTime
+                                                        newValues = ShowProjekte.adjustToCapacity(uid, teamID, allowOvertime, newValues, xStartDate, oldValues)
+                                                    End If
 
 
                                                     If IsNothing(tmpRole) Then
