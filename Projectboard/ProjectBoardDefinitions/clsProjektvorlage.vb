@@ -2443,65 +2443,70 @@
             Dim firstIX As Integer, lastIX As Integer
             Dim elemID As String
 
-            If lookingForMS Then
-                lastIX = Me.hierarchy.count
-                firstIX = Me.hierarchy.getIndexOf1stMilestone
-                If firstIX < 0 Then
-                    ' es gibt keine Meilensteine 
+            Try
+                If lookingForMS Then
+                    lastIX = Me.hierarchy.count
+                    firstIX = Me.hierarchy.getIndexOf1stMilestone
+                    If firstIX < 0 Then
+                        ' es gibt keine Meilensteine 
+                    Else
+
+                        For mx = firstIX To lastIX
+                            elemID = Me.hierarchy.getIDAtIndex(mx)
+
+                            sortDate = Me.getMilestoneByID(elemID).getDate
+                            If Not tmpSortList.ContainsValue(elemID) Then
+
+                                Do While tmpSortList.ContainsKey(sortDate)
+                                    sortDate = sortDate.AddMilliseconds(1)
+                                Loop
+
+                                tmpSortList.Add(sortDate, elemID)
+
+                            End If
+
+                        Next
+
+                    End If
                 Else
+                    ' Phasen holen
+                    firstIX = 1
+                    lastIX = Me.hierarchy.getIndexOf1stMilestone - 1
 
-                    For mx = firstIX To lastIX
-                        elemID = Me.hierarchy.getIDAtIndex(mx)
+                    If lastIX < 0 Then
+                        ' es gibt keine Meilensteine, sondern nur Phasen 
+                        lastIX = Me.hierarchy.count
+                    End If
 
-                        sortDate = Me.getMilestoneByID(elemID).getDate
+                    For px = firstIX To lastIX
+                        elemID = Me.hierarchy.getIDAtIndex(px)
+
+                        sortDate = Me.getPhaseByID(elemID).getStartDate
+
                         If Not tmpSortList.ContainsValue(elemID) Then
 
                             Do While tmpSortList.ContainsKey(sortDate)
                                 sortDate = sortDate.AddMilliseconds(1)
                             Loop
 
+
                             tmpSortList.Add(sortDate, elemID)
+
 
                         End If
 
                     Next
 
                 End If
-            Else
-                ' Phasen holen
-                firstIX = 1
-                lastIX = Me.hierarchy.getIndexOf1stMilestone - 1
 
-                If lastIX < 0 Then
-                    ' es gibt keine Meilensteine, sondern nur Phasen 
-                    lastIX = Me.hierarchy.count
-                End If
-
-                For mx = firstIX To lastIX
-                    elemID = Me.hierarchy.getIDAtIndex(mx)
-
-                    sortDate = Me.getPhaseByID(elemID).getStartDate
-
-                    If Not tmpSortList.ContainsValue(elemID) Then
-
-                        Do While tmpSortList.ContainsKey(sortDate)
-                            sortDate = sortDate.AddMilliseconds(1)
-                        Loop
-
-
-                        tmpSortList.Add(sortDate, elemID)
-
-
-                    End If
-
+                ' jetzt muss umkopiert werden 
+                For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                    iDCollection.Add(kvp.Value, kvp.Value)
                 Next
+            Catch ex As Exception
 
-            End If
+            End Try
 
-            ' jetzt muss umkopiert werden 
-            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
-                iDCollection.Add(kvp.Value, kvp.Value)
-            Next
 
             getAllElemIDs = iDCollection
 

@@ -99,12 +99,14 @@ Partial Class ucProperties
         'labelRespons
         '
         Me.labelRespons.AutoSize = True
+        Me.labelRespons.Enabled = False
         Me.labelRespons.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelRespons.Location = New System.Drawing.Point(6, 101)
         Me.labelRespons.Name = "labelRespons"
         Me.labelRespons.Size = New System.Drawing.Size(90, 17)
         Me.labelRespons.TabIndex = 4
         Me.labelRespons.Text = "Responsible:"
+        Me.labelRespons.Visible = False
         '
         'eleRespons
         '

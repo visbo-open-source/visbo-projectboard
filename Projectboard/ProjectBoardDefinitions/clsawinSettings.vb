@@ -475,7 +475,7 @@ Public Class clsawinSettings
         _mppEnableSmartPPT = True
 
         _mppProjectsWithNoMPmayPass = False
-        _mppInvoicesPenalties = True
+        _mppInvoicesPenalties = False
 
 
         ' Settings für online MassenEdit 

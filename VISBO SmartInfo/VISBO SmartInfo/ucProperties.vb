@@ -453,6 +453,8 @@ Public Class ucProperties
             End With
         End If
 
+        Me.labelRespons.Visible = False
+
         Call emptyPane()
 
 
@@ -537,11 +539,11 @@ Public Class ucProperties
             End With
 
             With labelRespons
-                .Visible = True
+                .Visible = False
             End With
 
             With eleRespons
-                .Visible = True
+                .Visible = False
             End With
 
             With labelAmpel

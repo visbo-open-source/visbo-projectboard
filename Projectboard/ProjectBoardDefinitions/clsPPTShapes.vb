@@ -210,6 +210,9 @@ Public Class clsPPTShapes
                             Case "Swimlanes2"
                                 containerShape = pptShape
 
+                            Case "ActualTargetTime"
+                                containerShape = pptShape
+
                             Case "MilestoneCategories"
                                 containerShape = pptShape
 
@@ -695,6 +698,7 @@ Public Class clsPPTShapes
         ' der Kalender-Start soll in Abhängigkeit von kennzeichneung weiter links oder weiter rechts begionnen 
         If kennzeichnung = "Multiprojektsicht" Or
             kennzeichnung.StartsWith("Swimlane") Or
+            kennzeichnung = "ActualTargetTime" Or
             kennzeichnung = "PortfolioRoadmap" Then
             ' hier wird ein linker Rand gebraucht 
             calendarLineStart = 120
@@ -711,6 +715,7 @@ Public Class clsPPTShapes
                 kennzeichnung = "Multiprojektsicht" Or
                 kennzeichnung = "Einzelprojektsicht" Or
                 kennzeichnung.StartsWith("Swimlane") Or
+                kennzeichnung = "ActualTargetTime" Or
                 kennzeichnung = "PortfolioRoadmap" Then
 
             If IsNothing(_quarterMonthVorlagenShape) Then
@@ -1260,6 +1265,7 @@ Public Class clsPPTShapes
                 kennzeichnung = "Multivariantensicht" Or
                 kennzeichnung = "Multiprojektsicht" Or
                 kennzeichnung = "Einzelprojektsicht" Or
+                kennzeichnung = "ActualTargetTime" Or
                 kennzeichnung = "PortfolioRoadmap" Then
 
                 If IsNothing(_MsDescVorlagenShape) Then

@@ -650,7 +650,7 @@ Public Class clsPPTTimeMachine
 
             Case ptNavigationButtons.erster
 
-                tmpDate = _minmaxTimeStamps(0)
+                tmpDate = _minmaxTimeStamps(0).AddMinutes(1)
 
 
             Case ptNavigationButtons.letzter

@@ -156,24 +156,24 @@ Public Class ucSearch
                 Select Case CStr(cathegoryList.SelectedItem)
                     Case "Name"
                         catCode = pptInfoType.cName
-                    Case "Responsibilities"
-                        catCode = pptInfoType.responsible
-                    Case "Original Name"
-                        catCode = pptInfoType.oName
+                    'Case "Responsibilities"
+                    '    catCode = pptInfoType.responsible
+                    'Case "Original Name"
+                    '    catCode = pptInfoType.oName
                     Case "Abbreviation"
                         catCode = pptInfoType.sName
-                    Case "voller Name"
-                        catCode = pptInfoType.bCrumb
+                    'Case "voller Name"
+                    '    catCode = pptInfoType.bCrumb
                     Case "Deliverables"
                         catCode = pptInfoType.lUmfang
-                    Case "manually Changed Dates"
-                        catCode = pptInfoType.mvElement
-                    Case "Resources"
-                        catCode = pptInfoType.resources
-                    Case "Cost"
-                        catCode = pptInfoType.costs
-                    Case "Overdue"
-                        catCode = pptInfoType.overDue
+                        'Case "manually Changed Dates"
+                        '    catCode = pptInfoType.mvElement
+                        'Case "Resources"
+                        '    catCode = pptInfoType.resources
+                        'Case "Cost"
+                        '    catCode = pptInfoType.costs
+                        'Case "Overdue"
+                        '    catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
                 End Select
@@ -182,24 +182,24 @@ Public Class ucSearch
                 Select Case CStr(cathegoryList.SelectedItem)
                     Case "Name"
                         catCode = pptInfoType.cName
-                    Case "Verantwortlich"
-                        catCode = pptInfoType.responsible
-                    Case "Original Name"
-                        catCode = pptInfoType.oName
+                    'Case "Verantwortlich"
+                    '    catCode = pptInfoType.responsible
+                    'Case "Original Name"
+                    '    catCode = pptInfoType.oName
                     Case "Abkürzung"
                         catCode = pptInfoType.sName
-                    Case "voller Name"
-                        catCode = pptInfoType.bCrumb
+                    'Case "voller Name"
+                    '    catCode = pptInfoType.bCrumb
                     Case "Lieferumfänge"
                         catCode = pptInfoType.lUmfang
-                    Case "manuelle Termin-Änderungen"
-                        catCode = pptInfoType.mvElement
-                    Case "Ressourcen"
-                        catCode = pptInfoType.resources
-                    Case "Kosten"
-                        catCode = pptInfoType.costs
-                    Case "Überfällig"
-                        catCode = pptInfoType.overDue
+                        'Case "manuelle Termin-Änderungen"
+                        '    catCode = pptInfoType.mvElement
+                        'Case "Ressourcen"
+                        '    catCode = pptInfoType.resources
+                        'Case "Kosten"
+                        '    catCode = pptInfoType.costs
+                        'Case "Überfällig"
+                        '    catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
                 End Select
@@ -310,14 +310,14 @@ Public Class ucSearch
                 .Label2.Text = "Elements:"
             End With
             cathegoryList.Items.Add("Name")
-            cathegoryList.Items.Add("Responsibilities")
+            'cathegoryList.Items.Add("Responsibilities")
             cathegoryList.Items.Add("Deliverables")
             'cathegoryList.Items.Add("Original Name")
-            cathegoryList.Items.Add("Overdue")
-            cathegoryList.Items.Add("Resources")
+            'cathegoryList.Items.Add("Overdue")
+            'cathegoryList.Items.Add("Resources")
             cathegoryList.Items.Add("Abbreviation")
-            cathegoryList.Items.Add("Cost")
-            cathegoryList.Items.Add("manually Changed Dates")
+            'cathegoryList.Items.Add("Cost")
+            'cathegoryList.Items.Add("manually Changed Dates")
 
             'If slideHasSmartElements Then
             '    cathegoryList.SelectedItem = "Name"
@@ -328,14 +328,14 @@ Public Class ucSearch
                 .Label2.Text = "Elemente:"
             End With
             cathegoryList.Items.Add("Name")
-            cathegoryList.Items.Add("Verantwortlich")
+            'cathegoryList.Items.Add("Verantwortlich")
             cathegoryList.Items.Add("Lieferumfänge")
             'cathegoryList.Items.Add("Original Name")
-            cathegoryList.Items.Add("Überfällig")
-            cathegoryList.Items.Add("Ressourcen")
+            'cathegoryList.Items.Add("Überfällig")
+            'cathegoryList.Items.Add("Ressourcen")
             cathegoryList.Items.Add("Abkürzung")
-            cathegoryList.Items.Add("Kosten")
-            cathegoryList.Items.Add("manuelle Termin-Änderungen")
+            'cathegoryList.Items.Add("Kosten")
+            'cathegoryList.Items.Add("manuelle Termin-Änderungen")
 
         End If
 
@@ -389,24 +389,24 @@ Public Class ucSearch
             Select Case CStr(cathegoryList.SelectedItem)
                 Case "Name"
                     catCode = pptInfoType.cName
-                Case "Responsibilities"
-                    catCode = pptInfoType.responsible
-                Case "Original Name"
-                    catCode = pptInfoType.oName
+                'Case "Responsibilities"
+                '    catCode = pptInfoType.responsible
+                'Case "Original Name"
+                '    catCode = pptInfoType.oName
                 Case "Abbreviation"
                     catCode = pptInfoType.sName
-                Case "voller Name"
-                    catCode = pptInfoType.bCrumb
+                'Case "voller Name"
+                '    catCode = pptInfoType.bCrumb
                 Case "Deliverables"
                     catCode = pptInfoType.lUmfang
-                Case "manually Changed Dates"
-                    catCode = pptInfoType.mvElement
-                Case "Resources"
-                    catCode = pptInfoType.resources
-                Case "Cost"
-                    catCode = pptInfoType.costs
-                Case "Overdue"
-                    catCode = pptInfoType.overDue
+                    'Case "manually Changed Dates"
+                    '    catCode = pptInfoType.mvElement
+                    'Case "Resources"
+                    '    catCode = pptInfoType.resources
+                    'Case "Cost"
+                    '    catCode = pptInfoType.costs
+                    'Case "Overdue"
+                    '    catCode = pptInfoType.overDue
                 Case Else
                     catCode = pptInfoType.cName
             End Select
@@ -414,24 +414,24 @@ Public Class ucSearch
             Select Case CStr(cathegoryList.SelectedItem)
                 Case "Name"
                     catCode = pptInfoType.cName
-                Case "Verantwortlich"
-                    catCode = pptInfoType.responsible
-                Case "Original Name"
-                    catCode = pptInfoType.oName
+                'Case "Verantwortlich"
+                '    catCode = pptInfoType.responsible
+                'Case "Original Name"
+                '    catCode = pptInfoType.oName
                 Case "Abkürzung"
                     catCode = pptInfoType.sName
-                Case "voller Name"
-                    catCode = pptInfoType.bCrumb
+                'Case "voller Name"
+                '    catCode = pptInfoType.bCrumb
                 Case "Lieferumfänge"
                     catCode = pptInfoType.lUmfang
-                Case "manuelle Termin-Änderungen"
-                    catCode = pptInfoType.mvElement
-                Case "Ressourcen"
-                    catCode = pptInfoType.resources
-                Case "Kosten"
-                    catCode = pptInfoType.costs
-                Case "Überfällig"
-                    catCode = pptInfoType.overDue
+                    'Case "manuelle Termin-Änderungen"
+                    '    catCode = pptInfoType.mvElement
+                    'Case "Ressourcen"
+                    '    catCode = pptInfoType.resources
+                    'Case "Kosten"
+                    '    catCode = pptInfoType.costs
+                    'Case "Überfällig"
+                    '    catCode = pptInfoType.overDue
                 Case Else
                     catCode = pptInfoType.cName
             End Select

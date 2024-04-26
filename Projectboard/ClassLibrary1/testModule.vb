@@ -15631,6 +15631,7 @@ Public Module testModule
 
 
     End Sub
+
     '''' <summary>
     '''' zeichnet die Projekte der Multiprojekt Sicht ( auch für extended Mode )
     '''' </summary>
@@ -17010,7 +17011,8 @@ Public Module testModule
         ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
         ' überdeckt werden soll 
 
-        If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
+        If awinSettings.mppShowMsName Then
+            'If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
 
             Dim doDraw As Boolean = False
             Dim myText As String = ""
@@ -17022,27 +17024,27 @@ Public Module testModule
                 myText = msBeschriftung
                 myType = PTpptAnnotationType.text
                 myTitle = "Beschriftung"
-            ElseIf MS.invoice.Key > 0 Then
-                doDraw = True
-                myText = MS.invoice.Key.ToString("##0.#") & " T€"
-                myType = PTpptAnnotationType.invoice
-                myTitle = "Invoice"
+                'ElseIf MS.invoice.Key > 0 Then
+                '    doDraw = True
+                '    myText = MS.invoice.Key.ToString("##0.#") & " T€"
+                '    myType = PTpptAnnotationType.invoice
+                '    myTitle = "Invoice"
             End If
 
             ' now find out whether or not 
             ' there is a milestone with NAme Invoice at the end of a proejct 
             Dim specialCaseInvoice As Boolean = False
 
-            Try
+            'Try
 
-                specialCaseInvoice = (MS.invoice.Key > 0) And
-                                (DateDiff(DateInterval.Day, MS.getDate, hproj.endeDate) = 0) And
-                                (MS.name = "Invoice")
+            '    specialCaseInvoice = (MS.invoice.Key > 0) And
+            '                    (DateDiff(DateInterval.Day, MS.getDate, hproj.endeDate) = 0) And
+            '                    (MS.name = "Invoice")
 
 
-            Catch ex As Exception
-                specialCaseInvoice = False
-            End Try
+            'Catch ex As Exception
+            '    specialCaseInvoice = False
+            'End Try
 
 
             If doDraw Then
@@ -17076,8 +17078,8 @@ Public Module testModule
 
         ' jetzt muss ggf das Datum angebracht werden 
         Dim msDateText As String = ""
-        If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
-
+        'If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
+        If awinSettings.mppShowMsDate Then
             Dim doDraw As Boolean = False
             Dim myText As String = ""
             Dim myType As PTpptAnnotationType
@@ -17089,11 +17091,11 @@ Public Module testModule
                 myType = PTpptAnnotationType.datum
                 myTitle = "Datum"
 
-            ElseIf MS.penalty.Value > 0 Then
-                doDraw = True
-                myText = MS.penalty.Value.ToString("##0.#") & " T€ (" & MS.penalty.Key.ToShortDateString & ")"
-                myType = PTpptAnnotationType.penalty
-                myTitle = "Penalty"
+                'ElseIf MS.penalty.Value > 0 Then
+                '    doDraw = True
+                '    myText = MS.penalty.Value.ToString("##0.#") & " T€ (" & MS.penalty.Key.ToShortDateString & ")"
+                '    myType = PTpptAnnotationType.penalty
+                '    myTitle = "Penalty"
             End If
 
 
@@ -17305,8 +17307,7 @@ Public Module testModule
             ' jetzt muss ggf die Beschriftung angebracht werden 
             ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
             ' überdeckt werden soll 
-            If (awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText)) Or
-                awinSettings.mppInvoicesPenalties Then
+            If (awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText)) Then
 
                 Dim doDraw As Boolean = False
                 Dim myText As String = ""
@@ -17320,11 +17321,11 @@ Public Module testModule
                     myType = PTpptAnnotationType.text
                     myTitle = "Beschriftung"
                     leftPos = CSng(x1)
-                ElseIf cphase.invoice.Key > 0 Then
-                    doDraw = True
-                    myText = cphase.invoice.Key.ToString("##0.#") & " T€"
-                    myType = PTpptAnnotationType.invoice
-                    myTitle = "Invoice"
+                    'ElseIf cphase.invoice.Key > 0 Then
+                    '    doDraw = True
+                    '    myText = cphase.invoice.Key.ToString("##0.#") & " T€"
+                    '    myType = PTpptAnnotationType.invoice
+                    '    myTitle = "Invoice"
 
                 End If
 
@@ -17362,8 +17363,7 @@ Public Module testModule
             End If
 
             ' jetzt muss ggf das Datum angebracht werden 
-            If (awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText)) Or
-                awinSettings.mppInvoicesPenalties Then
+            If (awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText)) Then
 
                 Dim doDraw As Boolean = False
                 Dim myText As String = ""
@@ -17377,11 +17377,11 @@ Public Module testModule
                     myType = PTpptAnnotationType.datum
                     myTitle = "Datum"
                     leftPos = CSng(x1)
-                ElseIf cphase.penalty.Value > 0 Then
-                    doDraw = True
-                    myText = cphase.penalty.Value.ToString("##0.#") & " T€ (" & cphase.penalty.Key.ToShortDateString & ")"
-                    myType = PTpptAnnotationType.penalty
-                    myTitle = "Penalty"
+                    'ElseIf cphase.penalty.Value > 0 Then
+                    '    doDraw = True
+                    '    myText = cphase.penalty.Value.ToString("##0.#") & " T€ (" & cphase.penalty.Key.ToShortDateString & ")"
+                    '    myType = PTpptAnnotationType.penalty
+                    '    myTitle = "Penalty"
                 End If
 
                 If doDraw Then
@@ -17489,7 +17489,7 @@ Public Module testModule
     ''' <param name="milestoneID">die ID des Meilensteins, der gezeichnet werden soll</param>
     ''' <param name="yPosition">die yPosition auf der Zeichenfläche; die x-Position wird errechnet</param>
     ''' <remarks></remarks>
-    Private Sub zeichneMeilensteinInSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection,
+    Public Sub zeichneMeilensteinInSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection,
                                                ByVal hproj As clsProjekt,
                                                ByVal swimlaneID As String,
                                                ByVal milestoneID As String,

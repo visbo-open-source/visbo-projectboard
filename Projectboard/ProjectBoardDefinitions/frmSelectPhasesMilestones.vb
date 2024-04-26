@@ -9,6 +9,9 @@ Public Class frmSelectPhasesMilestones
     Public selectedMilestones As New Collection
     Public selectedPhases As New Collection
 
+    ' tk 25.4 in ActualTargetTime or all other reporting components where the timeframe selection should not be shown 
+    Public showTimeFrameSelection As Boolean
+
     ' steuert ob die showrangeLEft und showrangeRight Daten gezeigt werden 
     Public Property addElementMode As Boolean
 
@@ -19,6 +22,7 @@ Public Class frmSelectPhasesMilestones
     Public Sub New()
 
         ' Dieser Aufruf ist für den Designer erforderlich.
+        showTimeFrameSelection = True
         _addElementMode = False
         InitializeComponent()
 
@@ -83,6 +87,12 @@ Public Class frmSelectPhasesMilestones
             einstellungen.Text = "Einstellungen"
             Me.Text = "Auswahl von Projekten, Phasen, Meilensteinen"
             Me.Ok_Button.Text = "Auswahl bestätigen"
+        End If
+
+        If Not showTimeFrameSelection Then
+            zeitLabel.Visible = False
+            vonDate.Visible = False
+            bisDate.Visible = False
         End If
 
     End Sub

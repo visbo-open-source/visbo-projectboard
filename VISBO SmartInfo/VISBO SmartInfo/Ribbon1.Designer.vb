@@ -199,6 +199,7 @@
         'btnShowChanges
         '
         Me.btnShowChanges.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnShowChanges.Enabled = False
         Me.btnShowChanges.Image = Global.VISBO_SmartInfo.My.Resources.Resources.shape_triangle
         Me.btnShowChanges.Label = "Difference"
         Me.btnShowChanges.Name = "btnShowChanges"

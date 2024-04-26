@@ -13,7 +13,7 @@ Module creationModule
                                                 "TableMilestoneAPVCV", "ProjektBedarfsChart", "Ampel-Farbe", "Ampel-Text",
                                                 "Beschreibung", "Business-Unit", "SymTrafficLight", "SymRisks", "SymGoals",
                                                 "SymTeam", "SymFinance", "SymSchedules", "SymPrPf", "Stand:", "Laufzeit:", "Verantwortlich:",
-                                                "ActualTargetReve", "ActualTargetCost", "ActualTargetRess", "ActualTargetProfit"}
+                                                "ActualTargetReve", "ActualTargetCost", "ActualTargetRess", "ActualTargetProfit", "ActualTargetTime"}
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
@@ -203,6 +203,7 @@ Module creationModule
         Dim fallendShape As PowerPoint.Shape = Nothing
         Dim ampelShape As PowerPoint.Shape = Nothing
         Dim sternShape As PowerPoint.Shape = Nothing
+        Dim hyperLinkShape As PowerPoint.Shape = Nothing
 
         Dim reportCreationDate As Date = Date.Now
 
@@ -321,6 +322,12 @@ Module creationModule
             phMSSelNeeded(0) = False
             phMSSelNeeded(1) = False
 
+            ' soll die Phasen und Milestone Selektion von Baseline oder current Plan ausgehen ? 
+            ' im Default: von current Plan 
+            ' bei ActualTargetTime von der Baseline 
+
+            Dim selectPhMsFromBaseline As Boolean = False
+
             ' müssen Rollen, Kostenarten gewählt werden ?
             ' (0) = true : es wird eine Selection benötigt 
             ' (1) = true : die Selection hat bereits stattgefunden
@@ -420,6 +427,7 @@ Module creationModule
                         kennzeichnung = "TableMilestoneAPVCV" Or
                         kennzeichnung = "Tabelle Projektziele" Or
                         kennzeichnung = "ProjektBedarfsChart" Or
+                        kennzeichnung = "ActualTargetTime" Or
                         kennzeichnung = "ActualTargetReve" Or
                         kennzeichnung = "ActualTargetCost" Or
                         kennzeichnung = "ActualTargetRess" Or
@@ -458,6 +466,8 @@ Module creationModule
                     ElseIf kennzeichnung = "stern" Then
                         sternShape = pptShape
 
+                    ElseIf kennzeichnung = "link2Visbo" Then
+                        hyperLinkShape = pptShape
                     End If
 
 
@@ -466,6 +476,7 @@ Module creationModule
                 If kennzeichnung = "Einzelprojektsicht" Or
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
+                        kennzeichnung = "ActualTargetTime" Or
                         kennzeichnung = "Multiprojektsicht" Or
                         kennzeichnung = "TableMilestoneAPVCV" Or
                         kennzeichnung = "Meilenstein" Or
@@ -484,6 +495,10 @@ Module creationModule
                        kennzeichnung = "ActualTargetProfit" Then
                     ' it should only be given as text in the Powerpoint Templates. Currently there is no interactive selection 
                     roleCostSelNeeded(0) = False
+                End If
+
+                If kennzeichnung = "ActualTargetTime" Then
+                    selectPhMsFromBaseline = True
                 End If
 
 
@@ -511,12 +526,23 @@ Module creationModule
 
                 ' jetzt die selectedProjekte auf ein Projekt setzen, das wird nämlich dann verwendet , um im TreeView bei 
                 ' die Struktur Auswahl zu machen 
+
                 selectedProjekte.Clear(False)
-                If ShowProjekte.Count > 0 Then
-                    selectedProjekte.Add(ShowProjekte.getProject(1), False)
+                If selectPhMsFromBaseline Then
+                    ShowProjekte.AddAnyway(lproj, False)
+                    selectedProjekte.Add(lproj, False)
+                Else
+                    If ShowProjekte.Count > 0 Then
+                        selectedProjekte.Add(ShowProjekte.getProject(1), False)
+                    End If
                 End If
 
                 Dim frmSelectionPhMs As New frmSelectPhasesMilestones
+                If selectPhMsFromBaseline Then
+                    frmSelectionPhMs.showTimeFrameSelection = False
+                End If
+
+
                 If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
 
                     If Not IsNothing(frmSelectionPhMs.selectedPhases) Then
@@ -668,6 +694,20 @@ Module creationModule
 
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                                ptReportBigTypes.components, ptReportComponents.prName)
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=KeyMetrics"
+                                        ' https://my.visbo.net/vpKeyMetrics/61afda091abb54659f65765e?view=KeyMetrics
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
+
                                 Catch ex As Exception
                                     msgTxt = "Component 'Projekt-Name':" & ex.Message
                                     msgCollection.Add(msgTxt)
@@ -902,6 +942,18 @@ Module creationModule
                                         .TextFrame2.TextRange.Text = ""
                                         .AlternativeText = ""
                                         .Title = ""
+
+                                        ' if there is a link2VISBO Shape defined - then insert that 
+                                        If Not IsNothing(hyperLinkShape) Then
+
+                                            ' define Url 
+                                            Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Deadline"
+
+                                            ' Link the shape with URL
+                                            Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                        End If
                                     End If
 
 
@@ -1021,6 +1073,18 @@ Module creationModule
                                         .Title = ""
                                     End If
 
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Deadline"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
+
 
                                 Catch ex As Exception
 
@@ -1052,6 +1116,18 @@ Module creationModule
                                     .TextFrame2.TextRange.Text = ""
                                     .AlternativeText = ""
                                     .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Deadline"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
 
                                 Catch ex As Exception
 
@@ -1091,6 +1167,18 @@ Module creationModule
                                     .TextFrame2.TextRange.Text = ""
                                     .AlternativeText = ""
                                     .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Deadline"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
 
                                 Catch ex As Exception
 
@@ -1257,6 +1345,50 @@ Module creationModule
                                 End Try
 
 
+                            Case "ActualTargetTime"
+
+
+                                Try
+
+                                    Dim minCal As Boolean = False
+                                    If qualifier2.Length > 0 Then
+                                        minCal = (qualifier2.Trim = "minCal")
+                                    End If
+
+                                    Dim pptFirstTime As Boolean = True
+
+
+                                    Call zeichneActualTargetTimeinPPT(selectedPhases, selectedMilestones, hproj, bproj, lproj, kennzeichnung, minCal, msgCollection)
+
+                                    .TextFrame2.TextRange.Text = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Deadline"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
+
+                                Catch ex As Exception
+
+                                    msgTxt = "Component 'Swimlanes':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
+                                    .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
+                                    objectsDone = objectsToDo
+                                End Try
+
+
+
+
+
                             Case "ActualTargetReve"
 
                                 Try
@@ -1304,6 +1436,19 @@ Module creationModule
 
                                     .AlternativeText = ""
                                     .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=KeyMetrics"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
+
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
 
@@ -1360,6 +1505,18 @@ Module creationModule
 
                                     .AlternativeText = ""
                                     .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Costtype&unit=PD&drillDown=1"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
 
@@ -1416,6 +1573,19 @@ Module creationModule
 
                                     .AlternativeText = ""
                                     .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Capacity&unit=PD&drillDown=1"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
+
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
 
@@ -1471,6 +1641,20 @@ Module creationModule
 
                                     .AlternativeText = ""
                                     .Title = ""
+
+                                    ' if there is a link2VISBO Shape defined - then insert that 
+                                    If Not IsNothing(hyperLinkShape) Then
+
+                                        ' define Url 
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Overview"
+
+                                        ' Link the shape with URL
+                                        Call createHyperlinkToVISBO(kennzeichnung, pptShape, hyperLinkShape, visboHyperLinkURL)
+
+                                    End If
+
+
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
 
@@ -1851,7 +2035,7 @@ Module creationModule
                                     bigType = ptReportBigTypes.components
                                     compID = ptReportComponents.prAmpel
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                              bigType, compID)
+                                      bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -1884,11 +2068,10 @@ Module creationModule
                                     compID = ptReportComponents.prAmpelText
                                     qualifier2 = boxName
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
-
                                 Catch ex As Exception
                                     msgTxt = "Component 'Ampel-Text':" & ex.Message
                                     msgCollection.Add(msgTxt)
@@ -1913,7 +2096,7 @@ Module creationModule
                                     compID = ptReportComponents.prBusinessUnit
                                     qualifier2 = boxName
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -1946,9 +2129,9 @@ Module creationModule
                                             '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf &
                                             '    "Varianten-Beschreibung: " & hproj.variantDescription
 
-                                            .TextFrame2.TextRange.Text = hproj.description & vbLf & vbLf &
-                                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                            .TextFrame2.TextRange.Text = hproj.description & vbLf & vbLf & "Varianten-Beschreibung: " & hproj.variantDescription
                                         End If
+
                                     Catch ex As Exception
 
                                     End Try
@@ -1957,7 +2140,7 @@ Module creationModule
                                     compID = ptReportComponents.prDescription
                                     qualifier2 = boxName
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -1978,7 +2161,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymTrafficLight
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                              bigType, compID)
+                                      bigType, compID)
 
                                     pptShape.AlternativeText = ""
                                     pptShape.Title = ""
@@ -1997,7 +2180,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymRisks
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -2015,7 +2198,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymDescription
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
                                     .AlternativeText = ""
                                     .Title = ""
 
@@ -2033,7 +2216,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymFinance
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
                                     .AlternativeText = ""
                                     .Title = ""
 
@@ -2050,7 +2233,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymSchedules
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
                                     .AlternativeText = ""
                                     .Title = ""
 
@@ -2067,7 +2250,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymTeam
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -2085,7 +2268,7 @@ Module creationModule
                                     compID = ptReportComponents.prSymProject
                                     qualifier2 = ""
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
                                     .AlternativeText = ""
                                     .Title = ""
 
@@ -2118,7 +2301,7 @@ Module creationModule
                                     bigType = ptReportBigTypes.components
                                     compID = ptReportComponents.prStand
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -2146,7 +2329,7 @@ Module creationModule
                                     bigType = ptReportBigTypes.components
                                     compID = ptReportComponents.prLaufzeit
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                  bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -2175,7 +2358,7 @@ Module creationModule
                                     compID = ptReportComponents.prVerantwortlich
                                     qualifier2 = boxName
                                     Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                              bigType, compID)
+                                      bigType, compID)
 
                                     .AlternativeText = ""
                                     .Title = ""
@@ -2220,6 +2403,11 @@ Module creationModule
                 gleichShape = Nothing
             End If
 
+            If Not IsNothing(hyperLinkShape) Then
+                hyperLinkShape.Delete()
+                hyperLinkShape = Nothing
+            End If
+
             If Not IsNothing(steigendShape) Then
                 steigendShape.Delete()
                 steigendShape = Nothing
@@ -2238,11 +2426,11 @@ Module creationModule
             'Next
 
             If objectsDone < objectsToDo Then
-                msgTxt = "not all elements could be drawn on page ... only " & objectsDone & " out of " & objectsToDo
-                msgCollection.Add(msgTxt)
-                objectsToDo = 0
-                objectsDone = 0
-            End If
+            msgTxt = "not all elements could be drawn on page ... only " & objectsDone & " out of " & objectsToDo
+            msgCollection.Add(msgTxt)
+            objectsToDo = 0
+            objectsDone = 0
+        End If
 
         End While ' folieIX <= anzSlidestoAdd
 
@@ -2934,19 +3122,6 @@ Module creationModule
         ' jetzt werden die Collections in dem Chart aufgebaut ...
         With newPPTChart.Chart
 
-            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-
-                .Name = "Current Plan"
-                .Values = projectValues
-                .Interior.Color = visboFarbeBlau
-
-                .XValues = Xdatenreihe
-                .ChartType = PlanChartType
-
-
-            End With
-
-
             ' now draw baselineValues , but only it there are baselineValues 
 
             If Not IsNothing(sCInfo.vglProj) Then
@@ -2959,8 +3134,44 @@ Module creationModule
                     .XValues = Xdatenreihe
                     .ChartType = vglChartType
 
+                    Try
+                        .ApplyDataLabels()
+                        'CType(.DataLabels, PowerPoint.DataLabels).Position = PowerPoint.XlDataLabelPosition.xlLabelPositionInsideBase
+
+                        CType(.DataLabels, PowerPoint.DataLabels).Format.TextFrame2.TextRange.Font.Size = tlFontSize - 3
+                        CType(.DataLabels, PowerPoint.DataLabels).Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+                        'CType(.DataLabels, PowerPoint.DataLabels).Position = PowerPoint.XlDataLabelPosition.xlLabelPositionBestFit
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
             End If
+
+
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = "Current Plan"
+                .Values = projectValues
+                .Interior.Color = visboFarbeBlau
+
+                .XValues = Xdatenreihe
+                .ChartType = PlanChartType
+
+                Try
+                    .ApplyDataLabels()
+                    'CType(.DataLabels, PowerPoint.DataLabels).Position = PowerPoint.XlDataLabelPosition.xlLabelPositionInsideBase
+
+                    CType(.DataLabels, PowerPoint.DataLabels).Format.TextFrame2.TextRange.Font.Size = tlFontSize - 3
+                    CType(.DataLabels, PowerPoint.DataLabels).Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+                    'CType(.DataLabels, PowerPoint.DataLabels).Position = PowerPoint.XlDataLabelPosition.xlLabelPositionBestFit
+                Catch ex As Exception
+
+                End Try
+
+
+            End With
+
 
         End With
 
@@ -3619,7 +3830,718 @@ Module creationModule
 
     End Sub
 
+    ''' <summary>
+    ''' calculates from strtadates and end-dates the min-, max-dates 
+    ''' adds some 20% of duration in months on maxDate
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="bProj">first baseline</param>
+    ''' <param name="lproj">last baseline</param>
+    ''' <param name="minDate"></param>
+    ''' <param name="maxDate"></param>
+    Private Sub bestimmeMinMaxDates(ByVal hproj As clsProjekt, ByVal bProj As clsProjekt, ByVal lproj As clsProjekt,
+                                    ByRef minDate As Date, ByRef maxDate As Date)
 
+
+        minDate = hproj.startDate
+        maxDate = hproj.endeDate
+
+        If Not IsNothing(bProj) Then
+            If DateDiff(DateInterval.Day, minDate, bProj.startDate) < 0 Then
+                minDate = bProj.startDate
+            End If
+
+            If DateDiff(DateInterval.Day, maxDate, bProj.endeDate) > 0 Then
+                maxDate = bProj.endeDate
+            End If
+
+        End If
+
+        If Not IsNothing(lproj) Then
+            If DateDiff(DateInterval.Day, minDate, lproj.startDate) < 0 Then
+                minDate = lproj.startDate
+            End If
+
+            If DateDiff(DateInterval.Day, maxDate, lproj.endeDate) > 0 Then
+                maxDate = lproj.endeDate
+            End If
+
+        End If
+
+
+        ' jetzt noch den Puffer aufsetzen ...
+        ' tk 16.10.19 hier nach hinten immer etwas Luft lassen 
+        Dim puffer As Integer = CInt(DateDiff(DateInterval.Month, minDate, maxDate) * 0.2)
+        If puffer = 0 Then
+            puffer = 1
+        End If
+
+        maxDate = maxDate.AddMonths(puffer)
+
+
+    End Sub
+
+    ''' <summary>
+    ''' draws the ActualTargetTimeComparison between Plan and Baseline
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="curYPosition"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="considerAll"></param>
+    ''' <param name="selectedPhaseIDs"></param>
+    ''' <param name="selectedMilestoneIDs"></param>
+    Sub zeichneOneLaneOfProject(ByRef rds As clsPPTShapes, ByRef curYPosition As Double,
+                                 ByVal hproj As clsProjekt,
+                                 ByVal considerAll As Boolean,
+                                 ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection, ByVal isRed As Boolean)
+
+
+        ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
+        Dim shapeNameCollection As New Collection
+
+        Dim swlMilestoneCollection As New Collection
+
+        ' draw always within 1 line = lane 
+        Dim extended As Boolean = False
+
+        ' x1, x2 sind die Anfangs- und End-Koordinaten eines Shapes auf der Zeichenfläche 
+        Dim x1 As Double, x2 As Double
+
+        ' startNr, endNr sind die Anfangs- und End-Indices der Kind-Phasen der Swimlane
+        Dim startNr As Integer = 0
+        Dim endNr As Integer = 0
+
+
+        ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
+        Dim aktuelleYPosition As Double = curYPosition
+
+
+        Dim copiedShape As PowerPoint.Shape
+
+        Dim planBaselineFontSize As Single = 12.0
+        Dim isBold As Boolean = False
+
+        Try
+            If rds.containerShape.HasTextFrame = MsoTriState.msoCTrue Then
+                planBaselineFontSize = rds.containerShape.TextFrame2.TextRange.Font.Size
+                isBold = (rds.containerShape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue)
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        ' ###########################################################
+        ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
+        ' Doppelzeichnungen 
+        ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
+        '
+        If hproj.variantName <> ptVariantFixNames.pfv.ToString Then
+
+            copiedShape = createPPTShapeFromShape(rds.horizontalLineShape, rds.pptSlide)
+            With copiedShape
+                .Top = CSng(curYPosition - 0.5 * rds.zeilenHoehe)
+                .Left = CSng(rds.drawingAreaLeft)
+                .Width = CSng(rds.drawingAreaWidth)
+                .Name = .Name & .Id
+                shapeNameCollection.Add(.Name)
+            End With
+
+            curYPosition = curYPosition + rds.zeilenHoehe
+
+        End If
+
+
+
+        ' ###########################################################
+        ' zeichnen des Bezeichners - either Current Plan (<Date>) or Baseline (<Date>)
+        '
+
+        copiedShape = createPPTShapeFromShape(rds.projectNameVorlagenShape, rds.pptSlide)
+        Dim laneNameShape As PowerPoint.Shape = copiedShape
+        ' Ergänzung 20.4.24
+        Dim myDescriptor As String = "Current Plan"
+
+        If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+            myDescriptor = "Baseline"
+        End If
+
+        Dim cphase As clsPhase = hproj.getPhaseByID(rootPhaseName)
+
+        With copiedShape
+            .Top = CSng(curYPosition - rds.YprojectName)
+            .Left = CSng(rds.projectListLeft)
+            .TextFrame2.TextRange.Text = myDescriptor
+
+            Try
+                .TextFrame2.TextRange.Font.Bold = rds.containerShape.TextFrame2.TextRange.Font.Bold
+                .TextFrame2.TextRange.Font.Size = rds.containerShape.TextFrame2.TextRange.Font.Size
+                If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                    .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = rds.containerShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                Else
+                    .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = rds.containerShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    ' tk 23.4.24 until there is a way to update the coloring, this is not done 
+                    'If isRed Then
+                    '    .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                    'Else
+                    '    .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                    'End If
+                End If
+
+                .TextFrame2.TextRange.ParagraphFormat.TextDirection = MsoTextDirection.msoTextDirectionLeftToRight
+                .TextFrame2.TextRange.ParagraphFormat.WordWrap = MsoTriState.msoFalse
+
+            Catch ex As Exception
+
+            End Try
+
+
+            .Name = .Name & .Id
+
+
+            ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
+            shapeNameCollection.Add(.Name)
+
+
+        End With
+
+        ' weiter mit Zeichnen der Lane ...
+
+        ' ###########################################################
+        ' optionales Zeichnen der Swimlane-Linie 
+        '
+
+        Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
+
+        With laneNameShape
+            ' jetzt muss überprüft werden, ob SwimlaneName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+            If .Left + .Width > x1 Then
+                ' jetzt muss der Name entsprechend gekürzt werden 
+                .TextFrame2.WordWrap = MsoTriState.msoTrue
+                .Width = CSng(x1 - .Left)
+
+                ' jetzt, wenn es in die nächste Zeile reingeht, so weit hochschieben, dass der Name nicht mehr in die nächste Zeile reicht 
+                If .Top + .Height > curYPosition + rds.zeilenHoehe Then
+                    .Top = CSng(curYPosition + rds.zeilenHoehe - .Height)
+                End If
+
+            End If
+        End With
+
+
+
+
+        If awinSettings.mppShowProjectLine Then
+
+            ' tk 5.1.2021
+            Dim swlLineShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
+
+            copiedShape = createPPTShapeFromShape(rds.projectVorlagenShape, rds.pptSlide)
+            With copiedShape
+                .Top = CSng(curYPosition - rds.YProjectLine)
+                .Left = CSng(x1)
+                .Width = CSng(x2 - x1)
+                '.Name = .Name & .Id
+                .Name = swlLineShapeName & .Id
+
+                shapeNameCollection.Add(.Name)
+
+                If awinSettings.mppEnableSmartPPT Then
+
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                    'Dim originalName As String = cphase.originalName
+
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                    Dim shortText As String = cphase.shortName
+                    Dim originalName As String = cphase.originalName
+
+                    Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+                    Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
+                    If originalName = cphase.name Then
+                        originalName = Nothing
+                    End If
+
+                    Call addSmartPPTMsPhInfo(copiedShape, hproj,
+                                                fullBreadCrumb, cphase.name, shortText, originalName,
+                                                bestShortName, bestLongName,
+                                                cphase.getStartDate, cphase.getEndDate,
+                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+                                                cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
+
+                End If
+
+
+                ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+                If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+                    .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                End If
+
+                ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+                If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+                    .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                End If
+
+
+            End With
+
+
+
+        End If
+
+
+
+        Dim curPhase As clsPhase
+        Dim drawPhase As Boolean = False
+        Dim drawMilestone As Boolean = False
+
+        ' new 20.4.24
+        For px As Integer = 1 To hproj.CountPhases
+
+            Try
+                curPhase = hproj.getPhase(px)
+                drawPhase = considerAll Or selectedPhaseIDs.Contains(curPhase.nameID) Or curPhase.nameID = rootPhaseName
+
+                If drawPhase Then
+                    ' now draw the phase
+                    If considerAll Or selectedPhaseIDs.Contains(curPhase.nameID) Then
+
+
+                        Try
+                            ' now draw the phase
+                            Dim tmpCollection As New Collection
+                            Call zeichnePhaseinSwimlane(rds, tmpCollection, hproj, rootPhaseName,
+                                                    curPhase.nameID, curYPosition)
+
+                            ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                            For Each tmpName As String In tmpCollection
+
+                                shapeNameCollection.Add(tmpName)
+
+                            Next
+
+                        Catch ex As Exception
+                            Dim a As Integer = 1
+                        End Try
+
+
+                    End If
+                End If
+
+                For mx As Integer = 1 To curPhase.countMilestones
+                    Dim curMs As clsMeilenstein = curPhase.getMilestone(mx)
+                    drawMilestone = considerAll Or selectedMilestoneIDs.Contains(curMs.nameID)
+
+                    If drawMilestone Then
+                        ' now draw the milestone
+                        ' zeichne den Meilenstein 
+                        Dim tmpCollection As New Collection
+                        Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj,
+                                                              curPhase.nameID, curMs.nameID, curYPosition)
+
+                        ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                        For Each tmpName As String In tmpCollection
+
+                            shapeNameCollection.Add(tmpName)
+
+                            ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                            swlMilestoneCollection.Add(tmpName)
+
+                        Next
+
+                    End If
+                Next
+            Catch ex As Exception
+
+            End Try
+
+
+        Next
+
+        ' ###########################################################
+        ' Weiterschalten der CurYPosition         '
+
+        curYPosition = curYPosition + rds.zeilenHoehe
+
+        ' ###########################################################
+        ' alle Milestones in den Vordergrund holen 
+        '
+        Dim anzElements As Integer = swlMilestoneCollection.Count
+        Dim arrayOFNames() As String
+        Dim shapeGruppe As PowerPoint.ShapeRange
+
+        If anzElements > 1 Then
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(swlMilestoneCollection.Item(i))
+            Next
+
+            Try
+                shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+                shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+
+        ElseIf anzElements = 1 Then
+            Try
+                Dim msShape As PowerPoint.Shape = rds.pptSlide.Shapes.Item(swlMilestoneCollection.Item(1))
+                msShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' links the given shape in slide with the provided URL
+    ''' </summary>
+    ''' <param name="hyperLinkURL"></param>
+    ''' <param name="subURL"></param>
+    Friend Sub createHyperlinkToVISBO(ByVal kennzeichnung As String, ByVal contentShape As PowerPoint.Shape, ByVal shapeToCopy As PowerPoint.Shape, ByVal hyperLinkURL As String, Optional ByVal subURL As String = "")
+
+        Try
+
+            Dim myLinkShape = shapeToCopy.Duplicate
+
+            Select Case kennzeichnung
+                Case "Projekt-Name"
+                    With myLinkShape
+
+                        .Top = contentShape.Top
+                        .Left = CSng(contentShape.Left - 1.2 * shapeToCopy.Width)
+
+                    End With
+
+
+                Case Else
+
+                    With myLinkShape
+                        .Top = contentShape.Top
+                        .Left = contentShape.Left
+                    End With
+
+            End Select
+
+
+            With myLinkShape
+
+                With .ActionSettings(PowerPoint.PpMouseActivation.ppMouseClick)
+                    .Action = PowerPoint.PpActionType.ppActionHyperlink
+                    .Hyperlink.Address = hyperLinkURL
+                    .Hyperlink.ScreenTip = "Go To Visbo-WEB"
+                    .Hyperlink.AddToFavorites()
+                    .Hyperlink.SubAddress = subURL
+                End With
+            End With
+
+
+            ' bring linkShape to Front 
+            myLinkShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' drwas one line for each the baseline and according planning version 
+    ''' with milestones and phases as selected in selectedMS, selectedPhases
+    ''' </summary>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="hproj">represents current plan</param>    ''' 
+    ''' <param name="bProj">represents very first baseline</param>
+    ''' <param name="lProj">represents last baseline</param>
+    ''' <param name="kennzeichnung"></param>
+    ''' <param name="minCal"></param>
+    ''' <param name="msgCollection"></param>
+    Private Sub zeichneActualTargetTimeinPPT(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
+                                                 ByVal hproj As clsProjekt,
+                                                 ByVal bProj As clsProjekt,
+                                                 ByVal lProj As clsProjekt,
+                                                 ByVal kennzeichnung As String,
+                                                 ByVal minCal As Boolean,
+                                                 ByRef msgCollection As Collection)
+
+
+        Dim zeilenhoehe As Double = 0.0
+        Dim legendFontSize As Double = 6.0
+
+        ' tk 25.4.24 - rememberShowRangeLEft and Right - it need to be changed in order to define the calender-Width
+        ' just in case , if other components do need that 
+        Dim formerShowRangeLeft As Integer = showRangeLeft
+        Dim formerShowRangeRight = showRangeRight
+
+        If IsNothing(lProj) And Not IsNothing(bProj) Then
+            lProj = bProj
+        End If
+
+        Dim isRed As Boolean = False
+        Try
+            If Not IsNothing(hproj) And Not IsNothing(lProj) Then
+                isRed = DateDiff(DateInterval.Day, hproj.endeDate, lProj.endeDate) < 0
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        ' Wichtig für Kalendar 
+        Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
+        Dim errorShape As PowerPoint.Shape = Nothing
+
+        'Dim curFormatSize(1) As Double
+
+        'Dim maxZeilen As Integer = 0
+        'Dim anzZeilen As Integer = 0
+        'Dim gesamtAnzZeilen As Integer = 0
+
+
+
+        ' Ende Übernahme
+
+        'Dim format As Integer = 4
+        'Dim tmpslideID As Integer
+
+        ' an der Variablen lässt sich in der Folge erkennen, ob die Segmente BHTC Milestones gezeichnet werden müssen oder 
+        ' ob ganz allgemein nach Swimlanes gesucht wird ... 
+        'Dim isSwimlanes2 As Boolean = (kennzeichnung = "Swimlanes2")
+
+        Dim rds As New clsPPTShapes
+        'Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
+
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt , sofern bereits vorhanden ..
+        ' das Ganze funktioniert also noch mit alten Vorlagen wie mit neuen ... 
+        rds.pptSlide = currentSlide
+
+
+        ' jetzt werden die noch fehlenden Shapes erstellt .. 
+        If rds.getMissingShpNames(kennzeichnung).Count > 0 Then
+            Call rds.createMandatoryDrawingShapes(kennzeichnung)
+        End If
+
+
+
+        ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
+        'If completeMppDefinition.Sum = completeMppDefinition.Length Then
+        Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+        If missingShapes.Length = 0 Then
+            ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
+
+            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
+
+            Dim selectedPhaseIDs As New Collection
+            Dim selectedMilestoneIDs As New Collection
+
+            If considerAll Then
+                selectedPhaseIDs = lProj.getAllElemIDs(False)
+                selectedMilestoneIDs = lProj.getAllElemIDs(True)
+            Else
+                selectedPhaseIDs = lProj.getElemIdsOf(selectedPhases, False)
+                selectedMilestoneIDs = lProj.getElemIdsOf(selectedMilestones, True)
+            End If
+
+
+
+            ' wenn Kalenderlinie oder Legend-Linie über Container Grenzen gehen, werden die Koordinaten der Lines entsprechend angepasst 
+            Call rds.plausibilityAdjustments()
+
+            ' ermittelt die Koordinaten für Kalender, linker Rand Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
+            Call rds.bestimmeZeichenKoordinaten()
+
+
+
+
+            Dim minDate As Date, maxDate As Date
+
+
+
+            ' bestimmt für den angegebenen Zeitraum die Projekte, die eine der angegeben Phasen oder Meilensteine im Zeitraum enthalten. 
+            ' bestimmt darüber hinaus das minimale bzw. maximale Datum , das die Phasen der Projekte aufspannen , die den Zeitraum "berühren"  
+            Call bestimmeMinMaxDates(hproj, bProj, lProj, minDate, maxDate)
+
+
+            ' wird benötigt für die Bestimmung der Anzahl zielen und das Zeichnen der Swimlane Phase / Meilensteine
+            ' wenn mppshowallIFOne = false, dann sollte zeitRaumGrenzeL = showrangeL und zeitRaumGrenzeR = showrangeR
+            ' andernfalls ist der Zeitraum ggf. deutlich größer als Showrange 
+            'Dim zeitraumGrenzeL As Integer
+            'Dim zeitraumGrenzeR As Integer
+
+            showRangeLeft = getColumnOfDate(minDate)
+            showRangeRight = getColumnOfDate(maxDate)
+
+            '
+            ' bestimme das Start und Ende Datum des PPT Kalenders
+            Call calcStartEndePPTKalender(minDate, maxDate,
+                                          pptStartofCalendar, pptEndOfCalendar)
+
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
+            ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
+            ' dabei muss berücksichtigt werden dass selectedPhases.count = 0 sein kann, aber selectedPhaseIDs.count > 0 
+
+            Call rds.bestimmeZeilenHoehe(System.Math.Max(selectedPhases.Count, selectedPhaseIDs.Count),
+                                         System.Math.Max(selectedMilestones.Count, hproj.getPhase(1).countMilestones), considerAll)
+
+
+
+            ' es werden zwei Zeilen benötigt ... 
+            Call rds.setZeilenhoehe(4, 0)
+
+
+            Dim weitermachen As Boolean = Not IsNothing(hproj) And Not IsNothing(lProj)
+
+            If weitermachen Then
+
+
+                ' jetzt erst mal den Kalender zeichnen 
+                ' zeichne den Kalender
+                'Dim calendargroup As pptNS.Shape = Nothing
+
+                Try
+
+                    With rds
+
+                        Call draw3RowsCalendar(rds, minCal)
+
+                    End With
+
+
+
+                Catch ex As Exception
+
+                End Try
+
+                ' tk 24.4.24 get smartInfoCRD as timestamp of current plan, not of baseline
+                Dim smartInfoCRD As Date = hproj.timeStamp
+
+
+                ' 
+                ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+                ' eigentlich müsste das ContainerShpae gezeichnet werden , nicht die Seite 
+                Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+
+
+
+                Dim curYPosition As Double = rds.drawingAreaTop
+
+                ' now draw baseline Elements  
+                Call zeichneOneLaneOfProject(rds, curYPosition, lProj, considerAll, selectedPhaseIDs, selectedMilestoneIDs, False)
+
+                curYPosition = curYPosition + rds.zeilenHoehe
+
+                ' now check and verify whether or not Ids need to be redefined
+                Dim verifiedPhaseIDs As New Collection
+                Dim emptyCollection As New Collection
+
+                For Each phID As String In selectedPhaseIDs
+                    Dim cphase As clsPhase = hproj.getPhaseByID(phID)
+                    Dim addIt As Boolean = False
+
+                    If IsNothing(cphase) Then
+
+                        Dim elemName As String = elemNameOfElemID(phID)
+                        Dim tmpCollection As New Collection
+                        tmpCollection.Add(phID)
+                        Dim phBreadCrumb As String() = hproj.getBreadCrumbArray(tmpCollection, emptyCollection)
+
+                        If phBreadCrumb.Length > 0 Then
+                            cphase = hproj.getPhase(elemName, phBreadCrumb(0))
+                            If IsNothing(cphase) Then
+                                cphase = hproj.getPhase(elemName)
+                            End If
+                        End If
+
+                        If Not IsNothing(cphase) Then
+                            addIt = True
+                        End If
+
+                    Else
+                        addIt = True
+                    End If
+
+                    If addIt Then
+                        verifiedPhaseIDs.Add(phID, phID)
+                    End If
+                Next
+
+                Dim verifiedMilestoneIDs As New Collection
+
+
+                For Each msID As String In selectedMilestoneIDs
+                    Dim ms As clsMeilenstein = hproj.getMilestoneByID(msID)
+                    Dim addIt As Boolean = False
+
+                    If IsNothing(ms) Then
+
+                        Dim elemName As String = elemNameOfElemID(msID)
+                        Dim tmpCollection As New Collection
+                        tmpCollection.Add(msID)
+                        Dim msBreadCrumb As String() = hproj.getBreadCrumbArray(emptyCollection, tmpCollection)
+
+                        If msBreadCrumb.Length > 0 Then
+                            ms = hproj.getMilestone(elemName, msBreadCrumb(0))
+                            If IsNothing(ms) Then
+                                ms = hproj.getMilestone(elemName)
+                            End If
+                        End If
+
+                        If Not IsNothing(ms) Then
+                            addIt = True
+                        End If
+
+                    Else
+                        addIt = True
+                    End If
+
+                    If addIt Then
+                        verifiedMilestoneIDs.Add(msID, msID)
+                    End If
+                Next
+
+                ' now draw current Plan Elements
+                Call zeichneOneLaneOfProject(rds, curYPosition, hproj, considerAll, verifiedPhaseIDs, verifiedMilestoneIDs, isRed)
+
+
+            Else
+                ' nichs weiter tun
+            End If
+
+
+        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
+            ''rds.errorVorlagenShape.Copy()
+            ''errorShape = pptslide.Shapes.Paste
+
+            errorShape = createPPTShapeFromShape(rds.errorVorlagenShape, currentSlide)
+            With errorShape
+                .TextFrame2.TextRange.Text = missingShapes
+            End With
+        End If
+
+        ' jetzt werden alle für das Zeichnen notwendigen Hilfs-Shapes unsichtbar gemacht 
+        ' sie können dann beim Ändern des Reports wieder verwendet werden 
+        Call rds.setShapesInvisible()
+
+        ' jezt wird das containershape in den Hintergrund gesetzt 
+        Call rds.containerShape.ZOrder(MsoZOrderCmd.msoSendToBack)
+
+        ' now set back showrangeLeft
+        ' just in case if other components do need it 
+        showRangeLeft = formerShowRangeLeft
+        showRangeRight = formerShowRangeRight
+    End Sub
 
     ''' <summary>
     ''' zeichnet sowohl Swimlanes im BHTC Modus als auch im Normal -Modus
@@ -8079,6 +9001,12 @@ Module creationModule
 
             End If
 
+            ' now round to the nearest integer
+            baselineValues(0) = System.Math.Round(baselineValues(0))
+            baselineValues(1) = System.Math.Round(baselineValues(1))
+
+            projectValues(0) = System.Math.Round(projectValues(0))
+            projectValues(1) = System.Math.Round(projectValues(1))
 
         Catch ex As Exception
 

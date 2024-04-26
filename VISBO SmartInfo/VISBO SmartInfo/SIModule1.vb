@@ -1889,6 +1889,7 @@ Module SIModule1
                         End If
 
                         Dim pvName As String = ""
+                        vpid = ""
 
                         If projType = ptPRPFType.project Then
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
@@ -1907,7 +1908,17 @@ Module SIModule1
                             If tmpShape.Tags.Item("VPID").Length > 0 Then
                                 vpid = tmpShape.Tags.Item("VPID")
                             End If
+
+                            If pvName <> "" And vpid <> "" Then
+                                If smartSlideLists.containsProject(pvName, vpid) Then
+                                    ' nichts tun, ist schon drin ..
+                                Else
+                                    smartSlideLists.addProject(pvName, vpid)
+                                End If
+                            End If
+
                         ElseIf projType = ptPRPFType.portfolio Then
+
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
                                 Dim vName As String = tmpShape.Tags.Item("VNM")
@@ -1916,18 +1927,8 @@ Module SIModule1
                             If tmpShape.Tags.Item("VPID").Length > 0 Then
                                 vpid = tmpShape.Tags.Item("VPID")
                             End If
-                        End If
 
-                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
-                                And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfName))) Then
-
-                            'tmpShape ist ein Componente , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
-                            ' das ist in einem Tag im tmpshape enthalten
-
-                            If pvName <> "" Then
-                                If tmpShape.Tags.Item("VPID").Length > 0 Then
-                                    vpid = tmpShape.Tags.Item("VPID")
-                                End If
+                            If pvName <> "" And vpid <> "" Then
                                 If smartSlideLists.containsPortfolio(pvName, vpid) Then
                                     ' nichts tun, ist schon drin ..
                                 Else
@@ -1936,21 +1937,45 @@ Module SIModule1
                             End If
 
 
-                        ElseIf tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
-                                And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prName))) Then
-
-
-                            ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
-
-                            If pvName <> "" Then
-                                If smartSlideLists.containsProject(pvName, vpid) Then
-                                    ' nichts tun, ist schon drin ..
-                                Else
-                                    smartSlideLists.addProject(pvName, vpid)
-                                End If
-                            End If
-
                         End If
+
+                        'If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                        '    And (CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio) Then
+                        '    ' tk 25.4.24 - make sure it is recognized even if there is no portfolio Name present 
+                        '    'And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfName))) Then
+
+                        '    'tmpShape ist ein Componente , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                        '    ' das ist in einem Tag im tmpshape enthalten
+
+                        '    If pvName <> "" Then
+                        '        If tmpShape.Tags.Item("VPID").Length > 0 Then
+                        '            vpid = tmpShape.Tags.Item("VPID")
+                        '        End If
+                        '        If smartSlideLists.containsPortfolio(pvName, vpid) Then
+                        '            ' nichts tun, ist schon drin ..
+                        '        Else
+                        '            smartSlideLists.addPortfolio(pvName, vpid)
+                        '        End If
+                        '    End If
+
+
+                        'ElseIf tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                        '    And (CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.project) Then
+
+                        '    'And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prName))) Then
+
+
+                        '    ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
+
+                        '    If pvName <> "" Then
+                        '        If smartSlideLists.containsProject(pvName, vpid) Then
+                        '            ' nichts tun, ist schon drin ..
+                        '        Else
+                        '            smartSlideLists.addProject(pvName, vpid)
+                        '        End If
+                        '    End If
+
+                        'End If
                     End If
 
 
@@ -1974,30 +1999,31 @@ Module SIModule1
                                 tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                             End If
 
-                            'tmpShape ist ein Chart , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
-                            ' das ist in einem Tag im tmpshape enthalten
-                            If tmpShape.Tags.Item("PRPF").Length > 0 Then
-                                If CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio Then
-                                    Dim pfName As String = ""
-                                    If tmpShape.Tags.Item("PNM").Length > 0 Then
-                                        Dim pName As String = tmpShape.Tags.Item("PNM")
-                                        Dim vName As String = tmpShape.Tags.Item("VNM")
-                                        'pvName = calcProjektKey(pName, vName)
-                                        pfName = pName
-                                    End If
-                                    If tmpShape.Tags.Item("VPID").Length > 0 Then
-                                        vpid = tmpShape.Tags.Item("VPID")
-                                    End If
-                                    If pfName <> "" Then
-                                        If smartSlideLists.containsPortfolio(pfName, vpid) Then
-                                            ' nichts tun, ist schon drin ..
-                                        Else
-                                            smartSlideLists.addPortfolio(pfName, vpid)
-                                        End If
-                                    End If
-                                Else
-                                End If
-                            End If
+                            ' tk 25.4. ist ja schon drin
+                            ''tmpShape ist ein Chart , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            '' das ist in einem Tag im tmpshape enthalten
+                            'If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                            '    If CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio Then
+                            '        Dim pfName As String = ""
+                            '        If tmpShape.Tags.Item("PNM").Length > 0 Then
+                            '            Dim pName As String = tmpShape.Tags.Item("PNM")
+                            '            Dim vName As String = tmpShape.Tags.Item("VNM")
+                            '            'pvName = calcProjektKey(pName, vName)
+                            '            pfName = pName
+                            '        End If
+                            '        If tmpShape.Tags.Item("VPID").Length > 0 Then
+                            '            vpid = tmpShape.Tags.Item("VPID")
+                            '        End If
+                            '        If pfName <> "" Then
+                            '            If smartSlideLists.containsPortfolio(pfName, vpid) Then
+                            '                ' nichts tun, ist schon drin ..
+                            '            Else
+                            '                smartSlideLists.addPortfolio(pfName, vpid)
+                            '            End If
+                            '        End If
+                            '    Else
+                            '    End If
+                            'End If
 
                         End If
                     End If
@@ -8496,8 +8522,21 @@ Module SIModule1
         Const MongoDBIDLength As Integer = 24
         Dim VNlength As Integer = vpidVN.Length - MongoDBIDLength
 
-        Dim vpid As String = LSet(vpidVN, MongoDBIDLength)
-        Dim VN As String = RSet(vpidVN, vpidVN.Length - MongoDBIDLength)
+        ' old , did not get the correct variant name - it retunred the first three instead of the last three
+        'Dim vpid As String = LSet(vpidVN, MongoDBIDLength)
+        'Dim VN As String = RSet(vpidVN, vpidVN.Length - MongoDBIDLength)
+
+        ' tk 25.4.24
+        Dim vpID As String = vpidVN.Substring(0, System.Math.Min(vpidVN.Length, MongoDBIDLength))
+        Dim VN As String = ""
+
+        If vpidVN.Length <= MongoDBIDLength Then
+            vpID = vpidVN
+            VN = ""
+        Else
+            vpID = vpidVN.Substring(0, MongoDBIDLength)
+            VN = vpidVN.Substring(MongoDBIDLength, vpidVN.Length - MongoDBIDLength)
+        End If
 
 
         getVPIDVNfromString = New clsvpidVN(vpid, VN)
@@ -9573,6 +9612,7 @@ Module SIModule1
 
         Dim tmpStr As String = ""
         Try
+            ' CN is only <> empty when it is milestone of phass
             tmpStr = curShape.Tags.Item("CN")
         Catch ex As Exception
 
@@ -9593,10 +9633,16 @@ Module SIModule1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function isSymbolShape(ByVal curShape As PowerPoint.Shape) As Boolean
-        Dim bigType As String = curShape.Tags.Item("BID")
-        Dim detailID As String = curShape.Tags.Item("DID")
 
-        isSymbolShape = ((bigType = CStr(ptReportBigTypes.components)) And
+        Dim result As Boolean = False
+
+
+        Try
+
+            Dim bigType As String = curShape.Tags.Item("BID")
+            Dim detailID As String = curShape.Tags.Item("DID")
+
+            result = ((bigType = CStr(ptReportBigTypes.components)) And
                          (detailID = CStr(ptReportComponents.prSymDescription) Or
                           detailID = CStr(ptReportComponents.prSymRisks) Or
                           detailID = CStr(ptReportComponents.prSymTrafficLight) Or
@@ -9604,6 +9650,12 @@ Module SIModule1
                           detailID = CStr(ptReportComponents.prSymProject) Or
                           detailID = CStr(ptReportComponents.prSymSchedules) Or
                           detailID = CStr(ptReportComponents.prSymTeam)))
+
+        Catch ex As Exception
+
+        End Try
+
+        isSymbolShape = result
 
     End Function
 
@@ -11125,129 +11177,141 @@ Module SIModule1
     ''' <remarks></remarks>
     Friend Sub aktualisiereInfoPane(ByVal tmpShape As PowerPoint.Shape, Optional ByVal isMovedShape As Boolean = False)
 
-        If Not IsNothing(ucPropertiesView) Then
+        Try
+            If Not IsNothing(ucPropertiesView) Then
 
-            ' ''With infoFrm
-            ' ''    .btnSendToHome.Enabled = homeButtonRelevance
-            ' ''    .btnSentToChange.Enabled = changedButtonRelevance
-            ' ''End With
+                ' ''With infoFrm
+                ' ''    .btnSendToHome.Enabled = homeButtonRelevance
+                ' ''    .btnSentToChange.Enabled = changedButtonRelevance
+                ' ''End With
 
-            If Not IsNothing(tmpShape) And Not IsNothing(selectedPlanShapes) Then
+                If Not IsNothing(tmpShape) And Not IsNothing(selectedPlanShapes) Then
 
-                If selectedPlanShapes.Count = 1 Then
+                    If selectedPlanShapes.Count = 1 Then
 
-                    If isSymbolShape(tmpShape) Then
+                        If isSymbolShape(tmpShape) Then
+                            With ucPropertiesView
+
+                                ' positioniert die Darstellungs-Elemente entsprechend
+                                .symbolMode(True)
+                                .eleName.Text = bestimmeSymbolName(tmpShape)
+                                .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
+
+                                ' Dokumenten Links ausblenden 
+                                .setLinksToVisible(False)
+                                .setLinkValues(tmpShape)
+
+                            End With
+                        Else
+                            With ucPropertiesView
+
+
+                                Try
+                                    .symbolMode(False)
+
+                                    .eleName.Text = "                                                                   "
+                                    .eleName.Text = bestimmeElemText(tmpShape, False, False, showBestName)
+
+                                    .eleDatum.Text = bestimmeElemDateText(tmpShape, False, False)
+
+                                    'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
+
+                                    Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
+
+                                    Select Case CInt(tmpShape.Tags.Item("AC"))
+
+                                        Case PTfarbe.none
+                                            .eleAmpel.BackColor = Drawing.Color.Silver
+                                        Case PTfarbe.green
+                                            .eleAmpel.BackColor = Drawing.Color.Green
+                                        Case PTfarbe.yellow
+                                            .eleAmpel.BackColor = Drawing.Color.Yellow
+                                        Case PTfarbe.red
+                                            .eleAmpel.BackColor = Drawing.Color.Firebrick
+
+                                    End Select
+
+                                    .percentDone.Text = bestimmeElemPD(tmpShape)
+
+                                    .eleAmpelText.Text = bestimmeElemAE(tmpShape)
+
+                                    .eleDeliverables.Text = bestimmeElemLU(tmpShape)
+
+                                    .eleRespons.Text = bestimmeElemVE(tmpShape)
+
+                                    ' die Link Buttons grundsätzlich einblenden 
+                                    .setLinksToVisible(False)
+                                    .setLinkValues(tmpShape)
+
+                                Catch ex As Exception
+
+                                End Try
+                                ' positioniert die Darstellungs-Elemente entsprechend
+
+
+                            End With
+                        End If
+
+
+                    ElseIf selectedPlanShapes.Count > 1 Then
+
+                        'Dim rdbCode As Integer = calcRDB()
+
                         With ucPropertiesView
+                            ' leeren ...
+                            Call .emptyPane()
 
-                            ' positioniert die Darstellungs-Elemente entsprechend
-                            .symbolMode(True)
-                            .eleName.Text = bestimmeSymbolName(tmpShape)
-                            .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
+                            If .eleName.Text <> bestimmeElemText(tmpShape, False, True, showBestName) Then
+                                .eleName.Text = " ... "
+                            End If
+                            If .eleDatum.Text <> bestimmeElemDateText(tmpShape, False) Then
+                                .eleDatum.Text = " ... "
+                            End If
+
+                            .eleRespons.Text = ""
+                            .eleDatum.Enabled = False
+                            .eleDeliverables.Text = ""
+                            .eleAmpelText.Text = ""
+                            .eleAmpel.BackColor = Drawing.Color.Silver
+                            .percentDone.Text = ""
+
+                            .documentsLink = ""
+                            .myDocumentsLink = ""
 
                             ' Dokumenten Links ausblenden 
                             .setLinksToVisible(False)
-                            .setLinkValues(tmpShape)
+                            .setLinkValues(Nothing)
 
                         End With
-                    Else
-                        With ucPropertiesView
 
-                            ' positioniert die Darstellungs-Elemente entsprechend
-                            .symbolMode(False)
-
-                            .eleName.Text = "                                                                   "
-                            .eleName.Text = bestimmeElemText(tmpShape, False, False, showBestName)
-
-                            .eleDatum.Text = bestimmeElemDateText(tmpShape, False, False)
-
-                            'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
-
-                            Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
-
-                            Select Case CInt(tmpShape.Tags.Item("AC"))
-
-                                Case PTfarbe.none
-                                    .eleAmpel.BackColor = Drawing.Color.Silver
-                                Case PTfarbe.green
-                                    .eleAmpel.BackColor = Drawing.Color.Green
-                                Case PTfarbe.yellow
-                                    .eleAmpel.BackColor = Drawing.Color.Yellow
-                                Case PTfarbe.red
-                                    .eleAmpel.BackColor = Drawing.Color.Firebrick
-
-                            End Select
-
-                            .percentDone.Text = bestimmeElemPD(tmpShape)
-
-                            .eleAmpelText.Text = bestimmeElemAE(tmpShape)
-
-                            .eleDeliverables.Text = bestimmeElemLU(tmpShape)
-
-                            .eleRespons.Text = bestimmeElemVE(tmpShape)
-
-                            ' die Link Buttons grundsätzlich einblenden 
-                            .setLinksToVisible(False)
-                            .setLinkValues(tmpShape)
-
-
-                        End With
                     End If
-
-
-                ElseIf selectedPlanShapes.Count > 1 Then
-
-                    'Dim rdbCode As Integer = calcRDB()
-
+                Else
+                    ' Info Pane Inhalte zurücksetzen ... 
                     With ucPropertiesView
-                        ' leeren ...
+                        ' leeren 
                         Call .emptyPane()
 
-                        If .eleName.Text <> bestimmeElemText(tmpShape, False, True, showBestName) Then
-                            .eleName.Text = " ... "
-                        End If
-                        If .eleDatum.Text <> bestimmeElemDateText(tmpShape, False) Then
-                            .eleDatum.Text = " ... "
-                        End If
-
-                        .eleRespons.Text = ""
-                        .eleDatum.Enabled = False
+                        .eleName.Text = ""
+                        .eleDatum.Text = ""
                         .eleDeliverables.Text = ""
-                        .eleAmpelText.Text = ""
                         .eleAmpel.BackColor = Drawing.Color.Silver
+                        .eleAmpelText.Text = ""
+                        .eleRespons.Text = ""
                         .percentDone.Text = ""
 
                         .documentsLink = ""
                         .myDocumentsLink = ""
 
-                        ' Dokumenten Links ausblenden 
-                        .setLinksToVisible(False)
-                        .setLinkValues(Nothing)
-
                     End With
 
                 End If
-            Else
-                ' Info Pane Inhalte zurücksetzen ... 
-                With ucPropertiesView
-                    ' leeren 
-                    Call .emptyPane()
-
-                    .eleName.Text = ""
-                    .eleDatum.Text = ""
-                    .eleDeliverables.Text = ""
-                    .eleAmpel.BackColor = Drawing.Color.Silver
-                    .eleAmpelText.Text = ""
-                    .eleRespons.Text = ""
-                    .percentDone.Text = ""
-
-                    .documentsLink = ""
-                    .myDocumentsLink = ""
-
-                End With
 
             End If
+        Catch ex As Exception
 
-        End If
+        End Try
+
+
     End Sub
 
     ''' <summary>
