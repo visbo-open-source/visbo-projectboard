@@ -36,7 +36,7 @@
     <PublishUrl>C:\publish\VISBO Project Publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>7.0.1.1</ApplicationVersion>
+    <ApplicationVersion>7.0.2.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -185,6 +185,7 @@
   <ItemGroup>
     <Import Include="Microsoft.Office.Interop.Excel" />
     <Import Include="Microsoft.VisualBasic" />
+    <Import Include="Microsoft.VisualStudio.Tools.Applications.Runtime" />
     <Import Include="System" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.Linq" />
