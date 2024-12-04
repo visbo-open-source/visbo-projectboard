@@ -574,9 +574,6 @@ Public Class Ribbon1
 
             Else
 
-                ' tk 30.11.24 - the defualt has been set to meAllowOvertime = true, when allocating with loadInContext, meAllowOverTime should be set to false
-                ' now make sure that meAllowOvertime is set to false !
-                awinSettings.meAllowOverTime = False
 
                 ' Timer
                 Dim sw As clsStopWatch
@@ -704,6 +701,12 @@ Public Class Ribbon1
                                                                                                                                    variantName:=portfolioVariantName,
                                                                                                                                    storedAtOrBefore:=storedAtOrBefore)
                                     projectConstellations.Add(PiCPortfolio)
+
+
+                                    ' tk 30.11.24 - the defualt has been set to meAllowOvertime = true, when allocating with loadInContext, meAllowOverTime should be set to false
+                                    ' now make sure that meAllowOvertime is set to false !
+                                    awinSettings.meAllowOverTime = False
+
 
                                     sw.StartTimer()
 
