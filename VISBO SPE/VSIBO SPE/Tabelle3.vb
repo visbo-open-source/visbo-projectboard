@@ -732,8 +732,8 @@ Public Class Tabelle3
                                 End If
                                 appInstance.EnableEvents = True
                                 CType(meWS.Columns(col(PTmeTe.deliverables)), Range).AutoFit()
-                                If CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth > 65 Then
-                                    CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth = 65
+                                If CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth > 80 Then
+                                    CType(meWS.Columns(col(PTmeTe.deliverables)), Range).ColumnWidth = 80
                                 End If
                                 appInstance.EnableEvents = formerEE
                                 If contentWasProtected Then

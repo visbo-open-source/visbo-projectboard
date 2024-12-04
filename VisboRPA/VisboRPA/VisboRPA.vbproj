@@ -71,7 +71,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>9F0D3B6D880264A07D18814628FC45144A51C648</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>44706AAD5B3C556BCCE7B2C67E44C2497FFB55A4</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -138,7 +138,9 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsAIVpvTasks.vb" />
     <Compile Include="clsJobParameters.vb" />
+    <Compile Include="clsJsonReader.vb" />
     <Compile Include="clsPortfolioDefinitions.vb" />
     <Compile Include="clsRankingList.vb" />
     <Compile Include="clsRankingParameters.vb" />

@@ -345,7 +345,9 @@ Public Class clsawinSettings
 
         _noMatterActualData = False
         _autoLogin = True
-        _meAllowOverTime = False
+        ' tk changed to default = True, also Überlastung erst mal zulassen
+        ' default was false until 30.11.24
+        _meAllowOverTime = True
         _onePersonOneRole = False
         _meCompareVsLastPlan = False
         _meDateForLastPlan = Date.Now.AddDays(-1 * Date.Now.Day)
@@ -501,7 +503,7 @@ Public Class clsawinSettings
         _englishLanguage = True
         _allowSumEditing = True
 
-        _enableInvoices = False
+        _enableInvoices = True
 
         _considerRiskFee = False
 

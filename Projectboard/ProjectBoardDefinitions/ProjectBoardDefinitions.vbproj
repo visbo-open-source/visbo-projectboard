@@ -109,12 +109,15 @@
     <Compile Include="clsFilterDB.vb" />
     <Compile Include="clsEventsWindows.vb" />
     <Compile Include="clsProjectInfos.vb" />
+    <Compile Include="clsProjectPhaseTask.vb" />
+    <Compile Include="clsProjectPhaseTasks.vb" />
     <Compile Include="clsReportMessage.vb" />
     <Compile Include="clsroleHrchy.vb" />
     <Compile Include="clsroleNode.vb" />
     <Compile Include="clsSmartPPTChartInfo.vb" />
     <Compile Include="clsSmartPPTCompInfo.vb" />
     <Compile Include="clsStopWatch.vb" />
+    <Compile Include="clsTask.vb" />
     <Compile Include="clsVisboCryptography.vb" />
     <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />
