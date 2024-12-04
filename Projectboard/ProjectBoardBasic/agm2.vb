@@ -15613,7 +15613,13 @@ Public Module agm2
 
                 ' Lieferumfänge 
                 With CType(infoDataBlock.Columns(9), Excel.Range)
-                    .WrapText = True
+                    ' tk 2.12.24 wrapText = true führt dazu dass AutoFit nicht richtig wirkt 
+                    '.WrapText = True
+                    ' tk 2.12.24
+                    .AutoFit()
+                    If .ColumnWidth > 65 Then
+                        .ColumnWidth = 65
+                    End If
                 End With
 
                 ' percent Done 
@@ -20406,7 +20412,7 @@ Public Module agm2
                 Try
                     awinSettings.enableInvoices = CBool(.Range("enableInvoices").Value)
                 Catch ex As Exception
-                    awinSettings.enableInvoices = False
+                    awinSettings.enableInvoices = True
                 End Try
 
                 ' tk 23.12.18 deprecated

@@ -4343,13 +4343,24 @@ Module creationModule
             Dim selectedPhaseIDs As New Collection
             Dim selectedMilestoneIDs As New Collection
 
-            If considerAll Then
-                selectedPhaseIDs = lProj.getAllElemIDs(False)
-                selectedMilestoneIDs = lProj.getAllElemIDs(True)
+            If IsNothing(lProj) Then
+                If considerAll Then
+                    selectedPhaseIDs = hproj.getAllElemIDs(False)
+                    selectedMilestoneIDs = hproj.getAllElemIDs(True)
+                Else
+                    selectedPhaseIDs = hproj.getElemIdsOf(selectedPhases, False)
+                    selectedMilestoneIDs = hproj.getElemIdsOf(selectedMilestones, True)
+                End If
             Else
-                selectedPhaseIDs = lProj.getElemIdsOf(selectedPhases, False)
-                selectedMilestoneIDs = lProj.getElemIdsOf(selectedMilestones, True)
+                If considerAll Then
+                    selectedPhaseIDs = lProj.getAllElemIDs(False)
+                    selectedMilestoneIDs = lProj.getAllElemIDs(True)
+                Else
+                    selectedPhaseIDs = lProj.getElemIdsOf(selectedPhases, False)
+                    selectedMilestoneIDs = lProj.getElemIdsOf(selectedMilestones, True)
+                End If
             End If
+
 
 
 
@@ -4438,7 +4449,12 @@ Module creationModule
                 Dim curYPosition As Double = rds.drawingAreaTop
 
                 ' now draw baseline Elements  
-                Call zeichneOneLaneOfProject(rds, curYPosition, lProj, considerAll, selectedPhaseIDs, selectedMilestoneIDs, False)
+                ' but only if lProj <> Nothing
+
+                If Not IsNothing(lProj) Then
+                    Call zeichneOneLaneOfProject(rds, curYPosition, lProj, considerAll, selectedPhaseIDs, selectedMilestoneIDs, False)
+                End If
+
 
                 curYPosition = curYPosition + rds.zeilenHoehe
 

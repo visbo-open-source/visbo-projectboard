@@ -1263,6 +1263,7 @@ Module VISBO_SPE_Utilities
 
                                 ' Lieferumfänge
                                 CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
+
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
                                 Else
@@ -1406,14 +1407,24 @@ Module VISBO_SPE_Utilities
 
                 ' die Besonderheiten abbilden 
 
-
+                ' tk 2.12.24 auskommentiert
                 appInstance.EnableEvents = True
                 Try
+                    Dim testvalue As String = CType(currentWS.Cells(3, 9), Range).Value
+                    'Dim testw0 As Double = CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth
+
 
                     CType(currentWS.Columns(2), Range).AutoFit() ' Project Name
+
+                    CType(currentWS.Columns(4), Range).ColumnWidth = 90
                     CType(currentWS.Columns(4), Range).AutoFit() ' Elem-Name
+
                     CType(currentWS.Columns(7), Range).AutoFit() ' Ampel
+
+                    CType(currentWS.Columns(8), Range).ColumnWidth = 90
                     CType(currentWS.Columns(8), Range).AutoFit() ' Explanation
+
+                    CType(currentWS.Columns(9), Range).ColumnWidth = 120
                     CType(currentWS.Columns(9), Range).AutoFit() ' Deliverables
 
                     CType(currentWS.Columns(10), Range).AutoFit() ' Verantwortlich 
@@ -1427,24 +1438,26 @@ Module VISBO_SPE_Utilities
                     ' wenn zu breit, dann maximum setzen
                     ' but only, if there has been no user Action setting column width already 
 
+                    Dim maxColWidth As Integer = 80
                     ' Project-Name 
-                    If CType(CType(currentWS, Excel.Worksheet).Columns(2), Excel.Range).ColumnWidth > 65 Then
-                        CType(CType(currentWS, Excel.Worksheet).Columns(2), Excel.Range).ColumnWidth = 65
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(2), Excel.Range).ColumnWidth > maxColWidth Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(2), Excel.Range).ColumnWidth = maxColWidth
                     End If
 
                     ' Element-Name
-                    If CType(CType(currentWS, Excel.Worksheet).Columns(4), Excel.Range).ColumnWidth > 65 Then
-                        CType(CType(currentWS, Excel.Worksheet).Columns(4), Excel.Range).ColumnWidth = 65
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(4), Excel.Range).ColumnWidth > maxColWidth Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(4), Excel.Range).ColumnWidth = maxColWidth
                     End If
 
                     ' Erläuterung / Explanation
-                    If CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth > 65 Then
-                        CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth = 65
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth > maxColWidth Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(8), Excel.Range).ColumnWidth = maxColWidth
                     End If
 
                     ' Lieferumfänge / Deliverables
-                    If CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth > 65 Then
-                        CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth = 65
+                    'Dim testw As Double = CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth
+                    If CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth > maxColWidth Then
+                        CType(CType(currentWS, Excel.Worksheet).Columns(9), Excel.Range).ColumnWidth = maxColWidth
                     End If
 
 

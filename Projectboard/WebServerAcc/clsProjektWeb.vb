@@ -143,7 +143,13 @@ Public Class clsProjektWeb
             'ur: 210203: Me.status = .Status        ' wird nicht mehr an die DB weitergegeben
             ' ur: 20210915 neues Property übernommen aus VP kann in Projectboard nicht geändert werden
             Me.vpStatus = .vpStatus
-            Me.ampelStatus = .ampelStatus
+
+            Try
+                Me.ampelStatus = CStr(.ampelStatus)
+            Catch ex As Exception
+                Me.ampelStatus = "0"
+            End Try
+
             Me.ampelErlaeuterung = .ampelErlaeuterung
             Me.farbe = .farbe
             Me.Schrift = .Schrift
@@ -334,7 +340,12 @@ Public Class clsProjektWeb
 
             ' jetzt werden Ampel Status und Beschreibung gesetzt 
             ' da das jetzt in der Phase(1) abgespeichert ist, darf das erst gemacht werden, wenn die Phasen alle kopiert sind ... 
-            .ampelStatus = Me.ampelStatus
+            Try
+                .ampelStatus = CInt(Me.ampelStatus)
+            Catch ex As Exception
+                .ampelStatus = 0
+            End Try
+
             .ampelErlaeuterung = Me.ampelErlaeuterung
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 

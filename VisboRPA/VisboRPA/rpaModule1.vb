@@ -157,6 +157,12 @@ Module rpaModule1
         ' the percet modifier 
         visboPercentModifierCapacities = 35
 
+        ' the vpv Json created by Claude AI 
+        visboJsonVpv = 36
+
+        ' the combined vpv plus tasklist json created by claude AI 
+        visboJsonVpvTasks = 37
+
     End Enum
 
 
@@ -354,6 +360,94 @@ Module rpaModule1
 
     End Function
 
+    Public Function imPortJsonFile(ByVal fname As String, ByVal rpacat As PTRpa) As Boolean
+        Dim result As Boolean = False
+        Dim myName As String = My.Computer.FileSystem.GetName(fname)
+        Dim errMessages As New Collection
+
+        ' now clear Session 
+        Call emptyAllVISBOStructures()
+        ' define logfile Name
+        logfileNamePath = createLogfileName(rpaFolder, myName)
+
+        Try
+            Dim hproj As clsProjekt = New clsProjekt
+
+            Dim vp As New clsVP
+            Dim allAktVCUser As New List(Of clsUserReg) ' könnte per Read aus dem VISBO Center geholt werden
+
+            Select Case rpacat
+                Case CInt(PTRpa.visboJsonVpv)
+
+                    Try
+
+
+
+                        ' now check out whether or not it is pure vpv type Json 
+                        Dim webProj As clsProjektWebLong = clsJsonReader.ReadJsonFile(Of clsProjektWebLong)(fname)
+                        vp.name = webProj.name
+                        vp.description = webProj.description
+                        vp.managerId = Nothing ' damit man allAktVCUsers nicht braucht
+
+                        ' Strategic Fit, Risk, business Unit und die customdefinierten Fields anlegen  
+
+                        ' now copy all content to hproj
+                        webProj.copyto(hproj, vp, allAktVCUser)
+
+                    Catch ex As Exception
+                        result = False
+                    End Try
+
+
+
+                Case Int(PTRpa.visboJsonVpvTasks)
+
+                    Dim AIproj As clsAIVpvTasks = clsJsonReader.ReadJsonFile(Of clsAIVpvTasks)(fname)
+
+                    If Not IsNothing(AIproj) Then
+
+                        If Not IsNothing(AIproj.projectstructure) And Not IsNothing(AIproj.resourceNeeds) Then
+                            ' jetzt verarbeiten 
+
+                            vp.name = AIproj.projectstructure.name
+                            vp.description = AIproj.projectstructure.description
+                            vp.managerId = Nothing ' damit man allAktVCUsers nicht braucht
+
+                            ' Strategic Fit, Risk, business Unit und die customdefinierten Fields anlegen  
+
+                            ' now copy all content to hproj
+                            AIproj.projectstructure.copyto(hproj, vp, allAktVCUser)
+                            Try
+                                ' now add the efforts for the particular phases to hproj 
+                                Call hproj.addPhaseEfforts(AIproj.resourceNeeds)
+                            Catch ex As Exception
+                                Dim tmpMsg As String = "error when allocating efforts " & vbLf & ex.Message
+                                errMessages.Add(tmpMsg)
+                            End Try
+
+                        End If
+
+                    End If
+
+
+            End Select
+
+            If Not IsNothing(hproj) Then
+                result = processJsonProject(hproj, errMessages)
+            Else
+                result = False
+            End If
+
+        Catch ex As Exception
+            errMessages.Add(ex.Message)
+            result = False
+        End Try
+
+        ' now move it according to the result to folder failure or success
+        Call processResult(fname, result, errMessages)
+
+        imPortJsonFile = result
+    End Function
 
     ''' <summary>
     ''' Import of file fname, category rpaCat time importDate to the VisboCenter awinSettings.databaseName
@@ -1248,7 +1342,67 @@ Module rpaModule1
 
     End Function
 
+    Public Function bestimmeRPAJsonCategory(ByVal fileName As String) As PTRpa
 
+        Dim result As PTRpa = PTRpa.visboUnknown
+        Dim errMsg As String = "checking on Project: "
+
+        Try
+            If Not IsNothing(fileName) Then
+                If My.Computer.FileSystem.FileExists(fileName) Then
+
+                    Try ' first the more complex Json File 
+                        ' is it a vpv plus Task Json ? 
+                        Dim AIproj As clsAIVpvTasks = clsJsonReader.ReadJsonFile(Of clsAIVpvTasks)(fileName)
+
+                        If Not IsNothing(AIproj) Then
+
+                            If Not IsNothing(AIproj.projectstructure) And Not IsNothing(AIproj.resourceNeeds) Then
+                                If AIproj.resourceNeeds.alltheEfforts.Count > 0 Then
+                                    result = PTRpa.visboJsonVpvTasks
+                                    errMsg = ""
+                                End If
+                            End If
+
+                        End If
+
+
+                    Catch ex As Exception
+                        errMsg = errMsg & vbLf & "checking on Project plus Tasks: " & ex.Message
+                    End Try
+
+                    If result = PTRpa.visboUnknown Then
+                        Try
+                            ' is it a vpv Json ? 
+                            Dim webProj As clsProjektWebLong = clsJsonReader.ReadJsonFile(Of clsProjektWebLong)(fileName)
+                            ' set category if successful
+                            If Not IsNothing(webProj) Then
+                                result = PTRpa.visboJsonVpv
+                            End If
+
+                        Catch ex As Exception
+                            errMsg = errMsg & ex.Message
+                        End Try
+
+                    End If
+
+
+
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        If result = PTRpa.visboUnknown Then
+            Dim myCollection As New Collection
+            myCollection.Add(errMsg)
+            Call logger(ptErrLevel.logError, "Json file not valid: ", myCollection)
+        End If
+
+        bestimmeRPAJsonCategory = result
+
+    End Function
 
     Public Function bestimmeRPACategory(ByVal fileName As String) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
@@ -2459,7 +2613,93 @@ Module rpaModule1
         checkCostAssertion = result
     End Function
 
+    ''' <summary>
+    ''' stores a hproj which was imported as a AI created JSON file
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="errMessages"></param>
+    ''' <returns></returns>
+    Public Function processJsonProject(ByVal hproj As clsProjekt, ByRef errMessages As Collection) As Boolean
+        Dim importDate As Date = Date.Now
+        Dim allOK As Boolean = False
+        Dim err As New clsErrorCodeMsg
+        Dim projectAlreadyExists As Boolean = False
 
+
+        If Not IsNothing(hproj) Then
+
+            Dim isTemplate As Boolean = (LCase(hproj.name).Contains("template") And hproj.name = hproj.VorlagenName)
+
+            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, "", importDate, err) Then
+
+                projectAlreadyExists = True
+
+            End If
+
+
+            If isTemplate Then
+                hproj.projectType = ptPRPFType.projectTemplate
+            End If
+
+            Try
+                Dim mProj As clsProjekt = Nothing
+
+                If Not isTemplate Then
+                    ' store first as baseline 
+
+                    If Not projectAlreadyExists Then
+
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                        hproj.variantName = ptVariantFixNames.pfv.ToString
+
+                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=False) Then
+                            Call logger(ptErrLevel.logInfo, "Baseline and Current Plan stored successfully: ", hproj.name)
+                        Else
+                            Call logger(ptErrLevel.logError, "Baseline / CurrentPlan could not be stored, probably no right to do so ... :  ", hproj.name)
+                        End If
+
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                        hproj.variantName = ""
+
+                    Else
+                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=False) Then
+                            Call logger(ptErrLevel.logInfo, "Project stored successfully: ", hproj.name)
+                        Else
+                            Call logger(ptErrLevel.logError, "Project could not be stored, probably no right to do so ... :  ", hproj.name)
+                        End If
+                    End If
+
+
+
+                    allOK = True
+
+                Else
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=False) Then
+                        Call logger(ptErrLevel.logInfo, "Template stored successfully: ", hproj.name)
+                    Else
+                        Call logger(ptErrLevel.logError, "Template from Json File could not be stored:  ", hproj.name)
+                    End If
+
+                    allOK = False
+                End If
+
+
+
+
+            Catch ex As Exception
+                Call logger(ptErrLevel.logError, "RPA Error could not store Json Import:  ", hproj.name)
+                allOK = False
+            End Try
+
+
+        Else
+            allOK = False
+            Call logger(ptErrLevel.logError, "RPA Error importing Json Project: no valid Json Structure", errMessages)
+        End If
+
+        processJsonProject = allOK
+
+    End Function
 
     Private Function processVisboBrief(ByVal myName As String, ByVal importDate As Date, ByRef errMessages As Collection) As Boolean
 
@@ -6074,24 +6314,24 @@ Module rpaModule1
                             End If
                         End If
 
-                    Case ".xlsm"
+                    'Case ".xlsm"
 
-                        myName = My.Computer.FileSystem.GetName(fullFileName)
+                    '    myName = My.Computer.FileSystem.GetName(fullFileName)
 
-                        ' Bestimme den Import-Typ der zu importierenden Daten
-                        rpaCategory = bestimmeRPACategory(fullFileName)
+                    '    ' Bestimme den Import-Typ der zu importierenden Daten
+                    '    rpaCategory = bestimmeRPACategory(fullFileName)
 
-                        If rpaCategory = PTRpa.visboUnknown Then
-                            ' move file to unknown Folder ... 
-                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
-                        Else
-                            result = importOneProject(fullFileName, rpaCategory, Date.Now())
-                            If result Then
-                                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
-                            End If
-                        End If
+                    '    If rpaCategory = PTRpa.visboUnknown Then
+                    '        ' move file to unknown Folder ... 
+                    '        Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                    '        My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                    '        Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                    '    Else
+                    '        result = importOneProject(fullFileName, rpaCategory, Date.Now())
+                    '        If result Then
+                    '            Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                    '        End If
+                    '    End If
 
                     Case ".mpp"
 
@@ -6105,6 +6345,27 @@ Module rpaModule1
                         If result Then
                             Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
                         End If
+
+                    Case ".json"
+
+                        rpaCategory = bestimmeRPAJsonCategory(fullFileName)
+
+                        myName = My.Computer.FileSystem.GetName(fullFileName)
+
+                        If rpaCategory = PTRpa.visboUnknown Then
+                            ' move file to unknown Folder ... 
+                            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
+                            My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
+                            Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
+                        Else
+                            result = imPortJsonFile(fullFileName, rpaCategory)
+
+                            If result Then
+                                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
+                            End If
+                        End If
+
+
 
                     Case Else
                         myName = My.Computer.FileSystem.GetName(fullFileName)
@@ -6130,65 +6391,7 @@ Module rpaModule1
         End If
 
 
-        'If My.Computer.FileSystem.FileExists(fullFileName) And Not fullFileName.Contains("~$") Then
 
-        '    Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was created at: " & Date.Now().ToLongDateString)
-
-        '    'FileExtension ansehen
-        '    Dim fileExt As String = My.Computer.FileSystem.GetFileInfo(fullFileName).Extension
-        '    Select Case fileExt
-        '        Case ".xlsx"
-
-        '            myName = My.Computer.FileSystem.GetName(fullFileName)
-
-        '            ' Bestimme den Import-Typ der zu importierenden Daten
-        '            rpaCategory = bestimmeRPACategory(fullFileName)
-
-        '            If rpaCategory = PTRpa.visboUnknown Then
-        '                ' move file to unknown Folder ... 
-        '                Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-        '                My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-        '                Call logger(ptErrLevel.logInfo, "unknown file / category: ", myName)
-        '            Else
-        '                result = importOneProject(fullFileName, rpaCategory, Date.Now())
-        '                If result Then
-        '                    Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
-        '                End If
-        '            End If
-        '        Case ".mpp"
-
-        '            myName = My.Computer.FileSystem.GetName(fullFileName)
-
-        '            ' Import Typ ist Microsoft Project File
-        '            rpaCategory = PTRpa.visboMPP
-
-        '            ' Import wird durchgeführt
-        '            result = importOneProject(fullFileName, rpaCategory, Date.Now())
-        '            If result Then
-        '                Call logger(ptErrLevel.logInfo, "watchFolder_Created", "File '" & fullFileName & "' was imported successfully at: " & Date.Now().ToLongDateString)
-        '            End If
-
-        '        Case Else
-        '            myName = My.Computer.FileSystem.GetName(fullFileName)
-        '            rpaCategory = PTRpa.visboUnknown
-        '            ' move file to unknown Folder ... 
-        '            Dim newDestination As String = My.Computer.FileSystem.CombinePath(unknownFolder, myName)
-
-        '            Try
-        '                My.Computer.FileSystem.MoveFile(fullFileName, newDestination, True)
-        '            Catch ex As Exception
-        '                Call MsgBox("try catch watch.created" & ex.Message)
-        '            End Try
-
-        '            Call logger(ptErrLevel.logInfo, "unknown file / category: unknown", myName)
-
-        '            errMsgCode = New clsErrorCodeMsg
-        '            result = CType(databaseAcc, DBAccLayer.Request).sendEmailToUser("VISBO Robotic Process automation" & vbCrLf _
-        '                                                                        & myName & vbCrLf & " unknown file / category ...", errMsgCode)
-        '    End Select
-        'Else
-        '    Dim a As String = ""
-        'End If
 
         processNewImportFile = result
 

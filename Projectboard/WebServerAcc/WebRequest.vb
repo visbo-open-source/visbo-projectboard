@@ -1386,13 +1386,30 @@ Public Class Request
                 End If
 
                 ' ur: 20210426: neue vp-Properties nun aus VP in VPV kopieren
+                ' tk nimm nur bekannte Business Units auf ...
                 If Not IsNothing(projekt.businessUnit) Then
                     Dim bu As New clsCustomFieldStr
                     bu.type = "System"
                     bu.name = vp_businessUnit
-                    bu.value = projekt.businessUnit
+                    ' find out whether or not businessUnit in projekt is existent ..
+                    Dim buFound As Boolean = False
+
+                    For i As Integer = 0 To businessUnitDefinitions.Count - 1
+                        If projekt.businessUnit = businessUnitDefinitions.ElementAt(i).Value.name Then
+                            buFound = True
+                            Exit For
+                        End If
+                    Next
+                    If buFound Then
+                        bu.value = projekt.businessUnit
+                    Else
+                        bu.value = ""
+                    End If
                     VP.customFieldString.Add(bu)
+
                 End If
+
+                ' System CustomField StrategicFit
                 If Not IsNothing(projekt.StrategicFit) Then
                     Dim sfit As New clsCustomFieldDbl
                     sfit.type = "System"
@@ -1411,14 +1428,17 @@ Public Class Request
 
                 ' ur: 20230808: neues vp-Propery customStringFields, 
                 If Not IsNothing(projekt.customStringFields) Then
-                    For Each cSF As KeyValuePair(Of Integer, String) In projekt.customStringFields
-                        Dim newcSF As New clsCustomFieldStr
-                        newcSF.type = "VP"
-                        newcSF.name = customFieldDefinitions.getName(cSF.Key)
-                        newcSF.value = cSF.Value
-                        VP.customFieldString.Add(newcSF)
-                    Next
+                    If projekt.customStringFields.Count > 0 Then
+                        For Each cSF As KeyValuePair(Of Integer, String) In projekt.customStringFields
+                            Dim newcSF As New clsCustomFieldStr
+                            newcSF.type = "VP"
+                            newcSF.name = customFieldDefinitions.getName(cSF.Key)
+                            newcSF.value = cSF.Value
+                            VP.customFieldString.Add(newcSF)
+                        Next
+                    End If
                 End If
+
                 ' ur: 20230808: neues vp-Propery customDblFields, 
                 If Not IsNothing(projekt.customDblFields) Then
                     For Each cDblF As KeyValuePair(Of Integer, Double) In projekt.customDblFields
@@ -1444,34 +1464,37 @@ Public Class Request
 
                     ' action to invite the project.leadPerson into the new created project
 
-                    If Not IsNothing(projekt.leadPerson) And projekt.leadPerson <> "" Then
-                        Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
-                        If userlist.Count = 1 Then
-                            projekt.leadPerson = userlist.ElementAt(0).email
-                        End If
+                    If Not IsNothing(projekt.leadPerson) Then
+                        If projekt.leadPerson <> "" Then
+                            Dim userlist As List(Of clsUserReg) = retrieveUsersFromDB(projekt.leadPerson, err)
+                            If userlist.Count = 1 Then
+                                projekt.leadPerson = userlist.ElementAt(0).email
+                            End If
 
-                        Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
-                        ' find visbo Project Admin GroupID
-                        For Each grp In groups
-                            If LCase(grp.name) = LCase("Visbo Project Admin") Then
-                                'invite the projekt.leadPerson to this group
-                                Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
-                                For Each u In newManager
-                                    If LCase(u.email) = LCase(projekt.leadPerson) Then
-                                        aktvp.managerId = u.userId
-                                    End If
-                                Next
-                                If newManager.Count > 0 Then
-                                    ' Project lead in VP eintragen
-                                    Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
-                                    If vpList.Count <= 0 Then
-                                        Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
-                                    Else
-                                        Call logger(ptErrLevel.logInfo, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID successful! ")
+                            Dim groups As List(Of clsGroup) = GETallGroupsOfVP(vpid, err)
+                            ' find visbo Project Admin GroupID
+                            For Each grp In groups
+                                If LCase(grp.name) = LCase("Visbo Project Admin") Then
+                                    'invite the projekt.leadPerson to this group
+                                    Dim newManager As List(Of clsUser) = POSTUserToGroupOfVP(vpid, grp._id, projekt.leadPerson, err)
+                                    For Each u In newManager
+                                        If LCase(u.email) = LCase(projekt.leadPerson) Then
+                                            aktvp.managerId = u.userId
+                                        End If
+                                    Next
+                                    If newManager.Count > 0 Then
+                                        ' Project lead in VP eintragen
+                                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                                        If vpList.Count <= 0 Then
+                                            Call logger(ptErrLevel.logWarning, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID went wrong! ")
+                                        Else
+                                            Call logger(ptErrLevel.logInfo, "storeProjectToDB", "Update of VP '" & vpid & "' with the managerID successful! ")
+                                        End If
                                     End If
                                 End If
-                            End If
-                        Next
+                            Next
+                        End If
+
                     End If
 
 

@@ -1232,6 +1232,65 @@ Public Class clsProjekt
 
     End Property
 
+    ''' <summary>
+    ''' adds the AI created projectPhaseEfforts to the project
+    ''' </summary>
+    ''' <param name="projectPhaseEfforts"></param>
+    Public Sub addPhaseEfforts(ByVal projectPhaseEfforts As clsProjectPhaseEfforts)
+
+        Dim teamID As Integer = -1
+        Dim roleID As Integer = -1
+
+        If Not IsNothing(projectPhaseEfforts) Then
+
+            For Each phEfforts As clsPhaseEfforts In projectPhaseEfforts.alltheEfforts
+                Try
+                    Dim cphase As clsPhase = Me.getPhase(phEfforts.phaseName)
+                    cphase.clearRoles()
+
+                    For Each effort As clsEffort In phEfforts.phaseEfforts
+
+                        Try
+                            teamID = -1
+                            Dim roleSkillName As String = effort.role
+                            Dim pdAnz As Double = effort.hours / 8
+                            If pdAnz < 0 Then
+                                pdAnz = pdAnz * -1
+                            End If
+
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(effort.role)
+                            If Not IsNothing(tmpRole) Then
+                                If tmpRole.isSkill Then
+                                    teamID = tmpRole.UID
+                                    roleID = RoleDefinitions.getContainingRoleOfSkillMembers(teamID).UID
+                                Else
+                                    roleID = tmpRole.UID
+                                    teamID = -1
+                                End If
+                            End If
+
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
+
+                            ' jetzt den Effort hinzuzählen
+                            If roleNameID <> "" Then
+                                Call cphase.AddRole(roleNameID, pdAnz, True)
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    Next
+
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+        End If
+    End Sub
     Public Overrides Sub AddPhase(ByVal phase As clsPhase,
                                   Optional ByVal origName As String = "",
                                   Optional ByVal parentID As String = "")

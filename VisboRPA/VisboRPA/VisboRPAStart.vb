@@ -60,6 +60,53 @@ Public Class VisboRPAStart
                 If result Then
                     Call logger(ptErrLevel.logInfo, "WatchFolder_changed", "File '" & e.FullPath & "' was imported successfully at: " & Date.Now().ToLongDateString)
                 End If
+
+            Case ".json"
+
+                ' this is not any more valid. See processNewImport
+
+                'myName = My.Computer.FileSystem.GetName(fullFileName)
+                'Dim toBeContinued As Boolean = True
+
+                'Try
+                '    Dim hproj As clsProjekt = New clsProjekt
+                '    Dim vp As New clsVP
+                '    Dim allAktVCUser As New List(Of clsUserReg) ' könnte per Read aus dem VISBO Center geholt werden
+
+
+                '    ' now check out whether or not it is pure vpv type Json 
+                '    Dim webProj As clsProjektWebLong = clsJsonReader.ReadJsonFile(Of clsProjektWebLong)(fullFileName)
+                '    vp.name = webProj.name
+                '    vp.managerId = Nothing ' damit man allAktVCUsers nicht braucht
+
+                '    ' Strategic Fit, Risk, business Unit und die customdefinierten Fields anlegen  
+
+                '    ' now copy all content to hproj
+                '    webProj.copyto(hproj, vp, allAktVCUser)
+
+                '    If Not IsNothing(hproj) Then
+                '        toBeContinued = False
+                '        Dim errMessages As New Collection
+                '        result = processJsonProject(hproj, errMessages)
+                '    Else
+                '        toBeContinued = False
+                '    End If
+                'Catch ex As Exception
+                '    result = False
+                '    toBeContinued = True
+                'End Try
+
+
+                'If toBeContinued Then
+                '    ' next Json Format Try
+                '    ' now check out whether or not it is about getting suggestion when to best start 
+
+                'End If
+
+                '' now move it according to the result to folder failure or success
+                'Call processResult(fullFileName, result, errMessages)
+
+
             Case Else
 
         End Select
