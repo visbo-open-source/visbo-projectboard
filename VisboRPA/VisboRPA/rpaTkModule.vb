@@ -1514,8 +1514,13 @@ Module rpaTkModule
                 If noActivePortfolio Then
                     Call logger(ptErrLevel.logError, "no active Portfolio: " & portfolioName, myKennung.ToString)
                 Else
+                    ' get the ranking list 
+                    'Dim rankingList As SortedList(Of Integer, String) = getRanking()
+                    Dim rankingList As SortedList(Of Integer, clsRankingParameters) = getRanking(myKennung)
+
+
                     ' check whether and how projects are fitting to the already existing Portfolio 
-                    allOk = processProjectListWithActivePortfolio(jobParameters, myKennung)
+                    allOk = processProjectListWithActivePortfolio(jobParameters, rankingList, myKennung)
 
                 End If
 
@@ -2278,7 +2283,8 @@ Module rpaTkModule
     ''' in ImportProjekte sind alle aktuell eingelesenen Projekte 
     ''' </summary>
     ''' <returns></returns>
-    Public Function processProjectListWithActivePortfolio(ByVal jobParameters As clsJobParameters, ByVal myKennung As PTRpa) As Boolean
+    Public Function processProjectListWithActivePortfolio(ByVal jobParameters As clsJobParameters, ByVal rankingList As SortedList(Of Integer, clsRankingParameters),
+                                                          ByVal myKennung As PTRpa) As Boolean
         Dim result As Boolean = True
         Dim saveShowRangeLeft As Integer = showRangeLeft
         Dim saveShowRangeRight As Integer = showRangeRight
@@ -2484,7 +2490,8 @@ Module rpaTkModule
 
             ' get the ranking list 
             'Dim rankingList As SortedList(Of Integer, String) = getRanking()
-            Dim rankingList As SortedList(Of Integer, clsRankingParameters) = getRanking(myKennung)
+            ' tk 4.12.24 wird an der Aufruf Stelle gemacht 
+            ' Dim rankingList As SortedList(Of Integer, clsRankingParameters) = getRanking(myKennung)
 
 
             ' now create a Portfolio variant with unchanged new projects ...
@@ -2508,13 +2515,14 @@ Module rpaTkModule
 
                     If first Then
                         first = False
-
-                        minMonthColumn = System.Math.Min(getColumnOfDate(hproj.startDate), getColumnOfDate(rankingPair.Value.earliestStart))
-                        maxMonthColumn = getColumnOfDate(hproj.endeDate)
+                        ' tk this would mean only projects can be handled that are already starting in the future. That is nonsense. It should apply to projects as well, being now in the past. but not yet startet
+                        ' minMonthColumn = System.Math.Min(getColumnOfDate(hproj.startDate), getColumnOfDate(rankingPair.Value.earliestStart))
+                        minMonthColumn = getColumnOfDate(rankingPair.Value.earliestStart)
+                        maxMonthColumn = minMonthColumn + hproj.dauerInMths - 1
                     Else
                         'Dim myMin As Integer = getColumnOfDate(hproj.startDate)
-                        Dim myMin As Integer = System.Math.Min(getColumnOfDate(hproj.startDate), getColumnOfDate(rankingPair.Value.earliestStart))
-                        Dim myMax As Integer = getColumnOfDate(hproj.endeDate)
+                        Dim myMin As Integer = getColumnOfDate(rankingPair.Value.earliestStart)
+                        Dim myMax As Integer = myMin + hproj.dauerInMths - 1
                         If myMin < minMonthColumn Then
                             minMonthColumn = myMin
                         End If

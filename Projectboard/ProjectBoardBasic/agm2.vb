@@ -15617,8 +15617,8 @@ Public Module agm2
                     '.WrapText = True
                     ' tk 2.12.24
                     .AutoFit()
-                    If .ColumnWidth > 65 Then
-                        .ColumnWidth = 65
+                    If .ColumnWidth > 80 Then
+                        .ColumnWidth = 80
                     End If
                 End With
 
