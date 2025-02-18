@@ -38,6 +38,11 @@
     <OfficeApplicationDescription />
   </PropertyGroup>
   <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6 %28x86 und x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.7 %28x86 und x64%29</ProductName>
@@ -421,7 +426,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>9F0D3B6D880264A07D18814628FC45144A51C648</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>EC4B464A1A890B03303778F0274ACE3186C1E7AE</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
