@@ -134,9 +134,6 @@ Partial Public NotInheritable Class Tabelle2
      Global.System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Tools.Office.ProgrammingModel.dll", "15.0.0.0"),  _
      Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Never)>  _
     Private Sub InitializeComponents()
-        '
-        'Tabelle2
-        '
     End Sub
     
     '''

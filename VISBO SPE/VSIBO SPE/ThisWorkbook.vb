@@ -211,6 +211,8 @@ Public Class ThisWorkbook
 
             Call loadGivenProject()
 
+
+
             anzahlCalls = 0
         Catch ex As Exception
             Call logger(ptErrLevel.logError, "Startup- nach speSetTypen", ex.Message)

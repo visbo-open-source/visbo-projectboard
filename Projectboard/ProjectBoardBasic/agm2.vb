@@ -14256,6 +14256,17 @@ Public Module agm2
 
                     If Not IsNothing(hproj) Then
 
+                        ' tk 27.12.24 not necessary because it is done in SPE
+                        '' tk 27.12.24 now check whether or not it is variantName = pfv
+                        'If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                        '    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                        '    awinSettings.loadPFV = True
+                        '    ' set actualDataUntil to make it impossible to change past values of a baseline afterwards
+                        '    If DateDiff(DateInterval.Month, hproj.startDate, Date.Now) > 0 Then
+                        '        hproj.actualDataUntil = Date.Now.AddMonths(-1)
+                        '    End If
+                        'End If
+
                         'Call logger(ptErrLevel.logInfo, "writeOnlineMassEditRessCost", "Projekt " & pvName & " aus AlleProjekte geholt?, yes")
 
                         ' if setup, that one person is haviing exactly one role then make sure that each person has its role applied ...
