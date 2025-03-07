@@ -467,6 +467,81 @@ Module rpaTkModule
         getConsiderationList = result
     End Function
 
+    Public Function setJobParameters(ByVal myKennung As PTRpa) As clsJobParameters
+        Dim result As New clsJobParameters
+        Try
+
+
+            Select Case myKennung
+                Case PTRpa.visboFindfeasiblePortfolio
+
+                    result.allowedOverloadMonth = 1.0
+                    result.allowedOverloadTotal = 1.0
+
+                    ' zeile 3
+                    result.donotConsiderRoleSkills = New Collection
+                    ' zeile 4
+                    result.considerRoleSkills = New Collection
+
+                    result.portfolioName = myActivePortfolio
+                    result.portfolioVariantName = "What-if"
+
+                    result.defaultLatestEnd = Date.Now.AddYears(4)
+
+
+
+                Case PTRpa.visboFindProjectStart
+
+                    result.allowedOverloadMonth = 1.0
+                    result.allowedOverloadTotal = 1.0
+
+                    ' zeile 3
+                    result.donotConsiderRoleSkills = New Collection
+                    ' zeile 4
+                    result.considerRoleSkills = New Collection
+
+                    result.portfolioName = myActivePortfolio
+                    result.portfolioVariantName = "What-if"
+
+                    result.defaultLatestEnd = Date.Now.AddYears(4)
+
+
+                    result.projectVariantName = "best start"
+
+                    result.defaultDeltaInDays = 7
+                    result.changeFactorResourceNeeds = 1.0
+                    result.changeFactorDuration = 1.0
+
+                Case PTRpa.visboFindProjectStartPM
+                    ' not yet defined ...
+
+                Case PTRpa.visboSuggestResourceAllocation
+                    ' not yet defined ...
+
+                Case PTRpa.visboCreateHedgedVariant
+                    ' not yet defined ...
+
+                Case PTRpa.visboAutoAdjust
+                    ' not yet defined ...
+
+                Case PTRpa.visboDataQualityCheck
+                    ' not yet defined ...
+
+                Case PTRpa.visboWriteActualTarget
+                    ' not yet defined ...
+
+                Case Else
+
+
+            End Select
+
+        Catch ex As Exception
+            Call logger(ptErrLevel.logsevereError, "SetJobParameters: Severe Error ", ex.Message)
+        End Try
+
+        setJobParameters = result
+    End Function
+
     Public Function getJobParameters(ByVal blattName As String, ByVal myKennung As PTRpa) As clsJobParameters
         Dim result As New clsJobParameters
 
@@ -1099,6 +1174,72 @@ Module rpaTkModule
         End Try
 
         getPortfolioDefinitions = result
+    End Function
+
+    ''' <summary>
+    ''' used to define the ranking parameters for just one project 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="kennung"></param>
+    ''' <returns></returns>
+    Public Function setRanking(ByVal hproj As clsProjekt,
+                               Optional ByVal kennung As PTRpa = PTRpa.visboFindProjectStart) As SortedList(Of Integer, clsRankingParameters)
+
+        Dim result As New SortedList(Of Integer, clsRankingParameters)
+
+        Try
+            Dim myCurrentParams As New clsRankingParameters
+
+            myCurrentParams.projectName = hproj.name
+            myCurrentParams.projectVariantName = hproj.variantName
+
+            Select Case kennung
+
+
+                Case PTRpa.visboFindProjectStart
+
+                    Try
+                        myCurrentParams.earliestStart = hproj.startDate
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        myCurrentParams.latestEnd = hproj.endeDate.AddMonths(36)
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        myCurrentParams.shortestDuration = 1.0
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        myCurrentParams.longestDuration = 1.0
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        myCurrentParams.propFactor = 1.0
+                    Catch ex As Exception
+
+                    End Try
+
+
+
+                Case Else
+
+            End Select
+
+            result.Add(1, myCurrentParams)
+
+        Catch ex As Exception
+
+        End Try
+        setRanking = result
     End Function
 
 

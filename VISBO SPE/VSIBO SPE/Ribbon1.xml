@@ -27,9 +27,9 @@
 		<tabs>
 			<tab id="PTVISBO" label="VISBO">
 				<group id ="PT6G6" label="VISBO Simple Project Edit">
-					<button id="Pt6G6B0" label="Load" size ="large" imageMso="MindMapExportData" onAction="PTProjectLoad" />
+					<button id="Pt6G6B0" label="Load" size ="large" imageMso="MindMapExportData" onAction="PTProjectLoad" getEnabled ="getButtonsEnabled"/>
 					<button id="Pt6G6B1" label="Save" size ="large" imageMso="MindMapImportData"  onAction="PTProjectSave" />
-          <button id="Pt6G6B2" label="Download" size ="large" imageMso="MindMapImportData"  onAction="PTDownload" />
+          <button id="Pt6G6B2" label="Download" size ="large" imageMso="MindMapImportData"  onAction="PTDownload" getEnabled ="getButtonsEnabled"/>
 					<!--<button id="Pt6G6B2" label="Unload" visible="true" size ="large" imageMso="Delete" onAction="PTProjectDelete" />-->
 					<separator id="Pt6G6B0s1"/>
 					<button id="Pt6G6B3" label="Cost" size ="large"  getImage="imageSuper_GetImage" onAction="PTProjectCost" supertip="The costs for the selected projects can be edited here"/>
@@ -37,12 +37,12 @@
 					<button id="Pt6G6B4" label="Time" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectTime" supertip="The beginning and the end for the phases and milestones of the selected projects can be edited here"/>
 					<separator id="Pt6G6B0s2"/>
 					<!--<button id="Pt6G6B9" label="Charts" size ="large"   getImage="imageSuper_GetImage" onAction="PTSPEshowCharts" />-->          
-					<button id="Pt6G6B8" label="Context" size ="large"   getImage="imageSuper_GetImage" onAction="PTLoadPiC_ConstellationFromDB" />
-          <button id="Pt6G6B10" label="Auto-Allocate" size ="large" getImage="imageSuper_GetImage" onAction="PTAutoAlloc" />
+					<button id="Pt6G6B8" label="Context" size ="large"   getImage="imageSuper_GetImage" onAction="PTLoadPiC_ConstellationFromDB" getEnabled ="getButtonsEnabled"/>
+          <button id="Pt6G6B10" label="Auto-Allocate" size ="large" getImage="imageSuper_GetImage" onAction="PTAutoAlloc" getEnabled ="getButtonsEnabled"/>
 					<separator id="Pt6G6B0s3"/>
-					<button id="Pt6G6B6" label="WebUI" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectGoToWebUI" />
+					<button id="Pt6G6B6" label="WebUI" size ="large"   getImage="imageSuper_GetImage" onAction="PTProjectGoToWebUI" getEnabled ="getButtonsEnabled"/>
 					<separator id="Pt6G6B0s4"/>
-					<button id="Pt6G6B7" label="Settings"  size ="large"  getImage="imageSuper_GetImage"  onAction="PTProjectEditSettings" supertip="these settings only affect appointments (Time)"/>
+					<button id="Pt6G6B7" label="Settings"  size ="large"  getImage="imageSuper_GetImage"  onAction="PTProjectEditSettings" getEnabled ="getButtonsEnabled" supertip="these settings mostly affect resource allocations"/>
 				</group>
 			</tab>
 		</tabs>

@@ -13,6 +13,9 @@ Imports System.Diagnostics
 
 Module VISBO_SPE_Utilities
 
+    ' tk 27.12.24
+    Public buttonsAreEnabled As Boolean = True
+
     Public spe_vpid As String = ""
     Public spe_vpvid As String = ""
     Public spe_ott As String = ""
@@ -1598,6 +1601,22 @@ Module VISBO_SPE_Utilities
             Call CType(databaseAcc, DBAccLayer.Request).retrieveOneVPandSetaktVCid(spe_vpid, err)
             Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectVersionfromDB(spe_vpid, spe_vpvid, err)
             If Not IsNothing(hproj) Then
+
+                ' necessary for editing a baseline type project, i.e when variantName = pfv
+                ' tk 27.12.24 now check whether or not it is variantName = pfv
+                If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                    ' tk, 27.12.24 do not have certain menu-items active 
+                    buttonsAreEnabled = False
+
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+                    awinSettings.loadPFV = True
+                    ' set actualDataUntil to make it impossible to change past values of a baseline afterwards
+                    If DateDiff(DateInterval.Month, hproj.startDate, Date.Now) > 0 Then
+                        hproj.actualDataUntil = Date.Now.AddMonths(-1)
+                    End If
+
+                End If
+
                 ShowProjekte.AddAnyway(hproj, False)
                 ' tk 16.11.22 add editProjekteInSPE
                 editProjekteInSPE.AddAnyway(hproj, False)

@@ -377,6 +377,9 @@ Public Class Ribbon1
             End If
             Call MsgBox(msgTxt)
         End If
+
+        ' now invalidate
+        Me.ribbon.Invalidate()
     End Sub
 
     ''' <summary>
@@ -443,6 +446,14 @@ Public Class Ribbon1
 
     End Sub
 
+    ''' <summary>
+    ''' takes care that in case a baseline is edited, then menu-items Load, Context, Auto-allocate,  
+    ''' </summary>
+    ''' <param name="Control"></param>
+    ''' <returns></returns>
+    Function getButtonsEnabled(Control As IRibbonControl) As Boolean
+        getButtonsEnabled = buttonsAreEnabled
+    End Function
 
     Public Sub PTProjectCost(control As Office.IRibbonControl)
 
@@ -782,7 +793,7 @@ Public Class Ribbon1
                     Call MsgBox("Datebase Connection lost ...")
                 End If
 
-                ' nww invalidate 
+                ' now invalidate 
                 Me.ribbon.Invalidate()
 
             End If

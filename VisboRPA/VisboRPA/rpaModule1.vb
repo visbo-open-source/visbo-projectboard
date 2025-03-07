@@ -2628,7 +2628,7 @@ Module rpaModule1
 
         If Not IsNothing(hproj) Then
 
-            Dim isTemplate As Boolean = (LCase(hproj.name).Contains("template") And hproj.name = hproj.VorlagenName)
+            Dim isTemplate As Boolean = LCase(hproj.name).Contains("template")
 
             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, "", importDate, err) Then
 
@@ -2639,6 +2639,7 @@ Module rpaModule1
 
             If isTemplate Then
                 hproj.projectType = ptPRPFType.projectTemplate
+                hproj.VorlagenName = hproj.name
             End If
 
             Try
@@ -2652,38 +2653,69 @@ Module rpaModule1
                         myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
                         hproj.variantName = ptVariantFixNames.pfv.ToString
 
+                        Dim weitermachen As Boolean = True
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=False) Then
                             Call logger(ptErrLevel.logInfo, "Baseline and Current Plan stored successfully: ", hproj.name)
+                            allOK = True
                         Else
                             Call logger(ptErrLevel.logError, "Baseline / CurrentPlan could not be stored, probably no right to do so ... :  ", hproj.name)
+                            weitermachen = False
                         End If
 
                         myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
                         hproj.variantName = ""
 
+                        ' tk 27.12.24
+                        If weitermachen And hproj.getAlleRessourcen.Sum > 0 Then
+                            ' first set kennung and according jobParameters
+                            Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
+                            Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
+
+                            ' Define rankinglist 
+                            Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
+
+                            ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
+                            ImportProjekte.Add(hproj, False)
+
+                            ' check whether and how projects are fitting to the already existing Portfolio 
+                            Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+
+                        Else
+                            ' write error
+                            Call logger(ptErrLevel.logError, "no finding best start took place ... :  ", hproj.name)
+                        End If
+
+
+
                     Else
+
+                        ' now you should consider call importProjekteeintragen
+
+                        ' tk 29.12.25 now put it into ImPortProjekte, because processProjectList does operate on these projects 
+                        ImportProjekte.Add(hproj, False)
+                        Call importProjekteEintragen(Date.Now, False, True, True, calledFromActualDataImport:=False, calledFromRPA:=True)
+                        ' 
+
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=False) Then
                             Call logger(ptErrLevel.logInfo, "Project stored successfully: ", hproj.name)
+                            allOK = True
                         Else
                             Call logger(ptErrLevel.logError, "Project could not be stored, probably no right to do so ... :  ", hproj.name)
                         End If
                     End If
 
 
-
-                    allOK = True
-
                 Else
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=False) Then
                         Call logger(ptErrLevel.logInfo, "Template stored successfully: ", hproj.name)
+                        allOK = True
                     Else
                         Call logger(ptErrLevel.logError, "Template from Json File could not be stored:  ", hproj.name)
+                        allOK = False
                     End If
 
-                    allOK = False
+
                 End If
-
-
 
 
             Catch ex As Exception
@@ -2696,6 +2728,9 @@ Module rpaModule1
             allOK = False
             Call logger(ptErrLevel.logError, "RPA Error importing Json Project: no valid Json Structure", errMessages)
         End If
+
+        ' now empty RPA
+        Call emptyRPASession()
 
         processJsonProject = allOK
 
@@ -2760,10 +2795,16 @@ Module rpaModule1
 
             End If
 
-
+            Dim projectAlreadyExists As Boolean = False
             allOK = Not IsNothing(hproj)
 
             If allOK Then
+
+                Dim Err As New clsErrorCodeMsg
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, "", importDate, Err) Then
+                    projectAlreadyExists = True
+                End If
+
                 Try
 
                     ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
@@ -2786,6 +2827,30 @@ Module rpaModule1
                     lastReadingProjectTemplates = readProjectTemplates()
                 End If
             End If
+
+            ' tk 29.12.25 now, if the project did not exist already find a best start 
+            If Not projectAlreadyExists And hproj.getAlleRessourcen.Sum > 0 Then
+                ' first set kennung and according jobParameters
+                Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
+                Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
+
+                ' Define rankinglist 
+                Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
+
+                ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
+                ImportProjekte.Add(hproj, False)
+
+                ' check whether and how projects are fitting to the already existing Portfolio 
+                Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+
+            Else
+                ' write error
+                Call logger(ptErrLevel.logError, "no finding best start took place ... :  ", hproj.name)
+            End If
+
+
+
+            '
 
             ' empty session 
             Call emptyRPASession()
