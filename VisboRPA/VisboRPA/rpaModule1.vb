@@ -237,11 +237,31 @@ Module rpaModule1
 
         Call logger(ptErrLevel.logInfo, "VisboRPA_Main", "Excel-application mit Parameter festlegen ")
         ' Parameter für die Excel Instance festlegen
+
+
         appInstance = New xlns.Application
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        appInstance.Visible = False
-        appInstance.DisplayAlerts = False
+        ' führt zu Fehler, wahrscheinlich weil meine Excel Installation aktuell nicht mehr korrekt ist ? 
+
+        ' ChatGPT Recommendation
+        'Dim excelType As Type = Type.GetTypeFromProgID("Excel.Application")
+        'Dim appInstance As Object = Activator.CreateInstance(excelType)
+
+        Try
+
+            If appInstance IsNot Nothing Then
+
+                appInstance.EnableEvents = False
+                appInstance.ScreenUpdating = False
+                appInstance.Visible = False
+                appInstance.DisplayAlerts = False
+
+            Else
+                MsgBox("Fehler: Excel-Anwendung konnte nicht erstellt werden.")
+            End If
+        Catch ex As Exception
+            MsgBox("Fehler bei Excel-Initialisierung: " & ex.Message)
+        End Try
+
 
         'rpaPath not yet defined, therefore the defaultPath is used
         If rpaPath = "" Then
@@ -2666,24 +2686,26 @@ Module rpaModule1
                         hproj.variantName = ""
 
                         ' tk 27.12.24
-                        If weitermachen And hproj.getAlleRessourcen.Sum > 0 Then
-                            ' first set kennung and according jobParameters
-                            Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
-                            Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
+                        Try
+                            If weitermachen And hproj.getAlleRessourcen.Sum > 0 Then
+                                ' first set kennung and according jobParameters
+                                Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
+                                Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
 
-                            ' Define rankinglist 
-                            Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
+                                ' Define rankinglist 
+                                Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
 
-                            ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
-                            ImportProjekte.Add(hproj, False)
+                                ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
+                                ImportProjekte.Add(hproj, False)
 
-                            ' check whether and how projects are fitting to the already existing Portfolio 
-                            Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+                                ' check whether and how projects are fitting to the already existing Portfolio 
 
-                        Else
-                            ' write error
-                            Call logger(ptErrLevel.logError, "no finding best start took place ... :  ", hproj.name)
-                        End If
+                                Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
 
 
 
@@ -2829,23 +2851,24 @@ Module rpaModule1
             End If
 
             ' tk 29.12.25 now, if the project did not exist already find a best start 
-            If Not projectAlreadyExists And hproj.getAlleRessourcen.Sum > 0 Then
-                ' first set kennung and according jobParameters
-                Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
-                Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
+            If Not isTemplate Then
 
-                ' Define rankinglist 
-                Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
+                If Not projectAlreadyExists And hproj.getAlleRessourcen.Sum > 0 Then
+                    ' first set kennung and according jobParameters
+                    Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
+                    Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
 
-                ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
-                ImportProjekte.Add(hproj, False)
+                    ' Define rankinglist 
+                    Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
 
-                ' check whether and how projects are fitting to the already existing Portfolio 
-                Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+                    ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
+                    ImportProjekte.Add(hproj, False)
 
-            Else
-                ' write error
-                Call logger(ptErrLevel.logError, "no finding best start took place ... :  ", hproj.name)
+                    ' check whether and how projects are fitting to the already existing Portfolio 
+                    Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+
+                End If
+
             End If
 
 
@@ -5754,7 +5777,7 @@ Module rpaModule1
                     Dim cfList As New SortedList(Of Integer, String)
 
                     ' are there any values provided for CustomFields
-                    If lastColumn > 4 Then
+                    If lastColumn > 5 Then
                         Dim tmpCf As String
                         For icol As Integer = 5 To lastColumn
                             If Not IsNothing(CType(.Cells(1, icol), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
@@ -5822,6 +5845,15 @@ Module rpaModule1
                             Else
                                 mybusinessUnit = ""
                             End If
+
+                            Dim myProjectNr As String = ""
+                            Try
+                                If Not IsNothing(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                    myProjectNr = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                End If
+                            Catch ex As Exception
+                                myProjectNr = ""
+                            End Try
 
 
                             ' set myCustom User Role 
@@ -5897,6 +5929,21 @@ Module rpaModule1
                                         If myProject.leadPerson <> myResponsible Then
                                             myProject.leadPerson = myResponsible
                                             storeRequired = True
+                                        End If
+                                    End If
+
+                                    ' added 11.3.25
+                                    If myProjectNr <> "" Then
+                                        If myProject.kundenNummer <> myProjectNr Then
+                                            Dim pNameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(myProjectNr, err)
+                                            If pNameCollection.Count = 0 Then
+                                                ' then it does not already exist, so do no change it to the given Number  
+                                                myProject.kundenNummer = myProjectNr
+                                                storeRequired = True
+                                            Else
+                                                msgTxt = "Project Nr " & myProjectNr.ToString & " already in use: " & pNameCollection.Item(1)
+                                                Call logger(ptErrLevel.logError, "No Change. ", msgTxt)
+                                            End If
                                         End If
                                     End If
 
