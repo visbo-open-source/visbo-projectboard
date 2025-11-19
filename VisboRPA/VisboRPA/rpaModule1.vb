@@ -2837,7 +2837,7 @@ Module rpaModule1
                     Call logger(ptErrLevel.logError, "RPA Error importing project brief file " & PTRpa.visboProject.ToString, ex2.Message)
                 End Try
             Else
-                Call logger(ptErrLevel.logError, "RPA Error importing project brief file " & PTRpa.visboProject.ToString, myName)
+                Call logger(ptErrLevel.logError, "RPA Error importing project brief file ", myName)
             End If
 
             ' store Project 
@@ -2850,24 +2850,30 @@ Module rpaModule1
                 End If
             End If
 
-            ' tk 29.12.25 now, if the project did not exist already find a best start 
+            ' tk 29.12.24 now, if the project did not exist already find a best start 
             If Not isTemplate Then
 
-                If Not projectAlreadyExists And hproj.getAlleRessourcen.Sum > 0 Then
-                    ' first set kennung and according jobParameters
-                    Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
-                    Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
+                Try
+                    If Not projectAlreadyExists And hproj.getAlleRessourcen.Sum > 0 Then
+                        ' first set kennung and according jobParameters
+                        Dim myKennung As PTRpa = PTRpa.visboFindProjectStart
+                        Dim jobParameter As clsJobParameters = setJobParameters(myKennung)
 
-                    ' Define rankinglist 
-                    Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
+                        ' Define rankinglist 
+                        Dim rankingList As SortedList(Of Integer, clsRankingParameters) = setRanking(hproj)
 
-                    ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
-                    ImportProjekte.Add(hproj, False)
+                        ' now put it into ImPortProjekte, because processProjectList does operate on these projects 
+                        ImportProjekte.Add(hproj, False)
 
-                    ' check whether and how projects are fitting to the already existing Portfolio 
-                    Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
+                        ' check whether and how projects are fitting to the already existing Portfolio 
+                        Dim foundStart As Boolean = processProjectListWithActivePortfolio(jobParameter, rankingList, myKennung)
 
-                End If
+                        Call logger(ptErrLevel.logInfo, "end find best start: " & PTRpa.visboProject.ToString, myName)
+                    End If
+                Catch ex As Exception
+                    Call logger(ptErrLevel.logInfo, "did not find best start: " & PTRpa.visboProject.ToString, myName)
+                End Try
+
 
             End If
 
