@@ -19,7 +19,7 @@
     <PublishUrl>C:\publish\VISBO SPE\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>7.1.0.0</ApplicationVersion>
+    <ApplicationVersion>7.2.0.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>8</UpdateInterval>
@@ -355,7 +355,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>9F0D3B6D880264A07D18814628FC45144A51C648</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>EC4B464A1A890B03303778F0274ACE3186C1E7AE</ManifestCertificateThumbprint>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -365,7 +365,7 @@
         <ProjectProperties HostName="VISBO Project Edit.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]VISBO Project Edit.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\VISBO Project Edit.xlsx" PublishedHash="C7B376692A090EC6E68ECB9030016D6B09028D44">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="9C8DA9D8F95B385A08C2D2934836EB200ECD8DB7" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
-          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
+          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="1477224DA095CF7893DCD4FB2D03FFF48FFAABFD" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="9A9E490E623CC5FE7A4C41D8C75F26AE0A08A2CF" DisplayName="meTE" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
           <HostItem Name="Tabelle4" Code="Tabelle4.vb" CanonicalName="Tabelle4" PublishedHash="DCD0AFC6E07AFD40D91F719C9251521E05E3D365" DisplayName="meAT" Blueprint="Tabelle4.Designer.xml" GeneratedCode="Tabelle4.Designer.vb" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
