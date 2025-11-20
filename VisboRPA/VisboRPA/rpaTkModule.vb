@@ -187,10 +187,28 @@ Module rpaTkModule
         checkRename = result
     End Function
 
+    ''' <summary>
+    ''' Checks if the active worksheet in the given workbook is named "Assign Attributes" 
+    ''' and if its first row contains the expected column headers.
+    ''' </summary>
+    ''' <param name="currentWB">The Excel workbook to be checked.</param>
+    ''' <returns>
+    ''' A PTRpa enumeration value:
+    ''' - visboAssignAttributes if the worksheet exists and has the correct structure.
+    ''' - visboUnknown otherwise.
+    ''' </returns>
+    ''' <remarks>
+    ''' This function verifies the presence of specific column names in the first row of the 
+    ''' "Assign Attributes" worksheet. If the structure matches, it returns visboAssignAttributes; 
+    ''' otherwise, it returns visboUnknown. If an exception occurs, it defaults to visboUnknown.
+    ''' </remarks>
+    ''' <exception cref="Exception">
+    ''' Any unexpected errors during worksheet verification are caught and result in visboUnknown.
+    ''' </exception>
     Public Function checkAssignAttributes(ByVal currentWB As xlns.Workbook) As PTRpa
         Dim result As PTRpa = PTRpa.visboUnknown
         Dim blattName As String = "Assign Attributes"
-        Dim colNames() = {"Project Name", "KPI Strategic Fit", "KPI Realization Risk", "Business Unit"}
+        Dim colNames() = {"Project Name", "KPI Strategic Fit", "KPI Realization Risk", "Business Unit", "Project-Nr"}
 
         Dim currentWS As xlns.Worksheet = Nothing
 
@@ -205,7 +223,8 @@ Module rpaTkModule
                     verifiedStructure = CStr(ersteZeile.Cells(1, 1).value).Trim = colNames(0) And
                                         CStr(ersteZeile.Cells(1, 2).value).Trim = colNames(1) And
                                         CStr(ersteZeile.Cells(1, 3).value).Trim = colNames(2) And
-                                        CStr(ersteZeile.Cells(1, 4).value).Trim = colNames(3)
+                                        CStr(ersteZeile.Cells(1, 4).value).Trim = colNames(3) And
+                                        CStr(ersteZeile.Cells(1, 5).value).Trim = colNames(4)
                 End If
                 If verifiedStructure Then
                     result = PTRpa.visboAssignAttributes
@@ -4098,6 +4117,10 @@ Module rpaTkModule
 
                 ' VISBO ID of project
                 ws.Cells(zeile, spalte).value = "VISBO ID"
+                spalte = spalte + 1
+
+                ' Project Nr of Project 
+                ws.Cells(zeile, spalte).value = "Project-Nr"
 
 
                 Dim lastRow As Integer = 1 + myConstellation.Liste.Count
@@ -4441,6 +4464,9 @@ Module rpaTkModule
                             ws.Cells(zeile, spalte).value = hproj.vpID
                             spalte = spalte + 1
 
+                            ' VISBO Project Nr
+                            ws.Cells(zeile, spalte).value = hproj.kundenNummer
+                            spalte = spalte + 1
                         Else
                             ' could not read the name 
                             ws.Cells(zeile, 1).value = pName
