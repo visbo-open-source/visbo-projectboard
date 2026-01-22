@@ -1,0 +1,7 @@
+Note: this Project does contain some needed librariers required for the other VISBO Microsoft Add-Ins
+- Simple Project Edit : Excel Add-In to edit VISBO Projects in a Excel user interface 
+- SmartInfo : Powepoint Add-In to create and update Powerpoit Reports
+- Project Publish : MS Project Add-In to publish MS Project Plans to VISBO 
+- RPA - robot process Automation to upload Excel Project Briefs, Project lists, to do Lists and more. 
+
+The Projectboard Desktop application is not needed any more, butte libarieresa re needed. 
