@@ -44,7 +44,7 @@ Public Class Ribbon1
     End Sub
 
     Public Function GetCustomUI(ByVal ribbonID As String) As String Implements Office.IRibbonExtensibility.GetCustomUI
-        Return GetResourceText("VSIBO_SPE.Ribbon1.xml")
+        Return GetResourceText("VISBO_SPE.Ribbon1.xml")
     End Function
 
 #Region "Menübandrückrufe"
@@ -115,7 +115,7 @@ Public Class Ribbon1
 
 
         Try
-            'Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VSIBO SPE\bin\Debug"
+            'Dim path As String = "C:\Users\UteRittinghaus-Koyte\Dokumente\VISBO-NativeClients\visbo-projectboard\VISBO SPE\VISBO SPE\bin\Debug"
             Dim path As String = ""
 
             If Not speSetTypen_Performed Then

@@ -112,8 +112,8 @@ FOLDER STRUCTURE
     Source code of the Excel Add-In
 
 /admin-doc
-    ClickOnce deployment package
-    Installation guide
+    ClickOnce install package, with clints linked to VISBO Demo and Test platform
+    Installation guide, i.e how to build a new install package linking to OnPremise or Private Cloud 
 
 /user-docs
     End user documentation
@@ -133,11 +133,11 @@ Contribution Flow:
 1. Fork the repository
 2. Create a feature branch
 3. Commit changes
-4. Submit a Pull Request to main
-5. Sign the CLA 
+4. Submit a Pull Request to branch main 
+5. Be Aware that with creating a pull request you are accepting the Contributor Licence Agreement (CLA) 
 
 Contact for questions:
-open.source@visbo.de
+info@visbo.de
 
 ------------------------------------------------------------
 LICENSE

@@ -11,8 +11,8 @@ Imports System.Security
 
 <Assembly: AssemblyTitle("VISBO SPE")>
 <Assembly: AssemblyDescription("")> 
-<Assembly: AssemblyCompany("")> 
-<Assembly: AssemblyProduct("VSIBO SPE")> 
+<Assembly: AssemblyCompany("")>
+<Assembly: AssemblyProduct("VISBO SPE")>
 <Assembly: AssemblyCopyright("Copyright ©  2022")> 
 <Assembly: AssemblyTrademark("")> 
 

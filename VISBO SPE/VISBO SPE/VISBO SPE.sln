@@ -1,11 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32126.315
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "VISBO SPE", "VISBO SPE.vbproj", "{DEBEB824-7D90-4438-AF53-271F9FAE4AFF}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "VISBO ProjectEditSetup", "..\VISBO ProjectEditSetup\VISBO ProjectEditSetup.vdproj", "{5E32B948-4EBF-471D-9DF5-2CD909E9DD7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,10 +14,7 @@ Global
 		{DEBEB824-7D90-4438-AF53-271F9FAE4AFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DEBEB824-7D90-4438-AF53-271F9FAE4AFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEBEB824-7D90-4438-AF53-271F9FAE4AFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E32B948-4EBF-471D-9DF5-2CD909E9DD7D}.Debug|Any CPU.ActiveCfg = Debug
-		{5E32B948-4EBF-471D-9DF5-2CD909E9DD7D}.Debug|Any CPU.Build.0 = Debug
-		{5E32B948-4EBF-471D-9DF5-2CD909E9DD7D}.Release|Any CPU.ActiveCfg = Release
-		{5E32B948-4EBF-471D-9DF5-2CD909E9DD7D}.Release|Any CPU.Build.0 = Release
+		{DEBEB824-7D90-4438-AF53-271F9FAE4AFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

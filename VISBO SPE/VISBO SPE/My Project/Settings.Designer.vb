@@ -300,11 +300,11 @@ Namespace My
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute()>  _
     Friend Module MySettingsProperty
-        
-        <Global.System.ComponentModel.Design.HelpKeywordAttribute("My.Settings")>  _
-        Friend ReadOnly Property Settings() As Global.VSIBO_SPE.MySettings
+
+        <Global.System.ComponentModel.Design.HelpKeywordAttribute("My.Settings")>
+        Friend ReadOnly Property Settings() As Global.VISBO_SPE.MySettings
             Get
-                Return Global.VSIBO_SPE.MySettings.Default
+                Return Global.VISBO_SPE.MySettings.Default
             End Get
         End Property
     End Module
